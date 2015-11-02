@@ -18,9 +18,18 @@ public class VoiceBase {
   // collection of control points, each one having a pitch and a volume. rendering morphs from one cp to another. 
   public ArrayList<Point> CPoints = new ArrayList<>();
   public static class Point {
-    public double Time;
-    public double Octave;
+    public double RealTime = 0.0, SubTime = 0.0;// SubTime is cumulative subjective time.
+    public double Octave = 0.0;
     public double Loudness;
+    public void CopyFrom(Point source) {
+      this.RealTime = source.RealTime;
+      this.SubTime = source.SubTime;
+      this.Octave = source.Octave;
+      this.Loudness = source.Loudness;
+    }
+    public double GetFrequencyFactor() {
+      return Math.pow(2.0, this.Octave);
+    }
   }
   public static class Player_Head_Base {
     //protected VoiceBase Parent;

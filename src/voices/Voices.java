@@ -23,18 +23,18 @@ public class Voices {
     double Cycles = 0.0;
     //double StartPhase;
     Point pnt0 = new Point();
-    pnt0.Time = 0;
+    pnt0.RealTime = 0;
     pnt0.Octave = 2;
     pnt0.Loudness = 1;
     Point pnt1 = new Point();
-    pnt1.Time = 1;// 1 second later? 
+    pnt1.RealTime = 1;// 1 second later? 
     pnt1.Octave = 3;
     pnt1.Loudness = 1;
 
     // C0 16.35 
     // A0 27.50 
-    double TimeRange = pnt1.Time - pnt0.Time;
-    double TimeAlong = Time = pnt0.Time;
+    double TimeRange = pnt1.RealTime - pnt0.RealTime;
+    double TimeAlong = Time = pnt0.RealTime;
     double FractAlong = TimeAlong / TimeRange;
 
     double PitchRange = pnt1.Octave - pnt0.Octave;
