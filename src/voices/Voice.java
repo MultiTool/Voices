@@ -30,12 +30,15 @@ public class Voice extends VoiceBase {
     public double SampleRate;
     Point Prev_Point, Next_Point;
     Point Cursor_Point = new Point();
+    /* ********************************************************************************* */
     @Override
     public void Start() {
       this.SubTime = 0.0;
       this.Current_Time = 0.0;
       this.Phase = 0.0;
       this.Cycles = 0.0;
+      this.Prev_Point = this.Parent.CPoints.get(0);
+      this.Cursor_Point.CopyFrom(Prev_Point);
     }
     /* ********************************************************************************* */
     @Override
@@ -68,7 +71,7 @@ public class Voice extends VoiceBase {
       double TimeAlong = RealTime - pnt0.RealTime;
       double OctaveRange = pnt1.Octave - pnt0.Octave;
       double OctaveRate = OctaveRange / TimeRange;// octaves per second
-      double SubTimeLocal = Calculus(pnt0.Octave, pnt0.RealTime, pnt1.Octave, pnt1.RealTime, OctaveRate, RealTime);
+      double SubTimeLocal = Calculus(OctaveRate, TimeAlong);
       PntMid.RealTime = RealTime;
       PntMid.SubTime = pnt0.SubTime + (FrequencyFactorPrev * SubTimeLocal);
 
@@ -82,6 +85,21 @@ public class Voice extends VoiceBase {
     @Override
     public void Render_To(double Time, Wave wave) {
       Math.sin(Time);
+      /*
+       set prev point to wherever cursor is.
+       (in start, cursor is set to point 0 by default)
+       iterate to the point where next_point.realtime <= time.  do while? 
+       Next_Point = this.Cursor_Point;
+       loop {
+       Prev_Point = Next_Point;
+       Next_Point = this.Parent.CPoints.get(cnt);
+       Render_Line(Prev_Point, Next_Point, wave);
+       }
+	  
+       Interpolate_ControlPoint(Prev_Point, Next_Point, Time, Cursor_Point);//  render loose end. 
+       Render_Line(Prev_Point, Cursor_Point, wave);
+	  
+       */
     }
     /* ********************************************************************************* */
     public void Skip_Line() {
@@ -93,54 +111,59 @@ public class Voice extends VoiceBase {
       return frequency_from_octave_integral;
     }
     /* ********************************************************************************* */
-    public void Render_Line(Point pnt0, Point pnt1) {
+    public void Render_Line(Point pnt0, Point pnt1, Wave wave0, Wave wave1) {
       double TimeRange = pnt1.RealTime - pnt0.RealTime;
       double SampleDuration = 1.0 / this.SampleRate;
-      double Time = pnt0.RealTime;
-      double TimeAlong = Time - pnt0.RealTime;
-      double FractAlong = TimeAlong / TimeRange;
-      double FrequencyFactor0 = pnt0.GetFrequencyFactor();
+      double RealTime = pnt0.RealTime;
+      double FrequencyFactorPrev = pnt0.GetFrequencyFactor();
       double OctaveRange = pnt1.Octave - pnt0.Octave;
-      double CurrentPitch = pnt0.Octave + (OctaveRange * FractAlong);
+      if (OctaveRange == 0.0) {
+        OctaveRange = 0.00000000001;// Fudge to avoid div by 0 
+      }
       double LoudnessRange = pnt1.Loudness - pnt0.Loudness;
-      double CurrentLoudness = pnt0.Loudness + (LoudnessRange * FractAlong);
-
       double OctaveRate = OctaveRange / TimeRange;// octaves per second
+      double LoudnessRate = LoudnessRange / TimeRange;
       double SubTimeLocal, Denom;
-      double CurrentSubTime;
-      int NumSamples = (int) (TimeRange * SampleRate);
+      double SubTimeAbsolute;
+      int NumSamples = (int) (TimeRange * this.SampleRate);
+
+      double FractAlong;
+      double TimeAlong;
+      double CurrentOctaveAbsolute, CurrentOctaveLocal, CurrentLoudness, CurrentFrequency, CurrentFrequencyFactorAbsolute, CurrentFrequencyFactorLocal;
+      double Amplitude;
+
+      double SubTimeIterate = 0.0, SubTimeCalc = 0.0;
+      SubTimeAbsolute = 0.0;
+
       for (int scnt = 0; scnt < NumSamples; scnt++) {
-        TimeAlong = scnt * SampleDuration;
+        TimeAlong = scnt * SampleDuration;// good
+        RealTime = pnt0.RealTime + TimeAlong;
         FractAlong = TimeAlong / TimeRange;
-        Current_Octave = pnt0.Octave + (OctaveRange * FractAlong);
-        Time = pnt0.RealTime + TimeAlong;
-        Current_Frequency = BaseFreqC0 * Math.pow(2.0, Current_Octave);
-        this.SubTime += (Current_Frequency * TwoPi) / this.SampleRate;
+        CurrentOctaveLocal = TimeAlong * OctaveRate;
+        CurrentFrequencyFactorLocal = Math.pow(2.0, CurrentOctaveLocal); // to convert to absolute, do pnt0.SubTime + (FrequencyFactorPrev * CurrentFrequencyFactorLocal);
+        CurrentFrequencyFactorAbsolute = pnt0.SubTime + (FrequencyFactorPrev * CurrentFrequencyFactorLocal);
 
-        // Whoops!  looks like we need the integral of (2^(t*z)) ???
-        double gral = Math.pow(2, (TimeAlong * OctaveRate));// integral of this formula
-        double snoo = Math.pow(2, (TimeAlong * OctaveRate)) / (Math.log(2) * OctaveRate) - 1 / (Math.log(2) * OctaveRate);
-        Denom = (Math.log(2) * OctaveRate);
-        SubTimeLocal = (Math.pow(2, (TimeAlong * OctaveRate)) / Denom) - (1.0 / Denom);
-        // 2^z/(log(2)*z)-1/(log(2)*z)
-        // 2^(2*z)/(log(2)*z)-1/(log(2)*z)
-        // 2^(3*z)/(log(2)*z)-1/(log(2)*z)
-        // 2^(4*z)/(log(2)*z)-1/(log(2)*z)
-        // 2^(5*z)/(log(2)*z)-1/(log(2)*z)
-        // 2^(6*z)/(log(2)*z)-1/(log(2)*z)
-        // 2^(7*z)/(log(2)*z)-1/(log(2)*z)
+        if (false) {
+          CurrentOctaveAbsolute = pnt0.Octave + CurrentOctaveLocal;// good to here
+          CurrentFrequencyFactorAbsolute = Math.pow(2.0, CurrentOctaveAbsolute);
+        }
+        // SubTimeLocal = Math.pow(2.0, CurrentOctaveLocal);
+        SubTimeIterate += CurrentFrequencyFactorAbsolute / this.SampleRate;
 
-        // sin( (pi*2)*(2^(x*0.0001)/(ln(2)*0.0001) - 1/(ln(2)*0.0001)) )  bend at near 0 octave rate
-        // sin( (pi*2)*(2^(x*0.5)/(ln(2)*0.5) - 1/(ln(2)*0.5)) )  bend at 0.5 octave rate
-        // sin( (pi*2)*(2^(x*1.0)/(ln(2)*1.0) - 1/(ln(2)*1.0)) )  bend at 1.0 octave rate (1 octave per second)
-        // http://www.fooplot.com/#W3sidHlwZSI6MCwiZXEiOiIoMl4oeCowLjUpKSIsImNvbG9yIjoiIzAwMDAwMCJ9LHsidHlwZSI6MCwiZXEiOiIyXih4KjAuNSkvKGxuKDIpKjAuNSktMS8obG4oMikqMC41KSIsImNvbG9yIjoiI0ZGMDAwMCJ9LHsidHlwZSI6MCwiZXEiOiIyXih4KjAuMDAwMSkvKGxuKDIpKjAuMDAwMSktMS8obG4oMikqMC4wMDAxKSIsImNvbG9yIjoiIzExRkYwMCJ9LHsidHlwZSI6MCwiZXEiOiJzaW4oKHBpKjIpKigyXih4KjEuMCkvKGxuKDIpKjEuMCktMS8obG4oMikqMS4wKSkpIiwiY29sb3IiOiIjMDAwMDAwIn0seyJ0eXBlIjoxMDAwLCJ3aW5kb3ciOlsiLTQuNTY5MTM0Njc1ODAwMjk3IiwiMi40MTAxODcxODAxOTk2NTEzIiwiLTIuMTY2NTM3MzY5NzU5ODIwNSIsIjIuMTI4NDI5OTI2MjQwMTUyMyJdfV0-
-        // 2^(x*1)/(ln(2)*1) - 1/(ln(2)*1)
-        // SubTimeCalc = 2^(x*0.0001)/(ln(2)*0.0001) - 1/(ln(2)*0.0001) where 0.0001 is octave rate and x is realtime. 
-        // so after this, SubTimeCalc will be the ratio of total subjective time elapsed to total real time elapsed since pnt0.Time (TimeAlong)
-        // to get actual SubTime, we will have to add? it to pnt0.SubTime. 
-        // no no no we multiply SubTimeCalc times pnt0.FrequencyFactor (2^pnt0.Octave) and then add it to pnt0.SubTime.  
-        // SubTimeCalc IS a frequency factor. 
-        //CurrentSubTime = pnt0.SubTime + (FrequencyFactor0 * SubTimeCalc);// absolute subjective time.  maybe this ????????? 
+        CurrentFrequency = BaseFreqC0 * SubTimeIterate;// do we really need to include the base frequency in the summing?
+
+        SubTimeIterate += (CurrentFrequency * TwoPi) / this.SampleRate;
+        Amplitude = Math.sin(SubTimeAbsolute * BaseFreqC0 * TwoPi);
+        wave0.wave[scnt] = Amplitude;
+
+        {
+          SubTimeLocal = Calculus(OctaveRate, TimeAlong);
+          SubTimeAbsolute = pnt0.SubTime + (FrequencyFactorPrev * SubTimeLocal);
+          Amplitude = Math.sin(SubTimeAbsolute * BaseFreqC0 * TwoPi);
+          wave1.wave[scnt] = Amplitude;
+        }
+
+        CurrentLoudness = pnt0.Loudness + (TimeAlong * LoudnessRate);
       }
     }
     /* ********************************************************************************* */
@@ -213,14 +236,14 @@ public class Voice extends VoiceBase {
       double TimeRange = Next_Point.RealTime - Prev_Point.RealTime;
       double OctaveRange = Next_Point.Octave - Prev_Point.Octave;
       double OctaveRate = OctaveRange / TimeRange;// octaves per second
-      SubTimeLocal = Calculus(Prev_Point.Octave, Prev_Point.RealTime, Next_Point.Octave, Next_Point.RealTime, OctaveRate, Next_Point.RealTime);
+      SubTimeLocal = Calculus(OctaveRate, TimeRange);
       Next_Point.SubTime = Prev_Point.SubTime + (FrequencyFactorPrev * SubTimeLocal);
     }
   }
   /* ********************************************************************************* */
-  public static double Calculus(double Octave0, double RealTime0, double Octave1, double RealTime1, double OctaveRate, double TimeAlong) {// ready for test
+  public static double Calculus(double OctaveRate, double TimeAlong) {// ready for test
     double SubTimeCalc;// given realtime passed and rate of octave change, use integration to get the sum of all subjective time passed.  
-    double Denom = (Math.log(2) * OctaveRate);
+    double Denom = (Math.log(2) * OctaveRate);// returns the integral of (2 ^ (TimeAlong * OctaveRate))
     //SubTimeCalc = (Math.pow(2, (TimeAlong * OctaveRate)) / Denom) - (1.0 / Denom);
     SubTimeCalc = ((Math.pow(2, (TimeAlong * OctaveRate)) - 1.0) / Denom);
     return SubTimeCalc;
