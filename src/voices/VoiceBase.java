@@ -39,6 +39,9 @@ public class VoiceBase {
     }
     public void Render_To(double Time, Wave wave) {
     }
+    /* ********************************************************************************* */
+    public void Render_Line(Point pnt0, Point pnt1, Wave wave0, Wave wave1) {
+    }
   }
   public VoiceBase() {
   }

@@ -5,6 +5,10 @@
  */
 package voices;
 
+import java.io.FileNotFoundException;
+import java.io.PrintWriter;
+import voices.Voice.Player_Head;
+import voices.VoiceBase.Player_Head_Base;
 import voices.VoiceBase.Point;
 
 /**
@@ -18,6 +22,64 @@ public class Voices {
    */
   public static void main(String[] args) {
     // TODO code application logic here
+    Voice vc = new Voice();
+    Point pnt0 = new Point(), pnt1 = new Point();
+    Wave wave0 = new Wave(), wave1 = new Wave();
+    Wave wave_diff = new Wave();
+
+    int TDiff = 16;
+    int nsamps = TDiff * 1000;// 100;
+
+    pnt0.Octave = 1.0;
+    pnt1.Octave = 4.0;
+    pnt0.Loudness = 1.0;
+    pnt1.Loudness = 1.0;
+    pnt0.RealTime = 0.7;
+    pnt1.RealTime = pnt0.RealTime + TDiff;
+    pnt0.SubTime = 0.0;// pnt1.SubTime=1.0;
+
+    vc.Add_Note(pnt0);
+    vc.Add_Note(pnt1);
+    vc.Recalc_Line_SubTime();
+
+    wave0.Init(nsamps);
+    wave1.Init(nsamps);
+
+    Player_Head_Base hd = vc.Spawn_Player();
+    hd.Render_Line(pnt0, pnt1, wave0, wave1);
+
+    wave0.Diff(wave1, wave_diff);
+
+    SaveWave3(wave_diff, wave0, wave1, "wave_all.csv");
+//    SaveWave(wave0, "wave0.csv");
+//    SaveWave(wave1, "wave1.csv");
+//    SaveWave(wave_diff, "wave_diff.csv");
+
+    boolean nop = true;
+  }
+  public static void SaveWave3(Wave wave0, Wave wave1, Wave wave2, String FileName) {
+    try {
+      PrintWriter out = new PrintWriter(FileName);
+      for (int cnt = 0; cnt < wave0.numsamples; cnt++) {
+        //out.println(cnt + ", " + wave.wave[cnt] + "");
+        out.println(wave0.wave[cnt] + ", " + wave1.wave[cnt] + ", " + wave2.wave[cnt] + "");
+      }
+      out.close();
+    } catch (FileNotFoundException ex) {
+
+    }
+  }
+  public static void SaveWave(Wave wave, String FileName) {
+    try {
+      PrintWriter out = new PrintWriter(FileName);
+      for (int cnt = 0; cnt < wave.numsamples; cnt++) {
+        //out.println(cnt + ", " + wave.wave[cnt] + "");
+        out.println(wave.wave[cnt] + "");
+      }
+      out.close();
+    } catch (FileNotFoundException ex) {
+
+    }
   }
   public static void Circus(double Time) {
     double Cycles = 0.0;
@@ -81,22 +143,22 @@ public class Voices {
      so integral with range will be (2^endval)-1)/ln(2);
      ln(2) = 0.69314718 = 0.69314718055994530941723212145818
     
-    http://rtcmix.org/
+     http://rtcmix.org/
     
-    http://quickmath.com/webMathematica3/quickmath/calculus/integrate/advanced.jsp#c=integrate_advancedintegrate&v1=t*%282^%28t*z%29%29&v2=t&v3=0&v4=7
+     http://quickmath.com/webMathematica3/quickmath/calculus/integrate/advanced.jsp#c=integrate_advancedintegrate&v1=t*%282^%28t*z%29%29&v2=t&v3=0&v4=7
 
-t*(2^(t*z))  steady octave change. t is real time, z is octave change rate assuming t starts at 0.
-(log(2)*z-1)*%e^(log(2)*z)/(log(2)^2*z^2)+1/(log(2)^2*z^2)  range 0 to 1
-(2*log(2)*z-1)*%e^(2*log(2)*z)/(log(2)^2*z^2)+1/(log(2)^2*z^2)  0 to 2
-(3*log(2)*z-1)*%e^(3*log(2)*z)/(log(2)^2*z^2)+1/(log(2)^2*z^2)  to 3
-(4*log(2)*z-1)*%e^(4*log(2)*z)/(log(2)^2*z^2)+1/(log(2)^2*z^2)  to 4
-(5*log(2)*z-1)*%e^(5*log(2)*z)/(log(2)^2*z^2)+1/(log(2)^2*z^2)  to 5
+     t*(2^(t*z))  steady octave change. t is real time, z is octave change rate assuming t starts at 0.
+     (log(2)*z-1)*%e^(log(2)*z)/(log(2)^2*z^2)+1/(log(2)^2*z^2)  range 0 to 1
+     (2*log(2)*z-1)*%e^(2*log(2)*z)/(log(2)^2*z^2)+1/(log(2)^2*z^2)  0 to 2
+     (3*log(2)*z-1)*%e^(3*log(2)*z)/(log(2)^2*z^2)+1/(log(2)^2*z^2)  to 3
+     (4*log(2)*z-1)*%e^(4*log(2)*z)/(log(2)^2*z^2)+1/(log(2)^2*z^2)  to 4
+     (5*log(2)*z-1)*%e^(5*log(2)*z)/(log(2)^2*z^2)+1/(log(2)^2*z^2)  to 5
 
-(7*log(2)*z-1)*%e^(7*log(2)*z)/(log(2)^2*z^2)+1/(log(2)^2*z^2)  to 7
+     (7*log(2)*z-1)*%e^(7*log(2)*z)/(log(2)^2*z^2)+1/(log(2)^2*z^2)  to 7
 
-%e seems to be e=2.718281828459045
+     %e seems to be e=2.718281828459045
 
-t*((t*z))  steady frequency change.
+     t*((t*z))  steady frequency change.
      */
   }
 }
