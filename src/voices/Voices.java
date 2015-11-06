@@ -20,8 +20,15 @@ public class Voices {
   /**
    * @param args the command line arguments
    */
+  /* ********************************************************************************* */
   public static void main(String[] args) {
-    // TODO code application logic here
+    Test1();
+    if (false) {
+      Test0();
+    }
+  }
+  /* ********************************************************************************* */
+  public static void Test0() {
     Voice vc = new Voice();
     Point pnt0 = new Point(), pnt1 = new Point();
     Wave wave0 = new Wave(), wave1 = new Wave();
@@ -29,7 +36,7 @@ public class Voices {
 
     int TDiff = 16;
     int nsamps = TDiff * 1000;// 100;
-
+    nsamps = TDiff * Globals.SampleRate;
     pnt0.Octave = 1.0;
     pnt1.Octave = 4.0;
     pnt0.Loudness = 1.0;
@@ -46,7 +53,18 @@ public class Voices {
     wave1.Init(nsamps);
 
     Player_Head_Base hd = vc.Spawn_Player();
-    hd.Render_Line(pnt0, pnt1, wave0, wave1);
+
+    long StartTime, EndTime;
+
+    StartTime = System.currentTimeMillis();
+    hd.Render_Segment_Iterative(pnt0, pnt1, wave0);
+    EndTime = System.currentTimeMillis();
+    System.out.println("Render_Segment_Iterative time:" + (EndTime - StartTime));
+
+    StartTime = System.currentTimeMillis();
+    hd.Render_Segment_Integral(pnt0, pnt1, wave1);
+    EndTime = System.currentTimeMillis();
+    System.out.println("Render_Segment_Integral time:" + (EndTime - StartTime));
 
     wave0.Diff(wave1, wave_diff);
 
@@ -54,27 +72,59 @@ public class Voices {
 //    SaveWave(wave0, "wave0.csv");
 //    SaveWave(wave1, "wave1.csv");
 //    SaveWave(wave_diff, "wave_diff.csv");
-
     boolean nop = true;
   }
+  /* ********************************************************************************* */
+  public static void Test1() {
+    //Globals.SampleRate = 100;
+    Voice vc = new Voice();
+    Wave wave_render = new Wave();
+    //Wave wave_diff = new Wave();
+
+    int TDiff = 16;
+    int nsamps;
+    nsamps = TDiff * Globals.SampleRate;
+
+    vc.Add_Note(0, 4, 1);
+    vc.Add_Note(8, 1, 0.5);
+    vc.Add_Note(TDiff, 4, 1);
+    vc.Recalc_Line_SubTime();
+
+    wave_render.Init(nsamps);
+
+    Player_Head_Base hd = vc.Spawn_Player();
+
+    long StartTime, EndTime;
+
+    hd.Start();
+    StartTime = System.currentTimeMillis();
+    //hd.Render_To(TDiff, wave_render);
+    hd.Render_Range(0, 2, wave_render);
+    EndTime = System.currentTimeMillis();
+    System.out.println("Render_Range time:" + (EndTime - StartTime));
+
+    SaveWave(wave_render, "wave_render.csv");
+    boolean nop = true;
+  }
+  /* ********************************************************************************* */
   public static void SaveWave3(Wave wave0, Wave wave1, Wave wave2, String FileName) {
     try {
       PrintWriter out = new PrintWriter(FileName);
       for (int cnt = 0; cnt < wave0.numsamples; cnt++) {
         //out.println(cnt + ", " + wave.wave[cnt] + "");
-        out.println(wave0.wave[cnt] + ", " + wave1.wave[cnt] + ", " + wave2.wave[cnt] + "");
+        out.println(wave0.Get(cnt) + ", " + wave1.Get(cnt) + ", " + wave2.Get(cnt) + "");
       }
       out.close();
     } catch (FileNotFoundException ex) {
-
     }
   }
+  /* ********************************************************************************* */
   public static void SaveWave(Wave wave, String FileName) {
     try {
       PrintWriter out = new PrintWriter(FileName);
       for (int cnt = 0; cnt < wave.numsamples; cnt++) {
         //out.println(cnt + ", " + wave.wave[cnt] + "");
-        out.println(wave.wave[cnt] + "");
+        out.println(wave.Get(cnt) + "");
       }
       out.close();
     } catch (FileNotFoundException ex) {
@@ -104,7 +154,7 @@ public class Voices {
     double LoudnessRange = pnt1.Loudness - pnt0.Loudness;
     double CurrentLoudness = pnt0.Loudness + (LoudnessRange * FractAlong);
 
-    double freq = VoiceBase.BaseFreqC0 * Math.pow(2.0, pnt0.Octave);
+    double freq = Globals.BaseFreqC0 * Math.pow(2.0, pnt0.Octave);
     double Amplitude;
 
     double integrate = Math.pow(2.0, pnt0.Octave) / Math.log(2);// integral without range

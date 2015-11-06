@@ -13,8 +13,6 @@ import java.util.Collections;
  * @author MultiTool
  */
 public class VoiceBase {
-  public static double BaseFreqC0 = 16.3516;// hz
-  public static double TwoPi = Math.PI * 2.0;// hz
   // collection of control points, each one having a pitch and a volume. rendering morphs from one cp to another. 
   public ArrayList<Point> CPoints = new ArrayList<>();
   public static class Point {
@@ -33,19 +31,38 @@ public class VoiceBase {
   }
   public static class Player_Head_Base {
     //protected VoiceBase Parent;
+    /* ********************************************************************************* */
     public void Start() {
     }
-    public void Skip_To(double Time) {
-    }
-    public void Render_To(double Time, Wave wave) {
+    /* ********************************************************************************* */
+    public void Skip_To(double EndTime) {
     }
     /* ********************************************************************************* */
-    public void Render_Line(Point pnt0, Point pnt1, Wave wave0, Wave wave1) {
+    public void Render_To(double EndTime, Wave wave) {
+    }
+    /* ********************************************************************************* */
+    public void Render_Range(int dex0, int dex1, Wave wave) {
+    }
+    /* ********************************************************************************* */
+    public void Render_Segment_Iterative(Point pnt0, Point pnt1, Wave wave0) {
+    }
+    /* ********************************************************************************* */
+    public void Render_Segment_Integral(Point pnt0, Point pnt1, Wave wave1) {
     }
   }
   public VoiceBase() {
   }
   public void Add_Note(Point pnt) {
+    this.CPoints.add(pnt);
+  }
+  public Point Add_Note(double RealTime, double Octave, double Loudness) {
+    Point pnt = new Point();
+    pnt.Octave = Octave;
+    pnt.RealTime = RealTime;
+    pnt.SubTime = 0.0;
+    pnt.Loudness = Loudness;
+    this.CPoints.add(pnt);
+    return pnt;
   }
   public Player_Head_Base Spawn_Player() {
     return null;

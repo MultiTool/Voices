@@ -7,8 +7,6 @@ package voices;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import static voices.VoiceBase.BaseFreqC0;
-import static voices.VoiceBase.TwoPi;
 
 /**
  *
@@ -28,9 +26,12 @@ public class Voice extends VoiceBase {
     double Current_Time;
     double SubTime;// Subjective time.
     double Current_Octave, Current_Frequency;
-    public double SampleRate = 44100.0;
-    Point Prev_Point, Next_Point;
+    int Prev_Point_Dex, Next_Point_Dex;
     Point Cursor_Point = new Point();
+    /* ********************************************************************************* */
+    public Player_Head() {
+      //this.Start();
+    }
     /* ********************************************************************************* */
     @Override
     public void Start() {
@@ -38,14 +39,19 @@ public class Voice extends VoiceBase {
       this.Current_Time = 0.0;
       this.Phase = 0.0;
       this.Cycles = 0.0;
-      this.Prev_Point = this.Parent.CPoints.get(0);
-      this.Cursor_Point.CopyFrom(Prev_Point);
+      this.Prev_Point_Dex = 0;//this.Parent.CPoints.get(0);
+      this.Next_Point_Dex = 1;
+      //if (this.Parent != null) {
+      Point ppnt = this.Parent.CPoints.get(this.Prev_Point_Dex);
+      this.Cursor_Point.CopyFrom(ppnt);
+      //}
     }
     /* ********************************************************************************* */
     @Override
-    public void Skip_To(double Time) {// ready for test
+    public void Skip_To(double EndTime) {// ready for test
       int len = this.Parent.CPoints.size();
       int tcnt = 0;
+      Point Prev_Point, Next_Point;
       Next_Point = null;
       do {
         Prev_Point = Next_Point;
@@ -54,15 +60,85 @@ public class Voice extends VoiceBase {
         }
         Next_Point = this.Parent.CPoints.get(tcnt);
         tcnt++;
-      } while (Next_Point.RealTime < Time);
+      } while (Next_Point.RealTime < EndTime);
 
-      if (Time <= Next_Point.RealTime) {
+      if (EndTime <= Next_Point.RealTime) {
         if (Prev_Point != null) {
-          if (Prev_Point.RealTime <= Time) {// only sandwiched here. 
+          if (Prev_Point.RealTime <= EndTime) {// only sandwiched here. 
             Cursor_Point.CopyFrom(Prev_Point);
-            Interpolate_ControlPoint(Prev_Point, Next_Point, Time, Cursor_Point);
+            Interpolate_ControlPoint(Prev_Point, Next_Point, EndTime, Cursor_Point);
           }
         }
+      }
+    }
+    /* ********************************************************************************* */
+    @Override
+    public void Render_To(double EndTime, Wave wave) {// under construction
+      int len = this.Parent.CPoints.size();
+      int tcnt = this.Prev_Point_Dex;
+      Point Prev_Point, Next_Point;
+      Prev_Point = this.Cursor_Point;
+      int pdex = this.Next_Point_Dex;
+      Next_Point = this.Parent.CPoints.get(pdex);
+      while (Next_Point.RealTime < EndTime) {
+        Render_Segment_Integral(Prev_Point, Next_Point, wave);
+        pdex++;
+        if (pdex >= len) {
+          break;
+        }
+        Prev_Point = Next_Point;
+        Next_Point = this.Parent.CPoints.get(pdex);
+      }
+
+      Point End_Cursor = new Point();
+      End_Cursor.CopyFrom(Next_Point);
+
+      // render loose end. 
+      if (EndTime <= Next_Point.RealTime) {
+        if (Prev_Point.RealTime <= EndTime) {// EndTime is inside this box. 
+          End_Cursor.CopyFrom(Prev_Point);
+          Interpolate_ControlPoint(Prev_Point, Next_Point, EndTime, End_Cursor);
+          Render_Segment_Integral(Prev_Point, End_Cursor, wave);
+          this.Cursor_Point.CopyFrom(End_Cursor);
+        }
+      }
+
+      do {
+        if (tcnt >= len) {
+          break;
+        }
+        // is wave going to be overwritten every time or will it have its own cursor? 
+        Render_Segment_Integral(Prev_Point, Next_Point, wave);
+        Prev_Point = Next_Point;
+        Next_Point = this.Parent.CPoints.get(tcnt);
+        tcnt++;
+      } while (Next_Point.RealTime < EndTime);
+
+      /*
+       set prev point to wherever cursor is.
+       (in start, cursor is set to point 0 by default)
+       iterate to the point where next_point.realtime <= time.  do while? 
+       Next_Point = this.Cursor_Point;
+       loop {
+       Prev_Point = Next_Point;
+       Next_Point = this.Parent.CPoints.get(cnt);
+       Render_Line(Prev_Point, Next_Point, wave);
+       }
+	  
+       Interpolate_ControlPoint(Prev_Point, Next_Point, Time, Cursor_Point);//  render loose end. 
+       Render_Line(Prev_Point, Cursor_Point, wave);
+	  
+       */
+      //Render_Segment_Integral(Point pnt0, Point pnt1,  wave);
+    }
+    /* ********************************************************************************* */
+    @Override
+    public void Render_Range(int dex0, int dex1, Wave wave) {
+      Point pnt0, pnt1;
+      for (int pcnt = dex0; pcnt < dex1; pcnt++) {
+        pnt0 = this.Parent.CPoints.get(pcnt);
+        pnt1 = this.Parent.CPoints.get(pcnt + 1);
+        Render_Segment_Integral(pnt0, pnt1, wave);
       }
     }
     /* ********************************************************************************* */
@@ -83,26 +159,6 @@ public class Voice extends VoiceBase {
       PntMid.Loudness = pnt0.Loudness + LoudAlong;
     }
     /* ********************************************************************************* */
-    @Override
-    public void Render_To(double Time, Wave wave) {
-      Math.sin(Time);
-      /*
-       set prev point to wherever cursor is.
-       (in start, cursor is set to point 0 by default)
-       iterate to the point where next_point.realtime <= time.  do while? 
-       Next_Point = this.Cursor_Point;
-       loop {
-       Prev_Point = Next_Point;
-       Next_Point = this.Parent.CPoints.get(cnt);
-       Render_Line(Prev_Point, Next_Point, wave);
-       }
-	  
-       Interpolate_ControlPoint(Prev_Point, Next_Point, Time, Cursor_Point);//  render loose end. 
-       Render_Line(Prev_Point, Cursor_Point, wave);
-	  
-       */
-    }
-    /* ********************************************************************************* */
     public void Skip_Line() {
 
     }
@@ -113,12 +169,53 @@ public class Voice extends VoiceBase {
     }
     /* ********************************************************************************* */
     @Override
-    public void Render_Line(Point pnt0, Point pnt1, Wave wave0, Wave wave1) {
-      double BaseFreq = BaseFreqC0;
-      double SRate = this.SampleRate;
+    public void Render_Segment_Iterative(Point pnt0, Point pnt1, Wave wave0) {// stateful iterative approach
+      double BaseFreq = Globals.BaseFreqC0;
+      double SRate = Globals.SampleRate;
       BaseFreq = 1.0;
       //SRate = 100.0;
-      SRate = 1000.0;
+      //SRate = 1000.0;
+      double TimeRange = pnt1.RealTime - pnt0.RealTime;
+      double SampleDuration = 1.0 / SRate;
+      double FrequencyFactorStart = pnt0.GetFrequencyFactor();
+      double OctaveRange = pnt1.Octave - pnt0.Octave;
+      if (OctaveRange == 0.0) {
+        OctaveRange = 0.00000000001;// Fudge to avoid div by 0 
+      }
+      double LoudnessRange = pnt1.Loudness - pnt0.Loudness;
+      double OctaveRate = OctaveRange / TimeRange;// octaves per second
+      double LoudnessRate = LoudnessRange / TimeRange;
+      int NumSamples = (int) (TimeRange * SRate);
+
+      double TimeAlong;
+      double CurrentOctaveLocal, CurrentFrequency, CurrentFrequencyFactorAbsolute, CurrentFrequencyFactorLocal;
+      double CurrentLoudness;
+      double Amplitude;
+
+      double SubTimeIterate = (pnt0.SubTime * BaseFreq * Globals.TwoPi);
+
+      for (int scnt = 0; scnt < NumSamples; scnt++) {
+        TimeAlong = scnt * SampleDuration;
+        CurrentOctaveLocal = TimeAlong * OctaveRate;
+        CurrentFrequencyFactorLocal = Math.pow(2.0, CurrentOctaveLocal); // to convert to absolute, do pnt0.SubTime + (FrequencyFactorStart * CurrentFrequencyFactorLocal);
+        CurrentFrequencyFactorAbsolute = (FrequencyFactorStart * CurrentFrequencyFactorLocal);
+        CurrentLoudness = pnt0.Loudness + (TimeAlong * LoudnessRate);
+
+        CurrentFrequency = BaseFreq * CurrentFrequencyFactorAbsolute;// do we really need to include the base frequency in the summing?
+        Amplitude = Math.sin(SubTimeIterate);
+        wave0.Set(Amplitude * CurrentLoudness);
+        //wave0.wave[scnt] = Amplitude * CurrentLoudness;
+        SubTimeIterate += (CurrentFrequency * Globals.TwoPi) / SRate;
+      }
+    }
+    /* ********************************************************************************* */
+    @Override
+    public void Render_Segment_Integral(Point pnt0, Point pnt1, Wave wave1) {// stateless calculus integral approach
+      double BaseFreq = Globals.BaseFreqC0;
+      double SRate = Globals.SampleRate;
+      BaseFreq = 1.0;
+      //SRate = 100.0;
+      //SRate = 1000.0;
       double TimeRange = pnt1.RealTime - pnt0.RealTime;
       double SampleDuration = 1.0 / SRate;
       double FrequencyFactorStart = pnt0.GetFrequencyFactor();
@@ -134,72 +231,20 @@ public class Voice extends VoiceBase {
       int NumSamples = (int) (TimeRange * SRate);
 
       double TimeAlong;
-      double CurrentOctaveAbsolute, CurrentOctaveLocal, CurrentFrequency, CurrentFrequencyFactorAbsolute, CurrentFrequencyFactorLocal;
       double CurrentLoudness;
       double Amplitude;
 
-      double SubTimeIterate = (pnt0.SubTime * BaseFreq * TwoPi);
-
       for (int scnt = 0; scnt < NumSamples; scnt++) {
         TimeAlong = scnt * SampleDuration;
-        CurrentOctaveLocal = TimeAlong * OctaveRate;
-        CurrentFrequencyFactorLocal = Math.pow(2.0, CurrentOctaveLocal); // to convert to absolute, do pnt0.SubTime + (FrequencyFactorStart * CurrentFrequencyFactorLocal);
-        CurrentFrequencyFactorAbsolute = (FrequencyFactorStart * CurrentFrequencyFactorLocal);
         CurrentLoudness = pnt0.Loudness + (TimeAlong * LoudnessRate);
 
-        if (false) {// junkyard
-          CurrentOctaveAbsolute = pnt0.Octave + CurrentOctaveLocal;// good to here
-          CurrentFrequencyFactorAbsolute = Math.pow(2.0, CurrentOctaveAbsolute);
-          SubTimeIterate += CurrentFrequencyFactorAbsolute / SRate;
-          Amplitude = Math.sin(CurrentFrequencyFactorAbsolute * BaseFreq * TwoPi);
-        }
-        {// stateful iterative approach
-          CurrentFrequency = BaseFreq * CurrentFrequencyFactorAbsolute;// do we really need to include the base frequency in the summing?
-          Amplitude = Math.sin(SubTimeIterate);
-          wave0.wave[scnt] = Amplitude * CurrentLoudness;
-          SubTimeIterate += (CurrentFrequency * TwoPi) / SRate;
-        }
-        {// stateless calculus integral approach
-          SubTimeLocal = Calculus(OctaveRate, TimeAlong);
-          SubTimeAbsolute = pnt0.SubTime + (FrequencyFactorStart * SubTimeLocal);
-          Amplitude = Math.sin(SubTimeAbsolute * BaseFreq * TwoPi);
-          wave1.wave[scnt] = Amplitude * CurrentLoudness;
-        }
+        SubTimeLocal = Calculus(OctaveRate, TimeAlong);
+        SubTimeAbsolute = pnt0.SubTime + (FrequencyFactorStart * SubTimeLocal);
+        Amplitude = Math.sin(SubTimeAbsolute * BaseFreq * Globals.TwoPi);
+        //wave1.wave[scnt] = Amplitude * CurrentLoudness;
+        wave1.Set(Amplitude * CurrentLoudness);
       }
     }
-    /* ********************************************************************************* */
-    public void Interp_Points(Point pnt0, Point pnt1, double StartPhase, double Time) {
-      double freq = BaseFreqC0 * Math.pow(2.0, pnt0.Octave);
-
-      // C0 16.35 
-      // A0 27.50 
-      double TimeRange = pnt1.RealTime - pnt0.RealTime;
-      double TimeAlong = Time - pnt0.RealTime;
-      double FractAlong = TimeAlong / TimeRange;
-
-      double PitchRange = pnt1.Octave - pnt0.Octave;
-      double CurrentPitch = pnt0.Octave + (PitchRange * FractAlong);
-      double LoudnessRange = pnt1.Loudness - pnt0.Loudness;
-      double CurrentLoudness = pnt0.Loudness + (LoudnessRange * FractAlong);
-
-      // do all from end to end? or start in the middle and hope the phase was done correctly?
-      // end to end for starters
-      // we need samples per second, what are our time units, 
-      double SamplesPerSecond = 44100.0;
-      double SecondsPerSample = 1.0 / SamplesPerSecond;
-      // Freq is in hertz, must convert cycles to angles for sine 
-
-      double Radians = Cycles * Math.PI * 2.0;
-      // the most important thing in the world is to bend notes, and then bend them some more to other notes.
-
-      double Integral_Ranged = (Math.pow(2.0, pnt0.Octave) - 1.0) / Math.log(2);// integral with range from 0 to pnt0
-      this.SubTime = Integral_Ranged;
-      this.Cycles = BaseFreqC0 * this.SubTime;
-    }
-    /*
-     so how do we render from one point to the next? 
-     first we 
-     */
   }
   double SineGenerator(double time, double frequency, int sampleRate) {// http://stackoverflow.com/questions/8566938/how-to-properly-bend-a-note-in-an-audio-synthesis-application
     return Math.sin(time += (frequency * 2 * Math.PI) / sampleRate);
@@ -237,6 +282,9 @@ public class Voice extends VoiceBase {
       double FrequencyFactorStart = Prev_Point.GetFrequencyFactor();
       double TimeRange = Next_Point.RealTime - Prev_Point.RealTime;
       double OctaveRange = Next_Point.Octave - Prev_Point.Octave;
+      if (TimeRange == 0.0) {
+        TimeRange = 0.00000000001;// Fudge to avoid div by 0 
+      }
       double OctaveRate = OctaveRange / TimeRange;// octaves per second
       SubTimeLocal = Calculus(OctaveRate, TimeRange);
       Next_Point.SubTime = Prev_Point.SubTime + (FrequencyFactorStart * SubTimeLocal);
