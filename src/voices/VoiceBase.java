@@ -7,6 +7,7 @@ package voices;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 
 /**
  *
@@ -31,6 +32,7 @@ public class VoiceBase {
   }
   public static class Player_Head_Base {
     //protected VoiceBase Parent;
+    public Player_Head_Base ParentPlayer;
     /* ********************************************************************************* */
     public void Start() {
     }
@@ -55,6 +57,7 @@ public class VoiceBase {
   public void Add_Note(Point pnt) {
     this.CPoints.add(pnt);
   }
+  /* ********************************************************************************* */
   public Point Add_Note(double RealTime, double Octave, double Loudness) {
     Point pnt = new Point();
     pnt.Octave = Octave;
@@ -70,7 +73,24 @@ public class VoiceBase {
 //    ph.Parent = this;
 //    return ph;
   }
-
+  /* ********************************************************************************* */
+  public int Get_Sample_Count(int SampleRate) {
+    int len = this.CPoints.size();
+    Point First_Point = this.CPoints.get(0);
+    Point Final_Point = this.CPoints.get(len - 1);
+    double TimeDiff = Final_Point.RealTime - First_Point.RealTime;
+    return (int) (TimeDiff * SampleRate);
+    // return (int) (Final_Point.RealTime * SampleRate);
+  }
+  /* ********************************************************************************* */
+  public void Sort_Me() {// sorting by RealTime
+    Collections.sort(this.CPoints, new Comparator<Point>() {
+      @Override
+      public int compare(Point note0, Point note1) {
+        return Double.compare(note0.RealTime, note1.RealTime);
+      }
+    });
+  }
 //  public interface IFace {
 //    public interface IFaceChild {
 //    }
