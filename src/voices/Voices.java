@@ -177,5 +177,15 @@ public class Voices {
    double SineGenerator(double time, double frequency, int sampleRate) {// http://stackoverflow.com/questions/8566938/how-to-properly-bend-a-note-in-an-audio-synthesis-application
    return Math.sin(time += (frequency * 2 * Math.PI) / sampleRate);
    }
+  
+  so is every coordbox also an fxbox? and/or a container? 
+  
+  coordboxes were created so that a single instance of a voice would not carry its own offset coords everywhere it was reparented, or double-parented. 
+  but, a voice could be double-parented to an fxbox that had no coordinates of its own. (eventually you need a parent with coordinates though. 
+  you're always 0,0 from the inside of any parent that does not contain your coordboxes. 
+  
+  so should every voice spawn a coordbox to be attached to something?  doesn't seem like always. 
+  should I make my own coordbox if I am a voice?  
+  
    */
 }

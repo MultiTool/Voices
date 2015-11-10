@@ -16,6 +16,7 @@ import java.util.Comparator;
 public class VoiceBase {
   // collection of control points, each one having a pitch and a volume. rendering morphs from one cp to another. 
   public ArrayList<Point> CPoints = new ArrayList<>();
+  public Project MyProject;
   public static class Point {
     public double RealTime = 0.0, SubTime = 0.0;// SubTime is cumulative subjective time.
     public double Octave = 0.0;
@@ -40,10 +41,13 @@ public class VoiceBase {
   /* ********************************************************************************* */
   public static class Player_Head_Base extends CoordBox {
     //protected VoiceBase Parent;
+    public Project MyProject;
     double Inherited_Octave = 0.0, Inherited_OctaveRate = 0.0, Inherited_Loudness;// octave, bend and loudness context
+    public boolean IsFinished = false;
     public Player_Head_Base ParentPlayer;
     /* ********************************************************************************* */
     public void Start() {
+      IsFinished = false;
     }
     /* ********************************************************************************* */
     public void Skip_To(double EndTime) {
@@ -93,6 +97,12 @@ public class VoiceBase {
     double TimeDiff = Final_Point.RealTime - First_Point.RealTime;
     return (int) (TimeDiff * SampleRate);
     // return (int) (Final_Point.RealTime * SampleRate);
+  }
+  /* ********************************************************************************* */
+  public double Get_Final_Time() {
+    int len = this.CPoints.size();
+    Point Final_Point = this.CPoints.get(len - 1);
+    return Final_Point.RealTime;
   }
   /* ********************************************************************************* */
   public void Sort_Me() {// sorting by RealTime

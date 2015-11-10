@@ -11,55 +11,42 @@ import voices.VoiceBase.Player_Head_Base;
  *
  * @author MultiTool
  */
-public abstract class CoordBox implements ICoordBox {// location box to transpose in pitch, move in time, etc. 
-  public double TimeLoc, OctaveLoc, LoudnessLoc;
+public interface ICoordBox {// location box to transpose in pitch, move in time, etc. 
+  double TimeLoc_g();
+  void TimeLoc_s(double value);
+  double OctaveLoc_g();
+  void OctaveLoc_s(double value);
+  double LoudnessLoc_g();
+  void LoudnessLoc_s(double value);
+  // double TimeLoc, OctaveLoc, LoudnessLoc;
+//  public VoiceBase Content;
   /* ********************************************************************************* */
-  public void Clear() {// set all coordinates to identity, no transformation for content
-    TimeLoc = OctaveLoc = 0.0;
-    LoudnessLoc = 1.0;
-  }
+  public VoiceBase GetContent();
   /* ********************************************************************************* */
-  @Override
-  public void Compound(ICoordBox donor) {
-    this.TimeLoc_s(TimeLoc + donor.TimeLoc_g());
-    this.OctaveLoc_s(OctaveLoc + donor.OctaveLoc_g());
-    this.LoudnessLoc_s(LoudnessLoc + donor.LoudnessLoc_g());
-    //this.TimeLoc += donor.TimeLoc; this.OctaveLoc += donor.OctaveLoc; this.LoudnessLoc *= donor.LoudnessLoc;
-  }
+  public void Compound(ICoordBox donor);
+//  public VoiceBase GetContent() {
+//    return this.Content;
+//  }
   /* ********************************************************************************* */
-  public Player_Head_Base Spawn_Player() {
-    return null;
-  }
-  /* ********************************************************************************* */
-  @Override
-  public VoiceBase GetContent() {
-    return null;
-  }
-  @Override
-  public double TimeLoc_g() {
-    return TimeLoc;
-  }
-  @Override
-  public void TimeLoc_s(double value) {
-    TimeLoc = value;
-  }
-  @Override
-  public double OctaveLoc_g() {
-    return OctaveLoc;
-  }
-  @Override
-  public void OctaveLoc_s(double value) {
-    OctaveLoc = value;
-  }
-  @Override
-  public double LoudnessLoc_g() {
-    return LoudnessLoc;
-  }
-  @Override
-  public void LoudnessLoc_s(double value) {
-    LoudnessLoc = value;
-  }
+  public Player_Head_Base Spawn_Player();
 }
+//public abstract class CoordBox {// location box to transpose in pitch, move in time, etc. 
+//  public double TimeLoc, OctaveLoc, LoudnessLoc;
+////  public VoiceBase Content;
+//  /* ********************************************************************************* */
+//  public void Compound(CoordBox donor) {
+//    this.TimeLoc += donor.TimeLoc;
+//    this.OctaveLoc += donor.OctaveLoc;
+//    this.LoudnessLoc *= donor.LoudnessLoc;
+//  }
+////  public VoiceBase GetContent() {
+////    return this.Content;
+////  }
+//  /* ********************************************************************************* */
+//  public Player_Head_Base Spawn_Player() {
+//    return null;
+//  }
+//}
 /*
  Big picture, all the good effects depend on containers.  transposition, looping, bending, etc.
 

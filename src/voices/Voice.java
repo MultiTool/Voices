@@ -278,6 +278,7 @@ public class Voice extends VoiceBase {
     // Handy if my parent's players know what class I am and want special access to my particular type of player.
     Player_Head ph = new Player_Head();
     ph.MyPhrase = this;
+    ph.MyProject = this.MyProject;
     return ph;
   }
   /* ********************************************************************************* */
