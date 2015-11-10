@@ -77,6 +77,7 @@ public class Voices {
   /* ********************************************************************************* */
   public static void Test1() {
     Globals.SampleRate = 100;
+    Globals.BaseFreqC0 = 1.0;
     Voice vc = new Voice();
     Wave wave_render = new Wave();
     //Wave wave_diff = new Wave();
@@ -170,6 +171,11 @@ public class Voices {
    static double Frequency_Integral_Bent_Octave(double slope, double ybase, double xval) {// http://www.quickmath.com   bent note math
    double frequency_from_octave_integral = Math.pow(2.0, (ybase + slope * xval)) / (slope * Math.log(2.0));// returns the number of cycles since T0, assuming linear change to octave.
    return frequency_from_octave_integral;
+   }
+  
+   ********************************************************************************* 
+   double SineGenerator(double time, double frequency, int sampleRate) {// http://stackoverflow.com/questions/8566938/how-to-properly-bend-a-note-in-an-audio-synthesis-application
+   return Math.sin(time += (frequency * 2 * Math.PI) / sampleRate);
    }
    */
 }

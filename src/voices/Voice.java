@@ -20,8 +20,37 @@ public class Voice extends VoiceBase {
    with no relative containers, all points are absolute and none need a parent.
    however in the future we may want to transpose. we will keep a separate parent coordinate for a voice and the points can be relative to that. 
    */
+  /* ********************************************************************************* */
+  public static class CoordBox extends CoordBoxBase {// location box to transpose in pitch, move in time, etc. 
+    public Voice Content;
+    /* ********************************************************************************* */
+    @Override
+    public VoiceBase GetContent() {
+      return Content;
+    }
+    /* ********************************************************************************* */
+    public Player_Head Spawn_My_Player() {// for render time
+      Player_Head ph = this.Content.Spawn_My_Player();
+      ph.MyCoordBox = this;// to do: also transfer all of this box's offsets to player head. 
+      // also be sure to increment the player's offsets by the offsets that were handed down to me. 
+      // or should each player head reach up its chain of parents? 
+      // what about FxContainer class? all containers are FxContainers. 
+      //ph.Compound(this);
+      return ph;
+      /*
+       best patter is
+       in containing player {
+       childplayer = childcoordbox.spawn player
+       childplayer.Compound(this);// inheritance
+       childplayer.Compound(childcoordbox);
+       }
+       */
+    }
+  }
+  /* ********************************************************************************* */
   public static class Player_Head extends Player_Head_Base {
     protected Voice MyPhrase;
+    protected CoordBox MyCoordBox;
     double Phase, Cycles;// Cycles is the number of cycles we've rotated since the start of this voice. The fractional part is the phase information. 
     double Current_Time;
     double SubTime;// Subjective time.
@@ -193,18 +222,17 @@ public class Voice extends VoiceBase {
     public void Render_Segment_Integral(Point pnt0, Point pnt1, Wave wave1) {// stateless calculus integral approach
       double BaseFreq = Globals.BaseFreqC0;
       double SRate = Globals.SampleRate;
-      BaseFreq = 1.0;
-      //SRate = 100.0;
-      //SRate = 1000.0;
       double TimeRange = pnt1.RealTime - pnt0.RealTime;
       double SampleDuration = 1.0 / SRate;
       double FrequencyFactorStart = pnt0.GetFrequencyFactor();
+      FrequencyFactorStart *= Math.pow(2.0, this.Inherited_Octave);// inherit transposition 
       double OctaveRange = pnt1.Octave - pnt0.Octave;
       if (OctaveRange == 0.0) {
         OctaveRange = Globals.Fudge;// Fudge to avoid div by 0 
       }
       double LoudnessRange = pnt1.Loudness - pnt0.Loudness;
       double OctaveRate = OctaveRange / TimeRange;// octaves per second
+      OctaveRate += this.Inherited_OctaveRate;// inherit note bend 
       double LoudnessRate = LoudnessRange / TimeRange;
       double SubTimeLocal;
       double SubTimeAbsolute;
@@ -213,7 +241,6 @@ public class Voice extends VoiceBase {
       double TimeAlong;
       double CurrentLoudness;
       double Amplitude;
-
       for (int scnt = 0; scnt < NumSamples; scnt++) {
         TimeAlong = scnt * SampleDuration;
         CurrentLoudness = pnt0.Loudness + (TimeAlong * LoudnessRate);
@@ -227,19 +254,26 @@ public class Voice extends VoiceBase {
     }
   }
   /* ********************************************************************************* */
-  double SineGenerator(double time, double frequency, int sampleRate) {// http://stackoverflow.com/questions/8566938/how-to-properly-bend-a-note-in-an-audio-synthesis-application
-    return Math.sin(time += (frequency * 2 * Math.PI) / sampleRate);
-  }
-  /* ********************************************************************************* */
   public Voice() {
   }
   /* ********************************************************************************* */
   @Override
-  public Player_Head_Base Spawn_Player() {
+  public CoordBoxBase Spawn_CoordBox() {// for compose time
+    return this.Spawn_My_CoordBox();
+  }
+  /* ********************************************************************************* */
+  public CoordBox Spawn_My_CoordBox() {// for compose time
+    CoordBox lbox = new CoordBox();// Deliver a CoordBox specific to this type of phrase.
+    lbox.Content = this;
+    return lbox;
+  }
+  /* ********************************************************************************* */
+  @Override
+  public Player_Head_Base Spawn_Player() {// for render time
     return this.Spawn_My_Player();
   }
   /* ********************************************************************************* */
-  public Player_Head Spawn_My_Player() {
+  public Player_Head Spawn_My_Player() {// for render time
     // Deliver one of my players while exposing specific object class. 
     // Handy if my parent's players know what class I am and want special access to my particular type of player.
     Player_Head ph = new Player_Head();

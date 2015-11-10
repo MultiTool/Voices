@@ -30,8 +30,17 @@ public class VoiceBase {
       return Math.pow(2.0, this.Octave);
     }
   }
-  public static class Player_Head_Base {
+  /* ********************************************************************************* */
+  public static class CoordBoxBase extends CoordBox {// location box to transpose in pitch, move in time, etc. 
+    // public double TimeLoc = 0.0, OctaveLoc = 0.0, LoudnessLoc = 1.0;
+    public VoiceBase GetContent() {
+      return null;
+    }
+  }
+  /* ********************************************************************************* */
+  public static class Player_Head_Base extends CoordBox {
     //protected VoiceBase Parent;
+    double Inherited_Octave = 0.0, Inherited_OctaveRate = 0.0, Inherited_Loudness;// octave, bend and loudness context
     public Player_Head_Base ParentPlayer;
     /* ********************************************************************************* */
     public void Start() {
@@ -52,6 +61,7 @@ public class VoiceBase {
     public void Render_Segment_Integral(Point pnt0, Point pnt1, Wave wave1) {
     }
   }
+  /* ********************************************************************************* */
   public VoiceBase() {
   }
   public void Add_Note(Point pnt) {
@@ -67,11 +77,13 @@ public class VoiceBase {
     this.CPoints.add(pnt);
     return pnt;
   }
-  public Player_Head_Base Spawn_Player() {
+  /* ********************************************************************************* */
+  public CoordBoxBase Spawn_CoordBox() {// for compose time
     return null;
-//    Player_Head_Base ph = new Player_Head_Base();
-//    ph.Parent = this;
-//    return ph;
+  }
+  /* ********************************************************************************* */
+  public Player_Head_Base Spawn_Player() {// for render time
+    return null;
   }
   /* ********************************************************************************* */
   public int Get_Sample_Count(int SampleRate) {
