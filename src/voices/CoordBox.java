@@ -5,7 +5,7 @@
  */
 package voices;
 
-import voices.VoiceBase.Player_Head_Base;
+import voices.IPlayable.Player_Head_Base;
 
 /**
  *
@@ -19,44 +19,36 @@ public abstract class CoordBox implements ICoordBox {// location box to transpos
     LoudnessLoc = 1.0;
   }
   /* ********************************************************************************* */
-  @Override
-  public void Compound(ICoordBox donor) {
+  @Override public void Compound(ICoordBox donor) {
     this.TimeLoc_s(TimeLoc + donor.TimeLoc_g());
     this.OctaveLoc_s(OctaveLoc + donor.OctaveLoc_g());
     this.LoudnessLoc_s(LoudnessLoc + donor.LoudnessLoc_g());
     //this.TimeLoc += donor.TimeLoc; this.OctaveLoc += donor.OctaveLoc; this.LoudnessLoc *= donor.LoudnessLoc;
   }
   /* ********************************************************************************* */
-  public Player_Head_Base Spawn_Player() {
+  @Override public Player_Head_Base Spawn_Player() {
     return null;
   }
   /* ********************************************************************************* */
-  @Override
-  public VoiceBase GetContent() {
+  @Override public IPlayable GetContent() {
     return null;
   }
-  @Override
-  public double TimeLoc_g() {
+  @Override public double TimeLoc_g() {
     return TimeLoc;
   }
-  @Override
-  public void TimeLoc_s(double value) {
+  @Override public void TimeLoc_s(double value) {
     TimeLoc = value;
   }
-  @Override
-  public double OctaveLoc_g() {
+  @Override public double OctaveLoc_g() {
     return OctaveLoc;
   }
-  @Override
-  public void OctaveLoc_s(double value) {
+  @Override public void OctaveLoc_s(double value) {
     OctaveLoc = value;
   }
-  @Override
-  public double LoudnessLoc_g() {
+  @Override public double LoudnessLoc_g() {
     return LoudnessLoc;
   }
-  @Override
-  public void LoudnessLoc_s(double value) {
+  @Override public void LoudnessLoc_s(double value) {
     LoudnessLoc = value;
   }
 }

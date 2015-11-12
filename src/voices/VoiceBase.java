@@ -13,7 +13,7 @@ import java.util.Comparator;
  *
  * @author MultiTool
  */
-public class VoiceBase {
+public class VoiceBase implements IPlayable {
   // collection of control points, each one having a pitch and a volume. rendering morphs from one cp to another. 
   public ArrayList<Point> CPoints = new ArrayList<>();
   public Project MyProject;
@@ -34,37 +34,37 @@ public class VoiceBase {
   /* ********************************************************************************* */
   public static class CoordBoxBase extends CoordBox {// location box to transpose in pitch, move in time, etc. 
     // public double TimeLoc = 0.0, OctaveLoc = 0.0, LoudnessLoc = 1.0;
-    public VoiceBase GetContent() {
+    public IPlayable GetContent() {
       return null;
     }
   }
-  /* ********************************************************************************* */
-  public static class Player_Head_Base extends CoordBox {
-    //protected VoiceBase Parent;
-    public Project MyProject;
-    double Inherited_Octave = 0.0, Inherited_OctaveRate = 0.0, Inherited_Loudness;// octave, bend and loudness context
-    public boolean IsFinished = false;
-    public Player_Head_Base ParentPlayer;
-    /* ********************************************************************************* */
-    public void Start() {
-      IsFinished = false;
-    }
-    /* ********************************************************************************* */
-    public void Skip_To(double EndTime) {
-    }
-    /* ********************************************************************************* */
-    public void Render_To(double EndTime, Wave wave) {
-    }
-    /* ********************************************************************************* */
-    public void Render_Range(int dex0, int dex1, Wave wave) {
-    }
-    /* ********************************************************************************* */
-    public void Render_Segment_Iterative(Point pnt0, Point pnt1, Wave wave0) {
-    }
-    /* ********************************************************************************* */
-    public void Render_Segment_Integral(Point pnt0, Point pnt1, Wave wave1) {
-    }
-  }
+//  /* ********************************************************************************* */
+//  public static class Player_Head_Base extends CoordBox {
+//    //protected VoiceBase Parent;
+//    public Project MyProject;
+//    double Inherited_Octave = 0.0, Inherited_OctaveRate = 0.0, Inherited_Loudness;// octave, bend and loudness context
+//    public boolean IsFinished = false;
+//    public Player_Head_Base ParentPlayer;
+//    /* ********************************************************************************* */
+//    public void Start() {
+//      IsFinished = false;
+//    }
+//    /* ********************************************************************************* */
+//    public void Skip_To(double EndTime) {
+//    }
+//    /* ********************************************************************************* */
+//    public void Render_To(double EndTime, Wave wave) {
+//    }
+//    /* ********************************************************************************* */
+//    public void Render_Range(int dex0, int dex1, Wave wave) {
+//    }
+//    /* ********************************************************************************* */
+//    public void Render_Segment_Iterative(Point pnt0, Point pnt1, Wave wave0) {
+//    }
+//    /* ********************************************************************************* */
+//    public void Render_Segment_Integral(Point pnt0, Point pnt1, Wave wave1) {
+//    }
+//  }
   /* ********************************************************************************* */
   public VoiceBase() {
   }
@@ -99,7 +99,7 @@ public class VoiceBase {
     // return (int) (Final_Point.RealTime * SampleRate);
   }
   /* ********************************************************************************* */
-  public double Get_Final_Time() {
+  public double Get_Duration() {
     int len = this.CPoints.size();
     Point Final_Point = this.CPoints.get(len - 1);
     return Final_Point.RealTime;

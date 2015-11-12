@@ -8,7 +8,7 @@ package voices;
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 import voices.Voice.Player_Head;
-import voices.VoiceBase.Player_Head_Base;
+import voices.IPlayable.Player_Head_Base;
 import voices.VoiceBase.Point;
 
 /**
@@ -23,56 +23,6 @@ public class Voices {
   /* ********************************************************************************* */
   public static void main(String[] args) {
     Test1();
-    if (false) {
-      Test0();
-    }
-  }
-  /* ********************************************************************************* */
-  public static void Test0() {
-    Voice vc = new Voice();
-    Point pnt0 = new Point(), pnt1 = new Point();
-    Wave wave0 = new Wave(), wave1 = new Wave();
-    Wave wave_diff = new Wave();
-
-    int TDiff = 16;
-    int nsamps = TDiff * 1000;// 100;
-    nsamps = TDiff * Globals.SampleRate;
-    pnt0.Octave = 1.0;
-    pnt1.Octave = 4.0;
-    pnt0.Loudness = 1.0;
-    pnt1.Loudness = 1.0;
-    pnt0.RealTime = 0.7;
-    pnt1.RealTime = pnt0.RealTime + TDiff;
-    pnt0.SubTime = 0.0;// pnt1.SubTime=1.0;
-
-    vc.Add_Note(pnt0);
-    vc.Add_Note(pnt1);
-    vc.Recalc_Line_SubTime();
-
-    wave0.Init(nsamps);
-    wave1.Init(nsamps);
-
-    Player_Head_Base hd = vc.Spawn_Player();
-
-    long StartTime, EndTime;
-
-    StartTime = System.currentTimeMillis();
-    hd.Render_Segment_Iterative(pnt0, pnt1, wave0);
-    EndTime = System.currentTimeMillis();
-    System.out.println("Render_Segment_Iterative time:" + (EndTime - StartTime));
-
-    StartTime = System.currentTimeMillis();
-    hd.Render_Segment_Integral(pnt0, pnt1, wave1);
-    EndTime = System.currentTimeMillis();
-    System.out.println("Render_Segment_Integral time:" + (EndTime - StartTime));
-
-    wave0.Diff(wave1, wave_diff);
-
-    SaveWave3(wave_diff, wave0, wave1, "wave_all.csv");
-//    SaveWave(wave0, "wave0.csv");
-//    SaveWave(wave1, "wave1.csv");
-//    SaveWave(wave_diff, "wave_diff.csv");
-    boolean nop = true;
   }
   /* ********************************************************************************* */
   public static void Test1() {

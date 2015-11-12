@@ -1,0 +1,15 @@
+
+What next?
+
+Any iplayable's playerhead should treat that playable as if its time begins at 0, and ends at Duration.  So rename getfinaltime to Duration_G() or Get_Duration. 
+
+Should any playable know absolute time?  we can leave that for later.
+
+Are we going to support time scaling/compressing?  Only for rythm, therefore not for pitch.  
+So in the future every playerhead can ref an absoluterealtime clock, but we will cross that bridge when we get to it.  
+Or rather we might have a Tempo coordinate, but not yet.  It can be derived from absoluterealtime.  
+
+EndTime -= this.RealTimeAbsolute;// ???   // first, have to convert EndTime to local time offset. 
+// EndTime -= this.TimeLoc;//.RealTimeAbsolute;// ???   // first, have to convert EndTime to local time offset. 
+
+

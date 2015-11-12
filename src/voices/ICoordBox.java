@@ -5,7 +5,7 @@
  */
 package voices;
 
-import voices.VoiceBase.Player_Head_Base;
+import voices.IPlayable.Player_Head_Base;
 
 /**
  *
@@ -21,7 +21,7 @@ public interface ICoordBox {// location box to transpose in pitch, move in time,
   // double TimeLoc, OctaveLoc, LoudnessLoc;
 //  public VoiceBase Content;
   /* ********************************************************************************* */
-  public VoiceBase GetContent();
+  public IPlayable GetContent();
   /* ********************************************************************************* */
   public void Compound(ICoordBox donor);
 //  public VoiceBase GetContent() {

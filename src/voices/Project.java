@@ -5,7 +5,7 @@
  */
 package voices;
 
-import voices.VoiceBase.Player_Head_Base;
+import voices.IPlayable.Player_Head_Base;
 import static voices.Voices.SaveWave;
 
 /**
@@ -40,7 +40,7 @@ public class Project {
     RootPlayer.Compound(this.rootbox);
     Wave wave_render = new Wave();
 
-    double FinalTime = this.rootvoice.Get_Final_Time();
+    double FinalTime = this.rootvoice.Get_Duration();
 
     int nsamps = this.rootvoice.Get_Sample_Count(this.SampleRate);
     wave_render.Init(nsamps);

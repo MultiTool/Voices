@@ -71,6 +71,7 @@ public class Voice extends VoiceBase {
       this.Cycles = 0.0;
       this.Prev_Point_Dex = 0;//this.Parent.CPoints.get(0);
       this.Next_Point_Dex = 1;
+      this.IsFinished = false;
       //if (this.Parent != null) {
       Point ppnt = this.MyPhrase.CPoints.get(this.Prev_Point_Dex);
       this.Cursor_Point.CopyFrom(ppnt);
@@ -82,6 +83,7 @@ public class Voice extends VoiceBase {
       Point Prev_Point, Next_Point;
       int len = this.MyPhrase.CPoints.size();
       if (len < 2) {
+        this.IsFinished = true;
         return;
       }
       if (EndTime < Cursor_Point.RealTime) {
@@ -89,6 +91,7 @@ public class Voice extends VoiceBase {
       }
       Point Final_Point = this.MyPhrase.CPoints.get(len - 1);
       if (EndTime > Final_Point.RealTime) {
+        this.IsFinished = true;
         EndTime = Final_Point.RealTime;// clip time
       }
       Prev_Point = this.Cursor_Point;
@@ -116,6 +119,7 @@ public class Voice extends VoiceBase {
       Point Prev_Point, Next_Point;
       int len = this.MyPhrase.CPoints.size();
       if (len < 2) {
+        this.IsFinished = true;
         return;
       }
       if (EndTime < Cursor_Point.RealTime) {
@@ -123,6 +127,7 @@ public class Voice extends VoiceBase {
       }
       Point Final_Point = this.MyPhrase.CPoints.get(len - 1);
       if (EndTime > Final_Point.RealTime) {
+        this.IsFinished = true;
         EndTime = Final_Point.RealTime;// clip time
       }
       Prev_Point = this.Cursor_Point;
@@ -150,7 +155,6 @@ public class Voice extends VoiceBase {
       }
     }
     /* ********************************************************************************* */
-    @Override
     public void Render_Range(int dex0, int dex1, Wave wave) {
       Point pnt0, pnt1;
       for (int pcnt = dex0; pcnt < dex1; pcnt++) {
@@ -177,7 +181,6 @@ public class Voice extends VoiceBase {
       PntMid.Loudness = pnt0.Loudness + LoudAlong;
     }
     /* ********************************************************************************* */
-    @Override
     public void Render_Segment_Iterative(Point pnt0, Point pnt1, Wave wave0) {// stateful iterative approach
       double BaseFreq = Globals.BaseFreqC0;
       double SRate = Globals.SampleRate;
@@ -218,7 +221,6 @@ public class Voice extends VoiceBase {
       }
     }
     /* ********************************************************************************* */
-    @Override
     public void Render_Segment_Integral(Point pnt0, Point pnt1, Wave wave1) {// stateless calculus integral approach
       double BaseFreq = Globals.BaseFreqC0;
       double SRate = Globals.SampleRate;
