@@ -132,9 +132,9 @@ public class ChorusBox implements IPlayable {
     SubSongs.add(cb);
   }
   /* ********************************************************************************* */
-  @Override public double Get_Duration() {
-    int NumVoices = this.SubSongs.size();
-    CoordBox Final_Voice = this.SubSongs.get(NumVoices - 1);
+  @Override public double Get_Duration() {// this is wrong. the last song started may not be the last one playing. we need to scan the whole tree at compose time. 
+    int NumSubSongs = this.SubSongs.size();
+    CoordBox Final_Voice = this.SubSongs.get(NumSubSongs - 1);
     IPlayable vb = Final_Voice.GetContent();
     return vb.Get_Duration();
   }

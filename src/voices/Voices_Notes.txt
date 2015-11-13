@@ -13,3 +13,92 @@ EndTime -= this.RealTimeAbsolute;// ???   // first, have to convert EndTime to l
 // EndTime -= this.TimeLoc;//.RealTimeAbsolute;// ???   // first, have to convert EndTime to local time offset. 
 
 
+Next, fuse VoiceBase with Voice, because IPlayable is now the common ancestor element. 
+
+the last song started may not be the last one playing. we need to scan the whole tree at compose time. 
+so what about a collection of all subsongs sorted by end time?  that certainly allows easy measure of chorus duration.
+does it help in any other way?  well if I treesearch in to the list I can find every subsong that ends after the current range begins. 
+also every one that ends *before* the current range begins. 
+
+Could we have a ghost tree?  Even though the whole tree is a directed graph where one limb can belong to many branches, maybe a whole real non-duplicate tree can point to all the branches.
+How?  subsongs can't commit to any one location, so the ghost tree must point to all the subsongs. Will it know what they are?  
+Each player will be born referencing both its subsong and its fully-connected tree node. 
+
+The main pain here is that we may have come up with a better idea, and need to rewrite everything.  
+
+Advantages of ghost tree: dirty bits can bubble up from children. maybe we don't need player heads anymore?  with single-instance tree we can just traverse the tree.
+and so, each subsong spawns its tree part, and the tree part gets added to the real tree.  
+
+mostly we are just editing treeparts, and then they ref to their own subsongs to edit the main details. 
+WARNING: more than one treepart can ref the same subsong, so edits may conflict. treepart now serves dual purpose of an edit locator and a player. 
+treeparts therefore keep current play state. each treepart will have drawing code too?  
+
+treepart edit features:
+find all parents. 
+when tree is clicked, go through treeparts to find subsong in question.  edit song, bubble changes upward. 
+
+really 90% of the program is about the stateful tree, just some parameters are stored in the subsongs.  
+
+treepart.Render_To()
+
+do subsongs have lists of sub-subsongs?  on the principle of multiple locations they must. 
+their treeparts must also have lists of sub-treeparts that each point to each subsong.  Add a subsong to a subsong list, or remove it, and the parent treepart must also be updated. 
+
+each treepart parent will need both a list of its treepart children, AND a list of all NowPlaying. 
+treepart.Start() will wipe all the sub-treepart play states, or rather call all of their Start() fns.  
+StartPlay()
+
+Every time a SubSong is added to the tree, 
+1. it spawns a treepart which points back to the SubSong, 
+2. the treepart is added to the ghost tree, 
+3. all of the SubSong's children also spawn self-pointing treeparts which are then added to the parent treepart's list.  
+
+What if we remove a child from a treepart when editing?  then we remove that child from the SubSong. 
+How to sync?  the treepart child's MyPhrase pointer tells us the ID of the SubSong child, but how do we look it up?  SubSong has a hash table?  
+And SubSong can NEVER be edited except through treepart, because SubSong does not know where all of its personal treeparts are and cannot update them. 
+
+Well all of SubSong's children are always sorted by time, as are its treepart's, so a treesearch will find either. 
+
+All files can be saved as just the subsongs.  The true tree can be regenerated each time we load it.  Just traverse the directed graph and make duplicates whenever you visit a node twice.  
+
+SkeleTree
+ArbolEsquelito
+Scaffold 
+ScaffoldNode
+
+What about CoordBoxes?  do we still need those?  The SkeleTree can absorb them when it is generated.  Every treepart has its own coords built in, offset from its parent.  
+But, every SubSong parent still needs to own a list of coordboxes in order to place its children, who individually cannot know their own locations.  CoordBox is still needed. 
+
+SkeleTree is more of a memory hog, as the whole thing persists between renders.  
+
+Oy how does it map to loops?  It can/must explode for vines, but maybe loops can be special?  All loop children are just one SubSong.  The last child to start is the last to end, and any edits are mirrored across all loop children.  
+
+Strategy for change:
+Back up everything done so far. 
+Rename project to VectorMusic? 
+Convert all playerhead types to TreePart or SkeleTree or SkeleNode or ScaffoldNode.  
+SkeleNodes with children get lists of SkeleNode children.  
+
+No longer spawn any new sub-players during render time.  Just iterate through all skele-children, restart each with Start() and then Render_To() as needed.  
+When a child is done take it off the NowPlaying list.  
+
+Loops do look painful. Think this through well.  
+
+Hit stack will keep parent pointers and will also bubble up the edit flag.  Is hitstack or skeletree better for multiselect?  
+with multiselect, in either case hitstack or skeletree must return a hit tree.  or a hit group/list or something.  
+
+what about separating graphics from core code?  separating audio is easy, everything is buffered to wave arrays. 
+graphics could be supported by child classes.  or each code meat defines an interface of callbacks the graphics can pass.  but that'd be a huge job, to duplicate the Java graphics API.  
+well each class could define a simple(x,y, etc.) interface and the graphic layer could define complicated delegates and pass them as callbacks. 
+
+
+
+
+
+
+
+
+
+
+
+
