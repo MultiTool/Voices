@@ -8,8 +8,8 @@ package voices;
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 import voices.Voice.Player_Head;
-import voices.IPlayable.Player_Head_Base;
-import voices.VoiceBase.Point;
+import voices.ISonglet.Singer;
+//import voices.VoiceBase.Point;
 
 /**
  *
@@ -30,6 +30,7 @@ public class Voices {
     Globals.BaseFreqC0 = 1.0;
     Voice vc = new Voice();
     Wave wave_render = new Wave();
+    Wave wave_scratch = new Wave();
     //Wave wave_diff = new Wave();
 
     int TDiff = 16;// seconds
@@ -50,21 +51,24 @@ public class Voices {
 
     nsamps = vc.Get_Sample_Count(Globals.SampleRate);
 
-    wave_render.Init(nsamps);
+    wave_render.Init(0);
 
-    Player_Head_Base hd = vc.Spawn_Player();
+    Singer hd = vc.Spawn_Player();
 
     long StartTime, EndTime;
 
     hd.Start();
     StartTime = System.currentTimeMillis();
     ///hd.Skip_To(1.2);
-    //hd.Render_To(4, wave_render);
+    //hd.Render_To(4, wave_scratch);
     //hd.Skip_To(4.29);
-    hd.Render_To(0.5, wave_render);
-    hd.Render_To(TDiff - 4, wave_render);
-    hd.Render_To(TDiff - 0, wave_render);
-    //hd.Render_Range(0, 2, wave_render);
+    hd.Render_To(3.0, wave_scratch);
+    wave_render.Append(wave_scratch);
+    hd.Render_To(TDiff - 4, wave_scratch);
+    wave_render.Append(wave_scratch);
+    hd.Render_To(TDiff - 0, wave_scratch);
+    wave_render.Append(wave_scratch);
+    //hd.Render_Range(0, 2, wave_scratch);
     EndTime = System.currentTimeMillis();
     System.out.println("Render_To time:" + (EndTime - StartTime));// Render_To time: 150 milliseconds per 16 seconds. 
     //System.out.println("Render_Range time:" + (EndTime - StartTime));
@@ -128,14 +132,14 @@ public class Voices {
    return Math.sin(time += (frequency * 2 * Math.PI) / sampleRate);
    }
   
-  so is every coordbox also an fxbox? and/or a container? 
+   so is every coordbox also an fxbox? and/or a container? 
   
-  coordboxes were created so that a single instance of a voice would not carry its own offset coords everywhere it was reparented, or double-parented. 
-  but, a voice could be double-parented to an fxbox that had no coordinates of its own. (eventually you need a parent with coordinates though. 
-  you're always 0,0 from the inside of any parent that does not contain your coordboxes. 
+   coordboxes were created so that a single instance of a voice would not carry its own offset coords everywhere it was reparented, or double-parented. 
+   but, a voice could be double-parented to an fxbox that had no coordinates of its own. (eventually you need a parent with coordinates though. 
+   you're always 0,0 from the inside of any parent that does not contain your coordboxes. 
   
-  so should every voice spawn a coordbox to be attached to something?  doesn't seem like always. 
-  should I make my own coordbox if I am a voice?  
+   so should every voice spawn a coordbox to be attached to something?  doesn't seem like always. 
+   should I make my own coordbox if I am a voice?  
   
    */
 }

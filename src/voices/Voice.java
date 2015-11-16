@@ -7,12 +7,14 @@ package voices;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
+//import voices.VoiceBase.Point;
 
 /**
  *
  * @author MultiTool
  */
-public class Voice extends VoiceBase {
+public class Voice implements ISonglet {//extends VoiceBase{
   // collection of control points, each one having a pitch and a volume. rendering morphs from one cp to another. 
   //public ArrayList<Point> CPoints = new ArrayList<>();
   /*
@@ -20,12 +22,14 @@ public class Voice extends VoiceBase {
    with no relative containers, all points are absolute and none need a parent.
    however in the future we may want to transpose. we will keep a separate parent coordinate for a voice and the points can be relative to that. 
    */
+  // collection of control points, each one having a pitch and a volume. rendering morphs from one cp to another. 
+  public ArrayList<Point> CPoints = new ArrayList<>();
+  public Project MyProject;
   /* ********************************************************************************* */
-  public static class CoordBox extends CoordBoxBase {// location box to transpose in pitch, move in time, etc. 
+  public static class VoiceCoordBox extends CoordBox {// location box to transpose in pitch, move in time, etc. 
     public Voice Content;
     /* ********************************************************************************* */
-    @Override
-    public VoiceBase GetContent() {
+    @Override public ISonglet GetContent() {
       return Content;
     }
     /* ********************************************************************************* */
@@ -48,25 +52,24 @@ public class Voice extends VoiceBase {
     }
   }
   /* ********************************************************************************* */
-  public static class Player_Head extends Player_Head_Base {
+  public static class Player_Head extends Singer {
     protected Voice MyPhrase;
-    protected CoordBox MyCoordBox;
+    protected CoordBox MyCoordBox = CoordBox.Identity;
     double Phase, Cycles;// Cycles is the number of cycles we've rotated since the start of this voice. The fractional part is the phase information. 
-    double Current_Time;
+    double Prev_Time;
     double SubTime;// Subjective time.
     double Current_Octave, Current_Frequency;
     int Prev_Point_Dex, Next_Point_Dex;
     Point Cursor_Point = new Point();
     /* ********************************************************************************* */
     private Player_Head() {
-      this.ParentPlayer = null;
+      this.ParentSinger = null;
       //this.Start();
     }
     /* ********************************************************************************* */
-    @Override
-    public void Start() {
+    @Override public void Start() {
       this.SubTime = 0.0;
-      this.Current_Time = 0.0;
+      this.Prev_Time = 0.0;
       this.Phase = 0.0;
       this.Cycles = 0.0;
       this.Prev_Point_Dex = 0;//this.Parent.CPoints.get(0);
@@ -78,9 +81,9 @@ public class Voice extends VoiceBase {
       //}
     }
     /* ********************************************************************************* */
-    @Override
-    public void Skip_To(double EndTime) {// ready for test
+    @Override public void Skip_To(double EndTime) {// ready for test
       Point Prev_Point, Next_Point;
+      this.Prev_Time = EndTime = this.MyCoordBox.MapTime(EndTime);// EndTime is now time internal to voice's own coordinate system
       int len = this.MyPhrase.CPoints.size();
       if (len < 2) {
         this.IsFinished = true;
@@ -114,9 +117,16 @@ public class Voice extends VoiceBase {
       }
     }
     /* ********************************************************************************* */
-    @Override
-    public void Render_To(double EndTime, Wave wave) {// ready for test
+    @Override public void Render_To(double EndTime, Wave wave) {// ready for test
       Point Prev_Point, Next_Point;
+      //wave.StartTime = this.MyCoordBox.UnMapTime(this.Prev_Time);// wave start time is in parent coordinates because the parent will be reading it.
+//      EndTime = this.MyCoordBox.MapTime(EndTime);// EndTime is now time internal to voice's own coordinate system
+//      double TimeSpan = EndTime - this.Prev_Time;
+//      int nsamps = (int) (TimeSpan * Globals.SampleRate);
+//      wave.Init(nsamps);
+      wave.Init(this.MyCoordBox.UnMapTime(this.Prev_Time), EndTime, Globals.SampleRate);// wave times are in parent coordinates because the parent will be reading the wave data.
+      EndTime = this.MyCoordBox.MapTime(EndTime);// EndTime is now time internal to voice's own coordinate system
+      this.Prev_Time = EndTime;// we will only use Prev_Time on the next call so set it now
       int len = this.MyPhrase.CPoints.size();
       if (len < 2) {
         this.IsFinished = true;
@@ -256,22 +266,35 @@ public class Voice extends VoiceBase {
     }
   }
   /* ********************************************************************************* */
+  public static class Point {
+    public double RealTime = 0.0, SubTime = 0.0;// SubTime is cumulative subjective time.
+    public double Octave = 0.0;
+    public double Loudness;
+    public void CopyFrom(Point source) {
+      this.RealTime = source.RealTime;
+      this.SubTime = source.SubTime;
+      this.Octave = source.Octave;
+      this.Loudness = source.Loudness;
+    }
+    public double GetFrequencyFactor() {
+      return Math.pow(2.0, this.Octave);
+    }
+  }
+  /* ********************************************************************************* */
   public Voice() {
   }
   /* ********************************************************************************* */
-  @Override
-  public CoordBoxBase Spawn_CoordBox() {// for compose time
+  @Override public CoordBox Spawn_CoordBox() {// for compose time
     return this.Spawn_My_CoordBox();
   }
   /* ********************************************************************************* */
-  public CoordBox Spawn_My_CoordBox() {// for compose time
-    CoordBox lbox = new CoordBox();// Deliver a CoordBox specific to this type of phrase.
+  public VoiceCoordBox Spawn_My_CoordBox() {// for compose time
+    VoiceCoordBox lbox = new VoiceCoordBox();// Deliver a CoordBox specific to this type of phrase.
     lbox.Content = this;
     return lbox;
   }
   /* ********************************************************************************* */
-  @Override
-  public Player_Head_Base Spawn_Player() {// for render time
+  @Override public Singer Spawn_Player() {// for render time
     return this.Spawn_My_Player();
   }
   /* ********************************************************************************* */
@@ -282,6 +305,43 @@ public class Voice extends VoiceBase {
     ph.MyPhrase = this;
     ph.MyProject = this.MyProject;
     return ph;
+  }
+  /* ********************************************************************************* */
+  public void Add_Note(Point pnt) {
+    this.CPoints.add(pnt);
+  }
+  /* ********************************************************************************* */
+  public Point Add_Note(double RealTime, double Octave, double Loudness) {
+    Point pnt = new Point();
+    pnt.Octave = Octave;
+    pnt.RealTime = RealTime;
+    pnt.SubTime = 0.0;
+    pnt.Loudness = Loudness;
+    this.CPoints.add(pnt);
+    return pnt;
+  }
+  /* ********************************************************************************* */
+  @Override public int Get_Sample_Count(int SampleRate) {
+    int len = this.CPoints.size();
+    Point First_Point = this.CPoints.get(0);
+    Point Final_Point = this.CPoints.get(len - 1);
+    double TimeDiff = Final_Point.RealTime - First_Point.RealTime;
+    return (int) (TimeDiff * SampleRate);
+    // return (int) (Final_Point.RealTime * SampleRate);
+  }
+  /* ********************************************************************************* */
+  @Override public double Get_Duration() {
+    int len = this.CPoints.size();
+    Point Final_Point = this.CPoints.get(len - 1);
+    return Final_Point.RealTime;
+  }
+  /* ********************************************************************************* */
+  @Override public void Sort_Me() {// sorting by RealTime
+    Collections.sort(this.CPoints, new Comparator<Point>() {
+      @Override public int compare(Point note0, Point note1) {
+        return Double.compare(note0.RealTime, note1.RealTime);
+      }
+    });
   }
   /* ********************************************************************************* */
   public void Recalc_Line_SubTime() {// ready for test

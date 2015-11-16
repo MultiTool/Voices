@@ -91,7 +91,14 @@ what about separating graphics from core code?  separating audio is easy, everyt
 graphics could be supported by child classes.  or each code meat defines an interface of callbacks the graphics can pass.  but that'd be a huge job, to duplicate the Java graphics API.  
 well each class could define a simple(x,y, etc.) interface and the graphic layer could define complicated delegates and pass them as callbacks. 
 
-
+/* ********************************************************************************* */
+@Override public double MapTime(double ParentTime) {
+  return ParentTime - this.TimeLoc;
+}
+/* ********************************************************************************* */
+@Override public double UnMapTime(double ChildTime) {
+  return this.TimeLoc + ChildTime;
+}
 
 
 

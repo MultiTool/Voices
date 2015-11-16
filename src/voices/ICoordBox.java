@@ -5,7 +5,7 @@
  */
 package voices;
 
-import voices.IPlayable.Player_Head_Base;
+import voices.ISonglet.Singer;
 
 /**
  *
@@ -21,32 +21,17 @@ public interface ICoordBox {// location box to transpose in pitch, move in time,
   // double TimeLoc, OctaveLoc, LoudnessLoc;
 //  public VoiceBase Content;
   /* ********************************************************************************* */
-  public IPlayable GetContent();
+  public ISonglet GetContent();
   /* ********************************************************************************* */
   public void Compound(ICoordBox donor);
-//  public VoiceBase GetContent() {
-//    return this.Content;
-//  }
   /* ********************************************************************************* */
-  public Player_Head_Base Spawn_Player();
+  public double MapTime(double ParentTime);// convert time coordinate from my parent's frame to my child's frame
+  /* ********************************************************************************* */
+  public double UnMapTime(double ChildTime);// convert time coordinate from my child's frame to my parent's frame
+  /* ********************************************************************************* */
+  public Singer Spawn_Player();
 }
-//public abstract class CoordBox {// location box to transpose in pitch, move in time, etc. 
-//  public double TimeLoc, OctaveLoc, LoudnessLoc;
-////  public VoiceBase Content;
-//  /* ********************************************************************************* */
-//  public void Compound(CoordBox donor) {
-//    this.TimeLoc += donor.TimeLoc;
-//    this.OctaveLoc += donor.OctaveLoc;
-//    this.LoudnessLoc *= donor.LoudnessLoc;
-//  }
-////  public VoiceBase GetContent() {
-////    return this.Content;
-////  }
-//  /* ********************************************************************************* */
-//  public Player_Head_Base Spawn_Player() {
-//    return null;
-//  }
-//}
+
 /*
  Big picture, all the good effects depend on containers.  transposition, looping, bending, etc.
 

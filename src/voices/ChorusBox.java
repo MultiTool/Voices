@@ -13,12 +13,12 @@ import java.util.Comparator;
  *
  * @author MultiTool
  */
-public class ChorusBox implements IPlayable {
+public class ChorusBox implements ISonglet {
   public ArrayList<CoordBox> SubSongs = new ArrayList<>();
   /* ********************************************************************************* */
-  public static class Player_Head_ChorusBox extends Player_Head_Base {
+  public static class Player_Head_ChorusBox extends Singer {
     protected ChorusBox MyPhrase;
-    public ArrayList<Player_Head_Base> NowPlaying = new ArrayList<>();// pool of currently playing voices
+    public ArrayList<Singer> NowPlaying = new ArrayList<>();// pool of currently playing voices
     public int Current_Dex = 0;
     private Chorus_CoordBox MyCoordBox;
     /* ********************************************************************************* */
@@ -29,11 +29,12 @@ public class ChorusBox implements IPlayable {
     }
     /* ********************************************************************************* */
     @Override public void Skip_To(double EndTime) {
+      this.Current_Time = EndTime = this.MyCoordBox.MapTime(EndTime);// EndTime is now time internal to ChorusBox's own coordinate system
       if (this.MyPhrase.SubSongs.size() <= 0) {
         this.IsFinished = true;
         return;
       }
-      EndTime -= this.TimeLoc_g();//.RealTimeAbsolute;// ???   // first, have to convert EndTime to local time offset. 
+      //EndTime -= this.TimeLoc_g();//.RealTimeAbsolute;// ???   // first, have to convert EndTime to local time offset. 
       // what kind of coordinates does the caller pass?  the caller is the parent playerhead. the parent playerhead should be passing its own internal coords. 
       // that means it's up to me (player) to remove my offset coords from EndTime. 
       if (EndTime < 0) {
@@ -45,9 +46,9 @@ public class ChorusBox implements IPlayable {
         EndTime = Final_Time;// clip time
       }
       CoordBox cb = MyPhrase.SubSongs.get(Current_Dex);// repeat until cb start time > EndTime
-      while (cb.TimeLoc < EndTime) {// first find new voices in this time range and add them to pool
-        IPlayable vb = cb.GetContent();// SHOULD EndTime BE INCLUSIVE???
-        Player_Head_Base player = vb.Spawn_Player();
+      while (cb.TimeOrg < EndTime) {// first find new voices in this time range and add them to pool
+        ISonglet vb = cb.GetContent();// SHOULD EndTime BE INCLUSIVE???
+        Singer player = vb.Spawn_Player();
         this.NowPlaying.add(player);
         player.Start();
         Current_Dex++;
@@ -56,13 +57,13 @@ public class ChorusBox implements IPlayable {
       int NumPlaying = NowPlaying.size();
       int cnt = 0;
       while (cnt < NumPlaying) {// then play the whole pool
-        Player_Head_Base player = this.NowPlaying.get(cnt);
+        Singer player = this.NowPlaying.get(cnt);
         player.Skip_To(EndTime);
         cnt++;
       }
       cnt = 0;// now pack down the finished ones
       while (cnt < NumPlaying) {
-        Player_Head_Base player = this.NowPlaying.get(cnt);
+        Singer player = this.NowPlaying.get(cnt);
         if (player.IsFinished) {
           this.NowPlaying.remove(player);
         } else {
@@ -72,11 +73,12 @@ public class ChorusBox implements IPlayable {
     }
     /* ********************************************************************************* */
     @Override public void Render_To(double EndTime, Wave wave) {
+      this.Current_Time = EndTime = this.MyCoordBox.MapTime(EndTime);// EndTime is now time internal to ChorusBox's own coordinate system
       if (this.MyPhrase.SubSongs.size() <= 0) {
         this.IsFinished = true;
         return;
       }
-      EndTime -= this.TimeLoc_g();//.RealTimeAbsolute;// ???   // first, have to convert EndTime to local time offset. 
+      //EndTime -= this.TimeLoc_g();//.RealTimeAbsolute;// ???   // first, have to convert EndTime to local time offset. 
       if (EndTime < 0) {
         EndTime = 0;// clip time
       }
@@ -86,9 +88,9 @@ public class ChorusBox implements IPlayable {
         EndTime = Final_Time;// clip time
       }
       CoordBox cb = MyPhrase.SubSongs.get(this.Current_Dex);// repeat until cb start time > EndTime
-      while (cb.TimeLoc < EndTime) {// first find new voices in this time range and add them to pool
-        IPlayable vb = cb.GetContent();// SHOULD EndTime BE INCLUSIVE???
-        Player_Head_Base player = vb.Spawn_Player();
+      while (cb.TimeOrg < EndTime) {// first find new voices in this time range and add them to pool
+        ISonglet vb = cb.GetContent();// SHOULD EndTime BE INCLUSIVE???
+        Singer player = vb.Spawn_Player();
         this.NowPlaying.add(player);
         player.Start();
         this.Current_Dex++;
@@ -97,13 +99,13 @@ public class ChorusBox implements IPlayable {
       int NumPlaying = NowPlaying.size();
       int cnt = 0;
       while (cnt < NumPlaying) {// then play the whole pool
-        Player_Head_Base player = this.NowPlaying.get(cnt);
+        Singer player = this.NowPlaying.get(cnt);
         player.Render_To(EndTime, wave);
         cnt++;
       }
       cnt = 0;// now pack down the finished ones
       while (cnt < NumPlaying) {
-        Player_Head_Base player = this.NowPlaying.get(cnt);
+        Singer player = this.NowPlaying.get(cnt);
         if (player.IsFinished) {
           this.NowPlaying.remove(player);
         } else {
@@ -113,10 +115,10 @@ public class ChorusBox implements IPlayable {
     }
   }
   /* ********************************************************************************* */
-  public static class Chorus_CoordBox extends VoiceBase.CoordBoxBase {// location box to transpose in pitch, move in time, etc. 
+  public static class Chorus_CoordBox extends CoordBox {// location box to transpose in pitch, move in time, etc. 
     public ChorusBox Content;
     /* ********************************************************************************* */
-    @Override public IPlayable GetContent() {
+    @Override public ISonglet GetContent() {
       return Content;
     }
     /* ********************************************************************************* */
@@ -127,7 +129,7 @@ public class ChorusBox implements IPlayable {
     }
   }
   /* ********************************************************************************* */
-  public void Add_SubSong(IPlayable voice) {
+  public void Add_SubSong(ISonglet voice) {
     CoordBox cb = voice.Spawn_CoordBox();
     SubSongs.add(cb);
   }
@@ -135,19 +137,19 @@ public class ChorusBox implements IPlayable {
   @Override public double Get_Duration() {// this is wrong. the last song started may not be the last one playing. we need to scan the whole tree at compose time. 
     int NumSubSongs = this.SubSongs.size();
     CoordBox Final_Voice = this.SubSongs.get(NumSubSongs - 1);
-    IPlayable vb = Final_Voice.GetContent();
+    ISonglet vb = Final_Voice.GetContent();
     return vb.Get_Duration();
   }
   /* ********************************************************************************* */
   @Override public void Sort_Me() {// sorting by RealTime
     Collections.sort(this.SubSongs, new Comparator<CoordBox>() {
       @Override public int compare(CoordBox voice0, CoordBox voice1) {
-        return Double.compare(voice0.TimeLoc, voice1.TimeLoc);
+        return Double.compare(voice0.TimeOrg, voice1.TimeOrg);
       }
     });
   }
   /* ********************************************************************************* */
-  @Override public VoiceBase.CoordBoxBase Spawn_CoordBox() {// for compose time
+  @Override public CoordBox Spawn_CoordBox() {// for compose time
     return this.Spawn_My_CoordBox();
   }
   /* ********************************************************************************* */
@@ -157,7 +159,7 @@ public class ChorusBox implements IPlayable {
     return lbox;
   }
   /* ********************************************************************************* */
-  @Override public VoiceBase.Player_Head_Base Spawn_Player() {
+  @Override public ISonglet.Singer Spawn_Player() {
     return this.Spawn_My_Player();
   }
   /* ********************************************************************************* */

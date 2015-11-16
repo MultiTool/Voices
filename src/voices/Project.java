@@ -5,7 +5,7 @@
  */
 package voices;
 
-import voices.IPlayable.Player_Head_Base;
+import voices.ISonglet.Singer;
 import static voices.Voices.SaveWave;
 
 /**
@@ -35,9 +35,9 @@ public class Project {
   }
   /* ********************************************************************************* */
   public void Start_Render() {
-    Player_Head_Base RootPlayer = this.rootbox.Spawn_Player();
+    Singer RootPlayer = this.rootbox.Spawn_Player();
     RootPlayer.MyProject = this;
-    RootPlayer.Compound(this.rootbox);
+    // RootPlayer.Compound(this.rootbox);
     Wave wave_render = new Wave();
 
     double FinalTime = this.rootvoice.Get_Duration();
@@ -83,7 +83,7 @@ public class Project {
 
     wave_render.Init(nsamps);
 
-    Player_Head_Base hd = vc.Spawn_Player();
+    Singer hd = vc.Spawn_Player();
 
     long StartTime, EndTime;
 

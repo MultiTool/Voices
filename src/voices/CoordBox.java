@@ -5,39 +5,56 @@
  */
 package voices;
 
-import voices.IPlayable.Player_Head_Base;
+import voices.ISonglet.Singer;
 
 /**
  *
  * @author MultiTool
  */
-public abstract class CoordBox implements ICoordBox {// location box to transpose in pitch, move in time, etc. 
-  public double TimeLoc, OctaveLoc, LoudnessLoc;
+public class CoordBox implements ICoordBox {// location box to transpose in pitch, move in time, etc. 
+  public double TimeOrg, OctaveLoc, LoudnessLoc;
+  public static CoordBox Identity = CoordBox.CreateIdentity();
   /* ********************************************************************************* */
   public void Clear() {// set all coordinates to identity, no transformation for content
-    TimeLoc = OctaveLoc = 0.0;
+    TimeOrg = OctaveLoc = 0.0;
     LoudnessLoc = 1.0;
   }
   /* ********************************************************************************* */
+  public static CoordBox CreateIdentity() {
+    CoordBox cb = new CoordBox();
+    cb.TimeOrg = 0;
+    cb.OctaveLoc = 0;
+    cb.LoudnessLoc = 1.0;
+    return cb;
+  }
+  /* ********************************************************************************* */
   @Override public void Compound(ICoordBox donor) {
-    this.TimeLoc_s(TimeLoc + donor.TimeLoc_g());
+    this.TimeLoc_s(TimeOrg + donor.TimeLoc_g());
     this.OctaveLoc_s(OctaveLoc + donor.OctaveLoc_g());
     this.LoudnessLoc_s(LoudnessLoc + donor.LoudnessLoc_g());
     //this.TimeLoc += donor.TimeLoc; this.OctaveLoc += donor.OctaveLoc; this.LoudnessLoc *= donor.LoudnessLoc;
   }
   /* ********************************************************************************* */
-  @Override public Player_Head_Base Spawn_Player() {
+  @Override public Singer Spawn_Player() {
     return null;
   }
   /* ********************************************************************************* */
-  @Override public IPlayable GetContent() {
+  @Override public double MapTime(double ParentTime) {// convert time coordinate from my parent's frame to my child's frame
+    return ParentTime - this.TimeOrg;
+  }
+  /* ********************************************************************************* */
+  @Override public double UnMapTime(double ChildTime) {// convert time coordinate from my child's frame to my parent's frame
+    return this.TimeOrg + ChildTime;
+  }
+  /* ********************************************************************************* */
+  @Override public ISonglet GetContent() {
     return null;
   }
   @Override public double TimeLoc_g() {
-    return TimeLoc;
+    return TimeOrg;
   }
   @Override public void TimeLoc_s(double value) {
-    TimeLoc = value;
+    TimeOrg = value;
   }
   @Override public double OctaveLoc_g() {
     return OctaveLoc;
