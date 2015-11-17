@@ -16,17 +16,10 @@ import java.util.Comparator;
  */
 public class Voice implements ISonglet {//extends VoiceBase{
   // collection of control points, each one having a pitch and a volume. rendering morphs from one cp to another. 
-  //public ArrayList<Point> CPoints = new ArrayList<>();
-  /*
-   is the first point the defining frequency of this voice? 
-   with no relative containers, all points are absolute and none need a parent.
-   however in the future we may want to transpose. we will keep a separate parent coordinate for a voice and the points can be relative to that. 
-   */
-  // collection of control points, each one having a pitch and a volume. rendering morphs from one cp to another. 
   public ArrayList<Point> CPoints = new ArrayList<>();
   private Project MyProject;
   /* ********************************************************************************* */
-  public static class VoiceCoordBox extends CoordBox {// location box to transpose in pitch, move in time, etc. 
+  public static class VoiceOffsetBox extends OffsetBox {// location box to transpose in pitch, move in time, etc. 
     public Voice Content;
     /* ********************************************************************************* */
     @Override public ISonglet GetContent() {
@@ -35,7 +28,7 @@ public class Voice implements ISonglet {//extends VoiceBase{
     /* ********************************************************************************* */
     public Player_Head Spawn_My_Player() {// for render time
       Player_Head ph = this.Content.Spawn_My_Player();
-      ph.MyCoordBox = this;// to do: also transfer all of this box's offsets to player head. 
+      ph.MyOffsetBox = this;// to do: also transfer all of this box's offsets to player head. 
       // also be sure to increment the player's offsets by the offsets that were handed down to me. 
       // or should each player head reach up its chain of parents? 
       // what about FxContainer class? all containers are FxContainers. 
@@ -44,9 +37,9 @@ public class Voice implements ISonglet {//extends VoiceBase{
       /*
        best pattern is
        in containing player {
-       childplayer = childcoordbox.spawn player
+       childplayer = ChildOffsetBox.spawn player
        childplayer.Compound(this);// inheritance
-       childplayer.Compound(childcoordbox);
+       childplayer.Compound(ChildOffsetBox);
        }
        */
     }
@@ -54,9 +47,8 @@ public class Voice implements ISonglet {//extends VoiceBase{
   /* ********************************************************************************* */
   public static class Player_Head extends Singer {
     protected Voice MyPhrase;
-    protected CoordBox MyCoordBox = CoordBox.Identity;
+    protected OffsetBox MyOffsetBox = OffsetBox.Identity;
     double Phase, Cycles;// Cycles is the number of cycles we've rotated since the start of this voice. The fractional part is the phase information. 
-    //double Prev_Time;
     double SubTime;// Subjective time.
     double Current_Octave, Current_Frequency;
     int Prev_Point_Dex, Next_Point_Dex;
@@ -82,7 +74,7 @@ public class Voice implements ISonglet {//extends VoiceBase{
     /* ********************************************************************************* */
     @Override public void Skip_To(double EndTime) {// ready for test
       Point Prev_Point, Next_Point;
-      EndTime = this.MyCoordBox.MapTime(EndTime);// EndTime is now time internal to voice's own coordinate system
+      EndTime = this.MyOffsetBox.MapTime(EndTime);// EndTime is now time internal to voice's own coordinate system
       int len = this.MyPhrase.CPoints.size();
       if (len < 2) {// this should really just throw an error
         this.IsFinished = true;
@@ -118,8 +110,8 @@ public class Voice implements ISonglet {//extends VoiceBase{
     /* ********************************************************************************* */
     @Override public void Render_To(double EndTime, Wave wave) {// ready for test
       Point Prev_Point, Next_Point;
-      EndTime = this.MyCoordBox.MapTime(EndTime);// EndTime is now time internal to voice's own coordinate system
-      double UnMapped_Prev_Time = this.MyCoordBox.UnMapTime(this.Cursor_Point.RealTime);// get start time in parent coordinates
+      EndTime = this.MyOffsetBox.MapTime(EndTime);// EndTime is now time internal to voice's own coordinate system
+      double UnMapped_Prev_Time = this.MyOffsetBox.UnMapTime(this.Cursor_Point.RealTime);// get start time in parent coordinates
       int len = this.MyPhrase.CPoints.size();
       if (len < 2) {// this should really just throw an error
         this.IsFinished = true;
@@ -134,7 +126,7 @@ public class Voice implements ISonglet {//extends VoiceBase{
         this.IsFinished = true;
         EndTime = Final_Point.RealTime;// clip time
       }
-      wave.Init(UnMapped_Prev_Time, this.MyCoordBox.UnMapTime(EndTime), this.MyProject.SampleRate);// wave times are in parent coordinates because the parent will be reading the wave data.
+      wave.Init(UnMapped_Prev_Time, this.MyOffsetBox.UnMapTime(EndTime), this.MyProject.SampleRate);// wave times are in parent coordinates because the parent will be reading the wave data.
       Prev_Point = this.Cursor_Point;
       int pdex = this.Next_Point_Dex;
       Next_Point = this.MyPhrase.CPoints.get(pdex);
@@ -278,17 +270,17 @@ public class Voice implements ISonglet {//extends VoiceBase{
   public Voice() {
   }
   /* ********************************************************************************* */
-  @Override public CoordBox Spawn_CoordBox() {// for compose time
-    return this.Spawn_My_CoordBox();
+  @Override public OffsetBox Spawn_OffsetBox() {// for compose time
+    return this.Spawn_My_OffsetBox();
   }
   /* ********************************************************************************* */
-  public VoiceCoordBox Spawn_My_CoordBox() {// for compose time
-    VoiceCoordBox lbox = new VoiceCoordBox();// Deliver a CoordBox specific to this type of phrase.
+  public VoiceOffsetBox Spawn_My_OffsetBox() {// for compose time
+    VoiceOffsetBox lbox = new VoiceOffsetBox();// Deliver a OffsetBox specific to this type of phrase.
     lbox.Content = this;
     return lbox;
   }
   /* ********************************************************************************* */
-  @Override public Singer Spawn_Player() {// for render time
+  @Override public Singer Spawn_Singer() {// for render time
     return this.Spawn_My_Player();
   }
   /* ********************************************************************************* */
@@ -297,7 +289,7 @@ public class Voice implements ISonglet {//extends VoiceBase{
     // Handy if my parent's players know what class I am and want special access to my particular type of player.
     Player_Head ph = new Player_Head();
     ph.MyPhrase = this;
-    ph.MyProject = this.MyProject;
+    ph.MyProject = this.MyProject;// inherit project
     return ph;
   }
   /* ********************************************************************************* */

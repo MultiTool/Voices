@@ -11,7 +11,7 @@ package voices;
  */
 public interface ISonglet {// Cancionita
   /* ********************************************************************************* */
-  public static class Singer {//extends CoordBox {
+  public static class Singer {// Cantante extends OffsetBox {
     public Project MyProject;
     double Inherited_Octave = 0.0, Inherited_OctaveRate = 0.0, Inherited_Loudness;// octave, bend and loudness context
     public boolean IsFinished = false;
@@ -28,9 +28,9 @@ public interface ISonglet {// Cancionita
     }
   }
   /* ********************************************************************************* */
-  public CoordBox Spawn_CoordBox();// for compose time
+  public OffsetBox Spawn_OffsetBox();// for compose time
   /* ********************************************************************************* */
-  public ISonglet.Singer Spawn_Player();// for render time
+  public ISonglet.Singer Spawn_Singer();// for render time
   /* ********************************************************************************* */
   public int Get_Sample_Count(int SampleRate);
   /* ********************************************************************************* */

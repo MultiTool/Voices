@@ -66,8 +66,8 @@ ArbolEsquelito
 Scaffold 
 ScaffoldNode
 
-What about CoordBoxes?  do we still need those?  The SkeleTree can absorb them when it is generated.  Every treepart has its own coords built in, offset from its parent.  
-But, every SubSong parent still needs to own a list of coordboxes in order to place its children, who individually cannot know their own locations.  CoordBox is still needed. 
+What about OffsetBoxes?  do we still need those?  The SkeleTree can absorb them when it is generated.  Every treepart has its own coords built in, offset from its parent.  
+But, every SubSong parent still needs to own a list of OffsetBoxes in order to place its children, who individually cannot know their own locations.  OffsetBox is still needed. 
 
 SkeleTree is more of a memory hog, as the whole thing persists between renders.  
 
@@ -91,15 +91,36 @@ what about separating graphics from core code?  separating audio is easy, everyt
 graphics could be supported by child classes.  or each code meat defines an interface of callbacks the graphics can pass.  but that'd be a huge job, to duplicate the Java graphics API.  
 well each class could define a simple(x,y, etc.) interface and the graphic layer could define complicated delegates and pass them as callbacks. 
 
-/* ********************************************************************************* */
-@Override public double MapTime(double ParentTime) {
-  return ParentTime - this.TimeLoc;
-}
-/* ********************************************************************************* */
-@Override public double UnMapTime(double ChildTime) {
-  return this.TimeLoc + ChildTime;
-}
+/*
+ Big picture, all the good effects depend on containers.  transposition, looping, bending, etc.
 
+ How to do this neatly?
+
+ voice spawns player
+ phrase spawns player
+
+ player runs, midwifes new players from phrase's children. 
+ maybe the player should just get OffsetBox's coordinates separately and apply them to the playerhead children. 
+
+ problem is OffsetBox is generic, can't see its type of child. 
+
+ ergo, each phrase would be better off having its own unique list of pointers to children phrases. 
+ but, need to associate transformation with each child.  
+
+ double collections, one for boxes and one for children?
+
+ or special OffsetBoxes, each owned by each type of phrase?  that is each phrase owns its own type of OffsetBox, or each phrase owns its children's type of OffsetBox? 
+ better if each phrase owns its own type of OffsetBox. if a parent knows its children, then it will know their OffsetBoxes.  
+
+ still weird.  but if every phrase type owns its OffsetBox, then each phrase can expand the number of coordinates that can manipulate the child.  
+
+ what about octaverate/bending 'coords'?  kinda like coords but not displayed as such. 
+
+ so: each parent player has free control over its children players, including arbitrary new dimensions of coordinates. 
+
+ does bending count as a coordinate?  only if you want to bend the whole phrase. not very useful, do not include. 
+
+ */
 
 
 

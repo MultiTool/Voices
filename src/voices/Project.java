@@ -13,8 +13,7 @@ import static voices.Voices.SaveWave;
  * @author MultiTool
  */
 public class Project {
-  CoordBox rootbox;
-  Voice rootvoice;
+  OffsetBox rootbox;
   public int SampleRate = 100;// Globals.SampleRate
   /* ********************************************************************************* */
   public Project() {
@@ -24,44 +23,43 @@ public class Project {
   public void Compose_Chorus_Test() {
     ChorusBox cbx = new ChorusBox();
     cbx.Set_Project(this);
+    this.rootbox = cbx.Spawn_OffsetBox();
 
-    this.rootvoice = new Voice();
+    Voice rootvoice = new Voice();
     cbx.Add_SubSong(rootvoice);
-
-    this.rootbox = this.rootvoice.Spawn_CoordBox();
-    this.rootbox.Clear();
     {
-      this.rootvoice.Add_Note(1, 4, 1);
-      this.rootvoice.Add_Note(8, 1, 0.5);
-      this.rootvoice.Add_Note(16, 4, 1);
+      rootvoice.Add_Note(1, 4, 1);
+      rootvoice.Add_Note(8, 1, 0.5);
+      rootvoice.Add_Note(16, 4, 1);
     }
-    this.rootvoice.Recalc_Line_SubTime();
+    rootvoice.Recalc_Line_SubTime();
     cbx.Update_Durations();
   }
   /* ********************************************************************************* */
   public void Compose_Test() {
-    this.rootvoice = new Voice();
-    this.rootvoice.Set_Project(this);
-    this.rootbox = this.rootvoice.Spawn_CoordBox();
-    this.rootbox.Clear();
+    Voice rootvoice;
+    rootvoice = new Voice();
+    rootvoice.Set_Project(this);
+    rootbox = rootvoice.Spawn_OffsetBox();
+    rootbox.Clear();
     {
-      this.rootvoice.Add_Note(1, 4, 1);
-      this.rootvoice.Add_Note(8, 1, 0.5);
-      this.rootvoice.Add_Note(16, 4, 1);
+      rootvoice.Add_Note(1, 4, 1);
+      rootvoice.Add_Note(8, 1, 0.5);
+      rootvoice.Add_Note(16, 4, 1);
     }
-    this.rootvoice.Recalc_Line_SubTime();
+    rootvoice.Recalc_Line_SubTime();
   }
   /* ********************************************************************************* */
   public void Render_Test() {
-    Singer RootPlayer = this.rootbox.Spawn_Player();
-    RootPlayer.MyProject = this;
+    Singer RootPlayer = this.rootbox.Spawn_Singer();
+    // RootPlayer.MyProject = this; // not needed
     // RootPlayer.Compound(this.rootbox);
+
+    double FinalTime = this.rootbox.GetContent().Get_Duration();
+
+//    int nsamps = this.rootbox.GetContent().Get_Sample_Count(this.SampleRate);
+//    wave_render.Init(nsamps);
     Wave wave_render = new Wave();
-
-    double FinalTime = this.rootvoice.Get_Duration();
-
-    int nsamps = this.rootvoice.Get_Sample_Count(this.SampleRate);
-    wave_render.Init(nsamps);
 
     long StartTime, EndTime;
     RootPlayer.Start();
@@ -101,7 +99,7 @@ public class Project {
 
     wave_render.Init(nsamps);
 
-    Singer hd = vc.Spawn_Player();
+    Singer hd = vc.Spawn_Singer();
 
     long StartTime, EndTime;
 

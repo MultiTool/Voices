@@ -36,7 +36,7 @@ public class Wave {
     this.Current_Index = 0;
   }
   /* ********************************************************************************* */
-  public void SumIn(Wave other) {
+  public void Overdub(Wave other) {
     int StartPlace = other.StartDex;
     int limit = Math.min(this.numsamples, other.StartDex + other.numsamples);
     int ocnt = 0;
