@@ -24,7 +24,7 @@ public class Voice implements ISonglet {//extends VoiceBase{
    */
   // collection of control points, each one having a pitch and a volume. rendering morphs from one cp to another. 
   public ArrayList<Point> CPoints = new ArrayList<>();
-  public Project MyProject;
+  private Project MyProject;
   /* ********************************************************************************* */
   public static class VoiceCoordBox extends CoordBox {// location box to transpose in pitch, move in time, etc. 
     public Voice Content;
@@ -42,7 +42,7 @@ public class Voice implements ISonglet {//extends VoiceBase{
       //ph.Compound(this);
       return ph;
       /*
-       best patter is
+       best pattern is
        in containing player {
        childplayer = childcoordbox.spawn player
        childplayer.Compound(this);// inheritance
@@ -56,7 +56,7 @@ public class Voice implements ISonglet {//extends VoiceBase{
     protected Voice MyPhrase;
     protected CoordBox MyCoordBox = CoordBox.Identity;
     double Phase, Cycles;// Cycles is the number of cycles we've rotated since the start of this voice. The fractional part is the phase information. 
-    double Prev_Time;
+    //double Prev_Time;
     double SubTime;// Subjective time.
     double Current_Octave, Current_Frequency;
     int Prev_Point_Dex, Next_Point_Dex;
@@ -69,7 +69,6 @@ public class Voice implements ISonglet {//extends VoiceBase{
     /* ********************************************************************************* */
     @Override public void Start() {
       this.SubTime = 0.0;
-      this.Prev_Time = 0.0;
       this.Phase = 0.0;
       this.Cycles = 0.0;
       this.Prev_Point_Dex = 0;//this.Parent.CPoints.get(0);
@@ -83,9 +82,9 @@ public class Voice implements ISonglet {//extends VoiceBase{
     /* ********************************************************************************* */
     @Override public void Skip_To(double EndTime) {// ready for test
       Point Prev_Point, Next_Point;
-      this.Prev_Time = EndTime = this.MyCoordBox.MapTime(EndTime);// EndTime is now time internal to voice's own coordinate system
+      EndTime = this.MyCoordBox.MapTime(EndTime);// EndTime is now time internal to voice's own coordinate system
       int len = this.MyPhrase.CPoints.size();
-      if (len < 2) {
+      if (len < 2) {// this should really just throw an error
         this.IsFinished = true;
         return;
       }
@@ -119,17 +118,12 @@ public class Voice implements ISonglet {//extends VoiceBase{
     /* ********************************************************************************* */
     @Override public void Render_To(double EndTime, Wave wave) {// ready for test
       Point Prev_Point, Next_Point;
-      //wave.StartTime = this.MyCoordBox.UnMapTime(this.Prev_Time);// wave start time is in parent coordinates because the parent will be reading it.
-//      EndTime = this.MyCoordBox.MapTime(EndTime);// EndTime is now time internal to voice's own coordinate system
-//      double TimeSpan = EndTime - this.Prev_Time;
-//      int nsamps = (int) (TimeSpan * Globals.SampleRate);
-//      wave.Init(nsamps);
-      wave.Init(this.MyCoordBox.UnMapTime(this.Prev_Time), EndTime, Globals.SampleRate);// wave times are in parent coordinates because the parent will be reading the wave data.
       EndTime = this.MyCoordBox.MapTime(EndTime);// EndTime is now time internal to voice's own coordinate system
-      this.Prev_Time = EndTime;// we will only use Prev_Time on the next call so set it now
+      double UnMapped_Prev_Time = this.MyCoordBox.UnMapTime(this.Cursor_Point.RealTime);// get start time in parent coordinates
       int len = this.MyPhrase.CPoints.size();
-      if (len < 2) {
+      if (len < 2) {// this should really just throw an error
         this.IsFinished = true;
+        wave.Init(UnMapped_Prev_Time, UnMapped_Prev_Time, this.MyProject.SampleRate);
         return;
       }
       if (EndTime < Cursor_Point.RealTime) {
@@ -140,13 +134,13 @@ public class Voice implements ISonglet {//extends VoiceBase{
         this.IsFinished = true;
         EndTime = Final_Point.RealTime;// clip time
       }
+      wave.Init(UnMapped_Prev_Time, this.MyCoordBox.UnMapTime(EndTime), this.MyProject.SampleRate);// wave times are in parent coordinates because the parent will be reading the wave data.
       Prev_Point = this.Cursor_Point;
       int pdex = this.Next_Point_Dex;
       Next_Point = this.MyPhrase.CPoints.get(pdex);
       while (Next_Point.RealTime < EndTime) {
         Render_Segment_Integral(Prev_Point, Next_Point, wave);
         pdex++;
-        // if (pdex >= len) { break; } // this line may not be necessary
         Prev_Point = Next_Point;
         Next_Point = this.MyPhrase.CPoints.get(pdex);
       }
@@ -193,7 +187,7 @@ public class Voice implements ISonglet {//extends VoiceBase{
     /* ********************************************************************************* */
     public void Render_Segment_Iterative(Point pnt0, Point pnt1, Wave wave0) {// stateful iterative approach
       double BaseFreq = Globals.BaseFreqC0;
-      double SRate = Globals.SampleRate;
+      double SRate = this.MyProject.SampleRate;
       BaseFreq = 1.0;
       //SRate = 100.0;
       //SRate = 1000.0;
@@ -233,7 +227,7 @@ public class Voice implements ISonglet {//extends VoiceBase{
     /* ********************************************************************************* */
     public void Render_Segment_Integral(Point pnt0, Point pnt1, Wave wave1) {// stateless calculus integral approach
       double BaseFreq = Globals.BaseFreqC0;
-      double SRate = Globals.SampleRate;
+      double SRate = this.MyProject.SampleRate;
       double TimeRange = pnt1.RealTime - pnt0.RealTime;
       double SampleDuration = 1.0 / SRate;
       double FrequencyFactorStart = pnt0.GetFrequencyFactor();
@@ -336,12 +330,24 @@ public class Voice implements ISonglet {//extends VoiceBase{
     return Final_Point.RealTime;
   }
   /* ********************************************************************************* */
+  @Override public double Update_Durations() {
+    return this.Get_Duration();// this is not a container, so just return what we already know
+  }
+  /* ********************************************************************************* */
   @Override public void Sort_Me() {// sorting by RealTime
     Collections.sort(this.CPoints, new Comparator<Point>() {
       @Override public int compare(Point note0, Point note1) {
         return Double.compare(note0.RealTime, note1.RealTime);
       }
     });
+  }
+  /* ********************************************************************************* */
+  @Override public Project Get_Project() {
+    return this.MyProject;
+  }
+  /* ********************************************************************************* */
+  @Override public void Set_Project(Project project) {
+    this.MyProject = project;
   }
   /* ********************************************************************************* */
   public void Recalc_Line_SubTime() {// ready for test
@@ -370,6 +376,7 @@ public class Voice implements ISonglet {//extends VoiceBase{
       SubTimeLocal = Calculus(OctaveRate, TimeRange);
       Next_Point.SubTime = Prev_Point.SubTime + (FrequencyFactorStart * SubTimeLocal);
     }
+    // this.Update_Durations();
   }
   /* ********************************************************************************* */
   public static double Calculus(double OctaveRate, double TimeAlong) {// ready for test

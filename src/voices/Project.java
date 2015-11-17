@@ -21,9 +21,27 @@ public class Project {
     this.Compose_Test();
   }
   /* ********************************************************************************* */
+  public void Compose_Chorus_Test() {
+    ChorusBox cbx = new ChorusBox();
+    cbx.Set_Project(this);
+
+    this.rootvoice = new Voice();
+    cbx.Add_SubSong(rootvoice);
+
+    this.rootbox = this.rootvoice.Spawn_CoordBox();
+    this.rootbox.Clear();
+    {
+      this.rootvoice.Add_Note(1, 4, 1);
+      this.rootvoice.Add_Note(8, 1, 0.5);
+      this.rootvoice.Add_Note(16, 4, 1);
+    }
+    this.rootvoice.Recalc_Line_SubTime();
+    cbx.Update_Durations();
+  }
+  /* ********************************************************************************* */
   public void Compose_Test() {
     this.rootvoice = new Voice();
-    this.rootvoice.MyProject = this;
+    this.rootvoice.Set_Project(this);
     this.rootbox = this.rootvoice.Spawn_CoordBox();
     this.rootbox.Clear();
     {
@@ -34,7 +52,7 @@ public class Project {
     this.rootvoice.Recalc_Line_SubTime();
   }
   /* ********************************************************************************* */
-  public void Start_Render() {
+  public void Render_Test() {
     Singer RootPlayer = this.rootbox.Spawn_Player();
     RootPlayer.MyProject = this;
     // RootPlayer.Compound(this.rootbox);

@@ -16,7 +16,6 @@ public interface ISonglet {// Cancionita
     double Inherited_Octave = 0.0, Inherited_OctaveRate = 0.0, Inherited_Loudness;// octave, bend and loudness context
     public boolean IsFinished = false;
     public Singer ParentSinger;
-    public double Current_Time;
     /* ********************************************************************************* */
     public void Start() {
       IsFinished = false;
@@ -37,5 +36,11 @@ public interface ISonglet {// Cancionita
   /* ********************************************************************************* */
   public double Get_Duration();
   /* ********************************************************************************* */
+  public double Update_Durations();
+  /* ********************************************************************************* */
   public void Sort_Me();
+  /* ********************************************************************************* */
+  public Project Get_Project();
+  /* ********************************************************************************* */
+  public void Set_Project(Project project);
 }

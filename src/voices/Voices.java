@@ -31,25 +31,18 @@ public class Voices {
     Voice vc = new Voice();
     Wave wave_render = new Wave();
     Wave wave_scratch = new Wave();
-    //Wave wave_diff = new Wave();
+    Project proj = new Project();
+    proj.SampleRate = 100;
+    vc.Set_Project(proj);
 
     int TDiff = 16;// seconds
-    int nsamps;
-    //nsamps = TDiff * Globals.SampleRate;
-
-    {
-//      vc.Add_Note(0, 4, 1);
-//      vc.Add_Note(8, 1, 0.5);
-//      vc.Add_Note(TDiff, 4, 1);
-    }
+    
     {
       vc.Add_Note(1, 4, 1);
       vc.Add_Note(8, 1, 0.5);
       vc.Add_Note(TDiff, 4, 1);
     }
     vc.Recalc_Line_SubTime();
-
-    nsamps = vc.Get_Sample_Count(Globals.SampleRate);
 
     wave_render.Init(0);
 

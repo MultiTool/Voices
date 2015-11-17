@@ -15,21 +15,25 @@ import java.util.Comparator;
  */
 public class ChorusBox implements ISonglet {
   public ArrayList<CoordBox> SubSongs = new ArrayList<>();
+  public double Duration = 0.0;
+  private Project MyProject;
   /* ********************************************************************************* */
   public static class Player_Head_ChorusBox extends Singer {
     protected ChorusBox MyPhrase;
     public ArrayList<Singer> NowPlaying = new ArrayList<>();// pool of currently playing voices
     public int Current_Dex = 0;
+    double Prev_Time = 0;
     private Chorus_CoordBox MyCoordBox;
     /* ********************************************************************************* */
     @Override public void Start() {
       IsFinished = false;
       Current_Dex = 0;
+      Prev_Time = 0;
       NowPlaying.clear();
     }
     /* ********************************************************************************* */
     @Override public void Skip_To(double EndTime) {
-      this.Current_Time = EndTime = this.MyCoordBox.MapTime(EndTime);// EndTime is now time internal to ChorusBox's own coordinate system
+      EndTime = this.MyCoordBox.MapTime(EndTime);// EndTime is now time internal to ChorusBox's own coordinate system
       if (this.MyPhrase.SubSongs.size() <= 0) {
         this.IsFinished = true;
         return;
@@ -73,12 +77,14 @@ public class ChorusBox implements ISonglet {
     }
     /* ********************************************************************************* */
     @Override public void Render_To(double EndTime, Wave wave) {
-      this.Current_Time = EndTime = this.MyCoordBox.MapTime(EndTime);// EndTime is now time internal to ChorusBox's own coordinate system
+      EndTime = this.MyCoordBox.MapTime(EndTime);// EndTime is now time internal to ChorusBox's own coordinate system
+      double UnMapped_Prev_Time = this.MyCoordBox.UnMapTime(this.Prev_Time);// get start time in parent coordinates
       if (this.MyPhrase.SubSongs.size() <= 0) {
         this.IsFinished = true;
+        wave.Init(UnMapped_Prev_Time, UnMapped_Prev_Time, this.MyProject.SampleRate);// wave times are in parent coordinates because the parent will be reading the wave data.
+        this.Prev_Time = EndTime;
         return;
       }
-      //EndTime -= this.TimeLoc_g();//.RealTimeAbsolute;// ???   // first, have to convert EndTime to local time offset. 
       if (EndTime < 0) {
         EndTime = 0;// clip time
       }
@@ -87,6 +93,8 @@ public class ChorusBox implements ISonglet {
         this.IsFinished = true;
         EndTime = Final_Time;// clip time
       }
+      wave.Init(UnMapped_Prev_Time, this.MyCoordBox.UnMapTime(EndTime), this.MyProject.SampleRate);// wave times are in parent coordinates because the parent will be reading the wave data.
+      Wave ChildWave = new Wave();
       CoordBox cb = MyPhrase.SubSongs.get(this.Current_Dex);// repeat until cb start time > EndTime
       while (cb.TimeOrg < EndTime) {// first find new voices in this time range and add them to pool
         ISonglet vb = cb.GetContent();// SHOULD EndTime BE INCLUSIVE???
@@ -100,7 +108,8 @@ public class ChorusBox implements ISonglet {
       int cnt = 0;
       while (cnt < NumPlaying) {// then play the whole pool
         Singer player = this.NowPlaying.get(cnt);
-        player.Render_To(EndTime, wave);
+        player.Render_To(EndTime, ChildWave);
+        wave.SumIn(ChildWave);// sum/overdub the waves 
         cnt++;
       }
       cnt = 0;// now pack down the finished ones
@@ -112,6 +121,7 @@ public class ChorusBox implements ISonglet {
           cnt++;
         }
       }
+      this.Prev_Time = EndTime;
     }
   }
   /* ********************************************************************************* */
@@ -129,16 +139,28 @@ public class ChorusBox implements ISonglet {
     }
   }
   /* ********************************************************************************* */
-  public void Add_SubSong(ISonglet voice) {
-    CoordBox cb = voice.Spawn_CoordBox();
+  public void Add_SubSong(ISonglet songlet) {
+    songlet.Set_Project(this.MyProject);// inherit project
+    CoordBox cb = songlet.Spawn_CoordBox();
     SubSongs.add(cb);
   }
   /* ********************************************************************************* */
-  @Override public double Get_Duration() {// this is wrong. the last song started may not be the last one playing. we need to scan the whole tree at compose time. 
+  @Override public double Get_Duration() {
+    return this.Duration;
+  }
+  /* ********************************************************************************* */
+  @Override public double Update_Durations() {
+    double MaxDuration = 0.0;
+    double DurBuf = 0.0;
     int NumSubSongs = this.SubSongs.size();
-    CoordBox Final_Voice = this.SubSongs.get(NumSubSongs - 1);
-    ISonglet vb = Final_Voice.GetContent();
-    return vb.Get_Duration();
+    for (int cnt = 0; cnt < NumSubSongs; cnt++) {
+      ISonglet vb = this.SubSongs.get(cnt).GetContent();
+      if (MaxDuration < (DurBuf = vb.Update_Durations())) {
+        MaxDuration = DurBuf;
+      }
+    }
+    this.Duration = MaxDuration;
+    return MaxDuration;
   }
   /* ********************************************************************************* */
   @Override public void Sort_Me() {// sorting by RealTime
@@ -171,5 +193,13 @@ public class ChorusBox implements ISonglet {
   /* ********************************************************************************* */
   @Override public int Get_Sample_Count(int SampleRate) {
     return SampleRate * (int) this.Get_Duration();
+  }
+  /* ********************************************************************************* */
+  @Override public Project Get_Project() {
+    return this.MyProject;
+  }
+  /* ********************************************************************************* */
+  @Override public void Set_Project(Project project) {
+    this.MyProject = project;
   }
 }
