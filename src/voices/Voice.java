@@ -26,8 +26,12 @@ public class Voice implements ISonglet {//extends VoiceBase{
       return Content;
     }
     /* ********************************************************************************* */
-    public Player_Head Spawn_My_Player() {// for render time
-      Player_Head ph = this.Content.Spawn_My_Player();
+    @Override public Singer Spawn_Singer() {// always always always override this
+      return this.Spawn_My_Singer();
+    }
+    /* ********************************************************************************* */
+    public Player_Head Spawn_My_Singer() {// for render time
+      Player_Head ph = this.Content.Spawn_My_Singer();
       ph.MyOffsetBox = this;// to do: also transfer all of this box's offsets to player head. 
       // also be sure to increment the player's offsets by the offsets that were handed down to me. 
       // or should each player head reach up its chain of parents? 
@@ -37,9 +41,9 @@ public class Voice implements ISonglet {//extends VoiceBase{
       /*
        best pattern is
        in containing player {
-       childplayer = ChildOffsetBox.spawn player
-       childplayer.Compound(this);// inheritance
-       childplayer.Compound(ChildOffsetBox);
+       ChildSinger = ChildOffsetBox.Spawn_Singer();
+       ChildSinger.Compound(total parent offsets);// inheritance
+       ChildSinger.Compound(ChildOffsetBox);
        }
        */
     }
@@ -151,6 +155,10 @@ public class Voice implements ISonglet {//extends VoiceBase{
       }
     }
     /* ********************************************************************************* */
+    @Override public IOffsetBox Get_OffsetBox() {
+      return this.MyOffsetBox;
+    }
+    /* ********************************************************************************* */
     public void Render_Range(int dex0, int dex1, Wave wave) {
       Point pnt0, pnt1;
       for (int pcnt = dex0; pcnt < dex1; pcnt++) {
@@ -181,12 +189,12 @@ public class Voice implements ISonglet {//extends VoiceBase{
       double BaseFreq = Globals.BaseFreqC0;
       double SRate = this.MyProject.SampleRate;
       BaseFreq = 1.0;
-      //SRate = 100.0;
-      //SRate = 1000.0;
       double TimeRange = pnt1.RealTime - pnt0.RealTime;
       double SampleDuration = 1.0 / SRate;
       double FrequencyFactorStart = pnt0.GetFrequencyFactor();
-      double OctaveRange = pnt1.Octave - pnt0.Octave;
+      FrequencyFactorStart *= Math.pow(2.0, this.Inherited_Octave);// inherit transposition 
+      double Octave0 = this.Inherited_Octave + pnt0.Octave, Octave1 = this.Inherited_Octave + pnt1.Octave;
+      double OctaveRange = Octave1 - Octave0;
       if (OctaveRange == 0.0) {
         OctaveRange = Globals.Fudge;// Fudge to avoid div by 0 
       }
@@ -224,7 +232,10 @@ public class Voice implements ISonglet {//extends VoiceBase{
       double SampleDuration = 1.0 / SRate;
       double FrequencyFactorStart = pnt0.GetFrequencyFactor();
       FrequencyFactorStart *= Math.pow(2.0, this.Inherited_Octave);// inherit transposition 
-      double OctaveRange = pnt1.Octave - pnt0.Octave;
+
+      // double Inherited_Time = 0.0, Inherited_Loudness = 1.0;// time, octave, and loudness context
+      double Octave0 = this.Inherited_Octave + pnt0.Octave, Octave1 = this.Inherited_Octave + pnt1.Octave;
+      double OctaveRange = Octave1 - Octave0;
       if (OctaveRange == 0.0) {
         OctaveRange = Globals.Fudge;// Fudge to avoid div by 0 
       }
@@ -281,10 +292,10 @@ public class Voice implements ISonglet {//extends VoiceBase{
   }
   /* ********************************************************************************* */
   @Override public Singer Spawn_Singer() {// for render time
-    return this.Spawn_My_Player();
+    return this.Spawn_My_Singer();
   }
   /* ********************************************************************************* */
-  public Player_Head Spawn_My_Player() {// for render time
+  public Player_Head Spawn_My_Singer() {// for render time
     // Deliver one of my players while exposing specific object class. 
     // Handy if my parent's players know what class I am and want special access to my particular type of player.
     Player_Head ph = new Player_Head();

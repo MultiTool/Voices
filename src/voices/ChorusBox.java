@@ -46,12 +46,16 @@ public class ChorusBox implements ISonglet {
         this.IsFinished = true;
         EndTime = Final_Time;// clip time
       }
+      int Last_Song_Dex = MySonglet.SubSongs.size() - 1;
       OffsetBox cb = MySonglet.SubSongs.get(Current_Dex);// repeat until cb start time > EndTime
       while (cb.TimeOrg < EndTime) {// first find new voices in this time range and add them to pool
-        ISonglet vb = cb.GetContent();// SHOULD EndTime BE INCLUSIVE???
-        Singer player = vb.Spawn_Singer();
-        this.NowPlaying.add(player);
-        player.Start();
+        Singer singer = cb.Spawn_Singer();// SHOULD EndTime BE INCLUSIVE???
+        singer.Inherit(this);
+        this.NowPlaying.add(singer);
+        singer.Start();
+        if (Current_Dex >= Last_Song_Dex) {
+          break;
+        }
         Current_Dex++;
         cb = MySonglet.SubSongs.get(Current_Dex);
       }
@@ -92,12 +96,16 @@ public class ChorusBox implements ISonglet {
       }
       wave.Init(UnMapped_Prev_Time, this.MyOffsetBox.UnMapTime(EndTime), this.MyProject.SampleRate);// wave times are in parent coordinates because the parent will be reading the wave data.
       Wave ChildWave = new Wave();
+      int Last_Song_Dex = MySonglet.SubSongs.size() - 1;
       OffsetBox cb = MySonglet.SubSongs.get(this.Current_Dex);// repeat until cb start time > EndTime
       while (cb.TimeOrg < EndTime) {// first find new voices in this time range and add them to pool
-        ISonglet vb = cb.GetContent();// SHOULD EndTime BE INCLUSIVE???
-        Singer player = vb.Spawn_Singer();
-        this.NowPlaying.add(player);
-        player.Start();
+        Singer singer = cb.Spawn_Singer();// SHOULD EndTime BE INCLUSIVE???
+        singer.Inherit(this);
+        this.NowPlaying.add(singer);
+        singer.Start();
+        if (Current_Dex >= Last_Song_Dex) {
+          break;
+        }
         this.Current_Dex++;
         cb = MySonglet.SubSongs.get(this.Current_Dex);
       }
@@ -120,6 +128,10 @@ public class ChorusBox implements ISonglet {
       }
       this.Prev_Time = EndTime;
     }
+    /* ********************************************************************************* */
+    @Override public IOffsetBox Get_OffsetBox() {
+      return this.MyOffsetBox;
+    }
   }
   /* ********************************************************************************* */
   public static class Chorus_OffsetBox extends OffsetBox {// location box to transpose in pitch, move in time, etc. 
@@ -129,8 +141,12 @@ public class ChorusBox implements ISonglet {
       return Content;
     }
     /* ********************************************************************************* */
-    public Player_Head_ChorusBox Spawn_My_Player() {// for render time
-      Player_Head_ChorusBox ph = this.Content.Spawn_My_Player();
+    @Override public ISonglet.Singer Spawn_Singer() {// always always always override this
+      return this.Spawn_My_Singer();
+    }
+    /* ********************************************************************************* */
+    public Player_Head_ChorusBox Spawn_My_Singer() {// for render time
+      Player_Head_ChorusBox ph = this.Content.Spawn_My_Singer();
       ph.MyOffsetBox = this;// to do: also transfer all of this box's offsets to player head. 
       return ph;
     }
@@ -179,10 +195,10 @@ public class ChorusBox implements ISonglet {
   }
   /* ********************************************************************************* */
   @Override public ISonglet.Singer Spawn_Singer() {
-    return this.Spawn_My_Player();
+    return this.Spawn_My_Singer();
   }
   /* ********************************************************************************* */
-  public Player_Head_ChorusBox Spawn_My_Player() {
+  public Player_Head_ChorusBox Spawn_My_Singer() {
     Player_Head_ChorusBox ChorusPlayer = new Player_Head_ChorusBox();
     ChorusPlayer.MySonglet = this;
     ChorusPlayer.MyProject = this.MyProject;// inherit project

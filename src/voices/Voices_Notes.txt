@@ -123,7 +123,46 @@ well each class could define a simple(x,y, etc.) interface and the graphic layer
  */
 
 
+Next step:
+test composing and rendering in project
+add audio support
+test chords in project
+make looper
 
+fx: reverb, looper, vibrato, distortion?, 
+
+ripped from public static class Singer implements IOffsetBox {// Cantante
+/* ********************************************************************************* */
+@Override public double TimeLoc_g() {
+  return Inherited_Time;
+}
+@Override public void TimeLoc_s(double value) {
+  Inherited_Time = value;
+}
+@Override public double OctaveLoc_g() {
+  return Inherited_Octave;
+}
+@Override public void OctaveLoc_s(double value) {
+  Inherited_Octave = value;
+}
+@Override public double LoudnessLoc_g() {
+  return Inherited_Loudness;
+}
+@Override public void LoudnessLoc_s(double value) {
+  Inherited_Loudness = value;
+}
+@Override public ISonglet GetContent() {
+  return null;
+}
+@Override public double MapTime(double ParentTime) {
+  return this.Inherited_Time + ChildTime;
+}
+@Override public double UnMapTime(double ChildTime) {
+  return Inherited_Octave;
+}
+@Override public Singer Spawn_Singer() {
+  return Inherited_Octave;
+}
 
 
 

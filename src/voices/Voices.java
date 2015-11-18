@@ -22,7 +22,14 @@ public class Voices {
    */
   /* ********************************************************************************* */
   public static void main(String[] args) {
-    Test1();
+    Test2();
+  }
+  /* ********************************************************************************* */
+  public static void Test2() {
+    Globals.BaseFreqC0 = 1.0;
+    Project prj = new Project();
+    prj.Compose_Chorus_Test();
+    prj.Render_Test();
   }
   /* ********************************************************************************* */
   public static void Test1() {

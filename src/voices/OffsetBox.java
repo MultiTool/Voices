@@ -35,7 +35,7 @@ public class OffsetBox implements IOffsetBox {// location box to transpose in pi
     //this.TimeLoc += donor.TimeLoc; this.OctaveLoc += donor.OctaveLoc; this.LoudnessLoc *= donor.LoudnessLoc;
   }
   /* ********************************************************************************* */
-  @Override public Singer Spawn_Singer() {
+  @Override public Singer Spawn_Singer() {// always always always override this
     return null;
   }
   /* ********************************************************************************* */

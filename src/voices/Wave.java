@@ -18,6 +18,14 @@ public class Wave {
   public double StartTime = 0;
   private double[] wave;
   /* ********************************************************************************* */
+  public Wave() {
+    this.numsamples = 0;
+    wave = new double[this.numsamples];
+    this.StartTime = 0.0;
+    this.StartDex = 0;
+    this.Current_Index = 0;
+  }
+  /* ********************************************************************************* */
   public void Init(int SizeInit) {
     this.numsamples = SizeInit;
     wave = new double[SizeInit];
