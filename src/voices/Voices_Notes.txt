@@ -164,8 +164,35 @@ ripped from public static class Singer implements IOffsetBox {// Cantante
   return Inherited_Octave;
 }
 
+Skip_To
+int Last_Song_Dex = MySonglet.SubSongs.size() - 1;
+OffsetBox cb = MySonglet.SubSongs.get(Current_Dex);// repeat until cb start time > EndTime
+while (cb.TimeOrg < EndTime) {// first find new voices in this time range and add them to pool
+  Singer singer = cb.Spawn_Singer();// SHOULD EndTime BE INCLUSIVE???
+  singer.Inherit(this);
+  this.NowPlaying.add(singer);
+  singer.Start();
+  if (Current_Dex >= Last_Song_Dex) {
+    break;
+  }
+  Current_Dex++;
+  cb = MySonglet.SubSongs.get(Current_Dex);
+}
 
-
+Render_To
+int Last_Song_Dex = MySonglet.SubSongs.size() - 1;
+OffsetBox cb = MySonglet.SubSongs.get(this.Current_Dex);// repeat until cb start time > EndTime
+while (cb.TimeOrg <= Final_Start) {// first find new songlets in this time range and add them to pool
+	Singer singer = cb.Spawn_Singer();// SHOULD EndTime BE INCLUSIVE???
+	singer.Inherit(this);
+	this.NowPlaying.add(singer);
+	singer.Start();
+	if (Current_Dex >= Last_Song_Dex) {
+	  break;
+	}
+	this.Current_Dex++;
+	cb = MySonglet.SubSongs.get(this.Current_Dex);
+}
 
 
 

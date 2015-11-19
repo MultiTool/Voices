@@ -41,14 +41,32 @@ public class Wave {
     this.StartDex = (int) (this.StartTime * SampleRate0);// StartDex is the number of empty samples from Time=0 to wave[0]
     this.numsamples = nsamps;
     wave = new double[nsamps];
+    if (nsamps > 0) {
+      //wave[0] = 123.0;
+    }
     this.Current_Index = 0;
   }
   /* ********************************************************************************* */
   public void Overdub(Wave other) {
-    int StartPlace = other.StartDex;
-    int limit = Math.min(this.numsamples, other.StartDex + other.numsamples);
-    int ocnt = 0;
-    for (int cnt = StartPlace; cnt < limit; cnt++) {
+    int MeStart, YouStart, MeStop, YouStop;
+    if (other.StartDex > this.StartDex) {
+      MeStart = other.StartDex - this.StartDex;
+      YouStart = 0;
+    } else {
+      MeStart = 0;
+      YouStart = this.StartDex - other.StartDex;
+    }
+    MeStop = this.StartDex + this.numsamples;
+    YouStop = other.StartDex + other.numsamples;
+    if (MeStop < YouStop) {
+      MeStop = this.numsamples;
+      YouStop = (this.StartDex + this.numsamples) - other.StartDex;
+    } else {
+      MeStop = (other.StartDex + other.numsamples) - this.StartDex;
+      YouStop = other.numsamples;
+    }
+    int ocnt = YouStart;
+    for (int cnt = MeStart; cnt < MeStop; cnt++) {
       this.wave[cnt] += other.wave[ocnt++];
     }
   }
@@ -65,6 +83,20 @@ public class Wave {
     int nextsize = StartPlace + other.numsamples;
     this.wave = Arrays.copyOf(this.wave, nextsize);
     System.arraycopy(other.wave, 0, this.wave, StartPlace, other.numsamples);
+    if (nextsize > 0) {
+      //this.wave[0] = 123.0;
+    }
+    this.numsamples = nextsize;
+  }
+  /* ********************************************************************************* */
+  public void Append_Crude(Wave other) {
+    int StartPlace = this.numsamples;
+    int nextsize = StartPlace + other.numsamples;
+    this.wave = Arrays.copyOf(this.wave, nextsize);
+    System.arraycopy(other.wave, 0, this.wave, StartPlace, other.numsamples);
+    if (nextsize > 0) {
+      //this.wave[0] = 123.0;
+    }
     this.numsamples = nextsize;
   }
   /* ********************************************************************************* */

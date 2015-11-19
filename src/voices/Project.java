@@ -82,10 +82,10 @@ public class Project {
     //RootPlayer.Render_To(4, wave_render);
     //RootPlayer.Skip_To(4.29);
     RootPlayer.Render_To(0.5, wave_scratch);
-    wave_render.Append(wave_scratch);
+    wave_render.Append_Crude(wave_scratch);
     
     RootPlayer.Render_To(FinalTime - 0, wave_scratch);
-    wave_render.Append(wave_scratch);
+    wave_render.Append_Crude(wave_scratch);
 
     EndTime = System.currentTimeMillis();
     System.out.println("Render_To time:" + (EndTime - StartTime));// Render_To time: 150 milliseconds per 16 seconds. 
