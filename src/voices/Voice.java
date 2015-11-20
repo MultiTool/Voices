@@ -56,6 +56,7 @@ public class Voice implements ISonglet {//extends VoiceBase{
     double SubTime;// Subjective time.
     double Current_Octave, Current_Frequency;
     int Prev_Point_Dex, Next_Point_Dex;
+    int Sample_Dex;
     Point Cursor_Point = new Point();
     /* ********************************************************************************* */
     private Player_Head() {
@@ -69,6 +70,7 @@ public class Voice implements ISonglet {//extends VoiceBase{
       this.Cycles = 0.0;
       this.Prev_Point_Dex = 0;//this.Parent.CPoints.get(0);
       this.Next_Point_Dex = 1;
+      this.Sample_Dex = 0;
       this.IsFinished = false;
       //if (this.Parent != null) {
       Point ppnt = this.MyPhrase.CPoints.get(this.Prev_Point_Dex);
@@ -153,6 +155,7 @@ public class Voice implements ISonglet {//extends VoiceBase{
           this.Cursor_Point.CopyFrom(End_Cursor);
         }
       }
+      wave.Amplify(this.MyOffsetBox.LoudnessFactor);
     }
     /* ********************************************************************************* */
     @Override public IOffsetBox Get_OffsetBox() {
@@ -161,6 +164,7 @@ public class Voice implements ISonglet {//extends VoiceBase{
     /* ********************************************************************************* */
     public void Render_Range(int dex0, int dex1, Wave wave) {
       Point pnt0, pnt1;
+      this.Sample_Dex = 0;
       for (int pcnt = dex0; pcnt < dex1; pcnt++) {
         pnt0 = this.MyPhrase.CPoints.get(pcnt);
         pnt1 = this.MyPhrase.CPoints.get(pcnt + 1);
@@ -185,7 +189,7 @@ public class Voice implements ISonglet {//extends VoiceBase{
       PntMid.Loudness = pnt0.Loudness + LoudAlong;
     }
     /* ********************************************************************************* */
-    public void Render_Segment_Iterative(Point pnt0, Point pnt1, Wave wave0) {// stateful iterative approach
+    public void Render_Segment_Iterative(Point pnt0, Point pnt1, Wave wave) {// stateful iterative approach
       double BaseFreq = Globals.BaseFreqC0;
       double SRate = this.MyProject.SampleRate;
       BaseFreq = 1.0;
@@ -219,19 +223,20 @@ public class Voice implements ISonglet {//extends VoiceBase{
 
         CurrentFrequency = BaseFreq * CurrentFrequencyFactorAbsolute;// do we really need to include the base frequency in the summing?
         Amplitude = Math.sin(SubTimeIterate);
-        wave0.Set(Amplitude * CurrentLoudness);
+        wave.Set(this.Sample_Dex, Amplitude * CurrentLoudness);
         //wave0.wave[scnt] = Amplitude * CurrentLoudness;
         SubTimeIterate += (CurrentFrequency * Globals.TwoPi) / SRate;
+        this.Sample_Dex++;
       }
     }
     /* ********************************************************************************* */
-    public void Render_Segment_Integral(Point pnt0, Point pnt1, Wave wave1) {// stateless calculus integral approach
+    public void Render_Segment_Integral(Point pnt0, Point pnt1, Wave wave) {// stateless calculus integral approach
       double BaseFreq = Globals.BaseFreqC0;
       double SRate = this.MyProject.SampleRate;
       double TimeRange = pnt1.RealTime - pnt0.RealTime;
       double SampleDuration = 1.0 / SRate;
       double FrequencyFactorStart = pnt0.GetFrequencyFactor();
-      FrequencyFactorStart *= Math.pow(2.0, this.Inherited_Octave);// inherit transposition 
+      double FrequencyFactorInherited = Math.pow(2.0, this.Inherited_Octave);// inherit transposition 
 
       // double Inherited_Time = 0.0, Inherited_Loudness = 1.0;// time, octave, and loudness context
       double Octave0 = this.Inherited_Octave + pnt0.Octave, Octave1 = this.Inherited_Octave + pnt1.Octave;
@@ -240,7 +245,7 @@ public class Voice implements ISonglet {//extends VoiceBase{
         OctaveRange = Globals.Fudge;// Fudge to avoid div by 0 
       }
       double LoudnessRange = pnt1.Loudness - pnt0.Loudness;
-      double OctaveRate = OctaveRange / TimeRange;// octaves per second
+      double OctaveRate = OctaveRange / TimeRange;// octaves per second bend
       OctaveRate += this.Inherited_OctaveRate;// inherit note bend 
       double LoudnessRate = LoudnessRange / TimeRange;
       double SubTimeLocal;
@@ -255,10 +260,11 @@ public class Voice implements ISonglet {//extends VoiceBase{
         CurrentLoudness = pnt0.Loudness + (TimeAlong * LoudnessRate);
 
         SubTimeLocal = Calculus(OctaveRate, TimeAlong);
-        SubTimeAbsolute = pnt0.SubTime + (FrequencyFactorStart * SubTimeLocal);
+        SubTimeAbsolute = (pnt0.SubTime + (FrequencyFactorStart * SubTimeLocal)) * FrequencyFactorInherited;
         Amplitude = Math.sin(SubTimeAbsolute * BaseFreq * Globals.TwoPi);
-        //wave1.wave[scnt] = Amplitude * CurrentLoudness;
-        wave1.Set(Amplitude * CurrentLoudness);
+        //wave.wave[scnt] = Amplitude * CurrentLoudness;
+        wave.Set(this.Sample_Dex, Amplitude * CurrentLoudness);
+        this.Sample_Dex++;
       }
     }
   }
@@ -337,6 +343,10 @@ public class Voice implements ISonglet {//extends VoiceBase{
     return this.Get_Duration();// this is not a container, so just return what we already know
   }
   /* ********************************************************************************* */
+  @Override public void Update_Guts() {
+    this.Sort_Me();
+  }
+  /* ********************************************************************************* */
   @Override public void Sort_Me() {// sorting by RealTime
     Collections.sort(this.CPoints, new Comparator<Point>() {
       @Override public int compare(Point note0, Point note1) {
@@ -387,6 +397,7 @@ public class Voice implements ISonglet {//extends VoiceBase{
     if (OctaveRate == 0.0) {
       OctaveRate = Globals.Fudge;// Fudge to avoid div by 0 
     }
+    // Yep calling log and pow functions for every sample generated is expensive. We will have to optimize later. 
     double Denom = (Math.log(2) * OctaveRate);// returns the integral of (2 ^ (TimeAlong * OctaveRate))
     //SubTimeCalc = (Math.pow(2, (TimeAlong * OctaveRate)) / Denom) - (1.0 / Denom);
     SubTimeCalc = ((Math.pow(2, (TimeAlong * OctaveRate)) - 1.0) / Denom);

@@ -41,8 +41,8 @@ public class Wave {
     this.StartDex = (int) (this.StartTime * SampleRate0);// StartDex is the number of empty samples from Time=0 to wave[0]
     this.numsamples = nsamps;
     wave = new double[nsamps];
-    if (nsamps > 0) {
-      //wave[0] = 123.0;
+    if (this.wave.length > 0) {
+      //this.wave[0] = 123.0;
     }
     this.Current_Index = 0;
   }
@@ -71,6 +71,12 @@ public class Wave {
     }
   }
   /* ********************************************************************************* */
+  public void Amplify(double LoudnessFactor) {
+    for (int cnt = 0; cnt < this.numsamples; cnt++) {
+      this.wave[cnt] *= LoudnessFactor;
+    }
+  }
+  /* ********************************************************************************* */
   public void Diff(Wave other, Wave result) {
     result.Init(this.numsamples);
     for (int cnt = 0; cnt < this.numsamples; cnt++) {
@@ -83,7 +89,7 @@ public class Wave {
     int nextsize = StartPlace + other.numsamples;
     this.wave = Arrays.copyOf(this.wave, nextsize);
     System.arraycopy(other.wave, 0, this.wave, StartPlace, other.numsamples);
-    if (nextsize > 0) {
+    if (this.wave.length > 0) {
       //this.wave[0] = 123.0;
     }
     this.numsamples = nextsize;
@@ -94,7 +100,7 @@ public class Wave {
     int nextsize = StartPlace + other.numsamples;
     this.wave = Arrays.copyOf(this.wave, nextsize);
     System.arraycopy(other.wave, 0, this.wave, StartPlace, other.numsamples);
-    if (nextsize > 0) {
+    if (this.wave.length > 0) {
       //this.wave[0] = 123.0;
     }
     this.numsamples = nextsize;
@@ -106,5 +112,8 @@ public class Wave {
   public void Set(double value) {
     this.wave[Current_Index] = value;
     Current_Index++;
+  }
+  public void Set(int dex, double value) {
+    this.wave[dex] = value;
   }
 }

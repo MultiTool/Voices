@@ -36,35 +36,10 @@ public class ChorusBox implements ISonglet {
       EndTime = this.MyOffsetBox.MapTime(EndTime);// EndTime is now time internal to ChorusBox's own coordinate system
       if (this.MySonglet.SubSongs.size() <= 0) {
         this.IsFinished = true;
+        this.Prev_Time = EndTime;
         return;
       }
-      if (true) {
-        EndTime = this.Tee_Up(EndTime);
-      } else {
-        if (EndTime < 0) {
-          EndTime = 0;// clip time
-        }
-        int NumSonglets = MySonglet.SubSongs.size();
-        double Final_Start = this.MySonglet.SubSongs.get(NumSonglets - 1).TimeOrg;
-        Final_Start = Math.min(Final_Start, EndTime);
-        double Final_Time = this.MySonglet.Get_Duration();
-        if (EndTime > Final_Time) {
-          this.IsFinished = true;
-          EndTime = Final_Time;// clip time
-        }
-        OffsetBox cb;
-        while (this.Current_Dex < NumSonglets) {// first find new songlets in this time range and add them to pool
-          cb = MySonglet.SubSongs.get(this.Current_Dex);
-          if (Final_Start < cb.TimeOrg) {// repeat until cb start time > EndTime
-            break;
-          }
-          Singer singer = cb.Spawn_Singer();
-          singer.Inherit(this);
-          this.NowPlaying.add(singer);
-          singer.Start();
-          this.Current_Dex++;
-        }
-      }
+      EndTime = this.Tee_Up(EndTime);
       int NumPlaying = NowPlaying.size();
       int cnt = 0;
       while (cnt < NumPlaying) {// then play the whole pool
@@ -73,7 +48,7 @@ public class ChorusBox implements ISonglet {
         cnt++;
       }
       cnt = 0;// now pack down the finished ones
-      while (cnt < NumPlaying) {
+      while (cnt < this.NowPlaying.size()) {
         Singer player = this.NowPlaying.get(cnt);
         if (player.IsFinished) {
           this.NowPlaying.remove(player);
@@ -93,33 +68,7 @@ public class ChorusBox implements ISonglet {
         this.Prev_Time = EndTime;
         return;
       }
-      if (true) {
-        EndTime = this.Tee_Up(EndTime);
-      } else {
-        if (EndTime < 0) {
-          EndTime = 0;// clip time
-        }
-        int NumSonglets = MySonglet.SubSongs.size();
-        double Final_Start = this.MySonglet.SubSongs.get(NumSonglets - 1).TimeOrg;
-        Final_Start = Math.min(Final_Start, EndTime);
-        double Final_Time = this.MySonglet.Get_Duration();
-        if (EndTime > Final_Time) {
-          this.IsFinished = true;
-          EndTime = Final_Time;// clip time
-        }
-        OffsetBox cb;
-        while (this.Current_Dex < NumSonglets) {// first find new songlets in this time range and add them to pool
-          cb = MySonglet.SubSongs.get(this.Current_Dex);
-          if (Final_Start < cb.TimeOrg) {// repeat until cb start time > EndTime
-            break;
-          }
-          Singer singer = cb.Spawn_Singer();
-          singer.Inherit(this);
-          this.NowPlaying.add(singer);
-          singer.Start();
-          this.Current_Dex++;
-        }
-      }
+      EndTime = this.Tee_Up(EndTime);
       wave.Init(UnMapped_Prev_Time, this.MyOffsetBox.UnMapTime(EndTime), this.MyProject.SampleRate);// wave times are in parent coordinates because the parent will be reading the wave data.
       Wave ChildWave = new Wave();
       int NumPlaying = NowPlaying.size();
@@ -131,7 +80,7 @@ public class ChorusBox implements ISonglet {
         cnt++;
       }
       cnt = 0;// now pack down the finished ones
-      while (cnt < NumPlaying) {
+      while (cnt < this.NowPlaying.size()) {
         Singer player = this.NowPlaying.get(cnt);
         if (player.IsFinished) {
           this.NowPlaying.remove(player);
@@ -192,10 +141,14 @@ public class ChorusBox implements ISonglet {
     }
   }
   /* ********************************************************************************* */
-  public void Add_SubSong(ISonglet songlet) {
-    songlet.Set_Project(this.MyProject);// inherit project
-    OffsetBox cb = songlet.Spawn_OffsetBox();
-    SubSongs.add(cb);
+  public OffsetBox Add_SubSong(ISonglet songlet, double TimeOffset, double OctaveOffset, double LoudnessFactor) {
+    songlet.Set_Project(this.MyProject);// child inherits project from me
+    OffsetBox obox = songlet.Spawn_OffsetBox();
+    obox.TimeLoc_s(TimeOffset);
+    obox.OctaveLoc_s(OctaveOffset);
+    obox.LoudnessFactor_s(LoudnessFactor);
+    SubSongs.add(obox);
+    return obox;
   }
   /* ********************************************************************************* */
   @Override public double Get_Duration() {
@@ -216,6 +169,12 @@ public class ChorusBox implements ISonglet {
     }
     this.Duration = MaxDuration;
     return MaxDuration;
+  }
+  /* ********************************************************************************* */
+  @Override public void Update_Guts() {
+    this.Sort_Me();
+    this.Update_Durations();
+    // to do: also recursively update all children guts without running update_durations more than once for each
   }
   /* ********************************************************************************* */
   @Override public void Sort_Me() {// sorting by RealTime

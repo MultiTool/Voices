@@ -20,15 +20,67 @@ public class Project {
     this.Compose_Test();
   }
   /* ********************************************************************************* */
-  public Voice Create_Voice(double TimeOffset, double OctaveOffset) {
-    Voice rootvoice = new Voice();
-    {
-      rootvoice.Add_Note(TimeOffset + 1, OctaveOffset + 4, 1);
-      rootvoice.Add_Note(TimeOffset + 8, OctaveOffset + 1, 0.5);
-      rootvoice.Add_Note(TimeOffset + 16, OctaveOffset + 4, 1);
+  public Voice Create_Warble_Voice(double TimeOffset, double OctaveOffset, double LoudnessOffset) {
+    Voice voice = new Voice();// for fuzz testing
+    double TDiff, OctaveRand, LoudnessRand;
+    double TimeCnt = 0;
+    for (int cnt = 0; cnt < 12; cnt++) {
+      TDiff = (Globals.RandomGenerator.nextDouble() * 2) + 1;
+      OctaveRand = Globals.RandomGenerator.nextDouble() * 2;
+      LoudnessRand = (Globals.RandomGenerator.nextDouble() * 0.5) + 0.5;
+      voice.Add_Note(TimeCnt, OctaveOffset + OctaveRand, LoudnessOffset * LoudnessRand);
+      TimeCnt += TDiff;
     }
-    rootvoice.Recalc_Line_SubTime();
-    return rootvoice;
+    voice.Recalc_Line_SubTime();
+    return voice;
+  }
+  /* ********************************************************************************* */
+  public Voice Create_Voice(double TimeOffset, double OctaveOffset, double LoudnessOffset) {
+    Voice voice = new Voice();
+    {
+      voice.Add_Note(TimeOffset + 0, OctaveOffset + 0, LoudnessOffset * 1);
+      voice.Add_Note(TimeOffset + 8, OctaveOffset + 1, LoudnessOffset * 0.5);
+      voice.Add_Note(TimeOffset + 16, OctaveOffset + 4, LoudnessOffset * 1);
+    }
+    voice.Recalc_Line_SubTime();
+    return voice;
+  }
+  /* ********************************************************************************* */
+  public IOffsetBox Create_Chorus(double TimeOffset, double OctaveOffset, double LoudnessOffset) {
+    ChorusBox cbx = new ChorusBox();
+    cbx.Set_Project(this);
+    IOffsetBox obox = cbx.Spawn_OffsetBox();
+
+    Voice vc0 = Create_Voice(0, 0, 1);
+    cbx.Add_SubSong(vc0, TimeOffset + 0, OctaveOffset + 3, LoudnessOffset * 0.2);
+
+    Voice vc1 = Create_Voice(0, 0, 1);
+    cbx.Add_SubSong(vc1, TimeOffset + 2, OctaveOffset + 0, LoudnessOffset * 1);
+
+//    Voice vc2 = Create_Warble_Voice(0, 0, 1);
+//    cbx.Add_SubSong(vc2, TimeOffset + 2, OctaveOffset + 0, LoudnessOffset * 1);
+    cbx.Update_Guts();
+
+    return obox;
+  }
+  /* ********************************************************************************* */
+  public void Compose_Chorus_Test1() {
+    ChorusBox cbx = new ChorusBox();
+    cbx.Set_Project(this);
+    this.rootbox = cbx.Spawn_OffsetBox();
+
+    Voice vc0 = Create_Voice(0, 0, 1);
+    cbx.Add_SubSong(vc0, 0, 3, 0.2);
+
+    Voice vc1 = Create_Voice(0, 0, 1);
+    cbx.Add_SubSong(vc1, 2, 0, 1);
+
+    Voice vc2 = Create_Warble_Voice(0, 0, 1);
+    cbx.Add_SubSong(vc2,  0, 1.3, 1);
+
+    cbx.Update_Guts();
+
+    Render_Test();
   }
   /* ********************************************************************************* */
   public void Compose_Chorus_Test() {
@@ -37,7 +89,7 @@ public class Project {
     this.rootbox = cbx.Spawn_OffsetBox();
 
     Voice rootvoice = new Voice();
-    cbx.Add_SubSong(rootvoice);
+    cbx.Add_SubSong(rootvoice, 0, 0, 0);
     {
       rootvoice.Add_Note(1, 0, 1);
       rootvoice.Add_Note(4, 1, 1);
@@ -81,9 +133,9 @@ public class Project {
     ///RootPlayer.Skip_To(1.2);
     //RootPlayer.Render_To(4, wave_render);
     //RootPlayer.Skip_To(4.29);
-    RootPlayer.Render_To(0.5, wave_scratch);
-    wave_render.Append_Crude(wave_scratch);
-    
+//    RootPlayer.Render_To(0.5, wave_scratch);
+//    wave_render.Append_Crude(wave_scratch);
+
     RootPlayer.Render_To(FinalTime - 0, wave_scratch);
     wave_render.Append_Crude(wave_scratch);
 

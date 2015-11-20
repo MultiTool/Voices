@@ -124,7 +124,7 @@ well each class could define a simple(x,y, etc.) interface and the graphic layer
 
 
 Next step:
-test composing and rendering in project
+test composing and rendering in project - working, test many overdubs 
 add audio support
 test chords in project
 make looper
@@ -148,7 +148,7 @@ ripped from public static class Singer implements IOffsetBox {// Cantante
 @Override public double LoudnessLoc_g() {
   return Inherited_Loudness;
 }
-@Override public void LoudnessLoc_s(double value) {
+@Override public void LoudnessFactor_s(double value) {
   Inherited_Loudness = value;
 }
 @Override public ISonglet GetContent() {
