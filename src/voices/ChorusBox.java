@@ -17,6 +17,7 @@ public class ChorusBox implements ISonglet {
   public ArrayList<OffsetBox> SubSongs = new ArrayList<>();
   public double Duration = 0.0;
   private Project MyProject;
+  public String MyName;// for debugging
   /* ********************************************************************************* */
   public static class Player_Head_ChorusBox extends Singer {
     protected ChorusBox MySonglet;
@@ -60,6 +61,9 @@ public class ChorusBox implements ISonglet {
     }
     /* ********************************************************************************* */
     @Override public void Render_To(double EndTime, Wave wave) {
+      if (this.MySonglet.MyName.contains("Chord0")) {
+        boolean nop = true;
+      }
       EndTime = this.MyOffsetBox.MapTime(EndTime);// EndTime is now time internal to ChorusBox's own coordinate system
       double UnMapped_Prev_Time = this.MyOffsetBox.UnMapTime(this.Prev_Time);// get start time in parent coordinates
       if (this.MySonglet.SubSongs.size() <= 0) {
@@ -69,13 +73,15 @@ public class ChorusBox implements ISonglet {
         return;
       }
       EndTime = this.Tee_Up(EndTime);
-      wave.Init(UnMapped_Prev_Time, this.MyOffsetBox.UnMapTime(EndTime), this.MyProject.SampleRate);// wave times are in parent coordinates because the parent will be reading the wave data.
+      double UnMapped_EndTime = this.MyOffsetBox.UnMapTime(EndTime);
+      wave.Init(UnMapped_Prev_Time, UnMapped_EndTime, this.MyProject.SampleRate);// wave times are in parent coordinates because the parent will be reading the wave data.
       Wave ChildWave = new Wave();
       int NumPlaying = NowPlaying.size();
       int cnt = 0;
       while (cnt < NumPlaying) {// then play the whole pool
         Singer player = this.NowPlaying.get(cnt);
         player.Render_To(EndTime, ChildWave);
+        ChildWave.Shift_Timebase(wave.StartTime);// shift child data to my parent's time base. hacky? 
         wave.Overdub(ChildWave);// sum/overdub the waves 
         cnt++;
       }

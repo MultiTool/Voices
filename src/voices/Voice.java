@@ -81,6 +81,7 @@ public class Voice implements ISonglet {//extends VoiceBase{
     @Override public void Skip_To(double EndTime) {// ready for test
       Point Prev_Point, Next_Point;
       EndTime = this.MyOffsetBox.MapTime(EndTime);// EndTime is now time internal to voice's own coordinate system
+      this.Sample_Dex = 0;
       int len = this.MyPhrase.CPoints.size();
       if (len < 2) {// this should really just throw an error
         this.IsFinished = true;
@@ -118,6 +119,7 @@ public class Voice implements ISonglet {//extends VoiceBase{
       Point Prev_Point, Next_Point;
       EndTime = this.MyOffsetBox.MapTime(EndTime);// EndTime is now time internal to voice's own coordinate system
       double UnMapped_Prev_Time = this.MyOffsetBox.UnMapTime(this.Cursor_Point.RealTime);// get start time in parent coordinates
+      this.Sample_Dex = 0;
       int len = this.MyPhrase.CPoints.size();
       if (len < 2) {// this should really just throw an error
         this.IsFinished = true;
@@ -132,7 +134,8 @@ public class Voice implements ISonglet {//extends VoiceBase{
         this.IsFinished = true;
         EndTime = Final_Point.RealTime;// clip time
       }
-      wave.Init(UnMapped_Prev_Time, this.MyOffsetBox.UnMapTime(EndTime), this.MyProject.SampleRate);// wave times are in parent coordinates because the parent will be reading the wave data.
+      double UnMapped_EndTime = this.MyOffsetBox.UnMapTime(EndTime);
+      wave.Init(UnMapped_Prev_Time, UnMapped_EndTime, this.MyProject.SampleRate);// wave times are in parent coordinates because the parent will be reading the wave data.
       Prev_Point = this.Cursor_Point;
       int pdex = this.Next_Point_Dex;
       Next_Point = this.MyPhrase.CPoints.get(pdex);

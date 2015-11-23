@@ -123,14 +123,6 @@ well each class could define a simple(x,y, etc.) interface and the graphic layer
  */
 
 
-Next step:
-test composing and rendering in project - working, test many overdubs 
-add audio support
-test chords in project
-make looper
-
-fx: reverb, looper, vibrato, distortion?, 
-
 ripped from public static class Singer implements IOffsetBox {// Cantante
 /* ********************************************************************************* */
 @Override public double TimeLoc_g() {
@@ -194,5 +186,15 @@ while (cb.TimeOrg <= Final_Start) {// first find new songlets in this time range
 	cb = MySonglet.SubSongs.get(this.Current_Dex);
 }
 
+
+Next step:
+test composing and rendering in project - working
+test chords in project - working
+  test deep overdubs, 
+  long complicated (random?) voices, - working with transpose
+add audio support
+make looper
+drone sample player
+fx: reverb, looper, vibrato, flanger, distortion? 
 
 

@@ -28,7 +28,9 @@ public class Voices {
   public static void Test2() {
     Globals.BaseFreqC0 = 1.0;
     Project prj = new Project();
-    prj.Compose_Chorus_Test1();
+    // prj.Compose_Chorus_Test1();
+    prj.Compose_Chorus_Test2();
+
     
 //    prj.Compose_Chorus_Test();
 //    prj.Render_Test();

@@ -15,7 +15,9 @@ public class Wave {
   public int numsamples;
   private int Current_Index;
   public int StartDex = 0;
+  public int SampleRate;
   public double StartTime = 0;
+  public double EndTime = 0;// for debugging
   private double[] wave;
   /* ********************************************************************************* */
   public Wave() {
@@ -26,6 +28,12 @@ public class Wave {
     this.Current_Index = 0;
   }
   /* ********************************************************************************* */
+  public void Shift_Timebase(double TimeDif) {
+    this.StartTime += TimeDif;// wave start time is the offset of wave[0] from time 0. 
+    this.EndTime += TimeDif;
+    this.StartDex = (int) (this.StartTime * this.SampleRate);// StartDex is the number of empty samples from Time=0 to wave[0]
+  }
+  /* ********************************************************************************* */
   public void Init(int SizeInit) {
     this.numsamples = SizeInit;
     wave = new double[SizeInit];
@@ -34,13 +42,15 @@ public class Wave {
     this.Current_Index = 0;
   }
   /* ********************************************************************************* */
-  public void Init(double StartTime0, double EndTime0, double SampleRate0) {
+  public void Init(double StartTime0, double EndTime0, int SampleRate0) {
     this.StartTime = StartTime0;// wave start time is the offset of wave[0] from time 0. 
+    this.EndTime = EndTime0;
+    this.SampleRate = SampleRate0;
     double TimeSpan = EndTime0 - StartTime0;
     int nsamps = (int) (TimeSpan * SampleRate0);
     this.StartDex = (int) (this.StartTime * SampleRate0);// StartDex is the number of empty samples from Time=0 to wave[0]
     this.numsamples = nsamps;
-    wave = new double[nsamps];
+    wave = new double[nsamps + 1];// plus 1 because converting from double to int truncates. 
     if (this.wave.length > 0) {
       //this.wave[0] = 123.0;
     }
@@ -114,6 +124,10 @@ public class Wave {
     Current_Index++;
   }
   public void Set(int dex, double value) {
-    this.wave[dex] = value;
+    if (this.wave.length <= dex) {
+      boolean nop = true;
+    } else {
+      this.wave[dex] = value;
+    }
   }
 }
