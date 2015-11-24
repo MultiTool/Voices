@@ -13,6 +13,7 @@ import java.util.Random;
  */
 public class Globals {
   public static int SampleRate = 44100;
+  public static int SampleRateTest = 100;
   public static double BaseFreqC0 = 16.3516;// hz
   public static double TwoPi = Math.PI * 2.0;// hz
   public static double Fudge = 0.00000000001;

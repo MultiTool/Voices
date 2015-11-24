@@ -31,7 +31,6 @@ public class Voices {
     // prj.Compose_Chorus_Test1();
     prj.Compose_Chorus_Test2();
 
-    
 //    prj.Compose_Chorus_Test();
 //    prj.Render_Test();
   }
@@ -47,13 +46,14 @@ public class Voices {
     vc.Set_Project(proj);
 
     int TDiff = 16;// seconds
-    
+
     {
       vc.Add_Note(1, 4, 1);
       vc.Add_Note(8, 1, 0.5);
       vc.Add_Note(TDiff, 4, 1);
     }
-    vc.Recalc_Line_SubTime();
+    ISonglet.MetricsPacket metrics = new ISonglet.MetricsPacket();
+    vc.Update_Guts(metrics);
 
     wave_render.Init(0);
 

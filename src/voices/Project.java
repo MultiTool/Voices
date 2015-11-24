@@ -5,6 +5,7 @@
  */
 package voices;
 
+import voices.ISonglet.MetricsPacket;
 import voices.ISonglet.Singer;
 import static voices.Voices.SaveWave;
 
@@ -14,7 +15,8 @@ import static voices.Voices.SaveWave;
  */
 public class Project {
   OffsetBox rootbox;
-  public int SampleRate = 100;// Globals.SampleRate
+  // public int SampleRate = 100;// Globals.SampleRate;
+  public int SampleRate = Globals.SampleRate;
   /* ********************************************************************************* */
   public Project() {
     //this.Compose_Test();
@@ -31,7 +33,8 @@ public class Project {
       voice.Add_Note(TimeCnt, OctaveOffset + OctaveRand, LoudnessOffset * LoudnessRand);
       TimeCnt += TDiff;
     }
-    voice.Recalc_Line_SubTime();
+    MetricsPacket metrics = new MetricsPacket();
+    voice.Update_Guts(metrics);
     return voice;
   }
   /* ********************************************************************************* */
@@ -42,7 +45,8 @@ public class Project {
       voice.Add_Note(TimeOffset + 8, OctaveOffset + 1, LoudnessOffset * 0.5);
       voice.Add_Note(TimeOffset + 16, OctaveOffset + 4, LoudnessOffset * 1);
     }
-    voice.Recalc_Line_SubTime();
+    MetricsPacket metrics = new MetricsPacket();
+    voice.Update_Guts(metrics);
     return voice;
   }
   /* ********************************************************************************* */
@@ -50,7 +54,8 @@ public class Project {
     Voice voice = new Voice();
     voice.Add_Note(TimeOffset + 0, OctaveOffset + 0, LoudnessOffset * 1);
     voice.Add_Note(TimeOffset + 1, OctaveOffset + 0, LoudnessOffset * 1);
-    voice.Recalc_Line_SubTime();
+    MetricsPacket metrics = new MetricsPacket();
+    voice.Update_Guts(metrics);
     return voice;
   }
   /* ********************************************************************************* */
@@ -65,22 +70,25 @@ public class Project {
       LoudnessRand = 1.0;//(Globals.RandomGenerator.nextDouble() * 0.5) + 0.5;
       cbx.Add_SubSong(note, TimeOffset + TDiff, OctaveOffset + OctaveRand, LoudnessOffset * LoudnessRand);
     }
+
     cbx.Sort_Me();
-    cbx.Update_Guts();
+    MetricsPacket metrics = new MetricsPacket();
+    cbx.Update_Guts(metrics);
     return cbx;
   }
   /* ********************************************************************************* */
-  public ChorusBox Create_Nested_Chorus(double TimeOffset, double OctaveOffset, double LoudnessOffset) {
+  public ChorusBox Create_Nested_Chorus(double TimeOffset, double OctaveOffset, double LoudnessOffset, int BoxDepth) {
     Voice note = Create_Simple_Note(0, 0, 1);// for stress testing
     ISonglet songlet = note;
     ChorusBox cbx = null;
-    for (int cnt = 0; cnt < 4; cnt++) {
+    for (int cnt = 0; cnt < BoxDepth; cnt++) {
       cbx = new ChorusBox();
       cbx.MyName = "Chord" + cnt;
       cbx.Set_Project(this);
       cbx.Add_SubSong(songlet, 1, 1, LoudnessOffset * 1.0);
       cbx.Sort_Me();
-      cbx.Update_Guts();
+      MetricsPacket metrics = new MetricsPacket();
+      cbx.Update_Guts(metrics);
       songlet = cbx;
     }
     cbx.MyName = "TopChord";
@@ -88,15 +96,18 @@ public class Project {
   }
   /* ********************************************************************************* */
   public void Compose_Chorus_Test2() {
-    ChorusBox cbx0 = null;
+    ChorusBox cbx = null;
     if (false) {
-      cbx0 = Create_Random_Chorus(0, 0, 1.0);
+      cbx = Create_Random_Chorus(0, 0, 1.0);
     } else {
-      cbx0 = Create_Nested_Chorus(0, 0, 1.0);
+      cbx = Create_Nested_Chorus(0, 0, 1.0, 4);
     }
-    OffsetBox obox = cbx0.Spawn_OffsetBox();
+    OffsetBox obox = cbx.Spawn_OffsetBox();
     this.rootbox = obox;
-    cbx0.Update_Guts();
+
+    MetricsPacket metrics = new MetricsPacket();
+    cbx.Update_Guts(metrics);
+
     Render_Test();
   }
   /* ********************************************************************************* */
@@ -114,7 +125,8 @@ public class Project {
     Voice vc2 = Create_Warble_Voice(0, 0, 1);
     cbx.Add_SubSong(vc2, 0, 1.3, 1);
 
-    cbx.Update_Guts();
+    MetricsPacket metrics = new MetricsPacket();
+    cbx.Update_Guts(metrics);
 
     Render_Test();
   }
@@ -131,8 +143,9 @@ public class Project {
     //rootvoice.Add_Note(1, 4, 1);
 //      rootvoice.Add_Note(8, 1, 0.5);
 //      rootvoice.Add_Note(16, 4, 1);
-    rootvoice.Recalc_Line_SubTime();
-    cbx.Update_Durations();
+
+    MetricsPacket metrics = new MetricsPacket();
+    cbx.Update_Guts(metrics);
   }
   /* ********************************************************************************* */
   public void Compose_Test() {
@@ -146,10 +159,13 @@ public class Project {
       rootvoice.Add_Note(8, 1, 0.5);
       rootvoice.Add_Note(16, 4, 1);
     }
-    rootvoice.Recalc_Line_SubTime();
+    MetricsPacket metrics = new MetricsPacket();
+    rootvoice.Update_Guts(metrics);
   }
   /* ********************************************************************************* */
   public void Render_Test() {
+    this.SampleRate = Globals.SampleRateTest;
+    this.SampleRate = Globals.SampleRate;
     Singer RootPlayer = this.rootbox.Spawn_Singer();
     RootPlayer.Compound(this.rootbox);
 
@@ -167,8 +183,8 @@ public class Project {
     //RootPlayer.Render_To(4, wave_render);
     //RootPlayer.Skip_To(4.29);
 
-//    RootPlayer.Render_To(FinalTime / 2, wave_scratch);
-//    wave_render.Append_Crude(wave_scratch);
+    RootPlayer.Render_To(FinalTime / 2, wave_scratch);
+    wave_render.Append_Crude(wave_scratch);
     RootPlayer.Render_To(FinalTime, wave_scratch);
     wave_render.Append_Crude(wave_scratch);
 
@@ -194,7 +210,8 @@ public class Project {
       vc.Add_Note(8, 1, 0.5);
       vc.Add_Note(TDiff, 4, 1);
     }
-    vc.Recalc_Line_SubTime();
+    MetricsPacket metrics = new MetricsPacket();
+    vc.Update_Guts(metrics);
 
     nsamps = vc.Get_Sample_Count(Globals.SampleRate);
 

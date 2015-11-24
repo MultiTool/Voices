@@ -61,10 +61,8 @@ public class ChorusBox implements ISonglet {
     }
     /* ********************************************************************************* */
     @Override public void Render_To(double EndTime, Wave wave) {
-      if (this.MySonglet.MyName.contains("Chord0")) {
-        boolean nop = true;
-      }
       EndTime = this.MyOffsetBox.MapTime(EndTime);// EndTime is now time internal to ChorusBox's own coordinate system
+      double Old_EndTime = EndTime;
       double UnMapped_Prev_Time = this.MyOffsetBox.UnMapTime(this.Prev_Time);// get start time in parent coordinates
       if (this.MySonglet.SubSongs.size() <= 0) {
         this.IsFinished = true;
@@ -81,7 +79,8 @@ public class ChorusBox implements ISonglet {
       while (cnt < NumPlaying) {// then play the whole pool
         Singer player = this.NowPlaying.get(cnt);
         player.Render_To(EndTime, ChildWave);
-        ChildWave.Shift_Timebase(wave.StartTime);// shift child data to my parent's time base. hacky? 
+        //ChildWave.Shift_Timebase(wave.StartTime);// shift child data to my parent's time base. hacky? 
+        ChildWave.Shift_Timebase(this.MyOffsetBox.TimeOrg);// shift child data to my parent's time base. hacky? 
         wave.Overdub(ChildWave);// sum/overdub the waves 
         cnt++;
       }
@@ -94,7 +93,8 @@ public class ChorusBox implements ISonglet {
           cnt++;
         }
       }
-      this.Prev_Time = EndTime;
+      wave.Amplify(this.MyOffsetBox.LoudnessFactor);
+      this.Prev_Time = Old_EndTime;// EndTime;
     }
     /* ********************************************************************************* */
     private double Tee_Up(double EndTime) {// consolidating identical code 
@@ -177,10 +177,23 @@ public class ChorusBox implements ISonglet {
     return MaxDuration;
   }
   /* ********************************************************************************* */
-  @Override public void Update_Guts() {
-    this.Sort_Me();
-    this.Update_Durations();
-    // to do: also recursively update all children guts without running update_durations more than once for each
+  @Override public void Update_Guts(MetricsPacket metrics) {
+    this.Sort_Me(); // to do: also recursively update all children guts without running update_durations more than once for each
+    metrics.MaxDuration = 0.0;// redundant
+    double MyMaxDuration = 0.0;
+    double DurBuf = 0.0;
+    int NumSubSongs = this.SubSongs.size();
+    for (int cnt = 0; cnt < NumSubSongs; cnt++) {
+      OffsetBox obx = this.SubSongs.get(cnt);
+      ISonglet songlet = obx.GetContent();
+      metrics.MaxDuration = 0.0;
+      songlet.Update_Guts(metrics);
+      if (MyMaxDuration < (DurBuf = (obx.TimeOrg + metrics.MaxDuration))) {
+        MyMaxDuration = DurBuf;
+      }
+    }
+    this.Duration = MyMaxDuration;
+    metrics.MaxDuration = MyMaxDuration;
   }
   /* ********************************************************************************* */
   @Override public void Sort_Me() {// sorting by RealTime
@@ -197,6 +210,7 @@ public class ChorusBox implements ISonglet {
   /* ********************************************************************************* */
   public Chorus_OffsetBox Spawn_My_OffsetBox() {// for compose time
     Chorus_OffsetBox lbox = new Chorus_OffsetBox();// Deliver a OffsetBox specific to this type of phrase.
+    lbox.Clear();
     lbox.Content = this;
     return lbox;
   }

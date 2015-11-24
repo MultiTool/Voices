@@ -338,6 +338,9 @@ public class Voice implements ISonglet {//extends VoiceBase{
   /* ********************************************************************************* */
   @Override public double Get_Duration() {
     int len = this.CPoints.size();
+    if (len <= 0) {
+      return 0;
+    }
     Point Final_Point = this.CPoints.get(len - 1);
     return Final_Point.RealTime;
   }
@@ -346,8 +349,10 @@ public class Voice implements ISonglet {//extends VoiceBase{
     return this.Get_Duration();// this is not a container, so just return what we already know
   }
   /* ********************************************************************************* */
-  @Override public void Update_Guts() {
+  @Override public void Update_Guts(MetricsPacket metrics) {
     this.Sort_Me();
+    this.Recalc_Line_SubTime();
+    metrics.MaxDuration = this.Get_Duration();
   }
   /* ********************************************************************************* */
   @Override public void Sort_Me() {// sorting by RealTime

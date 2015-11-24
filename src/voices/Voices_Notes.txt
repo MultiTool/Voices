@@ -190,11 +190,12 @@ while (cb.TimeOrg <= Final_Start) {// first find new songlets in this time range
 Next step:
 test composing and rendering in project - working
 test chords in project - working
-  test deep overdubs, 
+  test deep overdubs - working 
   long complicated (random?) voices, - working with transpose
-add audio support
+add audio support --next!!
 make looper
 drone sample player
-fx: reverb, looper, vibrato, flanger, distortion? 
+fx: reverb, looper, vibrato, flanger, distortion
 
 
+BBE-3311: Geocoder layout changes

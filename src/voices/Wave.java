@@ -66,9 +66,10 @@ public class Wave {
       MeStart = 0;
       YouStart = this.StartDex - other.StartDex;
     }
-    MeStop = this.StartDex + this.numsamples;
-    YouStop = other.StartDex + other.numsamples;
-    if (MeStop < YouStop) {
+    double TestMeStop, TestYouStop;
+    TestMeStop = this.StartDex + this.numsamples;
+    TestYouStop = other.StartDex + other.numsamples;
+    if (TestMeStop < TestYouStop) {
       MeStop = this.numsamples;
       YouStop = (this.StartDex + this.numsamples) - other.StartDex;
     } else {
