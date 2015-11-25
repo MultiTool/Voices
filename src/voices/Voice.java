@@ -82,15 +82,15 @@ public class Voice implements ISonglet {//extends VoiceBase{
       Point Prev_Point, Next_Point;
       EndTime = this.MyOffsetBox.MapTime(EndTime);// EndTime is now time internal to voice's own coordinate system
       this.Sample_Dex = 0;
-      int len = this.MyPhrase.CPoints.size();
-      if (len < 2) {// this should really just throw an error
+      int NumPoints = this.MyPhrase.CPoints.size();
+      if (NumPoints < 2) {// this should really just throw an error
         this.IsFinished = true;
         return;
       }
       if (EndTime < Cursor_Point.RealTime) {
         EndTime = Cursor_Point.RealTime;// clip time
       }
-      Point Final_Point = this.MyPhrase.CPoints.get(len - 1);
+      Point Final_Point = this.MyPhrase.CPoints.get(NumPoints - 1);
       if (EndTime > Final_Point.RealTime) {
         this.IsFinished = true;
         EndTime = Final_Point.RealTime;// clip time
@@ -116,12 +116,12 @@ public class Voice implements ISonglet {//extends VoiceBase{
     }
     /* ********************************************************************************* */
     @Override public void Render_To(double EndTime, Wave wave) {// ready for test
-      Point Prev_Point, Next_Point;
+      Point Prev_Point = null, Next_Point = null;
       EndTime = this.MyOffsetBox.MapTime(EndTime);// EndTime is now time internal to voice's own coordinate system
       double UnMapped_Prev_Time = this.MyOffsetBox.UnMapTime(this.Cursor_Point.RealTime);// get start time in parent coordinates
       this.Sample_Dex = 0;
-      int len = this.MyPhrase.CPoints.size();
-      if (len < 2) {// this should really just throw an error
+      int NumPoints = this.MyPhrase.CPoints.size();
+      if (NumPoints < 2) {// this should really just throw an error
         this.IsFinished = true;
         wave.Init(UnMapped_Prev_Time, UnMapped_Prev_Time, this.MyProject.SampleRate);
         return;
@@ -129,23 +129,42 @@ public class Voice implements ISonglet {//extends VoiceBase{
       if (EndTime < Cursor_Point.RealTime) {
         EndTime = Cursor_Point.RealTime;// clip time
       }
-      Point Final_Point = this.MyPhrase.CPoints.get(len - 1);
+      Point Final_Point = this.MyPhrase.CPoints.get(NumPoints - 1);
       if (EndTime > Final_Point.RealTime) {
         this.IsFinished = true;
         EndTime = Final_Point.RealTime;// clip time
       }
       double UnMapped_EndTime = this.MyOffsetBox.UnMapTime(EndTime);
       wave.Init(UnMapped_Prev_Time, UnMapped_EndTime, this.MyProject.SampleRate);// wave times are in parent coordinates because the parent will be reading the wave data.
+      //wave.Fill(777.0);
       Prev_Point = this.Cursor_Point;
       int pdex = this.Next_Point_Dex;
-      Next_Point = this.MyPhrase.CPoints.get(pdex);
-      while (Next_Point.RealTime < EndTime) {
-        Render_Segment_Integral(Prev_Point, Next_Point, wave);
-        pdex++;
-        Prev_Point = Next_Point;
+
+      if (true) {
         Next_Point = this.MyPhrase.CPoints.get(pdex);
+        while (Next_Point.RealTime < EndTime) {
+          Render_Segment_Integral(Prev_Point, Next_Point, wave);
+          pdex++;
+          Prev_Point = Next_Point;
+          Next_Point = this.MyPhrase.CPoints.get(pdex);
+        }
+        this.Next_Point_Dex = pdex;
+      } else {
+        while (this.Next_Point_Dex < NumPoints) {
+          Next_Point = this.MyPhrase.CPoints.get(this.Next_Point_Dex);
+          if (EndTime < Next_Point.RealTime) {// repeat until control point time overtakes EndTime
+            break;
+          }
+          this.Prev_Point_Dex = this.Next_Point_Dex - 1;
+          Prev_Point = this.MyPhrase.CPoints.get(this.Prev_Point_Dex);
+          Render_Segment_Integral(Prev_Point, Next_Point, wave);
+          this.Next_Point_Dex++;
+        }
       }
-      this.Next_Point_Dex = pdex;
+      if (Next_Point.RealTime == EndTime) {
+        boolean nop = true;
+      }
+
       this.Prev_Point_Dex = this.Next_Point_Dex - 1;
 
       // render loose end. 
@@ -218,6 +237,9 @@ public class Voice implements ISonglet {//extends VoiceBase{
       double SubTimeIterate = (pnt0.SubTime * BaseFreq * Globals.TwoPi);
 
       for (int scnt = 0; scnt < NumSamples; scnt++) {
+        if (scnt == NumSamples - 1) {
+          boolean nop = true;
+        }
         TimeAlong = scnt * SampleDuration;
         CurrentOctaveLocal = TimeAlong * OctaveRate;
         CurrentFrequencyFactorLocal = Math.pow(2.0, CurrentOctaveLocal); // to convert to absolute, do pnt0.SubTime + (FrequencyFactorStart * CurrentFrequencyFactorLocal);
@@ -259,6 +281,9 @@ public class Voice implements ISonglet {//extends VoiceBase{
       double CurrentLoudness;
       double Amplitude;
       for (int scnt = 0; scnt < NumSamples; scnt++) {
+        if (scnt == NumSamples - 1) {
+          boolean nop = true;
+        }
         TimeAlong = scnt * SampleDuration;
         CurrentLoudness = pnt0.Loudness + (TimeAlong * LoudnessRate);
 

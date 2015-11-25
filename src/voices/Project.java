@@ -59,6 +59,22 @@ public class Project {
     return voice;
   }
   /* ********************************************************************************* */
+  public ChorusBox Create_Chord(double TimeOffset, double OctaveOffset, double LoudnessOffset, int NumNotes) {
+    double OctaveChange, LoudnessChange;// for stress testing
+    ChorusBox cbx = new ChorusBox();
+    cbx.Set_Project(this);
+    for (int cnt = 0; cnt < NumNotes; cnt++) {
+      Voice note = Create_Simple_Note(0, 0, 1);
+      OctaveChange = cnt * 3;
+      LoudnessChange = 1.0 / (1.0 + cnt);
+      cbx.Add_SubSong(note, TimeOffset, OctaveOffset + OctaveChange, LoudnessOffset * LoudnessChange);
+    }
+    cbx.Sort_Me();
+    MetricsPacket metrics = new MetricsPacket();
+    cbx.Update_Guts(metrics);
+    return cbx;
+  }
+  /* ********************************************************************************* */
   public ChorusBox Create_Random_Chorus(double TimeOffset, double OctaveOffset, double LoudnessOffset) {
     double TDiff, OctaveRand, LoudnessRand;// for fuzz testing
     ChorusBox cbx = new ChorusBox();
@@ -70,7 +86,6 @@ public class Project {
       LoudnessRand = 1.0;//(Globals.RandomGenerator.nextDouble() * 0.5) + 0.5;
       cbx.Add_SubSong(note, TimeOffset + TDiff, OctaveOffset + OctaveRand, LoudnessOffset * LoudnessRand);
     }
-
     cbx.Sort_Me();
     MetricsPacket metrics = new MetricsPacket();
     cbx.Update_Guts(metrics);
@@ -97,10 +112,16 @@ public class Project {
   /* ********************************************************************************* */
   public void Compose_Chorus_Test2() {
     ChorusBox cbx = null;
-    if (false) {
+    switch (2) {
+    case 0:
       cbx = Create_Random_Chorus(0, 0, 1.0);
-    } else {
+      break;
+    case 1:
       cbx = Create_Nested_Chorus(0, 0, 1.0, 4);
+      break;
+    case 2:
+      cbx = Create_Chord(0, 0, 1.0, 1);
+      break;
     }
     OffsetBox obox = cbx.Spawn_OffsetBox();
     this.rootbox = obox;
@@ -165,7 +186,7 @@ public class Project {
   /* ********************************************************************************* */
   public void Render_Test() {
     this.SampleRate = Globals.SampleRateTest;
-    this.SampleRate = Globals.SampleRate;
+    //this.SampleRate = Globals.SampleRate;
     Singer RootPlayer = this.rootbox.Spawn_Singer();
     RootPlayer.Compound(this.rootbox);
 
@@ -174,6 +195,8 @@ public class Project {
 //    int nsamps = this.rootbox.GetContent().Get_Sample_Count(this.SampleRate);
 //    wave_render.Init(nsamps);
     Wave wave_render = new Wave();
+    wave_render.Init(0, FinalTime, SampleRate);
+    wave_render.Fill(777.0);
     Wave wave_scratch = new Wave();
 
     long StartTime, EndTime;
@@ -183,10 +206,17 @@ public class Project {
     //RootPlayer.Render_To(4, wave_render);
     //RootPlayer.Skip_To(4.29);
 
-    RootPlayer.Render_To(FinalTime / 2, wave_scratch);
-    wave_render.Append_Crude(wave_scratch);
-    RootPlayer.Render_To(FinalTime, wave_scratch);
-    wave_render.Append_Crude(wave_scratch);
+    //RootPlayer.Skip_To(FinalTime / 2);
+//    RootPlayer.Render_To(FinalTime / 2, wave_scratch);
+//    wave_render.Append(wave_scratch);
+//    RootPlayer.Render_To(FinalTime, wave_scratch);
+//    wave_render.Append(wave_scratch);
+    int NumSlices = 8;
+    for (int cnt = 0; cnt < NumSlices; cnt++) {
+      double FractAlong = (((double) (cnt + 1)) / (double) NumSlices);
+      RootPlayer.Render_To(FinalTime * FractAlong, wave_scratch);
+      wave_render.Append(wave_scratch);
+    }
 
     EndTime = System.currentTimeMillis();
     System.out.println("Render_To time:" + (EndTime - StartTime));// Render_To time: 150 milliseconds per 16 seconds. 

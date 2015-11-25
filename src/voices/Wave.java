@@ -19,6 +19,7 @@ public class Wave {
   public double StartTime = 0;
   public double EndTime = 0;// for debugging
   private double[] wave;
+  public static boolean Debugging = false;
   /* ********************************************************************************* */
   public Wave() {
     this.numsamples = 0;
@@ -26,6 +27,13 @@ public class Wave {
     this.StartTime = 0.0;
     this.StartDex = 0;
     this.Current_Index = 0;
+  }
+  /* ********************************************************************************* */
+  public void Rebase_Time(double TimeBase) {
+    double TimeRange = this.EndTime - this.StartTime;
+    this.StartTime = TimeBase;// wave start time is the offset of wave[0] from time 0. 
+    this.EndTime = this.StartTime + TimeRange;
+    this.StartDex = (int) (this.StartTime * this.SampleRate);// StartDex is the number of empty samples from Time=0 to wave[0]
   }
   /* ********************************************************************************* */
   public void Shift_Timebase(double TimeDif) {
@@ -40,6 +48,10 @@ public class Wave {
     this.StartTime = 0.0;
     this.StartDex = 0;
     this.Current_Index = 0;
+    if (Debugging && this.wave.length > 0) {
+      this.wave[0] = 123.0;
+      this.wave[this.wave.length - 1] = 999.0;
+    }
   }
   /* ********************************************************************************* */
   public void Init(double StartTime0, double EndTime0, int SampleRate0) {
@@ -51,8 +63,10 @@ public class Wave {
     this.StartDex = (int) (this.StartTime * SampleRate0);// StartDex is the number of empty samples from Time=0 to wave[0]
     this.numsamples = nsamps;
     wave = new double[nsamps + 1];// plus 1 because converting from double to int truncates. 
-    if (this.wave.length > 0) {
-      //this.wave[0] = 123.0;
+    if (Debugging && this.wave.length > 0) {
+      this.wave[0] = 123.0;
+      this.wave[this.wave.length - 1] = 999.0;
+      this.Fill(777.0);
     }
     this.Current_Index = 0;
   }
@@ -88,6 +102,13 @@ public class Wave {
     }
   }
   /* ********************************************************************************* */
+  public void Fill(double Stuffing) {
+    int len = this.wave.length;
+    for (int cnt = 0; cnt < len; cnt++) {
+      this.wave[cnt] = Stuffing;
+    }
+  }
+  /* ********************************************************************************* */
   public void Diff(Wave other, Wave result) {
     result.Init(this.numsamples);
     for (int cnt = 0; cnt < this.numsamples; cnt++) {
@@ -100,8 +121,9 @@ public class Wave {
     int nextsize = StartPlace + other.numsamples;
     this.wave = Arrays.copyOf(this.wave, nextsize);
     System.arraycopy(other.wave, 0, this.wave, StartPlace, other.numsamples);
-    if (this.wave.length > 0) {
-      //this.wave[0] = 123.0;
+    if (Debugging && this.wave.length > 0) {
+      this.wave[0] = 123.0;
+      this.wave[this.wave.length - 1] = 999.0;
     }
     this.numsamples = nextsize;
   }
@@ -111,8 +133,9 @@ public class Wave {
     int nextsize = StartPlace + other.numsamples;
     this.wave = Arrays.copyOf(this.wave, nextsize);
     System.arraycopy(other.wave, 0, this.wave, StartPlace, other.numsamples);
-    if (this.wave.length > 0) {
-      //this.wave[0] = 123.0;
+    if (Debugging && this.wave.length > 0) {
+      this.wave[0] = 123.0;
+      this.wave[this.wave.length - 1] = 999.0;
     }
     this.numsamples = nextsize;
   }

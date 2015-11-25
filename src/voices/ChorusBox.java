@@ -40,12 +40,12 @@ public class ChorusBox implements ISonglet {
         this.Prev_Time = EndTime;
         return;
       }
-      EndTime = this.Tee_Up(EndTime);
+      double Clipped_EndTime = this.Tee_Up(EndTime);
       int NumPlaying = NowPlaying.size();
       int cnt = 0;
       while (cnt < NumPlaying) {// then play the whole pool
         Singer player = this.NowPlaying.get(cnt);
-        player.Skip_To(EndTime);
+        player.Skip_To(Clipped_EndTime);
         cnt++;
       }
       cnt = 0;// now pack down the finished ones
@@ -62,7 +62,6 @@ public class ChorusBox implements ISonglet {
     /* ********************************************************************************* */
     @Override public void Render_To(double EndTime, Wave wave) {
       EndTime = this.MyOffsetBox.MapTime(EndTime);// EndTime is now time internal to ChorusBox's own coordinate system
-      double Old_EndTime = EndTime;
       double UnMapped_Prev_Time = this.MyOffsetBox.UnMapTime(this.Prev_Time);// get start time in parent coordinates
       if (this.MySonglet.SubSongs.size() <= 0) {
         this.IsFinished = true;
@@ -70,17 +69,17 @@ public class ChorusBox implements ISonglet {
         this.Prev_Time = EndTime;
         return;
       }
-      EndTime = this.Tee_Up(EndTime);
-      double UnMapped_EndTime = this.MyOffsetBox.UnMapTime(EndTime);
+      double Clipped_EndTime = this.Tee_Up(EndTime);
+      double UnMapped_EndTime = this.MyOffsetBox.UnMapTime(Clipped_EndTime);
       wave.Init(UnMapped_Prev_Time, UnMapped_EndTime, this.MyProject.SampleRate);// wave times are in parent coordinates because the parent will be reading the wave data.
       Wave ChildWave = new Wave();
       int NumPlaying = NowPlaying.size();
       int cnt = 0;
       while (cnt < NumPlaying) {// then play the whole pool
         Singer player = this.NowPlaying.get(cnt);
-        player.Render_To(EndTime, ChildWave);
-        //ChildWave.Shift_Timebase(wave.StartTime);// shift child data to my parent's time base. hacky? 
-        ChildWave.Shift_Timebase(this.MyOffsetBox.TimeOrg);// shift child data to my parent's time base. hacky? 
+        player.Render_To(Clipped_EndTime, ChildWave);
+        //ChildWave.Shift_Timebase(this.MyOffsetBox.TimeOrg);// shift child data to my parent's time base. hacky? 
+        ChildWave.Rebase_Time(this.MyOffsetBox.UnMapTime(ChildWave.StartTime));// shift child data to my parent's time base. hacky? 
         wave.Overdub(ChildWave);// sum/overdub the waves 
         cnt++;
       }
@@ -94,7 +93,7 @@ public class ChorusBox implements ISonglet {
         }
       }
       wave.Amplify(this.MyOffsetBox.LoudnessFactor);
-      this.Prev_Time = Old_EndTime;// EndTime;
+      this.Prev_Time = EndTime;
     }
     /* ********************************************************************************* */
     private double Tee_Up(double EndTime) {// consolidating identical code 
@@ -109,13 +108,13 @@ public class ChorusBox implements ISonglet {
         this.IsFinished = true;
         EndTime = Final_Time;// clip time
       }
-      OffsetBox cb;
+      OffsetBox obox;
       while (this.Current_Dex < NumSonglets) {// first find new songlets in this time range and add them to pool
-        cb = MySonglet.SubSongs.get(this.Current_Dex);
-        if (Final_Start < cb.TimeOrg) {// repeat until cb start time > EndTime
+        obox = MySonglet.SubSongs.get(this.Current_Dex);
+        if (Final_Start < obox.TimeOrg) {// repeat until cb start time overtakes EndTime
           break;
         }
-        Singer singer = cb.Spawn_Singer();
+        Singer singer = obox.Spawn_Singer();
         singer.Inherit(this);
         this.NowPlaying.add(singer);
         singer.Start();
