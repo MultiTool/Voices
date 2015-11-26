@@ -22,6 +22,10 @@ public class Voice implements ISonglet {//extends VoiceBase{
   public static class VoiceOffsetBox extends OffsetBox {// location box to transpose in pitch, move in time, etc. 
     public Voice Content;
     /* ********************************************************************************* */
+    public VoiceOffsetBox(){
+      this.Clear();
+    }
+    /* ********************************************************************************* */
     @Override public ISonglet GetContent() {
       return Content;
     }
@@ -214,7 +218,6 @@ public class Voice implements ISonglet {//extends VoiceBase{
     public void Render_Segment_Iterative(Point pnt0, Point pnt1, Wave wave) {// stateful iterative approach
       double BaseFreq = Globals.BaseFreqC0;
       double SRate = this.MyProject.SampleRate;
-      BaseFreq = 1.0;
       double TimeRange = pnt1.RealTime - pnt0.RealTime;
       double SampleDuration = 1.0 / SRate;
       double FrequencyFactorStart = pnt0.GetFrequencyFactor();
@@ -227,7 +230,7 @@ public class Voice implements ISonglet {//extends VoiceBase{
       double LoudnessRange = pnt1.Loudness - pnt0.Loudness;
       double OctaveRate = OctaveRange / TimeRange;// octaves per second
       double LoudnessRate = LoudnessRange / TimeRange;
-      int NumSamples = (int) (TimeRange * SRate);
+      int NumSamples = (int) Math.ceil(TimeRange * SRate);
 
       double TimeAlong;
       double CurrentOctaveLocal, CurrentFrequency, CurrentFrequencyFactorAbsolute, CurrentFrequencyFactorLocal;
@@ -237,19 +240,14 @@ public class Voice implements ISonglet {//extends VoiceBase{
       double SubTimeIterate = (pnt0.SubTime * BaseFreq * Globals.TwoPi);
 
       for (int scnt = 0; scnt < NumSamples; scnt++) {
-        if (scnt == NumSamples - 1) {
-          boolean nop = true;
-        }
         TimeAlong = scnt * SampleDuration;
         CurrentOctaveLocal = TimeAlong * OctaveRate;
         CurrentFrequencyFactorLocal = Math.pow(2.0, CurrentOctaveLocal); // to convert to absolute, do pnt0.SubTime + (FrequencyFactorStart * CurrentFrequencyFactorLocal);
         CurrentFrequencyFactorAbsolute = (FrequencyFactorStart * CurrentFrequencyFactorLocal);
         CurrentLoudness = pnt0.Loudness + (TimeAlong * LoudnessRate);
-
         CurrentFrequency = BaseFreq * CurrentFrequencyFactorAbsolute;// do we really need to include the base frequency in the summing?
         Amplitude = Math.sin(SubTimeIterate);
         wave.Set(this.Sample_Dex, Amplitude * CurrentLoudness);
-        //wave0.wave[scnt] = Amplitude * CurrentLoudness;
         SubTimeIterate += (CurrentFrequency * Globals.TwoPi) / SRate;
         this.Sample_Dex++;
       }
@@ -275,22 +273,16 @@ public class Voice implements ISonglet {//extends VoiceBase{
       double LoudnessRate = LoudnessRange / TimeRange;
       double SubTimeLocal;
       double SubTimeAbsolute;
-      int NumSamples = (int) (TimeRange * SRate);
-
+      int NumSamples = (int) Math.ceil(TimeRange * SRate);
       double TimeAlong;
       double CurrentLoudness;
       double Amplitude;
       for (int scnt = 0; scnt < NumSamples; scnt++) {
-        if (scnt == NumSamples - 1) {
-          boolean nop = true;
-        }
         TimeAlong = scnt * SampleDuration;
         CurrentLoudness = pnt0.Loudness + (TimeAlong * LoudnessRate);
-
         SubTimeLocal = Calculus(OctaveRate, TimeAlong);
         SubTimeAbsolute = (pnt0.SubTime + (FrequencyFactorStart * SubTimeLocal)) * FrequencyFactorInherited;
         Amplitude = Math.sin(SubTimeAbsolute * BaseFreq * Globals.TwoPi);
-        //wave.wave[scnt] = Amplitude * CurrentLoudness;
         wave.Set(this.Sample_Dex, Amplitude * CurrentLoudness);
         this.Sample_Dex++;
       }

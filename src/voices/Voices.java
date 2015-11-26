@@ -84,7 +84,7 @@ public class Voices {
   public static void SaveWave3(Wave wave0, Wave wave1, Wave wave2, String FileName) {
     try {
       PrintWriter out = new PrintWriter(FileName);
-      for (int cnt = 0; cnt < wave0.numsamples; cnt++) {
+      for (int cnt = 0; cnt < wave0.NumSamples; cnt++) {
         out.println(wave0.Get(cnt) + ", " + wave1.Get(cnt) + ", " + wave2.Get(cnt) + "");
       }
       out.close();
@@ -95,7 +95,7 @@ public class Voices {
   public static void SaveWave(Wave wave, String FileName) {
     try {
       PrintWriter out = new PrintWriter(FileName);
-      for (int cnt = 0; cnt < wave.numsamples; cnt++) {
+      for (int cnt = 0; cnt < wave.NumSamples; cnt++) {
         //out.println(cnt + ", " + wave.wave[cnt] + "");
         out.println(wave.Get(cnt) + "");
       }

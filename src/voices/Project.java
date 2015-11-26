@@ -111,17 +111,21 @@ public class Project {
   }
   /* ********************************************************************************* */
   public void Compose_Chorus_Test2() {
-    ChorusBox cbx = null;
+    ISonglet cbx = null;
     switch (2) {
-    case 0:
-      cbx = Create_Random_Chorus(0, 0, 1.0);
-      break;
-    case 1:
-      cbx = Create_Nested_Chorus(0, 0, 1.0, 4);
-      break;
-    case 2:
-      cbx = Create_Chord(0, 0, 1.0, 1);
-      break;
+      case 0:
+        cbx = Create_Random_Chorus(0, 0, 1.0);
+        break;
+      case 1:
+        cbx = Create_Nested_Chorus(0, 0, 1.0, 4);
+        break;
+      case 2:
+        cbx = Create_Chord(0, 0, 1.0, 2);
+        break;
+      case 3:
+        cbx = Create_Simple_Note(0, 2.3, 1);
+        cbx.Set_Project(this);
+        break;
     }
     OffsetBox obox = cbx.Spawn_OffsetBox();
     this.rootbox = obox;
