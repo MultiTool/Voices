@@ -230,7 +230,7 @@ public class Voice implements ISonglet {//extends VoiceBase{
       double LoudnessRange = pnt1.Loudness - pnt0.Loudness;
       double OctaveRate = OctaveRange / TimeRange;// octaves per second
       double LoudnessRate = LoudnessRange / TimeRange;
-      int NumSamples = (int) Math.ceil(TimeRange * SRate);
+      int NumSamples = (int) Math.round(TimeRange * SRate);
 
       double TimeAlong;
       double CurrentOctaveLocal, CurrentFrequency, CurrentFrequencyFactorAbsolute, CurrentFrequencyFactorLocal;
@@ -273,7 +273,7 @@ public class Voice implements ISonglet {//extends VoiceBase{
       double LoudnessRate = LoudnessRange / TimeRange;
       double SubTimeLocal;
       double SubTimeAbsolute;
-      int NumSamples = (int) Math.ceil(TimeRange * SRate);
+      int NumSamples = (int) Math.round(TimeRange * SRate);
       double TimeAlong;
       double CurrentLoudness;
       double Amplitude;
