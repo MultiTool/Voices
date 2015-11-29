@@ -208,7 +208,7 @@ public class ChorusBox implements ISonglet {
   }
   /* ********************************************************************************* */
   public Chorus_OffsetBox Spawn_My_OffsetBox() {// for compose time
-    Chorus_OffsetBox lbox = new Chorus_OffsetBox();// Deliver a OffsetBox specific to this type of phrase.
+    Chorus_OffsetBox lbox = new Chorus_OffsetBox();// Deliver an OffsetBox specific to this type of songlet.
     lbox.Clear();
     lbox.Content = this;
     return lbox;

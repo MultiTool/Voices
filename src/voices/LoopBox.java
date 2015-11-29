@@ -140,7 +140,14 @@ public class LoopBox implements ISonglet {
   }
   /* ********************************************************************************* */
   @Override public OffsetBox Spawn_OffsetBox() {
-    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    return this.Spawn_My_OffsetBox();
+  }
+  /* ********************************************************************************* */
+  public Loop_OffsetBox Spawn_My_OffsetBox() {// for compose time
+    Loop_OffsetBox lbox = new Loop_OffsetBox();// Deliver an OffsetBox specific to this type of songlet.
+    lbox.Clear();
+    lbox.Content = this;
+    return lbox;
   }
   /* ********************************************************************************* */
   @Override public Singer Spawn_Singer() {
@@ -148,7 +155,10 @@ public class LoopBox implements ISonglet {
   }
   /* ********************************************************************************* */
   private Loop_Singer Spawn_My_Singer() {
-    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    Loop_Singer LoopSinger = new Loop_Singer();
+    LoopSinger.MySonglet = this;
+    LoopSinger.MyProject = this.MyProject;// inherit project
+    return LoopSinger;
   }
   /* ********************************************************************************* */
   @Override public int Get_Sample_Count(int SampleRate) {
