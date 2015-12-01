@@ -59,6 +59,38 @@ public class Project {
     return voice;
   }
   /* ********************************************************************************* */
+  public Voice Create_BowTie() {
+    Voice voice;
+    voice = new Voice();
+    voice.Set_Project(this);
+    voice.Add_Note(1, 4, 1);
+    voice.Add_Note(8, 1, 0.5);
+    voice.Add_Note(16, 4, 1);
+    return voice;
+  }
+  /* ********************************************************************************* */
+  public Voice Create_Taper() {
+    Voice voice;
+    voice = new Voice();
+    voice.Set_Project(this);
+    voice.Add_Note(0, 0, 1.0);
+    voice.Add_Note(1, 5, 0.0);
+    return voice;
+  }
+  /* ********************************************************************************* */
+  public LoopBox Compose_Loop() {
+    LoopBox lbx = new LoopBox();
+    lbx.Set_Project(this);
+    Voice note = Create_Taper();
+    lbx.Add_Content(note);
+    //lbx.Set_Delay(0.75);
+    //lbx.Set_Duration(8.0);
+    lbx.Set_Delay(0.001);
+    lbx.Set_Duration(0.9);
+    lbx.Sort_Me();
+    return lbx;
+  }
+  /* ********************************************************************************* */
   public ChorusBox Create_Chord(double TimeOffset, double OctaveOffset, double LoudnessOffset, int NumNotes) {
     double OctaveChange, LoudnessChange;// for stress testing
     ChorusBox cbx = new ChorusBox();
@@ -110,32 +142,6 @@ public class Project {
     return cbx;
   }
   /* ********************************************************************************* */
-  public void Compose_Chorus_Test2() {
-    ISonglet cbx = null;
-    switch (2) {
-      case 0:
-        cbx = Create_Random_Chorus(0, 0, 1.0);
-        break;
-      case 1:
-        cbx = Create_Nested_Chorus(0, 0, 1.0, 4);
-        break;
-      case 2:
-        cbx = Create_Chord(0, 0, 1.0, 2);
-        break;
-      case 3:
-        cbx = Create_Simple_Note(0, 2.3, 1);
-        cbx.Set_Project(this);
-        break;
-    }
-    OffsetBox obox = cbx.Spawn_OffsetBox();
-    this.rootbox = obox;
-
-    MetricsPacket metrics = new MetricsPacket();
-    cbx.Update_Guts(metrics);
-
-    Render_Test();
-  }
-  /* ********************************************************************************* */
   public void Compose_Chorus_Test1() {
     ChorusBox cbx = new ChorusBox();
     cbx.Set_Project(this);
@@ -156,36 +162,34 @@ public class Project {
     Render_Test();
   }
   /* ********************************************************************************* */
-  public void Compose_Chorus_Test() {
-    ChorusBox cbx = new ChorusBox();
-    cbx.Set_Project(this);
-    this.rootbox = cbx.Spawn_OffsetBox();
-
-    Voice rootvoice = new Voice();
-    cbx.Add_SubSong(rootvoice, 0, 0, 0);
-    rootvoice.Add_Note(1, 0, 1);
-    rootvoice.Add_Note(4, 1, 1);
-    //rootvoice.Add_Note(1, 4, 1);
-//      rootvoice.Add_Note(8, 1, 0.5);
-//      rootvoice.Add_Note(16, 4, 1);
-
-    MetricsPacket metrics = new MetricsPacket();
-    cbx.Update_Guts(metrics);
-  }
-  /* ********************************************************************************* */
-  public void Compose_Test() {
-    Voice rootvoice;
-    rootvoice = new Voice();
-    rootvoice.Set_Project(this);
-    rootbox = rootvoice.Spawn_OffsetBox();
-    rootbox.Clear();
-    {
-      rootvoice.Add_Note(1, 4, 1);
-      rootvoice.Add_Note(8, 1, 0.5);
-      rootvoice.Add_Note(16, 4, 1);
+  public void Compose_Chorus_Test2() {
+    ISonglet song = null;
+    switch (4) {
+    case 0:
+      song = Create_Random_Chorus(0, 0, 1.0);
+      break;
+    case 1:
+      song = Create_Nested_Chorus(0, 0, 1.0, 4);
+      break;
+    case 2:
+      song = Create_Chord(0, 0, 1.0, 2);
+      break;
+    case 3:
+      song = Create_Simple_Note(0, 2.3, 1);
+      song.Set_Project(this);
+      break;
+    case 4:
+      song = Compose_Loop();
+      break;
     }
+
+    OffsetBox obox = song.Spawn_OffsetBox();
+    this.rootbox = obox;
+
     MetricsPacket metrics = new MetricsPacket();
-    rootvoice.Update_Guts(metrics);
+    song.Update_Guts(metrics);
+
+    Render_Test();
   }
   /* ********************************************************************************* */
   public void Render_Test() {

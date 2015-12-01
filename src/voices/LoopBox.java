@@ -12,10 +12,11 @@ import java.util.ArrayList;
  * @author MultiTool
  */
 public class LoopBox implements ISonglet {
-  public double MyDuration = 1.0;// manually assigned duration, as loops are infinite otherwise
-  public double Delay = 1.0;// time delay between loops
+  private double MyDuration = 1.0;// manually assigned duration, as loops are infinite otherwise
+  private double Delay = 1.0;// time delay between loops
   private Project MyProject = null;
   private ISonglet Content = null;
+  private OffsetBox ContentOBox = null;
   /* ********************************************************************************* */
   public static class Loop_Singer extends Singer {
     protected LoopBox MySonglet;
@@ -169,6 +170,14 @@ public class LoopBox implements ISonglet {
     return this.MyDuration;
   }
   /* ********************************************************************************* */
+  public void Set_Duration(double duration) {
+    this.MyDuration = duration;
+  }
+  /* ********************************************************************************* */
+  public void Set_Delay(double delay) {
+    this.Delay = delay;
+  }
+  /* ********************************************************************************* */
   @Override public double Update_Durations() {// probably deprecated
     return this.Content.Update_Durations();
   }
@@ -180,7 +189,7 @@ public class LoopBox implements ISonglet {
   }
   /* ********************************************************************************* */
   @Override public void Sort_Me() {
-    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    this.Content.Sort_Me();// not really the plan, but LoopBox doesn't have anything else to sort so why not
   }
   /* ********************************************************************************* */
   @Override public Project Get_Project() {
@@ -189,5 +198,13 @@ public class LoopBox implements ISonglet {
   /* ********************************************************************************* */
   @Override public void Set_Project(Project project) {
     this.MyProject = project;
+  }
+  /* ********************************************************************************* */
+  public OffsetBox Add_Content(ISonglet songlet) {
+    songlet.Set_Project(this.MyProject);// child inherits project from me
+    OffsetBox obox = songlet.Spawn_OffsetBox();
+    this.ContentOBox = obox;
+    this.Content = songlet;
+    return obox;
   }
 }

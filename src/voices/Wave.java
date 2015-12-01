@@ -59,7 +59,7 @@ public class Wave {
     this.EndTime = EndTime0;
     this.SampleRate = SampleRate0;
     double TimeSpan = EndTime0 - StartTime0;
-    int nsamps = (int) Math.round(TimeSpan * SampleRate0);
+    int nsamps = (int) Math.ceil(TimeSpan * SampleRate0);
     this.StartDex = (int) (this.StartTime * SampleRate0);// StartDex is the number of empty samples from Time=0 to wave[0]
     this.NumSamples = nsamps;
     wave = new double[nsamps + 1];// plus 1 because converting from double to int truncates. 

@@ -22,7 +22,7 @@ public class Voice implements ISonglet {//extends VoiceBase{
   public static class VoiceOffsetBox extends OffsetBox {// location box to transpose in pitch, move in time, etc. 
     public Voice Content;
     /* ********************************************************************************* */
-    public VoiceOffsetBox(){
+    public VoiceOffsetBox() {
       this.Clear();
     }
     /* ********************************************************************************* */
@@ -60,7 +60,7 @@ public class Voice implements ISonglet {//extends VoiceBase{
     double SubTime;// Subjective time.
     double Current_Octave, Current_Frequency;
     int Prev_Point_Dex, Next_Point_Dex;
-    int Sample_Dex;
+    int Render_Sample_Count, Origin_Sample_Count_Prev, Origin_Sample_Count;
     Point Cursor_Point = new Point();
     /* ********************************************************************************* */
     private Player_Head() {
@@ -74,7 +74,9 @@ public class Voice implements ISonglet {//extends VoiceBase{
       this.Cycles = 0.0;
       this.Prev_Point_Dex = 0;//this.Parent.CPoints.get(0);
       this.Next_Point_Dex = 1;
-      this.Sample_Dex = 0;
+      this.Render_Sample_Count = 0;
+      this.Origin_Sample_Count_Prev = 0;
+      this.Origin_Sample_Count = 0;
       this.IsFinished = false;
       //if (this.Parent != null) {
       Point ppnt = this.MyPhrase.CPoints.get(this.Prev_Point_Dex);
@@ -85,7 +87,10 @@ public class Voice implements ISonglet {//extends VoiceBase{
     @Override public void Skip_To(double EndTime) {// ready for test
       Point Prev_Point, Next_Point;
       EndTime = this.MyOffsetBox.MapTime(EndTime);// EndTime is now time internal to voice's own coordinate system
-      this.Sample_Dex = 0;
+      this.Origin_Sample_Count_Prev = this.Origin_Sample_Count;
+      this.Origin_Sample_Count = (int) Math.floor(EndTime);
+      this.Render_Sample_Count = 0;
+      // this.Origin_Sample_Count += (EndTime-this.Prev_Time);// 
       int NumPoints = this.MyPhrase.CPoints.size();
       if (NumPoints < 2) {// this should really just throw an error
         this.IsFinished = true;
@@ -122,8 +127,11 @@ public class Voice implements ISonglet {//extends VoiceBase{
     @Override public void Render_To(double EndTime, Wave wave) {// ready for test
       Point Prev_Point = null, Next_Point = null;
       EndTime = this.MyOffsetBox.MapTime(EndTime);// EndTime is now time internal to voice's own coordinate system
+      this.Origin_Sample_Count_Prev = this.Origin_Sample_Count;
+      this.Origin_Sample_Count = (int) Math.floor(EndTime);
+
       double UnMapped_Prev_Time = this.MyOffsetBox.UnMapTime(this.Cursor_Point.RealTime);// get start time in parent coordinates
-      this.Sample_Dex = 0;
+      this.Render_Sample_Count = 0;
       int NumPoints = this.MyPhrase.CPoints.size();
       if (NumPoints < 2) {// this should really just throw an error
         this.IsFinished = true;
@@ -190,7 +198,7 @@ public class Voice implements ISonglet {//extends VoiceBase{
     /* ********************************************************************************* */
     public void Render_Range(int dex0, int dex1, Wave wave) {
       Point pnt0, pnt1;
-      this.Sample_Dex = 0;
+      this.Render_Sample_Count = 0;
       for (int pcnt = dex0; pcnt < dex1; pcnt++) {
         pnt0 = this.MyPhrase.CPoints.get(pcnt);
         pnt1 = this.MyPhrase.CPoints.get(pcnt + 1);
@@ -230,7 +238,7 @@ public class Voice implements ISonglet {//extends VoiceBase{
       double LoudnessRange = pnt1.Loudness - pnt0.Loudness;
       double OctaveRate = OctaveRange / TimeRange;// octaves per second
       double LoudnessRate = LoudnessRange / TimeRange;
-      int NumSamples = (int) Math.round(TimeRange * SRate);
+      int NumSamples = (int) Math.ceil(TimeRange * SRate);
 
       double TimeAlong;
       double CurrentOctaveLocal, CurrentFrequency, CurrentFrequencyFactorAbsolute, CurrentFrequencyFactorLocal;
@@ -247,9 +255,9 @@ public class Voice implements ISonglet {//extends VoiceBase{
         CurrentLoudness = pnt0.Loudness + (TimeAlong * LoudnessRate);
         CurrentFrequency = BaseFreq * CurrentFrequencyFactorAbsolute;// do we really need to include the base frequency in the summing?
         Amplitude = Math.sin(SubTimeIterate);
-        wave.Set(this.Sample_Dex, Amplitude * CurrentLoudness);
+        wave.Set(this.Render_Sample_Count, Amplitude * CurrentLoudness);
         SubTimeIterate += (CurrentFrequency * Globals.TwoPi) / SRate;
-        this.Sample_Dex++;
+        this.Render_Sample_Count++;
       }
     }
     /* ********************************************************************************* */
@@ -273,7 +281,8 @@ public class Voice implements ISonglet {//extends VoiceBase{
       double LoudnessRate = LoudnessRange / TimeRange;
       double SubTimeLocal;
       double SubTimeAbsolute;
-      int NumSamples = (int) Math.round(TimeRange * SRate);
+      int NumSamples = (int) Math.ceil(TimeRange * SRate);
+      // NumSamples = this.Origin_Sample_Count - this.Origin_Sample_Count_Prev;// working on fix for alignment error
       double TimeAlong;
       double CurrentLoudness;
       double Amplitude;
@@ -283,8 +292,8 @@ public class Voice implements ISonglet {//extends VoiceBase{
         SubTimeLocal = Calculus(OctaveRate, TimeAlong);
         SubTimeAbsolute = (pnt0.SubTime + (FrequencyFactorStart * SubTimeLocal)) * FrequencyFactorInherited;
         Amplitude = Math.sin(SubTimeAbsolute * BaseFreq * Globals.TwoPi);
-        wave.Set(this.Sample_Dex, Amplitude * CurrentLoudness);
-        this.Sample_Dex++;
+        wave.Set(this.Render_Sample_Count, Amplitude * CurrentLoudness);
+        this.Render_Sample_Count++;
       }
     }
   }
