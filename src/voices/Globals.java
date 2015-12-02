@@ -19,6 +19,7 @@ public class Globals {
   public static double TwoPi = Math.PI * 2.0;// hz
   public static double Fudge = 0.00000000001;
   public static Random RandomGenerator = new Random();
+
   public class Notes {
     public double Cn, Cs, Dn, Ds, En, Fn, Fs, Gn, Gs, An, As, Bn;// naturals and sharps
     public int NumNotes = 12;
