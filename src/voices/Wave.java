@@ -116,6 +116,18 @@ public class Wave {
     }
   }
   /* ********************************************************************************* */
+  public void Normalize() {
+    int len = this.wave.length;
+    double MaxAmp = 0.0;
+    double AbsVal;
+    for (int cnt = 0; cnt < len; cnt++) {
+      if (MaxAmp < (AbsVal = Math.abs(this.wave[cnt]))) {
+        MaxAmp = AbsVal;
+      }
+    }
+    this.Amplify(1.0 / MaxAmp);
+  }
+  /* ********************************************************************************* */
   public void Append(Wave other) {
     int StartPlace = other.StartDex;
     int nextsize = StartPlace + other.NumSamples;

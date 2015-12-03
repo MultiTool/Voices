@@ -193,36 +193,18 @@ test chords in project - working
   test deep overdubs - working 
   long complicated (random?) voices, - working with transpose
 add audio support --next!!
-make looper
+make looper - working
 drone sample player
 fx: reverb, looper, vibrato, flanger, distortion
 
 2^(1/12) = 1.0594630943592952645618252949463
 
+cp
+christine
+mouths
+wd
+prosthetics
+paper faces
 
-
-public class Notes{
-  public static double C,Cs,D,Ds,E,F,Fs,G,Gs,A,B,Bs;
-  public static int NumNotes = 12;
-  public static double[] NoteRatios;
-  public void Init(){
-    NoteRatios = new double[NumNotes];
-    for (int notecnt = 0; notecnt<NumNotes; notecnt++){
-      NoteRatios[notecnt] = Math.pow(2.0, ((double)notecnt)/((double)NumNotes));
-    }
-    this.C  = NoteRatios[0];
-    this.Cs = NoteRatios[1];
-    this.D  = NoteRatios[2];
-    this.Ds = NoteRatios[3];
-    this.E  = NoteRatios[4];
-    this.F  = NoteRatios[5];
-    this.Fs = NoteRatios[6];
-    this.G  = NoteRatios[7];
-    this.Gs = NoteRatios[8];
-    this.A  = NoteRatios[9];
-    this.B  = NoteRatios[10];
-    this.Bs = NoteRatios[11];
-  }
-}
 
 

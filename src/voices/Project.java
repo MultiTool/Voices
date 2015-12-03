@@ -50,10 +50,10 @@ public class Project {
     return voice;
   }
   /* ********************************************************************************* */
-  public Voice Create_Simple_Note(double TimeOffset, double OctaveOffset, double LoudnessOffset) {
+  public Voice Create_Simple_Note(double TimeOffset, double Duration, double OctaveOffset, double LoudnessOffset) {
     Voice voice = new Voice();
     voice.Add_Note(TimeOffset + 0, OctaveOffset + 0, LoudnessOffset * 1);
-    voice.Add_Note(TimeOffset + 1, OctaveOffset + 0, LoudnessOffset * 1);
+    voice.Add_Note(TimeOffset + Duration, OctaveOffset + 0, LoudnessOffset * 1);
     MetricsPacket metrics = new MetricsPacket();
     voice.Update_Guts(metrics);
     return voice;
@@ -96,7 +96,7 @@ public class Project {
     ChorusBox cbx = new ChorusBox();
     cbx.Set_Project(this);
     for (int cnt = 0; cnt < NumNotes; cnt++) {
-      Voice note = Create_Simple_Note(0, 0, 1);
+      Voice note = Create_Simple_Note(0, 1, 0, 1);
       OctaveChange = cnt * 3;
       LoudnessChange = 1.0 / (1.0 + cnt);
       cbx.Add_SubSong(note, TimeOffset, OctaveOffset + OctaveChange, LoudnessOffset * LoudnessChange);
@@ -112,7 +112,7 @@ public class Project {
     ChorusBox cbx = new ChorusBox();
     cbx.Set_Project(this);
     for (int cnt = 0; cnt < 4; cnt++) {
-      Voice note = Create_Simple_Note(0, 0, 1);
+      Voice note = Create_Simple_Note(0, 1, 0, 1);
       TDiff = (Globals.RandomGenerator.nextDouble() * 5);
       OctaveRand = Globals.RandomGenerator.nextDouble() * 4;
       LoudnessRand = 1.0;//(Globals.RandomGenerator.nextDouble() * 0.5) + 0.5;
@@ -125,7 +125,7 @@ public class Project {
   }
   /* ********************************************************************************* */
   public ChorusBox Create_Nested_Chorus(double TimeOffset, double OctaveOffset, double LoudnessOffset, int BoxDepth) {
-    Voice note = Create_Simple_Note(0, 0, 1);// for stress testing
+    Voice note = Create_Simple_Note(0, 1, 0, 1);// for stress testing
     ISonglet songlet = note;
     ChorusBox cbx = null;
     for (int cnt = 0; cnt < BoxDepth; cnt++) {
@@ -142,7 +142,7 @@ public class Project {
     return cbx;
   }
   /* ********************************************************************************* */
-  public void Compose_Chorus_Test1() {
+  public ChorusBox Compose_Warble_Chorus() {
     ChorusBox cbx = new ChorusBox();
     cbx.Set_Project(this);
     this.rootbox = cbx.Spawn_OffsetBox();
@@ -159,12 +159,12 @@ public class Project {
     MetricsPacket metrics = new MetricsPacket();
     cbx.Update_Guts(metrics);
 
-    Render_Test();
+    return cbx;
   }
   /* ********************************************************************************* */
   public void Compose_Chorus_Test2() {
     ISonglet song = null;
-    switch (4) {
+    switch (2) {
     case 0:
       song = Create_Random_Chorus(0, 0, 1.0);
       break;
@@ -172,10 +172,11 @@ public class Project {
       song = Create_Nested_Chorus(0, 0, 1.0, 4);
       break;
     case 2:
-      song = Create_Chord(0, 0, 1.0, 2);
+      song = Create_Chord(0, 2, 1.0, 3);
       break;
     case 3:
-      song = Create_Simple_Note(0, 2.3, 1);
+      //song = Create_Simple_Note(0, 2.3, 1);
+      song = Create_Simple_Note(0, 1, 5, 1);
       song.Set_Project(this);
       break;
     case 4:
@@ -190,10 +191,41 @@ public class Project {
     song.Update_Guts(metrics);
 
     Render_Test();
+    Audio_Test();
+  }
+  /* ********************************************************************************* */
+  public void Audio_Test() {
+    this.SampleRate = Globals.SampleRate;
+    Singer RootPlayer = this.rootbox.Spawn_Singer();
+    RootPlayer.Compound(this.rootbox);
+
+    double FinalTime = this.rootbox.GetContent().Get_Duration();
+
+    Wave wave_render = new Wave();
+    wave_render.Init(0, FinalTime, SampleRate);
+    Wave wave_scratch = new Wave();
+
+    long StartTime, EndTime;
+    RootPlayer.Start();
+    StartTime = System.currentTimeMillis();
+
+    Audio aud = new Audio();
+    aud.Start();
+    int NumSlices = 8;
+    for (int cnt = 0; cnt < NumSlices; cnt++) {
+      double FractAlong = (((double) (cnt + 1)) / (double) NumSlices);
+      RootPlayer.Render_To(FinalTime * FractAlong, wave_scratch);
+      wave_scratch.Normalize();
+      wave_render.Append(wave_scratch);
+      aud.Feed(wave_scratch);
+    }
+    aud.Stop();
+    EndTime = System.currentTimeMillis();
+    System.out.println("Render_To time:" + (EndTime - StartTime));// Render_To time: 150 milliseconds per 16 seconds. 
   }
   /* ********************************************************************************* */
   public void Render_Test() {
-    this.SampleRate = Globals.SampleRateTest;
+    //this.SampleRate = Globals.SampleRateTest;
     //this.SampleRate = Globals.SampleRate;
     Singer RootPlayer = this.rootbox.Spawn_Singer();
     RootPlayer.Compound(this.rootbox);
@@ -228,49 +260,6 @@ public class Project {
 
     EndTime = System.currentTimeMillis();
     System.out.println("Render_To time:" + (EndTime - StartTime));// Render_To time: 150 milliseconds per 16 seconds. 
-
-    SaveWave(wave_render, "wave_render.csv");
-    boolean nop = true;
-  }
-  /* ********************************************************************************* */
-  public static void Test1() {
-    Globals.SampleRate = 100;
-    Globals.BaseFreqC0 = 1.0;
-    Voice vc = new Voice();
-    Wave wave_render = new Wave();
-
-    int TDiff = 16;// seconds
-    int nsamps;
-    //nsamps = TDiff * Globals.SampleRate;
-
-    {
-      vc.Add_Note(1, 4, 1);
-      vc.Add_Note(8, 1, 0.5);
-      vc.Add_Note(TDiff, 4, 1);
-    }
-    MetricsPacket metrics = new MetricsPacket();
-    vc.Update_Guts(metrics);
-
-    nsamps = vc.Get_Sample_Count(Globals.SampleRate);
-
-    wave_render.Init(nsamps);
-
-    Singer hd = vc.Spawn_Singer();
-
-    long StartTime, EndTime;
-
-    hd.Start();
-    StartTime = System.currentTimeMillis();
-    ///hd.Skip_To(1.2);
-    //hd.Render_To(4, wave_render);
-    //hd.Skip_To(4.29);
-    hd.Render_To(0.5, wave_render);
-    hd.Render_To(TDiff - 4, wave_render);
-    hd.Render_To(TDiff - 0, wave_render);
-    //hd.Render_Range(0, 2, wave_render);
-    EndTime = System.currentTimeMillis();
-    System.out.println("Render_To time:" + (EndTime - StartTime));// Render_To time: 150 milliseconds per 16 seconds. 
-    //System.out.println("Render_Range time:" + (EndTime - StartTime));
 
     SaveWave(wave_render, "wave_render.csv");
     boolean nop = true;

@@ -36,20 +36,8 @@ public class Voice implements ISonglet {//extends VoiceBase{
     /* ********************************************************************************* */
     public Player_Head Spawn_My_Singer() {// for render time
       Player_Head ph = this.Content.Spawn_My_Singer();
-      ph.MyOffsetBox = this;// to do: also transfer all of this box's offsets to player head. 
-      // also be sure to increment the player's offsets by the offsets that were handed down to me. 
-      // or should each player head reach up its chain of parents? 
-      // what about FxContainer class? all containers are FxContainers. 
-      //ph.Compound(this);
+      ph.MyOffsetBox = this;
       return ph;
-      /*
-       best pattern is
-       in containing player {
-       ChildSinger = ChildOffsetBox.Spawn_Singer();
-       ChildSinger.Compound(total parent offsets);// inheritance
-       ChildSinger.Compound(ChildOffsetBox);
-       }
-       */
     }
   }
   /* ********************************************************************************* */

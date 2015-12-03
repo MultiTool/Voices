@@ -35,7 +35,10 @@ public class Audio {
   /* ********************************************************************************* */
   public void Start() {
     this.BytesPerSample = BitsPerSample / Byte.SIZE;
-    this.HalfSample = (2 ^ (BitsPerSample - 1)) - 1;// 127.0 for 8 bit, 32767.0 for 16 bit
+    // this.HalfSample = (2 ^ (BitsPerSample - 1)) - 1;// 127.0 for 8 bit, 32767.0 for 16 bit
+
+    this.HalfSample = (1 << (BitsPerSample - 1)) - 1;// 127.0 for 8 bit, 32767.0 for 16 bit
+
     if (source != null) {
       source.write(new byte[0], 0, 0);
       source.stop();
@@ -65,26 +68,27 @@ public class Audio {
     }
     seconds = ((double) wave.NumSamples) / (double) SampleRate;
     byte[] buf = new byte[(int) (SampleRate * seconds * BytesPerSample)];
-    double Damper = 0.5;//0.75
+    double Damper = 1.0;// 0.5;//0.75
     double amplitude;
     int iamp, StartBit = BitsPerSample - Byte.SIZE;
     int bufcnt = 0;
     for (int scnt = 0; scnt < wave.NumSamples; scnt++) {
       amplitude = (wave.Get(scnt) * Damper * HalfSample);// wave is assumed to be within the range of -1.0 to +1.0 before we start playing it. 
       iamp = (int) amplitude;
-      if (false) {
+      if (true) {
         buf[bufcnt] = (byte) (iamp >> Byte.SIZE);// most significant byte
         bufcnt++;
         buf[bufcnt] = (byte) (iamp & 0xff);// least significant byte
         bufcnt++;
       } else {
-        for (int bcnt = StartBit; bcnt <= 0; bcnt -= Byte.SIZE) {
+        for (int bcnt = StartBit; bcnt >= 0; bcnt -= Byte.SIZE) {
           buf[bufcnt] = (byte) ((iamp >> bcnt) & 0xff);// most significant byte to least significant byte
           bufcnt++;
         }
       }
     }
     source.write(buf, 0, buf.length);
+    //source.drain(); source.stop(); source.close();
   }
   /* ********************************************************************************* */
   public void Sing_Wave(Wave wave) {
