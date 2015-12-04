@@ -116,6 +116,18 @@ public class Wave {
     }
   }
   /* ********************************************************************************* */
+  public double GetMaxAmp() {
+    int len = this.wave.length;
+    double MaxAmp = 0.0;
+    double AbsVal;
+    for (int cnt = 0; cnt < len; cnt++) {
+      if (MaxAmp < (AbsVal = Math.abs(this.wave[cnt]))) {
+        MaxAmp = AbsVal;
+      }
+    }
+    return MaxAmp;
+  }
+  /* ********************************************************************************* */
   public void Normalize() {
     int len = this.wave.length;
     double MaxAmp = 0.0;

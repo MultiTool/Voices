@@ -22,6 +22,12 @@ public class Project {
     //this.Compose_Test();
   }
   /* ********************************************************************************* */
+  public void Update_Guts() {
+    MetricsPacket metrics = new MetricsPacket();
+    metrics.MyProject = this;
+    rootbox.GetContent().Update_Guts(metrics);
+  }
+  /* ********************************************************************************* */
   public Voice Create_Warble_Voice(double TimeOffset, double OctaveOffset, double LoudnessOffset) {
     Voice voice = new Voice();// for fuzz testing
     double TDiff, OctaveRand, LoudnessRand;
@@ -33,8 +39,6 @@ public class Project {
       voice.Add_Note(TimeCnt, OctaveOffset + OctaveRand, LoudnessOffset * LoudnessRand);
       TimeCnt += TDiff;
     }
-    MetricsPacket metrics = new MetricsPacket();
-    voice.Update_Guts(metrics);
     return voice;
   }
   /* ********************************************************************************* */
@@ -45,8 +49,6 @@ public class Project {
       voice.Add_Note(TimeOffset + 8, OctaveOffset + 1, LoudnessOffset * 0.5);
       voice.Add_Note(TimeOffset + 16, OctaveOffset + 4, LoudnessOffset * 1);
     }
-    MetricsPacket metrics = new MetricsPacket();
-    voice.Update_Guts(metrics);
     return voice;
   }
   /* ********************************************************************************* */
@@ -54,8 +56,6 @@ public class Project {
     Voice voice = new Voice();
     voice.Add_Note(TimeOffset + 0, OctaveOffset + 0, LoudnessOffset * 1);
     voice.Add_Note(TimeOffset + Duration, OctaveOffset + 0, LoudnessOffset * 1);
-    MetricsPacket metrics = new MetricsPacket();
-    voice.Update_Guts(metrics);
     return voice;
   }
   /* ********************************************************************************* */
@@ -101,9 +101,6 @@ public class Project {
       LoudnessChange = 1.0 / (1.0 + cnt);
       cbx.Add_SubSong(note, TimeOffset, OctaveOffset + OctaveChange, LoudnessOffset * LoudnessChange);
     }
-    cbx.Sort_Me();
-    MetricsPacket metrics = new MetricsPacket();
-    cbx.Update_Guts(metrics);
     return cbx;
   }
   /* ********************************************************************************* */
@@ -118,9 +115,6 @@ public class Project {
       LoudnessRand = 1.0;//(Globals.RandomGenerator.nextDouble() * 0.5) + 0.5;
       cbx.Add_SubSong(note, TimeOffset + TDiff, OctaveOffset + OctaveRand, LoudnessOffset * LoudnessRand);
     }
-    cbx.Sort_Me();
-    MetricsPacket metrics = new MetricsPacket();
-    cbx.Update_Guts(metrics);
     return cbx;
   }
   /* ********************************************************************************* */
@@ -133,9 +127,6 @@ public class Project {
       cbx.MyName = "Chord" + cnt;
       cbx.Set_Project(this);
       cbx.Add_SubSong(songlet, 1, 1, LoudnessOffset * 1.0);
-      cbx.Sort_Me();
-      MetricsPacket metrics = new MetricsPacket();
-      cbx.Update_Guts(metrics);
       songlet = cbx;
     }
     cbx.MyName = "TopChord";
@@ -156,39 +147,49 @@ public class Project {
     Voice vc2 = Create_Warble_Voice(0, 0, 1);
     cbx.Add_SubSong(vc2, 0, 1.3, 1);
 
-    MetricsPacket metrics = new MetricsPacket();
-    cbx.Update_Guts(metrics);
-
     return cbx;
   }
   /* ********************************************************************************* */
   public void Compose_Chorus_Test2() {
     ISonglet song = null;
-    switch (2) {
+    OffsetBox obox = null;
+    switch (5) {
     case 0:
       song = Create_Random_Chorus(0, 0, 1.0);
+      obox = song.Spawn_OffsetBox();
       break;
     case 1:
       song = Create_Nested_Chorus(0, 0, 1.0, 4);
+      obox = song.Spawn_OffsetBox();
       break;
     case 2:
       song = Create_Chord(0, 2, 1.0, 3);
+      obox = song.Spawn_OffsetBox();
       break;
     case 3:
       //song = Create_Simple_Note(0, 2.3, 1);
       song = Create_Simple_Note(0, 1, 5, 1);
       song.Set_Project(this);
+      obox = song.Spawn_OffsetBox();
       break;
     case 4:
       song = Compose_Loop();
+      obox = song.Spawn_OffsetBox();
+      break;
+    case 5:
+      NoteMaker nm = new NoteMaker();
+      //song = nm.MakeMajor(0);// C major
+      //song = nm.MakeMajor(1);// D major
+      song = nm.MakeMinor(0);// C minor
+      song.Set_Project(this);
+      obox = song.Spawn_OffsetBox();
+      obox.OctaveLoc_s(4);
       break;
     }
 
-    OffsetBox obox = song.Spawn_OffsetBox();
     this.rootbox = obox;
 
-    MetricsPacket metrics = new MetricsPacket();
-    song.Update_Guts(metrics);
+    this.Update_Guts();
 
     Render_Test();
     Audio_Test();
@@ -255,6 +256,7 @@ public class Project {
     for (int cnt = 0; cnt < NumSlices; cnt++) {
       double FractAlong = (((double) (cnt + 1)) / (double) NumSlices);
       RootPlayer.Render_To(FinalTime * FractAlong, wave_scratch);
+      wave_scratch.Normalize();
       wave_render.Append(wave_scratch);
     }
 

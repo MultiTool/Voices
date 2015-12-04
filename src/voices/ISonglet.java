@@ -73,5 +73,6 @@ public interface ISonglet {// Cancionita
   /* ********************************************************************************* */
   public static class MetricsPacket {
     public double MaxDuration = 0.0;
+    public Project MyProject = null;
   }
 }

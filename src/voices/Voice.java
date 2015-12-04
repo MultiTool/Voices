@@ -364,6 +364,7 @@ public class Voice implements ISonglet {//extends VoiceBase{
   }
   /* ********************************************************************************* */
   @Override public void Update_Guts(MetricsPacket metrics) {
+    this.Set_Project(metrics.MyProject);
     this.Sort_Me();
     this.Recalc_Line_SubTime();
     metrics.MaxDuration = this.Get_Duration();

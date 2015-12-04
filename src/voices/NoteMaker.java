@@ -11,6 +11,7 @@ package voices;
  */
 public class NoteMaker {
   public static int NumNotes = 12;
+  public static double SemitoneFraction = (1.0 / (double) NumNotes);
   /* ********************************************************************************* */
   public double Cn, Cs, Dn, Ds, En, Fn, Fs, Gn, Gs, An, As, Bn;// naturals and sharps
   public double[] NoteRatios;
@@ -28,7 +29,7 @@ public class NoteMaker {
   public Voice Create_Simple_Note(double TimeOffset, double Duration, double OctaveOffset, double LoudnessOffset) {
     Voice voice = new Voice();
     voice.Add_Note(TimeOffset + 0, OctaveOffset + 0, LoudnessOffset * 1);
-    voice.Add_Note(TimeOffset + Duration, OctaveOffset + 0, LoudnessOffset * 1);
+    voice.Add_Note(TimeOffset + Duration, OctaveOffset - 0.1, LoudnessOffset * 1);
     return voice;
   }
   /* ********************************************************************************* */
@@ -44,31 +45,33 @@ public class NoteMaker {
   }
   /* ********************************************************************************* */
   public ChorusBox Create_Triad(int NoteDex0, int NoteDex1, int NoteDex2) {
-    double Loudness = 1.0;
-    double Duration = 2.0;
+    double Loudness = 1.0;// NoteDex0 is usually the key
+    double Duration = 1.0;
     ISonglet note;
-    NoteDex0 %= NumNotes;// NoteDex0 is usually the key
-    NoteDex1 %= NumNotes;
-    NoteDex2 %= NumNotes;
+//    NoteDex0 %= NumNotes;
+//    NoteDex1 %= NumNotes;
+//    NoteDex2 %= NumNotes;
     ChorusBox cbx = new ChorusBox();
     note = Create_Simple_Note(0, Duration, 0, Loudness);
-    cbx.Add_SubSong(note, 0, NoteRatios[NoteDex0], Loudness);
+    cbx.Add_SubSong(note, 0, SemitoneFraction * NoteDex0, Loudness);
     note = Create_Simple_Note(0, Duration, 0, Loudness);
-    cbx.Add_SubSong(note, 0, NoteRatios[NoteDex1], Loudness);
+    cbx.Add_SubSong(note, 0, SemitoneFraction * NoteDex1, Loudness);
     note = Create_Simple_Note(0, Duration, 0, Loudness);
-    cbx.Add_SubSong(note, 0, NoteRatios[NoteDex2], Loudness);
+    cbx.Add_SubSong(note, 0, SemitoneFraction * NoteDex2, Loudness);
     return cbx;
   }
   /* ********************************************************************************* */
   public ChorusBox MakeMajor(int Key) {
     // int FirstNote = Key; int SecondNote = (Key + 4) % NumNotes; int ThirdNote = (Key + 7) % NumNotes;
+//    ISonglet songlet = Create_Triad(Key, (Key + 4), (Key + 7));
+//    OffsetBox obx = songlet.Spawn_OffsetBox();
+//    obx.OctaveLoc_s(Octave);
+//    return songlet;
     return Create_Triad(Key, (Key + 4), (Key + 7));
   }
   /* ********************************************************************************* */
-  public void MakeMinor(int Key) {
-    int FirstNote = Key;
-    int SecondNote = (Key + 3) % NumNotes;
-    int ThirdNote = (Key + 7) % NumNotes;
+  public ChorusBox MakeMinor(int Key) {
+    return Create_Triad(Key, (Key + 3), (Key + 7));
   }
   /* ********************************************************************************* */
   public static class Indexes {

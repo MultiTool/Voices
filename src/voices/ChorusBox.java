@@ -177,6 +177,7 @@ public class ChorusBox implements ISonglet {
   }
   /* ********************************************************************************* */
   @Override public void Update_Guts(MetricsPacket metrics) {
+    this.Set_Project(metrics.MyProject);
     this.Sort_Me(); // to do: also recursively update all children guts without running update_durations more than once for each
     metrics.MaxDuration = 0.0;// redundant
     double MyMaxDuration = 0.0;

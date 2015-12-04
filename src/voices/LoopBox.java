@@ -183,6 +183,7 @@ public class LoopBox implements ISonglet {
   }
   /* ********************************************************************************* */
   @Override public void Update_Guts(MetricsPacket metrics) {
+    this.Set_Project(metrics.MyProject);
     metrics.MaxDuration = 0;
     this.Content.Update_Guts(metrics);
     metrics.MaxDuration = this.MyDuration;

@@ -5,7 +5,11 @@
  */
 package voices;
 
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import javax.sound.sampled.AudioFileFormat;
 import javax.sound.sampled.AudioFormat;
+import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.DataLine;
 import javax.sound.sampled.SourceDataLine;
@@ -68,7 +72,7 @@ public class Audio {
     }
     seconds = ((double) wave.NumSamples) / (double) SampleRate;
     byte[] buf = new byte[(int) (SampleRate * seconds * BytesPerSample)];
-    double Damper = 1.0;// 0.5;//0.75
+    double Damper = 1.0;// 1.0;// 0.5;//0.75
     double amplitude;
     int iamp, StartBit = BitsPerSample - Byte.SIZE;
     int bufcnt = 0;
@@ -137,6 +141,36 @@ public class Audio {
     }
   }
   /* ********************************************************************************* */
+  /**
+   * Save the double array as a sound file (using .wav or .au format).
+   */
+  public void save(String filename, double[] input) {
+    //double[] input;
+    // assumes 44,100 samples per second
+    // use 16-bit audio, mono, signed PCM, little Endian
+    double MAX_16_BIT = Short.MAX_VALUE;     // 32,767
+    AudioFormat format = new AudioFormat(this.SampleRate, 16, 1, true, false);
+    byte[] data = new byte[2 * input.length];
+    for (int scnt = 0; scnt < input.length; scnt++) {
+      int temp = (short) (input[scnt] * MAX_16_BIT);
+      data[2 * scnt + 0] = (byte) temp;
+      data[2 * scnt + 1] = (byte) (temp >> Byte.SIZE);
+    }
+    try {// now save the file
+      ByteArrayInputStream bais = new ByteArrayInputStream(data);
+      AudioInputStream ais = new AudioInputStream(bais, format, input.length);
+      if (filename.toLowerCase().endsWith(".wav")) {
+        AudioSystem.write(ais, AudioFileFormat.Type.WAVE, new File(filename));
+      } else if (filename.toLowerCase().endsWith(".au")) {
+        AudioSystem.write(ais, AudioFileFormat.Type.AU, new File(filename));
+      } else {
+        throw new RuntimeException("File format not supported: " + filename);
+      }
+    } catch (Exception e) {
+      System.out.println(e);
+      System.exit(1);
+    }
+  }
   public void Launch(Wave wave0) {
     Thread_Sounder ss = new Thread_Sounder();
     ss.wave = wave0;
