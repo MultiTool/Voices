@@ -178,4 +178,8 @@ public class Wave {
       this.wave[dex] = value;
     }
   }
+  /* ********************************************************************************* */
+  public double[] GetWave(){// just for testing. remove later
+    return this.wave;
+  }
 }

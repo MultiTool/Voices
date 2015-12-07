@@ -18,8 +18,9 @@ public class ChorusBox implements ISonglet {
   public double Duration = 0.0;
   private Project MyProject;
   public String MyName;// for debugging
+  private double MaxAmplitude = 0.0;
   /* ********************************************************************************* */
-  public static class Player_Head_ChorusBox extends Singer {
+  public static class ChorusBox_Singer extends Singer {
     protected ChorusBox MySonglet;
     public ArrayList<Singer> NowPlaying = new ArrayList<>();// pool of currently playing voices
     public int Current_Dex = 0;
@@ -139,8 +140,8 @@ public class ChorusBox implements ISonglet {
       return this.Spawn_My_Singer();
     }
     /* ********************************************************************************* */
-    public Player_Head_ChorusBox Spawn_My_Singer() {// for render time
-      Player_Head_ChorusBox ph = this.Content.Spawn_My_Singer();
+    public ChorusBox_Singer Spawn_My_Singer() {// for render time
+      ChorusBox_Singer ph = this.Content.Spawn_My_Singer();
       ph.MyOffsetBox = this;// to do: also transfer all of this box's offsets to player head. 
       return ph;
     }
@@ -158,6 +159,22 @@ public class ChorusBox implements ISonglet {
   /* ********************************************************************************* */
   @Override public double Get_Duration() {
     return this.Duration;
+  }
+  /* ********************************************************************************* */
+  @Override public double Get_Max_Amplitude() {
+    return this.MaxAmplitude;
+  }
+  /* ********************************************************************************* */
+  public void Update_Max_Amplitude() {
+    int len = this.SubSongs.size();
+    OffsetBox pnt;
+    double MaxAmp = 0.0;
+    for (int pcnt = 0; pcnt < len; pcnt++) {
+      pnt = this.SubSongs.get(pcnt);
+      double Amp = pnt.Get_Max_Amplitude();
+      MaxAmp += Amp;// this is overkill, we need to only sum those subsongs that overlap.
+    }
+    this.MaxAmplitude = MaxAmp;
   }
   /* ********************************************************************************* */
   @Override public double Update_Durations() {
@@ -179,6 +196,7 @@ public class ChorusBox implements ISonglet {
   @Override public void Update_Guts(MetricsPacket metrics) {
     this.Set_Project(metrics.MyProject);
     this.Sort_Me(); // to do: also recursively update all children guts without running update_durations more than once for each
+    this.Update_Max_Amplitude();
     metrics.MaxDuration = 0.0;// redundant
     double MyMaxDuration = 0.0;
     double DurBuf = 0.0;
@@ -219,8 +237,8 @@ public class ChorusBox implements ISonglet {
     return this.Spawn_My_Singer();
   }
   /* ********************************************************************************* */
-  public Player_Head_ChorusBox Spawn_My_Singer() {
-    Player_Head_ChorusBox ChorusPlayer = new Player_Head_ChorusBox();
+  public ChorusBox_Singer Spawn_My_Singer() {
+    ChorusBox_Singer ChorusPlayer = new ChorusBox_Singer();
     ChorusPlayer.MySonglet = this;
     ChorusPlayer.MyProject = this.MyProject;// inherit project
     return ChorusPlayer;

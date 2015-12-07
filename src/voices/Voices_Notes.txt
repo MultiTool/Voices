@@ -199,12 +199,13 @@ fx: reverb, looper, vibrato, flanger, distortion
 
 2^(1/12) = 1.0594630943592952645618252949463
 
-cp
-christine
-mouths
-wd
-prosthetics
-paper faces
-
-
+*voces - el clic esta arreglado 
+* output to wav - HECHO 
+* maxamp - calc maxamp, update_maxamp - my dificil 
+* fix sub-sample time alignment 
+* biased white noise - ruido blanco con sesgo 
+* voz de muestras 
+* quita player_head 
+* ModBox - container that splines loudness and pitch. buena para doblar acordes. 
+* mas mus - may require gui to compose well, so next we need a tiny sample repeater, for realtime user bending. 
 

@@ -153,6 +153,7 @@ public class Project {
   public void Compose_Chorus_Test2() {
     ISonglet song = null;
     OffsetBox obox = null;
+    ChorusBox CMinor, CMajor, DMajor, DMinor;
     switch (5) {
     case 0:
       song = Create_Random_Chorus(0, 0, 1.0);
@@ -177,10 +178,25 @@ public class Project {
       obox = song.Spawn_OffsetBox();
       break;
     case 5:
+      double Delay = 1.5;
+      //Delay = 3;
+      ChorusBox cbx = new ChorusBox();
       NoteMaker nm = new NoteMaker();
-      //song = nm.MakeMajor(0);// C major
-      //song = nm.MakeMajor(1);// D major
-      song = nm.MakeMinor(0);// C minor
+      LoopBox lbx = new LoopBox();
+      CMajor = nm.MakeMajor(0);// C major
+      cbx.Add_SubSong(CMajor, 0, 0, 1.0);
+      CMinor = nm.MakeMinor(0);// C minor
+      cbx.Add_SubSong(CMinor, Delay * 1, 0, 1.0);
+      DMajor = nm.MakeMajor(2);// D major
+      cbx.Add_SubSong(DMajor, Delay * 2, 0, 1.0);
+      DMinor = nm.MakeMinor(2);// D minor
+      cbx.Add_SubSong(DMinor, Delay * 3, 0, 1.0);
+
+      lbx.Add_Content(cbx);
+      lbx.Set_Delay(Delay * 4);
+      lbx.Set_Duration(100);
+
+      song = lbx;
       song.Set_Project(this);
       obox = song.Spawn_OffsetBox();
       obox.OctaveLoc_s(4);
@@ -191,8 +207,8 @@ public class Project {
 
     this.Update_Guts();
 
-    Render_Test();
     Audio_Test();
+    Render_Test();
   }
   /* ********************************************************************************* */
   public void Audio_Test() {
@@ -211,12 +227,15 @@ public class Project {
     StartTime = System.currentTimeMillis();
 
     Audio aud = new Audio();
+    // aud.SaveAudio("test.wav", this.rootbox);
+    
     aud.Start();
-    int NumSlices = 8;
+    int NumSlices = 100;
     for (int cnt = 0; cnt < NumSlices; cnt++) {
       double FractAlong = (((double) (cnt + 1)) / (double) NumSlices);
       RootPlayer.Render_To(FinalTime * FractAlong, wave_scratch);
-      wave_scratch.Normalize();
+      // wave_scratch.Normalize();
+      wave_scratch.Amplify(0.2);
       wave_render.Append(wave_scratch);
       aud.Feed(wave_scratch);
     }

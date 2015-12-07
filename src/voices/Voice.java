@@ -18,6 +18,7 @@ public class Voice implements ISonglet {//extends VoiceBase{
   // collection of control points, each one having a pitch and a volume. rendering morphs from one cp to another. 
   public ArrayList<Point> CPoints = new ArrayList<>();
   private Project MyProject;
+  private double MaxAmplitude;
   /* ********************************************************************************* */
   public static class VoiceOffsetBox extends OffsetBox {// location box to transpose in pitch, move in time, etc. 
     public Voice Content;
@@ -34,14 +35,14 @@ public class Voice implements ISonglet {//extends VoiceBase{
       return this.Spawn_My_Singer();
     }
     /* ********************************************************************************* */
-    public Player_Head Spawn_My_Singer() {// for render time
-      Player_Head ph = this.Content.Spawn_My_Singer();
+    public Voice_Singer Spawn_My_Singer() {// for render time
+      Voice_Singer ph = this.Content.Spawn_My_Singer();
       ph.MyOffsetBox = this;
       return ph;
     }
   }
   /* ********************************************************************************* */
-  public static class Player_Head extends Singer {
+  public static class Voice_Singer extends Singer {
     protected Voice MyPhrase;
     protected OffsetBox MyOffsetBox = OffsetBox.Identity;
     double Phase, Cycles;// Cycles is the number of cycles we've rotated since the start of this voice. The fractional part is the phase information. 
@@ -51,7 +52,7 @@ public class Voice implements ISonglet {//extends VoiceBase{
     int Render_Sample_Count, Origin_Sample_Count_Prev, Origin_Sample_Count;
     Point Cursor_Point = new Point();
     /* ********************************************************************************* */
-    private Player_Head() {
+    private Voice_Singer() {
       this.ParentSinger = null;
       //this.Start();
     }
@@ -116,7 +117,7 @@ public class Voice implements ISonglet {//extends VoiceBase{
       Point Prev_Point = null, Next_Point = null;
       EndTime = this.MyOffsetBox.MapTime(EndTime);// EndTime is now time internal to voice's own coordinate system
       this.Origin_Sample_Count_Prev = this.Origin_Sample_Count;
-      this.Origin_Sample_Count = (int) Math.floor(EndTime);
+      this.Origin_Sample_Count = (int) Math.floor(EndTime * (double) this.MyProject.SampleRate);// to do: use this to make sure generated wave is perfectly aligned.
 
       double UnMapped_Prev_Time = this.MyOffsetBox.UnMapTime(this.Cursor_Point.RealTime);// get start time in parent coordinates
       this.Render_Sample_Count = 0;
@@ -302,6 +303,7 @@ public class Voice implements ISonglet {//extends VoiceBase{
   }
   /* ********************************************************************************* */
   public Voice() {
+    this.MaxAmplitude = 1.0;
   }
   /* ********************************************************************************* */
   @Override public OffsetBox Spawn_OffsetBox() {// for compose time
@@ -318,10 +320,10 @@ public class Voice implements ISonglet {//extends VoiceBase{
     return this.Spawn_My_Singer();
   }
   /* ********************************************************************************* */
-  public Player_Head Spawn_My_Singer() {// for render time
+  public Voice_Singer Spawn_My_Singer() {// for render time
     // Deliver one of my players while exposing specific object class. 
     // Handy if my parent's players know what class I am and want special access to my particular type of player.
-    Player_Head ph = new Player_Head();
+    Voice_Singer ph = new Voice_Singer();
     ph.MyPhrase = this;
     ph.MyProject = this.MyProject;// inherit project
     return ph;
@@ -363,10 +365,28 @@ public class Voice implements ISonglet {//extends VoiceBase{
     return this.Get_Duration();// this is not a container, so just return what we already know
   }
   /* ********************************************************************************* */
+  @Override public double Get_Max_Amplitude() {
+    return this.MaxAmplitude;
+  }
+  /* ********************************************************************************* */
+  public void Update_Max_Amplitude() {
+    int len = this.CPoints.size();
+    Point pnt;
+    double MaxAmp = 0.0;
+    for (int pcnt = 0; pcnt < len; pcnt++) {
+      pnt = this.CPoints.get(pcnt);
+      if (MaxAmp < pnt.Loudness) {
+        MaxAmp = pnt.Loudness;
+      }
+    }
+    this.MaxAmplitude = MaxAmp;
+  }
+  /* ********************************************************************************* */
   @Override public void Update_Guts(MetricsPacket metrics) {
     this.Set_Project(metrics.MyProject);
     this.Sort_Me();
     this.Recalc_Line_SubTime();
+    this.Update_Max_Amplitude();
     metrics.MaxDuration = this.Get_Duration();
   }
   /* ********************************************************************************* */

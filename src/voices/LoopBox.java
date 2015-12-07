@@ -14,6 +14,7 @@ import java.util.ArrayList;
 public class LoopBox implements ISonglet {
   private double MyDuration = 1.0;// manually assigned duration, as loops are infinite otherwise
   private double Delay = 1.0;// time delay between loops
+  private double Sustain = 1.0;// Opposite of Diminish. How much the loudness changes with each repeat. 
   private Project MyProject = null;
   private ISonglet Content = null;
   private OffsetBox ContentOBox = null;
@@ -172,6 +173,10 @@ public class LoopBox implements ISonglet {
   /* ********************************************************************************* */
   public void Set_Duration(double duration) {
     this.MyDuration = duration;
+  }
+  /* ********************************************************************************* */
+  @Override public double Get_Max_Amplitude() {
+    throw new UnsupportedOperationException("Get_Max_Amplitude not supported yet.");
   }
   /* ********************************************************************************* */
   public void Set_Delay(double delay) {

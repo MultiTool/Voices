@@ -28,8 +28,12 @@ public class NoteMaker {
   /* ********************************************************************************* */
   public Voice Create_Simple_Note(double TimeOffset, double Duration, double OctaveOffset, double LoudnessOffset) {
     Voice voice = new Voice();
-    voice.Add_Note(TimeOffset + 0, OctaveOffset + 0, LoudnessOffset * 1);
-    voice.Add_Note(TimeOffset + Duration, OctaveOffset - 0.1, LoudnessOffset * 1);
+    double midfrac0 = 0.03, midfrac1 = 0.5;
+    voice.Add_Note(TimeOffset + 0, OctaveOffset + 0, LoudnessOffset * 0);
+    voice.Add_Note(TimeOffset + Duration * midfrac0, OctaveOffset + 0, LoudnessOffset * 1);
+    voice.Add_Note(TimeOffset + Duration * midfrac1, OctaveOffset - 0.07, LoudnessOffset * midfrac1);
+    voice.Add_Note(TimeOffset + Duration, OctaveOffset + 0.0, LoudnessOffset * 0.0);
+    //voice.Add_Note(TimeOffset + Duration, OctaveOffset + 0.1, LoudnessOffset * 0);
     return voice;
   }
   /* ********************************************************************************* */
@@ -46,7 +50,7 @@ public class NoteMaker {
   /* ********************************************************************************* */
   public ChorusBox Create_Triad(int NoteDex0, int NoteDex1, int NoteDex2) {
     double Loudness = 1.0;// NoteDex0 is usually the key
-    double Duration = 1.0;
+    double Duration = 2.0;
     ISonglet note;
 //    NoteDex0 %= NumNotes;
 //    NoteDex1 %= NumNotes;

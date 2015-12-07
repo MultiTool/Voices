@@ -140,11 +140,28 @@ public class Audio {
       System.out.println(e);
     }
   }
+
+  /* ********************************************************************************* */
+  public void SaveAudio(String filename, OffsetBox song) {
+    ISonglet.Singer RootPlayer = song.Spawn_Singer();
+    RootPlayer.Compound(song);
+
+    double FinalTime = song.GetContent().Get_Duration();
+
+    Wave wave_render = new Wave();
+    wave_render.Init(0, FinalTime, SampleRate);
+
+    RootPlayer.Start();
+    RootPlayer.Render_To(FinalTime, wave_render);
+    wave_render.Normalize();
+    wave_render.Amplify(0.99);
+    this.Save(filename, wave_render.GetWave());
+  }
   /* ********************************************************************************* */
   /**
    * Save the double array as a sound file (using .wav or .au format).
    */
-  public void save(String filename, double[] input) {
+  public void Save(String filename, double[] input) {
     //double[] input;
     // assumes 44,100 samples per second
     // use 16-bit audio, mono, signed PCM, little Endian
@@ -156,7 +173,7 @@ public class Audio {
       data[2 * scnt + 0] = (byte) temp;
       data[2 * scnt + 1] = (byte) (temp >> Byte.SIZE);
     }
-    try {// now save the file
+    try {// now Save the file
       ByteArrayInputStream bais = new ByteArrayInputStream(data);
       AudioInputStream ais = new AudioInputStream(bais, format, input.length);
       if (filename.toLowerCase().endsWith(".wav")) {

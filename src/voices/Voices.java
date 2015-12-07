@@ -7,13 +7,16 @@ package voices;
 
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
-import voices.Voice.Player_Head;
+import voices.Voice.Voice_Singer;
 import voices.ISonglet.Singer;
 //import voices.VoiceBase.Point;
 
 /**
  *
  * @author MultiTool
+ * Someday I'd like to port this whole project to C++.  
+ * Java is my pseudocode, easy to write, portable and reliable media I/O, but not as potentially fast as C/C++. 
+ * 
  */
 public class Voices {
 

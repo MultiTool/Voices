@@ -28,6 +28,10 @@ public class OffsetBox implements IOffsetBox {// location box to transpose in pi
     return cb;
   }
   /* ********************************************************************************* */
+  public double Get_Max_Amplitude() {
+    return this.GetContent().Get_Max_Amplitude() * this.LoudnessFactor;
+  }
+  /* ********************************************************************************* */
   @Override public void Compound(IOffsetBox donor) {
     this.TimeLoc_s(TimeOrg + donor.TimeLoc_g());
     this.OctaveLoc_s(OctaveLoc + donor.OctaveLoc_g());
@@ -69,4 +73,3 @@ public class OffsetBox implements IOffsetBox {// location box to transpose in pi
     LoudnessFactor = value;
   }
 }
-
