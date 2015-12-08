@@ -25,10 +25,12 @@ public class Voices {
    */
   /* ********************************************************************************* */
   public static void main(String[] args) {
-    Test2();
+    MainGui mg = new MainGui();
+    mg.Init();
+    Test_Synthesis();
   }
   /* ********************************************************************************* */
-  public static void Test2() {
+  public static void Test_Synthesis() {
     //Globals.BaseFreqC0 = 1.0;
     Project prj = new Project();
     // prj.Compose_Warble_Chorus();
@@ -36,51 +38,6 @@ public class Voices {
 
 //    prj.Compose_Chorus_Test();
 //    prj.Render_Test();
-  }
-  /* ********************************************************************************* */
-  public static void Test1() {
-    Globals.BaseFreqC0 = 1.0;
-    Voice vc = new Voice();
-    Wave wave_render = new Wave();
-    Wave wave_scratch = new Wave();
-    Project proj = new Project();
-    proj.SampleRate = 100;
-    vc.Set_Project(proj);
-
-    int TDiff = 16;// seconds
-
-    {
-      vc.Add_Note(1, 4, 1);
-      vc.Add_Note(8, 1, 0.5);
-      vc.Add_Note(TDiff, 4, 1);
-    }
-    ISonglet.MetricsPacket metrics = new ISonglet.MetricsPacket();
-    vc.Update_Guts(metrics);
-
-    wave_render.Init(0);
-
-    Singer hd = vc.Spawn_Singer();
-
-    long StartTime, EndTime;
-
-    hd.Start();
-    StartTime = System.currentTimeMillis();
-    ///hd.Skip_To(1.2);
-    //hd.Render_To(4, wave_scratch);
-    //hd.Skip_To(4.29);
-    hd.Render_To(3.0, wave_scratch);
-    wave_render.Append(wave_scratch);
-    hd.Render_To(TDiff - 4, wave_scratch);
-    wave_render.Append(wave_scratch);
-    hd.Render_To(TDiff - 0, wave_scratch);
-    wave_render.Append(wave_scratch);
-    //hd.Render_Range(0, 2, wave_scratch);
-    EndTime = System.currentTimeMillis();
-    System.out.println("Render_To time:" + (EndTime - StartTime));// Render_To time: 150 milliseconds per 16 seconds. 
-    //System.out.println("Render_Range time:" + (EndTime - StartTime));
-
-    SaveWave(wave_render, "wave_render.csv");
-    boolean nop = true;
   }
   /* ********************************************************************************* */
   public static void SaveWave3(Wave wave0, Wave wave1, Wave wave2, String FileName) {
