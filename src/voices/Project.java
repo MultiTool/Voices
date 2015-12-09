@@ -228,16 +228,18 @@ public class Project {
 
     Audio aud = new Audio();
     // aud.SaveAudio("test.wav", this.rootbox);
-    
+
     aud.Start();
     int NumSlices = 100;
     for (int cnt = 0; cnt < NumSlices; cnt++) {
+      System.out.print("cnt:" + cnt + " ");
       double FractAlong = (((double) (cnt + 1)) / (double) NumSlices);
       RootPlayer.Render_To(FinalTime * FractAlong, wave_scratch);
       // wave_scratch.Normalize();
       wave_scratch.Amplify(0.2);
       wave_render.Append(wave_scratch);
       aud.Feed(wave_scratch);
+      System.out.println(" done.");
     }
     aud.Stop();
     EndTime = System.currentTimeMillis();

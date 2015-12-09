@@ -5,20 +5,252 @@
  */
 package voices;
 
+import java.awt.Color;
+import java.awt.Graphics2D;
+import java.awt.geom.Point2D;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import javafx.geometry.BoundingBox;
 //import voices.VoiceBase.Point;
 
 /**
  *
  * @author MultiTool
  */
-public class Voice implements ISonglet {//extends VoiceBase{
+public class Voice implements ISonglet, IDrawable {//extends VoiceBase{
   // collection of control points, each one having a pitch and a volume. rendering morphs from one cp to another. 
   public ArrayList<Point> CPoints = new ArrayList<>();
   private Project MyProject;
   private double MaxAmplitude;
+  /* ********************************************************************************* */
+  public Voice() {
+    this.MaxAmplitude = 1.0;
+  }
+  /* ********************************************************************************* */
+  @Override public OffsetBox Spawn_OffsetBox() {// for compose time
+    return this.Spawn_My_OffsetBox();
+  }
+  /* ********************************************************************************* */
+  public VoiceOffsetBox Spawn_My_OffsetBox() {// for compose time
+    VoiceOffsetBox lbox = new VoiceOffsetBox();// Deliver a OffsetBox specific to this type of phrase.
+    lbox.Content = this;
+    return lbox;
+  }
+  /* ********************************************************************************* */
+  @Override public Singer Spawn_Singer() {// for render time
+    return this.Spawn_My_Singer();
+  }
+  /* ********************************************************************************* */
+  public Voice_Singer Spawn_My_Singer() {// for render time
+    // Deliver one of my players while exposing specific object class. 
+    // Handy if my parent's players know what class I am and want special access to my particular type of player.
+    Voice_Singer ph = new Voice_Singer();
+    ph.MyPhrase = this;
+    ph.MyProject = this.MyProject;// inherit project
+    return ph;
+  }
+  /* ********************************************************************************* */
+  public void Add_Note(Point pnt) {
+    this.CPoints.add(pnt);
+  }
+  /* ********************************************************************************* */
+  public Point Add_Note(double RealTime, double Octave, double Loudness) {
+    Point pnt = new Point();
+    pnt.Octave = Octave;
+    pnt.RealTime = RealTime;
+    pnt.SubTime = 0.0;
+    pnt.Loudness = Loudness;
+    this.CPoints.add(pnt);
+    return pnt;
+  }
+  /* ********************************************************************************* */
+  @Override public int Get_Sample_Count(int SampleRate) {
+    int len = this.CPoints.size();
+    Point First_Point = this.CPoints.get(0);
+    Point Final_Point = this.CPoints.get(len - 1);
+    double TimeDiff = Final_Point.RealTime - First_Point.RealTime;
+    return (int) (TimeDiff * SampleRate);
+    // return (int) (Final_Point.RealTime * SampleRate);
+  }
+  /* ********************************************************************************* */
+  @Override public double Get_Duration() {
+    int len = this.CPoints.size();
+    if (len <= 0) {
+      return 0;
+    }
+    Point Final_Point = this.CPoints.get(len - 1);
+    return Final_Point.RealTime;
+  }
+  /* ********************************************************************************* */
+  @Override public double Update_Durations() {
+    return this.Get_Duration();// this is not a container, so just return what we already know
+  }
+  /* ********************************************************************************* */
+  @Override public double Get_Max_Amplitude() {
+    return this.MaxAmplitude;
+  }
+  /* ********************************************************************************* */
+  public void Update_Max_Amplitude() {
+    int len = this.CPoints.size();
+    Point pnt;
+    double MaxAmp = 0.0;
+    for (int pcnt = 0; pcnt < len; pcnt++) {
+      pnt = this.CPoints.get(pcnt);
+      if (MaxAmp < pnt.Loudness) {
+        MaxAmp = pnt.Loudness;
+      }
+    }
+    this.MaxAmplitude = MaxAmp;
+  }
+  /* ********************************************************************************* */
+  @Override public void Update_Guts(MetricsPacket metrics) {
+    this.Set_Project(metrics.MyProject);
+    this.Sort_Me();
+    this.Recalc_Line_SubTime();
+    this.Update_Max_Amplitude();
+    metrics.MaxDuration = this.Get_Duration();
+  }
+  /* ********************************************************************************* */
+  @Override public void Sort_Me() {// sorting by RealTime
+    Collections.sort(this.CPoints, new Comparator<Point>() {
+      @Override public int compare(Point note0, Point note1) {
+        return Double.compare(note0.RealTime, note1.RealTime);
+      }
+    });
+  }
+  /* ********************************************************************************* */
+  @Override public Project Get_Project() {
+    return this.MyProject;
+  }
+  /* ********************************************************************************* */
+  @Override public void Set_Project(Project project) {
+    this.MyProject = project;
+  }
+  /* ********************************************************************************* */
+  public void Recalc_Line_SubTime() {// ready for test
+    double SubTimeLocal;// run this function whenever this voice instance is modified, e.g. control points moved, added, or removed. 
+    int len = this.CPoints.size();
+    if (len < 1) {
+      return;
+    }
+    this.Sort_Me();
+    Point Prev_Point, Next_Point, Dummy_First;
+    Next_Point = this.CPoints.get(0);
+    Dummy_First = new Point();
+    Dummy_First.CopyFrom(Next_Point);
+    Dummy_First.SubTime = Dummy_First.RealTime = 0.0;// Times must both start at 0, even though user may have put the first audible point at T greater than 0. 
+    Next_Point = Dummy_First;
+    for (int pcnt = 0; pcnt < len; pcnt++) {
+      Prev_Point = Next_Point;
+      Next_Point = this.CPoints.get(pcnt);
+      double FrequencyFactorStart = Prev_Point.GetFrequencyFactor();
+      double TimeRange = Next_Point.RealTime - Prev_Point.RealTime;
+      double OctaveRange = Next_Point.Octave - Prev_Point.Octave;
+      if (TimeRange == 0.0) {
+        TimeRange = Globals.Fudge;// Fudge to avoid div by 0 
+      }
+      double OctaveRate = OctaveRange / TimeRange;// octaves per second
+      SubTimeLocal = Integral(OctaveRate, TimeRange);
+      Next_Point.SubTime = Prev_Point.SubTime + (FrequencyFactorStart * SubTimeLocal);
+    }
+  }
+  /* ********************************************************************************* */
+  public static double Integral(double OctaveRate, double TimeAlong) {// to do: optimize this!
+    double SubTimeCalc;// given realtime passed and rate of octave change, use integration to get the sum of all subjective time passed.  
+    if (OctaveRate == 0.0) {
+      OctaveRate = Globals.Fudge;// Fudge to avoid div by 0 
+    }
+    // Yep calling log and pow functions for every sample generated is expensive. We will have to optimize later. 
+    double Denom = (Math.log(2) * OctaveRate);// returns the integral of (2 ^ (TimeAlong * OctaveRate))
+    //SubTimeCalc = (Math.pow(2, (TimeAlong * OctaveRate)) / Denom) - (1.0 / Denom);
+    SubTimeCalc = ((Math.pow(2, (TimeAlong * OctaveRate)) - 1.0) / Denom);
+    return SubTimeCalc;
+  }
+  /* ********************************************************************************* */
+  @Override public void Draw_Me(Drawing_Context dc) {
+    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+  }
+  /* ********************************************************************************* */
+  @Override public BoundingBox GetBoundingBox() {
+    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+  }
+  /* ********************************************************************************* */
+  public static class Point implements IDrawable {
+    public double RealTime = 0.0, SubTime = 0.0;// SubTime is cumulative subjective time.
+    public double Octave = 0.0;
+    public double Loudness = 1.0;
+    /* ********************************************************************************* */
+    public void CopyFrom(Point source) {
+      this.RealTime = source.RealTime;
+      this.SubTime = source.SubTime;
+      this.Octave = source.Octave;
+      this.Loudness = source.Loudness;
+    }
+    /* ********************************************************************************* */
+    public double GetFrequencyFactor() {
+      return Math.pow(2.0, this.Octave);
+    }
+    /* ********************************************************************************* */
+    @Override public void Draw_Me(IDrawable.Drawing_Context dc) {// IDrawable
+      double Radius = 5, Diameter = Radius * 2.0;
+      IDrawable.Drawing_Context mydc = new IDrawable.Drawing_Context(dc, this);
+      Point2D.Double pnt = mydc.To_Screen(mydc.Absolute_X, mydc.Absolute_Y);
+      dc.gr.setColor(Color.green);
+      mydc.gr.fillOval((int) (pnt.x) - (int) Radius, (int) (pnt.y) - (int) Radius, (int) Diameter, (int) Diameter);
+      /* 
+       IDrawable.Drawing_Context mydc = new IDrawable.Drawing_Context(dc, this);
+       
+       // Point2D.Double pnt = mydc.To_Screen(this.Start_Time_G(),this.Get_Pitch());
+       Point2D.Double pnt = mydc.To_Screen(mydc.Absolute_X, mydc.Absolute_Y);
+       mydc.gr.fillOval((int) (pnt.x) - 5, (int) (pnt.y) - 5, 10, 10);
+       //mydc.gr.fillOval((int) (mydc.Absolute_X * xscale) - 5, (int) (mydc.Absolute_Y * yscale) - 5, 10, 10);
+       My_Note.Draw_Me(mydc);
+       */
+      /*
+       Drawing_Context mydc = new Drawing_Context(dc, this);
+       Point2D.Double pnt = mydc.To_Screen(mydc.Absolute_X, mydc.Absolute_Y);
+       mydc.gr.fillOval((int) (pnt.x) - (int) Radius, (int) (pnt.y) - (int) Radius, (int) Diameter, (int) Diameter);
+       //mydc.gr.fillOval((int) (mydc.Absolute_X * xscale) - 5, (int) (mydc.Absolute_Y * yscale) - 5, 10, 10);
+       // fill triangle here.
+       double amphgt = 0.2;
+       Polygon pgon = new Polygon();
+       int[] xpoints = new int[3];
+       int[] ypoints = new int[3];
+
+       Point2D.Double endpnt = mydc.To_Screen(mydc.Absolute_X + this.Duration_G(), mydc.Absolute_Y);
+       Point2D.Double pnt0 = mydc.To_Screen(mydc.Absolute_X, mydc.Absolute_Y - amphgt);
+       Point2D.Double pnt1 = mydc.To_Screen(mydc.Absolute_X, mydc.Absolute_Y + amphgt);
+
+       xpoints[0] = (int) pnt0.x;
+       ypoints[0] = (int) pnt0.y;
+
+       xpoints[1] = (int) pnt1.x;
+       ypoints[1] = (int) pnt1.y;
+
+       xpoints[2] = (int) endpnt.x;
+       ypoints[2] = (int) endpnt.y;
+
+       mydc.gr.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.2f));
+
+       Color color = Color.cyan;
+       //color = new Color(color.getRed(), color.getGreen(), color.getBlue(), 0.1f); //Red
+
+       //Color color = new Color(1, 0, 0, 0.5); //Red
+       //color.getAlpha();  mydc.gr.setPaint(color);
+
+       mydc.gr.setColor(color);
+       //mydc.gr.drawPolygon(xpoints, ypoints, 3);
+       mydc.gr.fillPolygon(xpoints, ypoints, 3);
+
+       mydc.gr.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1.0f));
+       */
+    }
+    /* ********************************************************************************* */
+    @Override public BoundingBox GetBoundingBox() {
+      throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+  }
   /* ********************************************************************************* */
   public static class VoiceOffsetBox extends OffsetBox {// location box to transpose in pitch, move in time, etc. 
     public Voice Content;
@@ -201,7 +433,7 @@ public class Voice implements ISonglet {//extends VoiceBase{
       double TimeAlong = RealTime - pnt0.RealTime;
       double OctaveRange = pnt1.Octave - pnt0.Octave;
       double OctaveRate = OctaveRange / TimeRange;// octaves per second
-      double SubTimeLocal = Calculus(OctaveRate, TimeAlong);
+      double SubTimeLocal = Integral(OctaveRate, TimeAlong);
       PntMid.RealTime = RealTime;
       PntMid.SubTime = pnt0.SubTime + (FrequencyFactorStart * SubTimeLocal);
 
@@ -278,172 +510,12 @@ public class Voice implements ISonglet {//extends VoiceBase{
       for (int scnt = 0; scnt < NumSamples; scnt++) {
         TimeAlong = scnt * SampleDuration;
         CurrentLoudness = pnt0.Loudness + (TimeAlong * LoudnessRate);
-        SubTimeLocal = Calculus(OctaveRate, TimeAlong);
+        SubTimeLocal = Integral(OctaveRate, TimeAlong);
         SubTimeAbsolute = (pnt0.SubTime + (FrequencyFactorStart * SubTimeLocal)) * FrequencyFactorInherited;
         Amplitude = Math.sin(SubTimeAbsolute * BaseFreq * Globals.TwoPi);
         wave.Set(this.Render_Sample_Count, Amplitude * CurrentLoudness);
         this.Render_Sample_Count++;
       }
     }
-  }
-  /* ********************************************************************************* */
-  public static class Point {
-    public double RealTime = 0.0, SubTime = 0.0;// SubTime is cumulative subjective time.
-    public double Octave = 0.0;
-    public double Loudness;
-    public void CopyFrom(Point source) {
-      this.RealTime = source.RealTime;
-      this.SubTime = source.SubTime;
-      this.Octave = source.Octave;
-      this.Loudness = source.Loudness;
-    }
-    public double GetFrequencyFactor() {
-      return Math.pow(2.0, this.Octave);
-    }
-  }
-  /* ********************************************************************************* */
-  public Voice() {
-    this.MaxAmplitude = 1.0;
-  }
-  /* ********************************************************************************* */
-  @Override public OffsetBox Spawn_OffsetBox() {// for compose time
-    return this.Spawn_My_OffsetBox();
-  }
-  /* ********************************************************************************* */
-  public VoiceOffsetBox Spawn_My_OffsetBox() {// for compose time
-    VoiceOffsetBox lbox = new VoiceOffsetBox();// Deliver a OffsetBox specific to this type of phrase.
-    lbox.Content = this;
-    return lbox;
-  }
-  /* ********************************************************************************* */
-  @Override public Singer Spawn_Singer() {// for render time
-    return this.Spawn_My_Singer();
-  }
-  /* ********************************************************************************* */
-  public Voice_Singer Spawn_My_Singer() {// for render time
-    // Deliver one of my players while exposing specific object class. 
-    // Handy if my parent's players know what class I am and want special access to my particular type of player.
-    Voice_Singer ph = new Voice_Singer();
-    ph.MyPhrase = this;
-    ph.MyProject = this.MyProject;// inherit project
-    return ph;
-  }
-  /* ********************************************************************************* */
-  public void Add_Note(Point pnt) {
-    this.CPoints.add(pnt);
-  }
-  /* ********************************************************************************* */
-  public Point Add_Note(double RealTime, double Octave, double Loudness) {
-    Point pnt = new Point();
-    pnt.Octave = Octave;
-    pnt.RealTime = RealTime;
-    pnt.SubTime = 0.0;
-    pnt.Loudness = Loudness;
-    this.CPoints.add(pnt);
-    return pnt;
-  }
-  /* ********************************************************************************* */
-  @Override public int Get_Sample_Count(int SampleRate) {
-    int len = this.CPoints.size();
-    Point First_Point = this.CPoints.get(0);
-    Point Final_Point = this.CPoints.get(len - 1);
-    double TimeDiff = Final_Point.RealTime - First_Point.RealTime;
-    return (int) (TimeDiff * SampleRate);
-    // return (int) (Final_Point.RealTime * SampleRate);
-  }
-  /* ********************************************************************************* */
-  @Override public double Get_Duration() {
-    int len = this.CPoints.size();
-    if (len <= 0) {
-      return 0;
-    }
-    Point Final_Point = this.CPoints.get(len - 1);
-    return Final_Point.RealTime;
-  }
-  /* ********************************************************************************* */
-  @Override public double Update_Durations() {
-    return this.Get_Duration();// this is not a container, so just return what we already know
-  }
-  /* ********************************************************************************* */
-  @Override public double Get_Max_Amplitude() {
-    return this.MaxAmplitude;
-  }
-  /* ********************************************************************************* */
-  public void Update_Max_Amplitude() {
-    int len = this.CPoints.size();
-    Point pnt;
-    double MaxAmp = 0.0;
-    for (int pcnt = 0; pcnt < len; pcnt++) {
-      pnt = this.CPoints.get(pcnt);
-      if (MaxAmp < pnt.Loudness) {
-        MaxAmp = pnt.Loudness;
-      }
-    }
-    this.MaxAmplitude = MaxAmp;
-  }
-  /* ********************************************************************************* */
-  @Override public void Update_Guts(MetricsPacket metrics) {
-    this.Set_Project(metrics.MyProject);
-    this.Sort_Me();
-    this.Recalc_Line_SubTime();
-    this.Update_Max_Amplitude();
-    metrics.MaxDuration = this.Get_Duration();
-  }
-  /* ********************************************************************************* */
-  @Override public void Sort_Me() {// sorting by RealTime
-    Collections.sort(this.CPoints, new Comparator<Point>() {
-      @Override public int compare(Point note0, Point note1) {
-        return Double.compare(note0.RealTime, note1.RealTime);
-      }
-    });
-  }
-  /* ********************************************************************************* */
-  @Override public Project Get_Project() {
-    return this.MyProject;
-  }
-  /* ********************************************************************************* */
-  @Override public void Set_Project(Project project) {
-    this.MyProject = project;
-  }
-  /* ********************************************************************************* */
-  public void Recalc_Line_SubTime() {// ready for test
-    double SubTimeLocal;// run this function whenever this voice instance is modified, e.g. control points moved, added, or removed. 
-    int len = this.CPoints.size();
-    if (len < 1) {
-      return;
-    }
-    this.Sort_Me();
-    Point Prev_Point, Next_Point, Dummy_First;
-    Next_Point = this.CPoints.get(0);
-    Dummy_First = new Point();
-    Dummy_First.CopyFrom(Next_Point);
-    Dummy_First.SubTime = Dummy_First.RealTime = 0.0;// Times must both start at 0, even though user may have put the first audible point at T greater than 0. 
-    Next_Point = Dummy_First;
-    for (int pcnt = 0; pcnt < len; pcnt++) {
-      Prev_Point = Next_Point;
-      Next_Point = this.CPoints.get(pcnt);
-      double FrequencyFactorStart = Prev_Point.GetFrequencyFactor();
-      double TimeRange = Next_Point.RealTime - Prev_Point.RealTime;
-      double OctaveRange = Next_Point.Octave - Prev_Point.Octave;
-      if (TimeRange == 0.0) {
-        TimeRange = Globals.Fudge;// Fudge to avoid div by 0 
-      }
-      double OctaveRate = OctaveRange / TimeRange;// octaves per second
-      SubTimeLocal = Calculus(OctaveRate, TimeRange);
-      Next_Point.SubTime = Prev_Point.SubTime + (FrequencyFactorStart * SubTimeLocal);
-    }
-    // this.Update_Durations();
-  }
-  /* ********************************************************************************* */
-  public static double Calculus(double OctaveRate, double TimeAlong) {// ready for test
-    double SubTimeCalc;// given realtime passed and rate of octave change, use integration to get the sum of all subjective time passed.  
-    if (OctaveRate == 0.0) {
-      OctaveRate = Globals.Fudge;// Fudge to avoid div by 0 
-    }
-    // Yep calling log and pow functions for every sample generated is expensive. We will have to optimize later. 
-    double Denom = (Math.log(2) * OctaveRate);// returns the integral of (2 ^ (TimeAlong * OctaveRate))
-    //SubTimeCalc = (Math.pow(2, (TimeAlong * OctaveRate)) / Denom) - (1.0 / Denom);
-    SubTimeCalc = ((Math.pow(2, (TimeAlong * OctaveRate)) - 1.0) / Denom);
-    return SubTimeCalc;
   }
 }

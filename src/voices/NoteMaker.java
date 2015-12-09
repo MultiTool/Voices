@@ -52,9 +52,6 @@ public class NoteMaker {
     double Loudness = 1.0;// NoteDex0 is usually the key
     double Duration = 2.0;
     ISonglet note;
-//    NoteDex0 %= NumNotes;
-//    NoteDex1 %= NumNotes;
-//    NoteDex2 %= NumNotes;
     ChorusBox cbx = new ChorusBox();
     note = Create_Simple_Note(0, Duration, 0, Loudness);
     cbx.Add_SubSong(note, 0, SemitoneFraction * NoteDex0, Loudness);
@@ -65,17 +62,30 @@ public class NoteMaker {
     return cbx;
   }
   /* ********************************************************************************* */
+  public ChorusBox Create_Seventh(int NoteDex0, int NoteDex1, int NoteDex2, int NoteDex3) {
+    double Loudness = 1.0;// NoteDex0 is usually the key
+    double Duration = 2.0;
+    ISonglet note;
+    ChorusBox cbx = Create_Triad(NoteDex0, NoteDex1, NoteDex2);
+    note = Create_Simple_Note(0, Duration, 0, Loudness);
+    cbx.Add_SubSong(note, 0, SemitoneFraction * NoteDex3, Loudness);
+    return cbx;
+  }
+  /* ********************************************************************************* */
   public ChorusBox MakeMajor(int Key) {
-    // int FirstNote = Key; int SecondNote = (Key + 4) % NumNotes; int ThirdNote = (Key + 7) % NumNotes;
-//    ISonglet songlet = Create_Triad(Key, (Key + 4), (Key + 7));
-//    OffsetBox obx = songlet.Spawn_OffsetBox();
-//    obx.OctaveLoc_s(Octave);
-//    return songlet;
     return Create_Triad(Key, (Key + 4), (Key + 7));
   }
   /* ********************************************************************************* */
   public ChorusBox MakeMinor(int Key) {
     return Create_Triad(Key, (Key + 3), (Key + 7));
+  }
+  /* ********************************************************************************* */
+  public ChorusBox MakeAugmented(int Key) {
+    return Create_Triad(Key, (Key + 4), (Key + 8));
+  }
+  /* ********************************************************************************* */
+  public ChorusBox MakeDiminished(int Key) {
+    return Create_Triad(Key, (Key + 3), (Key + 6));
   }
   /* ********************************************************************************* */
   public static class Indexes {

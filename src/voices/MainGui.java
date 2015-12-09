@@ -29,21 +29,30 @@ public class MainGui {
     frame.setVisible(true);
   }
   /* ********************************************************************************* */
-  public static class DrawingPanel extends JPanel implements MouseMotionListener, MouseListener, KeyListener {
+  public static class DrawingPanel extends JPanel implements MouseMotionListener, MouseListener, MouseWheelListener, KeyListener {
     Project MyProject = null;
     /* ********************************************************************************* */
     public DrawingPanel() {
+      this.Init();
+    }
+    /* ********************************************************************************* */
+    public final void Init() {
+      // alternative: look into KeyBindings 
+      this.setFocusable(true);
+      this.addMouseListener(this);
+      this.addMouseMotionListener(this);
+      this.addMouseWheelListener(this);
+      this.addKeyListener(this);
     }
     /* ********************************************************************************* */
     @Override public void paintComponent(Graphics g) {
       super.paintComponent(g);
-      Graphics2D g2 = (Graphics2D) g;
+      Graphics2D g2d = (Graphics2D) g;
       Polygon p = new Polygon();
       for (int i = 0; i < 5; i++) {
-        p.addPoint((int) (100 + 50 * Math.cos(i * 2 * Math.PI / 5)),
-          (int) (100 + 50 * Math.sin(i * 2 * Math.PI / 5)));
+        p.addPoint((int) (100 + 50 * Math.cos(i * 2 * Math.PI / 5)), (int) (100 + 50 * Math.sin(i * 2 * Math.PI / 5)));
       }
-      g2.drawPolygon(p);
+      g2d.drawPolygon(p);
     }
     /* ********************************************************************************* */
     @Override public void mouseDragged(MouseEvent me) {
@@ -54,29 +63,25 @@ public class MainGui {
     }
     /* ********************************************************************************* */
     @Override public void mouseClicked(MouseEvent me) {
-      // throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
     @Override public void mousePressed(MouseEvent me) {
-      // throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
     @Override public void mouseReleased(MouseEvent me) {
-      // throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
     @Override public void mouseEntered(MouseEvent me) {
-      // throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
     @Override public void mouseExited(MouseEvent me) {
-      // throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+    /* ********************************************************************************* */
+    @Override public void mouseWheelMoved(MouseWheelEvent mwe) {
     }
     /* ********************************************************************************* */
     @Override public void keyTyped(KeyEvent ke) {
-      System.exit(0);// not working yet
+      System.exit(0);
     }
     @Override public void keyPressed(KeyEvent ke) {
-      // throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
     @Override public void keyReleased(KeyEvent ke) {
-      // throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
   }
 }
