@@ -213,6 +213,7 @@ public class Voice implements ISonglet, IDrawable {
 
     // graphics support
     double Radius = 5, Diameter = Radius * 2.0;
+    double PixelsPerLoudness = 20;// to do: loudness will have to be mapped to screen. not a pixel value right?
     CajaDelimitadora MyBounds = new CajaDelimitadora();
     /* ********************************************************************************* */
     public void CopyFrom(Point source) {
@@ -227,10 +228,12 @@ public class Voice implements ISonglet, IDrawable {
     }
     /* ********************************************************************************* */
     @Override public void Draw_Me(Drawing_Context ParentDC) {// IDrawable
-      IDrawable.Drawing_Context mydc = new IDrawable.Drawing_Context(ParentDC, this);
-      Point2D.Double pnt = mydc.To_Screen(mydc.Absolute_X, mydc.Absolute_Y);
+      //IDrawable.Drawing_Context mydc = new IDrawable.Drawing_Context(ParentDC, this);
+      // Control points have the same space as their parent, so no need to create a local map.
+      
+      Point2D.Double pnt = ParentDC.To_Screen(this.RealTime, this.Octave);
       ParentDC.gr.setColor(Color.green);
-      mydc.gr.fillOval((int) (pnt.x) - (int) Radius, (int) (pnt.y) - (int) Radius, (int) Diameter, (int) Diameter);
+      ParentDC.gr.fillOval((int) (pnt.x) - (int) Radius, (int) (pnt.y) - (int) Radius, (int) Diameter, (int) Diameter);
       /* 
        IDrawable.Drawing_Context mydc = new IDrawable.Drawing_Context(dc, this);
        
@@ -285,14 +288,7 @@ public class Voice implements ISonglet, IDrawable {
     }
     /* ********************************************************************************* */
     @Override public void UpdateBoundingBox() {
-      /* ew. just realized that every bounding box would have to be in absolute drawing coordinates
-       but since a songlet can exist in multiple places the bounds will probably have be in local coords and then mapped to parent coordinates
-       do this on paper before creating a bunch of interface contracts
-       */
-//      this.MyBounds.Reset();
-//      this.MyBounds.IncludePoint(RealTime - Radius, Octave - Radius);
-//      this.MyBounds.IncludePoint(RealTime + Radius, Octave + Radius);
-      double LoudnessPixels = Loudness * 10;// to do: loudness will have to be mapped to screen. not a pixel value right?
+      double LoudnessPixels = Loudness * PixelsPerLoudness;// Map loudness to screen pixels.
       this.MyBounds.Min.setLocation(RealTime - Radius, Octave - Math.min(Radius, LoudnessPixels));
       this.MyBounds.Max.setLocation(RealTime + Radius, Octave + Math.max(Radius, LoudnessPixels));
     }
@@ -473,7 +469,7 @@ public class Voice implements ISonglet, IDrawable {
       }
     }
     /* ********************************************************************************* */
-    public static void Interpolate_ControlPoint(Point pnt0, Point pnt1, double RealTime, Point PntMid) {// ready for test
+    public static void Interpolate_ControlPoint(Point pnt0, Point pnt1, double RealTime, Point PntMid) {
       double FrequencyFactorStart = pnt0.GetFrequencyFactor();
       double TimeRange = pnt1.RealTime - pnt0.RealTime;
       double TimeAlong = RealTime - pnt0.RealTime;

@@ -75,4 +75,11 @@ public class OffsetBox implements IOffsetBox {// location box to transpose in pi
   @Override public void LoudnessFactor_s(double value) {
     LoudnessFactor = value;
   }
+  OffsetBox Clone_Me() {
+    OffsetBox child = new OffsetBox();
+    child.TimeOrg = this.TimeOrg;
+    child.OctaveLoc = this.OctaveLoc;
+    child.LoudnessFactor = this.LoudnessFactor;
+    return child;
+  }
 }

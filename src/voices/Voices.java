@@ -63,47 +63,4 @@ public class Voices {
     } catch (FileNotFoundException ex) {
     }
   }
-  /*
-   Junkyard
-  
-   ln(2) = 0.69314718 = 0.69314718055994530941723212145818
-    
-   next?
-   long composition? 
-   graphics?
-   serialize and save/load? 
-   moving frame of reference?
-   vibrato effect?
-   loop effect? - need this
-   audio output? - need this, or at the very least save as raw file
-   voice type made of sample loops? - stretch goal
-
-   how vibrato?  Render_To_Bent(EndTime, EndOctave);
-   could just add the parent OctaveRate to our own, for the whole child render() span 
-
-   Render_To(){
-   double ParentOctaveOffset, ParentOctaveRate;
-   this.ParentPlayer.CurrentOctaveOffset;
-   this.ParentPlayer.CurrentOctaveRate;
-   }
-   static double Frequency_Integral_Bent_Octave(double slope, double ybase, double xval) {// http://www.quickmath.com   bent note math
-   double frequency_from_octave_integral = Math.pow(2.0, (ybase + slope * xval)) / (slope * Math.log(2.0));// returns the number of cycles since T0, assuming linear change to octave.
-   return frequency_from_octave_integral;
-   }
-  
-   ********************************************************************************* 
-   double SineGenerator(double time, double frequency, int sampleRate) {// http://stackoverflow.com/questions/8566938/how-to-properly-bend-a-note-in-an-audio-synthesis-application
-   return Math.sin(time += (frequency * 2 * Math.PI) / sampleRate);
-   }
-  
-   so is every OffsetBox also an fxbox? and/or a container? 
-  
-   OffsetBoxes were created so that a single instance of a voice would not carry its own offset coords everywhere it was reparented, or double-parented. 
-   but, a voice could be double-parented to an fxbox that had no coordinates of its own. (eventually you need a parent with coordinates though. 
-   you're always 0,0 from the inside of any parent that does not contain your OffsetBoxes. 
-  
-   so should every voice spawn a OffsetBox to be attached to something?  doesn't seem like always. 
-   should I make my own OffsetBox if I am a voice?  
-  
-   */
 }

@@ -33,11 +33,16 @@ public interface IDrawable {
       this.GlobalOffset.Clear();
     }
     /* ********************************************************************************* */
-    public Drawing_Context(Drawing_Context Fresh_Parent, IDrawable Fresh_Note) {
+    public Drawing_Context(Drawing_Context Fresh_Parent, OffsetBox Fresh_Transform) {
+      this.Offset = Fresh_Transform;
+      this.GlobalOffset = Fresh_Parent.GlobalOffset.Clone_Me();
+      this.GlobalOffset.Compound(this.Offset);// inherit and further transform parent space
+      //Fresh_Xform.GetContent(); // inherit and transform bounding box somehow.
     }
     /* ********************************************************************************* */
     public Point2D.Double To_Screen(double Absolute_X, double Absolute_Y) {
-      throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+      Point2D.Double pnt = new Point2D.Double(this.GlobalOffset.UnMapTime(Absolute_X), this.GlobalOffset.UnMapPitch(Absolute_Y));
+      return pnt;
     }
     /* ********************************************************************************* */
     public void Compound(OffsetBox other) {

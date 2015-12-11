@@ -209,7 +209,6 @@ fx: reverb, looper, vibrato, flanger, distortion
 * ModBox - container that splines loudness and pitch. buena para doblar acordes. 
 * mas mus - may require gui to compose well, so next we need a tiny sample repeater, for realtime user bending. 
 
-
 this.addMouseListener(new java.awt.event.MouseAdapter() {
   @Override public void mouseClicked(java.awt.event.MouseEvent evt) {
     System.out.println("mouseClicked");
@@ -227,4 +226,86 @@ this.addMouseListener(new java.awt.event.MouseAdapter() {
     System.out.println("mouseReleased");
   }
 });
+
+/*
+Junkyard
+
+ln(2) = 0.69314718 = 0.69314718055994530941723212145818
+
+next?
+long composition? 
+graphics?
+serialize and save/load? 
+moving frame of reference?
+vibrato effect?
+loop effect? - need this
+audio output? - need this, or at the very least save as raw file
+voice type made of sample loops? - stretch goal
+
+how vibrato?  Render_To_Bent(EndTime, EndOctave);
+could just add the parent OctaveRate to our own, for the whole child render() span 
+
+Render_To(){
+double ParentOctaveOffset, ParentOctaveRate;
+this.ParentPlayer.CurrentOctaveOffset;
+this.ParentPlayer.CurrentOctaveRate;
+}
+static double Frequency_Integral_Bent_Octave(double slope, double ybase, double xval) {// http://www.quickmath.com   bent note math
+double frequency_from_octave_integral = Math.pow(2.0, (ybase + slope * xval)) / (slope * Math.log(2.0));// returns the number of cycles since T0, assuming linear change to octave.
+return frequency_from_octave_integral;
+}
+
+********************************************************************************* 
+double SineGenerator(double time, double frequency, int sampleRate) {// http://stackoverflow.com/questions/8566938/how-to-properly-bend-a-note-in-an-audio-synthesis-application
+return Math.sin(time += (frequency * 2 * Math.PI) / sampleRate);
+}
+
+so is every OffsetBox also an fxbox? and/or a container? 
+
+OffsetBoxes were created so that a single instance of a voice would not carry its own offset coords everywhere it was reparented, or double-parented. 
+but, a voice could be double-parented to an fxbox that had no coordinates of its own. (eventually you need a parent with coordinates though. 
+you're always 0,0 from the inside of any parent that does not contain your OffsetBoxes. 
+
+so should every voice spawn a OffsetBox to be attached to something?  doesn't seem like always. 
+should I make my own OffsetBox if I am a voice?  
+
+*/
+
+Every IDrawable will have a bounding box, and every Drawing_Context will also have a bounding box. 
+Drawing will always be called from the top, and the bounding box will define what to draw. 
+
+Ugliness issues:
+Every ISonglet will also have to be an IDrawable because all a parent knows about its children is that they are ISonglets. 
+  Therefore, if a parent draws its children it will need access to their Draw_Me() functions.
+OffsetBoxes will need scale transforms back to screen as well as translation offsets.  Audio isn't scalable (yet, maybe ever) but graphics must map to pixels. 
+Could OffsetBoxes be the owners of all bounding boxes?  CPoints don't have offset boxes, but they can fake it, just handle their own bounding boxes and nothing else. 
+If OffsetBoxes own bounding boxes, could they also be all the drawables? All OffsetBoxes know their ISonglets well. 
+Every drawable has to pass its personal space transform to the Drawing_Context as it passes through. 
+So Draw_Me becomes Draw_Content, more or less? 
+In any case, whenever a Drawing_Context object passes through Draw_Me, it must remap to local coordinates. 
+A Songlet does not point to the offsetbox it needs for this remapping, so either 
+1. pass the offsetbox to its songlet's Draw_Me, or
+2. perform the remap *before* we invoke the Draw_Me, or
+3. give offsetbox the a Draw_Me function and it will have everything. 
+if 3 then the offset box will have all of the IDrawable stuff to do.
+Any issues with Songlets having and updating their own boundingboxes? 
+OffsetBoxes are destined to contain two transforms: audio and graphics both. Maybe each has an AudMapTime, AudUnMapTime, and GraphicsMapTime, GraphicsUnMapTime ? or just AudMap(), AudUnMap() all coordinates? could offsetbox contain 2 instances of XForm class, one audio and one graphic? 
+OffsetBoxes are good IDrawables because they already have coordinates, and what else?  Less clutter for Songlets?  
+
+In this world, each OffsetBox has a Draw_Me(spacecontext) that it can override, and internally it can ref the songlet's custom Draw_Me(spacecontext) or whatever else. 
+IDrawable could just have a Draw_Me, but it would still be synonymous with ISonglet. Ah, but not. Both IOffsetBox and ISonglet would share IDrawable. 
+IOffsetBox would have all the UpdateBounds, GetBounds etc. 
+If offset boxes own all the bounds, then they might have redundant bounds when multiple boxes own the same songlet. 
+Yeah but well if we do a full recurse to update stuff, we will hit the same songlets twice anyway. 
+for any updateguts, every songlet must have an update timestamp. if the timestamp is older than the current launch of updateguts, we delve in. if equal (or younger? never happens) then we skip that one. 
+maybe then every songlet owns a boundingbox along with other guts, but the offsetboxes are the ones that do the updating? 
+each songlet has 1. an update timestamp, and 2. a refcount. 
+
+I like the idea of giving every offsetbox two personalities, one for graphics and one for sound. 
+
+
+
+
+
+
 
