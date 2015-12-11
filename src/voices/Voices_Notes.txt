@@ -209,22 +209,6 @@ fx: reverb, looper, vibrato, flanger, distortion
 * ModBox - container that splines loudness and pitch. buena para doblar acordes. 
 * mas mus - may require gui to compose well, so next we need a tiny sample repeater, for realtime user bending. 
 
-cp
-christine
-mouths
-wd
-prosthetics
-paper faces
-footprints 
-
-I tripped and fell, but
-As I fell, I suddenly understood. 
-I like the snow, and went walking in the woods behind my house. 
-It was one of those days when the sky and land were both sheets of pure white, and trees forming naked black wet stitches between them. 
-The snow had stopped falling just an hour before and there were no footprints 
-
-I suddenly understood as I fell, plunging my hand through the top of our county water tower. 
-
 
 this.addMouseListener(new java.awt.event.MouseAdapter() {
   @Override public void mouseClicked(java.awt.event.MouseEvent evt) {

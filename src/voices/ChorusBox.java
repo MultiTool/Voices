@@ -13,12 +13,13 @@ import java.util.Comparator;
  *
  * @author MultiTool
  */
-public class ChorusBox implements ISonglet {
+public class ChorusBox implements ISonglet, IDrawable {
   public ArrayList<OffsetBox> SubSongs = new ArrayList<>();
   public double Duration = 0.0;
   private Project MyProject;
   public String MyName;// for debugging
   private double MaxAmplitude = 0.0;
+  public CajaDelimitadora MyBounds;
   /* ********************************************************************************* */
   public static class ChorusBox_Singer extends Singer {
     protected ChorusBox MySonglet;
@@ -254,5 +255,32 @@ public class ChorusBox implements ISonglet {
   /* ********************************************************************************* */
   @Override public void Set_Project(Project project) {
     this.MyProject = project;
+  }
+  /* ********************************************************************************* */
+  @Override public void Draw_Me(Drawing_Context ParentDC) {
+    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+  }
+  @Override public CajaDelimitadora GetBoundingBox() {
+    return this.MyBounds;
+  }
+  @Override public void UpdateBoundingBox() {
+    /* ew. just realized that every bounding box would have to be in absolute drawing coordinates
+     but since a songlet can exist in multiple places the bounds will probably have be in local coords and then mapped to parent coordinates
+     do this on paper before creating a bunch of interface contracts
+     */
+    OffsetBox ChildOffsetBox;
+    ISonglet song;
+    IDrawable DrawableChild = null;
+    CajaDelimitadora ChildBBoxUnMapped = new CajaDelimitadora();
+    this.MyBounds.Reset();
+    int len = this.SubSongs.size();
+    for (int pcnt = 0; pcnt < len; pcnt++) {
+      ChildOffsetBox = this.SubSongs.get(pcnt);
+      song = ChildOffsetBox.GetContent();
+      // DrawableChild = song; // are we going to have to make all ISonglets also IDrawable?
+      DrawableChild.UpdateBoundingBox();
+      DrawableChild.GetBoundingBox().UnMap(ChildOffsetBox, ChildBBoxUnMapped);// project child limits into parent (my) space
+      this.MyBounds.Include(ChildBBoxUnMapped);
+    }
   }
 }

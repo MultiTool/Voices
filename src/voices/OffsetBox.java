@@ -12,20 +12,15 @@ import voices.ISonglet.Singer;
  * @author MultiTool
  */
 public class OffsetBox implements IOffsetBox {// location box to transpose in pitch, move in time, etc. 
-  public double TimeOrg, OctaveLoc, LoudnessFactor;
-  public static OffsetBox Identity = OffsetBox.CreateIdentity();
+  public double TimeOrg = 0, OctaveLoc = 0, LoudnessFactor = 1.0;
+  /* ********************************************************************************* */
+  public OffsetBox() {
+    //this.Clear();
+  }
   /* ********************************************************************************* */
   public void Clear() {// set all coordinates to identity, no transformation for content
     TimeOrg = OctaveLoc = 0.0;
     LoudnessFactor = 1.0;
-  }
-  /* ********************************************************************************* */
-  public static OffsetBox CreateIdentity() {
-    OffsetBox cb = new OffsetBox();
-    cb.TimeOrg = 0;
-    cb.OctaveLoc = 0;
-    cb.LoudnessFactor = 1.0;
-    return cb;
   }
   /* ********************************************************************************* */
   public double Get_Max_Amplitude() {
@@ -49,6 +44,14 @@ public class OffsetBox implements IOffsetBox {// location box to transpose in pi
   /* ********************************************************************************* */
   @Override public double UnMapTime(double ChildTime) {// convert time coordinate from my child's frame to my parent's frame
     return this.TimeOrg + ChildTime;
+  }
+  /* ********************************************************************************* */
+  @Override public double MapPitch(double ParentPitch) {// convert octave coordinate from my parent's frame to my child's frame
+    return ParentPitch - this.OctaveLoc;
+  }
+  /* ********************************************************************************* */
+  @Override public double UnMapPitch(double ChildPitch) {// convert octave coordinate from my child's frame to my parent's frame
+    return this.OctaveLoc + ChildPitch;
   }
   /* ********************************************************************************* */
   @Override public ISonglet GetContent() {

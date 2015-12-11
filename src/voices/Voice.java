@@ -11,18 +11,20 @@ import java.awt.geom.Point2D;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-import javafx.geometry.BoundingBox;
+//import javafx.geometry.BoundingBox;
 //import voices.VoiceBase.Point;
 
 /**
  *
  * @author MultiTool
  */
-public class Voice implements ISonglet, IDrawable {//extends VoiceBase{
+public class Voice implements ISonglet, IDrawable {
   // collection of control points, each one having a pitch and a volume. rendering morphs from one cp to another. 
   public ArrayList<Point> CPoints = new ArrayList<>();
   private Project MyProject;
   private double MaxAmplitude;
+  // graphics support 
+  CajaDelimitadora MyBounds = new CajaDelimitadora();
   /* ********************************************************************************* */
   public Voice() {
     this.MaxAmplitude = 1.0;
@@ -168,18 +170,50 @@ public class Voice implements ISonglet, IDrawable {//extends VoiceBase{
     return SubTimeCalc;
   }
   /* ********************************************************************************* */
-  @Override public void Draw_Me(Drawing_Context dc) {
+  @Override public void Draw_Me(Drawing_Context ParentDC) {
+    Point pnt;
+    CajaDelimitadora ChildrenBounds = new CajaDelimitadora();
+    OffsetBox obx = ParentDC.Offset;
+    ParentDC.Bounds.Map(obx, ChildrenBounds);// map to child (my) internal coordinates
+    int len = this.CPoints.size();
+    for (int pcnt = 0; pcnt < len; pcnt++) {
+      pnt = this.CPoints.get(pcnt);
+      // do we have to map bounds before Intersects? 
+      // probably cheaper to map the dc to the children rather than vice versa
+      // but, the children will have to be mapped all the way up to the screen for actual drawing
+      if (ChildrenBounds.Intersects(pnt.GetBoundingBox())) {
+        pnt.Draw_Me(ParentDC);
+      }
+    }
+  }
+  /* ********************************************************************************* */
+  @Override public CajaDelimitadora GetBoundingBox() {
     throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
   }
   /* ********************************************************************************* */
-  @Override public BoundingBox GetBoundingBox() {
-    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+  @Override public void UpdateBoundingBox() {
+    /* ew. just realized that every bounding box would have to be in absolute drawing coordinates
+     but since a songlet can exist in multiple places the bounds will probably have be in local coords and then mapped to parent coordinates
+     do this on paper before creating a bunch of interface contracts
+     */
+    Point pnt;
+    this.MyBounds.Reset();
+    int len = this.CPoints.size();
+    for (int pcnt = 0; pcnt < len; pcnt++) {
+      pnt = this.CPoints.get(pcnt);
+      pnt.UpdateBoundingBox();
+      this.MyBounds.Include(pnt.MyBounds);// don't have to UnMap in this case because my points are already in my internal coordinates.
+    }
   }
   /* ********************************************************************************* */
   public static class Point implements IDrawable {
     public double RealTime = 0.0, SubTime = 0.0;// SubTime is cumulative subjective time.
     public double Octave = 0.0;
     public double Loudness = 1.0;
+
+    // graphics support
+    double Radius = 5, Diameter = Radius * 2.0;
+    CajaDelimitadora MyBounds = new CajaDelimitadora();
     /* ********************************************************************************* */
     public void CopyFrom(Point source) {
       this.RealTime = source.RealTime;
@@ -192,11 +226,10 @@ public class Voice implements ISonglet, IDrawable {//extends VoiceBase{
       return Math.pow(2.0, this.Octave);
     }
     /* ********************************************************************************* */
-    @Override public void Draw_Me(IDrawable.Drawing_Context dc) {// IDrawable
-      double Radius = 5, Diameter = Radius * 2.0;
-      IDrawable.Drawing_Context mydc = new IDrawable.Drawing_Context(dc, this);
+    @Override public void Draw_Me(Drawing_Context ParentDC) {// IDrawable
+      IDrawable.Drawing_Context mydc = new IDrawable.Drawing_Context(ParentDC, this);
       Point2D.Double pnt = mydc.To_Screen(mydc.Absolute_X, mydc.Absolute_Y);
-      dc.gr.setColor(Color.green);
+      ParentDC.gr.setColor(Color.green);
       mydc.gr.fillOval((int) (pnt.x) - (int) Radius, (int) (pnt.y) - (int) Radius, (int) Diameter, (int) Diameter);
       /* 
        IDrawable.Drawing_Context mydc = new IDrawable.Drawing_Context(dc, this);
@@ -247,8 +280,21 @@ public class Voice implements ISonglet, IDrawable {//extends VoiceBase{
        */
     }
     /* ********************************************************************************* */
-    @Override public BoundingBox GetBoundingBox() {
-      throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    @Override public CajaDelimitadora GetBoundingBox() {
+      return this.MyBounds;
+    }
+    /* ********************************************************************************* */
+    @Override public void UpdateBoundingBox() {
+      /* ew. just realized that every bounding box would have to be in absolute drawing coordinates
+       but since a songlet can exist in multiple places the bounds will probably have be in local coords and then mapped to parent coordinates
+       do this on paper before creating a bunch of interface contracts
+       */
+//      this.MyBounds.Reset();
+//      this.MyBounds.IncludePoint(RealTime - Radius, Octave - Radius);
+//      this.MyBounds.IncludePoint(RealTime + Radius, Octave + Radius);
+      double LoudnessPixels = Loudness * 10;// to do: loudness will have to be mapped to screen. not a pixel value right?
+      this.MyBounds.Min.setLocation(RealTime - Radius, Octave - Math.min(Radius, LoudnessPixels));
+      this.MyBounds.Max.setLocation(RealTime + Radius, Octave + Math.max(Radius, LoudnessPixels));
     }
   }
   /* ********************************************************************************* */
@@ -276,7 +322,7 @@ public class Voice implements ISonglet, IDrawable {//extends VoiceBase{
   /* ********************************************************************************* */
   public static class Voice_Singer extends Singer {
     protected Voice MyPhrase;
-    protected OffsetBox MyOffsetBox = OffsetBox.Identity;
+    protected OffsetBox MyOffsetBox = new OffsetBox();
     double Phase, Cycles;// Cycles is the number of cycles we've rotated since the start of this voice. The fractional part is the phase information. 
     double SubTime;// Subjective time.
     double Current_Octave, Current_Frequency;

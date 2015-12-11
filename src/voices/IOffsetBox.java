@@ -29,7 +29,9 @@ public interface IOffsetBox {// location box to transpose in pitch, move in time
   /* ********************************************************************************* */
   public double UnMapTime(double ChildTime);// convert time coordinate from my child's frame to my parent's frame
   /* ********************************************************************************* */
+  public double MapPitch(double ParentPitch);// convert octave coordinate from my parent's frame to my child's frame
+  /* ********************************************************************************* */
+  public double UnMapPitch(double ChildPitch);// convert octave coordinate from my child's frame to my parent's frame
+  /* ********************************************************************************* */
   public Singer Spawn_Singer();
 }
-
-

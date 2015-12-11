@@ -243,7 +243,7 @@ public class Project {
     }
     aud.Stop();
     EndTime = System.currentTimeMillis();
-    System.out.println("Render_To time:" + (EndTime - StartTime));// Render_To time: 150 milliseconds per 16 seconds. 
+    System.out.println("Audio_Test time:" + (EndTime - StartTime));// Render_To time: 150 milliseconds per 16 seconds. 
   }
   /* ********************************************************************************* */
   public void Render_Test() {
