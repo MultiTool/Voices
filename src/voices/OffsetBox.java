@@ -11,8 +11,9 @@ import voices.ISonglet.Singer;
  *
  * @author MultiTool
  */
-public class OffsetBox implements IOffsetBox {// location box to transpose in pitch, move in time, etc. 
+public class OffsetBox implements IOffsetBox, IDrawable {// location box to transpose in pitch, move in time, etc. 
   public double TimeOrg = 0, OctaveLoc = 0, LoudnessFactor = 1.0;
+  public CajaDelimitadora MyBounds;
   /* ********************************************************************************* */
   public OffsetBox() {
     //this.Clear();
@@ -81,5 +82,15 @@ public class OffsetBox implements IOffsetBox {// location box to transpose in pi
     child.OctaveLoc = this.OctaveLoc;
     child.LoudnessFactor = this.LoudnessFactor;
     return child;
+  }
+  /* ********************************************************************************* */
+  @Override public void Draw_Me(Drawing_Context ParentDC) {// IDrawable
+    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+  }
+  @Override public CajaDelimitadora GetBoundingBox() {// IDrawable
+    return this.MyBounds;
+  }
+  @Override public void UpdateBoundingBox() {// IDrawable
+    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
   }
 }

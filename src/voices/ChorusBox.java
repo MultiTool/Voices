@@ -21,133 +21,6 @@ public class ChorusBox implements ISonglet, IDrawable {
   private double MaxAmplitude = 0.0;
   public CajaDelimitadora MyBounds;
   /* ********************************************************************************* */
-  public static class ChorusBox_Singer extends Singer {
-    protected ChorusBox MySonglet;
-    public ArrayList<Singer> NowPlaying = new ArrayList<>();// pool of currently playing voices
-    public int Current_Dex = 0;
-    double Prev_Time = 0;
-    private Chorus_OffsetBox MyOffsetBox;
-    /* ********************************************************************************* */
-    @Override public void Start() {
-      IsFinished = false;
-      Current_Dex = 0;
-      Prev_Time = 0;
-      NowPlaying.clear();
-    }
-    /* ********************************************************************************* */
-    @Override public void Skip_To(double EndTime) {
-      EndTime = this.MyOffsetBox.MapTime(EndTime);// EndTime is now time internal to ChorusBox's own coordinate system
-      if (this.MySonglet.SubSongs.size() <= 0) {
-        this.IsFinished = true;
-        this.Prev_Time = EndTime;
-        return;
-      }
-      double Clipped_EndTime = this.Tee_Up(EndTime);
-      int NumPlaying = NowPlaying.size();
-      int cnt = 0;
-      while (cnt < NumPlaying) {// then play the whole pool
-        Singer player = this.NowPlaying.get(cnt);
-        player.Skip_To(Clipped_EndTime);
-        cnt++;
-      }
-      cnt = 0;// now pack down the finished ones
-      while (cnt < this.NowPlaying.size()) {
-        Singer player = this.NowPlaying.get(cnt);
-        if (player.IsFinished) {
-          this.NowPlaying.remove(player);
-        } else {
-          cnt++;
-        }
-      }
-      this.Prev_Time = EndTime;
-    }
-    /* ********************************************************************************* */
-    @Override public void Render_To(double EndTime, Wave wave) {
-      EndTime = this.MyOffsetBox.MapTime(EndTime);// EndTime is now time internal to ChorusBox's own coordinate system
-      double UnMapped_Prev_Time = this.MyOffsetBox.UnMapTime(this.Prev_Time);// get start time in parent coordinates
-      if (this.MySonglet.SubSongs.size() <= 0) {
-        this.IsFinished = true;
-        wave.Init(UnMapped_Prev_Time, UnMapped_Prev_Time, this.MyProject.SampleRate);// wave times are in parent coordinates because the parent will be reading the wave data.
-        this.Prev_Time = EndTime;
-        return;
-      }
-      double Clipped_EndTime = this.Tee_Up(EndTime);
-      double UnMapped_EndTime = this.MyOffsetBox.UnMapTime(Clipped_EndTime);
-      wave.Init(UnMapped_Prev_Time, UnMapped_EndTime, this.MyProject.SampleRate);// wave times are in parent coordinates because the parent will be reading the wave data.
-      Wave ChildWave = new Wave();
-      int NumPlaying = NowPlaying.size();
-      int cnt = 0;
-      while (cnt < NumPlaying) {// then play the whole pool
-        Singer player = this.NowPlaying.get(cnt);
-        player.Render_To(Clipped_EndTime, ChildWave);
-        //ChildWave.Shift_Timebase(this.MyOffsetBox.TimeOrg);// shift child data to my parent's time base. hacky? 
-        ChildWave.Rebase_Time(this.MyOffsetBox.UnMapTime(ChildWave.StartTime));// shift child data to my parent's time base. hacky? 
-        wave.Overdub(ChildWave);// sum/overdub the waves 
-        cnt++;
-      }
-      cnt = 0;// now pack down the finished ones
-      while (cnt < this.NowPlaying.size()) {
-        Singer player = this.NowPlaying.get(cnt);
-        if (player.IsFinished) {
-          this.NowPlaying.remove(player);
-        } else {
-          cnt++;
-        }
-      }
-      wave.Amplify(this.MyOffsetBox.LoudnessFactor);
-      this.Prev_Time = EndTime;
-    }
-    /* ********************************************************************************* */
-    private double Tee_Up(double EndTime) {// consolidating identical code 
-      if (EndTime < 0) {
-        EndTime = 0;// clip time
-      }
-      int NumSonglets = MySonglet.SubSongs.size();
-      double Final_Start = this.MySonglet.SubSongs.get(NumSonglets - 1).TimeOrg;
-      Final_Start = Math.min(Final_Start, EndTime);
-      double Final_Time = this.MySonglet.Get_Duration();
-      if (EndTime > Final_Time) {
-        this.IsFinished = true;
-        EndTime = Final_Time;// clip time
-      }
-      OffsetBox obox;
-      while (this.Current_Dex < NumSonglets) {// first find new songlets in this time range and add them to pool
-        obox = MySonglet.SubSongs.get(this.Current_Dex);
-        if (Final_Start < obox.TimeOrg) {// repeat until cb start time overtakes EndTime
-          break;
-        }
-        Singer singer = obox.Spawn_Singer();
-        singer.Inherit(this);
-        this.NowPlaying.add(singer);
-        singer.Start();
-        this.Current_Dex++;
-      }
-      return EndTime;
-    }
-    /* ********************************************************************************* */
-    @Override public IOffsetBox Get_OffsetBox() {
-      return this.MyOffsetBox;
-    }
-  }
-  /* ********************************************************************************* */
-  public static class Chorus_OffsetBox extends OffsetBox {// location box to transpose in pitch, move in time, etc. 
-    public ChorusBox Content;
-    /* ********************************************************************************* */
-    @Override public ISonglet GetContent() {
-      return Content;
-    }
-    /* ********************************************************************************* */
-    @Override public ISonglet.Singer Spawn_Singer() {// always always always override this
-      return this.Spawn_My_Singer();
-    }
-    /* ********************************************************************************* */
-    public ChorusBox_Singer Spawn_My_Singer() {// for render time
-      ChorusBox_Singer ph = this.Content.Spawn_My_Singer();
-      ph.MyOffsetBox = this;// to do: also transfer all of this box's offsets to player head. 
-      return ph;
-    }
-  }
-  /* ********************************************************************************* */
   public OffsetBox Add_SubSong(ISonglet songlet, double TimeOffset, double OctaveOffset, double LoudnessFactor) {
     songlet.Set_Project(this.MyProject);// child inherits project from me
     OffsetBox obox = songlet.Spawn_OffsetBox();
@@ -264,23 +137,158 @@ public class ChorusBox implements ISonglet, IDrawable {
     return this.MyBounds;
   }
   @Override public void UpdateBoundingBox() {
-    /* ew. just realized that every bounding box would have to be in absolute drawing coordinates
-     but since a songlet can exist in multiple places the bounds will probably have be in local coords and then mapped to parent coordinates
-     do this on paper before creating a bunch of interface contracts
-     */
     OffsetBox ChildOffsetBox;
-    ISonglet song;
-    IDrawable DrawableChild = null;
     CajaDelimitadora ChildBBoxUnMapped = new CajaDelimitadora();
     this.MyBounds.Reset();
     int len = this.SubSongs.size();
     for (int pcnt = 0; pcnt < len; pcnt++) {
       ChildOffsetBox = this.SubSongs.get(pcnt);
-      song = ChildOffsetBox.GetContent();
-      // DrawableChild = song; // are we going to have to make all ISonglets also IDrawable?
-      DrawableChild.UpdateBoundingBox();
-      DrawableChild.GetBoundingBox().UnMap(ChildOffsetBox, ChildBBoxUnMapped);// project child limits into parent (my) space
+      ChildOffsetBox.UpdateBoundingBox();
+      ChildBBoxUnMapped = ChildOffsetBox.GetBoundingBox();// project child limits into parent (my) space
       this.MyBounds.Include(ChildBBoxUnMapped);
+    }
+  }
+  /* ********************************************************************************* */
+  public static class ChorusBox_Singer extends Singer {
+    protected ChorusBox MySonglet;
+    public ArrayList<Singer> NowPlaying = new ArrayList<>();// pool of currently playing voices
+    public int Current_Dex = 0;
+    double Prev_Time = 0;
+    private Chorus_OffsetBox MyOffsetBox;
+    /* ********************************************************************************* */
+    @Override public void Start() {
+      IsFinished = false;
+      Current_Dex = 0;
+      Prev_Time = 0;
+      NowPlaying.clear();
+    }
+    /* ********************************************************************************* */
+    @Override public void Skip_To(double EndTime) {
+      EndTime = this.MyOffsetBox.MapTime(EndTime);// EndTime is now time internal to ChorusBox's own coordinate system
+      if (this.MySonglet.SubSongs.size() <= 0) {
+        this.IsFinished = true;
+        this.Prev_Time = EndTime;
+        return;
+      }
+      double Clipped_EndTime = this.Tee_Up(EndTime);
+      int NumPlaying = NowPlaying.size();
+      int cnt = 0;
+      while (cnt < NumPlaying) {// then play the whole pool
+        Singer player = this.NowPlaying.get(cnt);
+        player.Skip_To(Clipped_EndTime);
+        cnt++;
+      }
+      cnt = 0;// now pack down the finished ones
+      while (cnt < this.NowPlaying.size()) {
+        Singer player = this.NowPlaying.get(cnt);
+        if (player.IsFinished) {
+          this.NowPlaying.remove(player);
+        } else {
+          cnt++;
+        }
+      }
+      this.Prev_Time = EndTime;
+    }
+    /* ********************************************************************************* */
+    @Override public void Render_To(double EndTime, Wave wave) {
+      EndTime = this.MyOffsetBox.MapTime(EndTime);// EndTime is now time internal to ChorusBox's own coordinate system
+      double UnMapped_Prev_Time = this.MyOffsetBox.UnMapTime(this.Prev_Time);// get start time in parent coordinates
+      if (this.MySonglet.SubSongs.size() <= 0) {
+        this.IsFinished = true;
+        wave.Init(UnMapped_Prev_Time, UnMapped_Prev_Time, this.MyProject.SampleRate);// wave times are in parent coordinates because the parent will be reading the wave data.
+        this.Prev_Time = EndTime;
+        return;
+      }
+      double Clipped_EndTime = this.Tee_Up(EndTime);
+      double UnMapped_EndTime = this.MyOffsetBox.UnMapTime(Clipped_EndTime);
+      wave.Init(UnMapped_Prev_Time, UnMapped_EndTime, this.MyProject.SampleRate);// wave times are in parent coordinates because the parent will be reading the wave data.
+      Wave ChildWave = new Wave();
+      int NumPlaying = NowPlaying.size();
+      int cnt = 0;
+      while (cnt < NumPlaying) {// then play the whole pool
+        Singer player = this.NowPlaying.get(cnt);
+        player.Render_To(Clipped_EndTime, ChildWave);
+        //ChildWave.Shift_Timebase(this.MyOffsetBox.TimeOrg);// shift child data to my parent's time base. hacky? 
+        ChildWave.Rebase_Time(this.MyOffsetBox.UnMapTime(ChildWave.StartTime));// shift child data to my parent's time base. hacky? 
+        wave.Overdub(ChildWave);// sum/overdub the waves 
+        cnt++;
+      }
+      cnt = 0;// now pack down the finished ones
+      while (cnt < this.NowPlaying.size()) {
+        Singer player = this.NowPlaying.get(cnt);
+        if (player.IsFinished) {
+          this.NowPlaying.remove(player);
+        } else {
+          cnt++;
+        }
+      }
+      wave.Amplify(this.MyOffsetBox.LoudnessFactor);
+      this.Prev_Time = EndTime;
+    }
+    /* ********************************************************************************* */
+    private double Tee_Up(double EndTime) {// consolidating identical code 
+      if (EndTime < 0) {
+        EndTime = 0;// clip time
+      }
+      int NumSonglets = MySonglet.SubSongs.size();
+      double Final_Start = this.MySonglet.SubSongs.get(NumSonglets - 1).TimeOrg;
+      Final_Start = Math.min(Final_Start, EndTime);
+      double Final_Time = this.MySonglet.Get_Duration();
+      if (EndTime > Final_Time) {
+        this.IsFinished = true;
+        EndTime = Final_Time;// clip time
+      }
+      OffsetBox obox;
+      while (this.Current_Dex < NumSonglets) {// first find new songlets in this time range and add them to pool
+        obox = MySonglet.SubSongs.get(this.Current_Dex);
+        if (Final_Start < obox.TimeOrg) {// repeat until cb start time overtakes EndTime
+          break;
+        }
+        Singer singer = obox.Spawn_Singer();
+        singer.Inherit(this);
+        this.NowPlaying.add(singer);
+        singer.Start();
+        this.Current_Dex++;
+      }
+      return EndTime;
+    }
+    /* ********************************************************************************* */
+    @Override public IOffsetBox Get_OffsetBox() {
+      return this.MyOffsetBox;
+    }
+  }
+  /* ********************************************************************************* */
+  public static class Chorus_OffsetBox extends OffsetBox {// location box to transpose in pitch, move in time, etc. 
+    public ChorusBox Content = null;
+    /* ********************************************************************************* */
+    public Chorus_OffsetBox() {
+      MyBounds = new CajaDelimitadora();
+    }
+    /* ********************************************************************************* */
+    @Override public ISonglet GetContent() {
+      return Content;
+    }
+    /* ********************************************************************************* */
+    @Override public ISonglet.Singer Spawn_Singer() {// always always always override this
+      return this.Spawn_My_Singer();
+    }
+    /* ********************************************************************************* */
+    public ChorusBox_Singer Spawn_My_Singer() {// for render time
+      ChorusBox_Singer ph = this.Content.Spawn_My_Singer();
+      ph.MyOffsetBox = this;// to do: also transfer all of this box's offsets to player head. 
+      return ph;
+    }
+    /* ********************************************************************************* */
+    @Override public void Draw_Me(Drawing_Context ParentDC) {// IDrawable
+      Drawing_Context ChildDC = new Drawing_Context(ParentDC, this);
+      this.Content.Draw_Me(ChildDC);
+    }
+//    @Override public CajaDelimitadora GetBoundingBox() {// IDrawable
+//      return this.MyBounds;
+//    }
+    @Override public void UpdateBoundingBox() {// IDrawable
+      this.Content.UpdateBoundingBox();
+      this.Content.GetBoundingBox().UnMap(this, MyBounds);// project child limits into parent (my) space
     }
   }
 }

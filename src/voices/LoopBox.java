@@ -11,13 +11,109 @@ import java.util.ArrayList;
  *
  * @author MultiTool
  */
-public class LoopBox implements ISonglet {
+public class LoopBox implements ISonglet, IDrawable {
   private double MyDuration = 1.0;// manually assigned duration, as loops are infinite otherwise
   private double Delay = 1.0;// time delay between loops
   private double Sustain = 1.0;// Opposite of Diminish. How much the loudness changes with each repeat. 
   private Project MyProject = null;
   private ISonglet Content = null;
   private OffsetBox ContentOBox = null;
+  private CajaDelimitadora MyBounds = new CajaDelimitadora();
+  /* ********************************************************************************* */
+  public LoopBox() {
+    MyBounds = new CajaDelimitadora();
+  }
+  /* ********************************************************************************* */
+  @Override public OffsetBox Spawn_OffsetBox() {
+    return this.Spawn_My_OffsetBox();
+  }
+  /* ********************************************************************************* */
+  public Loop_OffsetBox Spawn_My_OffsetBox() {// for compose time
+    Loop_OffsetBox lbox = new Loop_OffsetBox();// Deliver an OffsetBox specific to this type of songlet.
+    lbox.Clear();
+    lbox.Content = this;
+    return lbox;
+  }
+  /* ********************************************************************************* */
+  @Override public Singer Spawn_Singer() {
+    return this.Spawn_My_Singer();
+  }
+  /* ********************************************************************************* */
+  private Loop_Singer Spawn_My_Singer() {
+    Loop_Singer LoopSinger = new Loop_Singer();
+    LoopSinger.MySonglet = this;
+    LoopSinger.MyProject = this.MyProject;// inherit project
+    return LoopSinger;
+  }
+  /* ********************************************************************************* */
+  @Override public int Get_Sample_Count(int SampleRate) {
+    return (int) (this.MyDuration * SampleRate);
+  }
+  /* ********************************************************************************* */
+  @Override public double Get_Duration() {
+    return this.MyDuration;
+  }
+  /* ********************************************************************************* */
+  public void Set_Duration(double duration) {
+    this.MyDuration = duration;
+  }
+  /* ********************************************************************************* */
+  @Override public double Get_Max_Amplitude() {
+    throw new UnsupportedOperationException("Get_Max_Amplitude not supported yet.");
+  }
+  /* ********************************************************************************* */
+  public void Set_Delay(double delay) {
+    this.Delay = delay;
+  }
+  /* ********************************************************************************* */
+  @Override public double Update_Durations() {// probably deprecated
+    return this.Content.Update_Durations();
+  }
+  /* ********************************************************************************* */
+  @Override public void Update_Guts(MetricsPacket metrics) {
+    this.Set_Project(metrics.MyProject);
+    metrics.MaxDuration = 0;
+    this.Content.Update_Guts(metrics);
+    metrics.MaxDuration = this.MyDuration;
+  }
+  /* ********************************************************************************* */
+  @Override public void Sort_Me() {
+    this.Content.Sort_Me();// not really the plan, but LoopBox doesn't have anything else to sort so why not
+  }
+  /* ********************************************************************************* */
+  @Override public Project Get_Project() {
+    return this.MyProject;
+  }
+  /* ********************************************************************************* */
+  @Override public void Set_Project(Project project) {
+    this.MyProject = project;
+  }
+  /* ********************************************************************************* */
+  public OffsetBox Add_Content(ISonglet songlet) {
+    songlet.Set_Project(this.MyProject);// child inherits project from me
+    OffsetBox obox = songlet.Spawn_OffsetBox();
+    this.ContentOBox = obox;
+    this.Content = songlet;
+    return obox;
+  }
+  /* ********************************************************************************* */
+  @Override public void Draw_Me(Drawing_Context ParentDC) {// IDrawable
+    //Drawing_Context ChildDC =  ParentDC
+    // To do: Must clip or expand ParentDC's width to my own duration
+    // To do: need fancy looped drawing code in here, this won't do
+    this.ContentOBox.Draw_Me(ParentDC);
+    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+  }
+  @Override public CajaDelimitadora GetBoundingBox() {// IDrawable
+    return this.MyBounds;
+  }
+  @Override public void UpdateBoundingBox() {// IDrawable
+    this.ContentOBox.UpdateBoundingBox();
+    CajaDelimitadora ChildBBoxUnMapped = this.ContentOBox.GetBoundingBox();// project child limits into parent (my) space
+    this.MyBounds.Include(ChildBBoxUnMapped);// Inefficient. We collect all the X information and then just throw it away. 
+    this.MyBounds.Min.x = 0;
+    this.MyBounds.Max.x = this.MyDuration;
+  }
   /* ********************************************************************************* */
   public static class Loop_Singer extends Singer {
     protected LoopBox MySonglet;
@@ -139,78 +235,17 @@ public class LoopBox implements ISonglet {
       ph.MyOffsetBox = this;// to do: also transfer all of this box's offsets to player head. 
       return ph;
     }
-  }
-  /* ********************************************************************************* */
-  @Override public OffsetBox Spawn_OffsetBox() {
-    return this.Spawn_My_OffsetBox();
-  }
-  /* ********************************************************************************* */
-  public Loop_OffsetBox Spawn_My_OffsetBox() {// for compose time
-    Loop_OffsetBox lbox = new Loop_OffsetBox();// Deliver an OffsetBox specific to this type of songlet.
-    lbox.Clear();
-    lbox.Content = this;
-    return lbox;
-  }
-  /* ********************************************************************************* */
-  @Override public Singer Spawn_Singer() {
-    return this.Spawn_My_Singer();
-  }
-  /* ********************************************************************************* */
-  private Loop_Singer Spawn_My_Singer() {
-    Loop_Singer LoopSinger = new Loop_Singer();
-    LoopSinger.MySonglet = this;
-    LoopSinger.MyProject = this.MyProject;// inherit project
-    return LoopSinger;
-  }
-  /* ********************************************************************************* */
-  @Override public int Get_Sample_Count(int SampleRate) {
-    return (int) (this.MyDuration * SampleRate);
-  }
-  /* ********************************************************************************* */
-  @Override public double Get_Duration() {
-    return this.MyDuration;
-  }
-  /* ********************************************************************************* */
-  public void Set_Duration(double duration) {
-    this.MyDuration = duration;
-  }
-  /* ********************************************************************************* */
-  @Override public double Get_Max_Amplitude() {
-    throw new UnsupportedOperationException("Get_Max_Amplitude not supported yet.");
-  }
-  /* ********************************************************************************* */
-  public void Set_Delay(double delay) {
-    this.Delay = delay;
-  }
-  /* ********************************************************************************* */
-  @Override public double Update_Durations() {// probably deprecated
-    return this.Content.Update_Durations();
-  }
-  /* ********************************************************************************* */
-  @Override public void Update_Guts(MetricsPacket metrics) {
-    this.Set_Project(metrics.MyProject);
-    metrics.MaxDuration = 0;
-    this.Content.Update_Guts(metrics);
-    metrics.MaxDuration = this.MyDuration;
-  }
-  /* ********************************************************************************* */
-  @Override public void Sort_Me() {
-    this.Content.Sort_Me();// not really the plan, but LoopBox doesn't have anything else to sort so why not
-  }
-  /* ********************************************************************************* */
-  @Override public Project Get_Project() {
-    return this.MyProject;
-  }
-  /* ********************************************************************************* */
-  @Override public void Set_Project(Project project) {
-    this.MyProject = project;
-  }
-  /* ********************************************************************************* */
-  public OffsetBox Add_Content(ISonglet songlet) {
-    songlet.Set_Project(this.MyProject);// child inherits project from me
-    OffsetBox obox = songlet.Spawn_OffsetBox();
-    this.ContentOBox = obox;
-    this.Content = songlet;
-    return obox;
+    /* ********************************************************************************* */
+    @Override public void Draw_Me(Drawing_Context ParentDC) {// IDrawable
+      Drawing_Context ChildDC = new Drawing_Context(ParentDC, this);
+      this.Content.Draw_Me(ChildDC);
+    }
+//    @Override public CajaDelimitadora GetBoundingBox() {// IDrawable
+//      return this.MyBounds;
+//    }
+    @Override public void UpdateBoundingBox() {// IDrawable
+      this.Content.UpdateBoundingBox();
+      this.Content.GetBoundingBox().UnMap(this, MyBounds);// project child limits into parent (my) space
+    }
   }
 }

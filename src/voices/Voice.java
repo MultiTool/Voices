@@ -170,39 +170,30 @@ public class Voice implements ISonglet, IDrawable {
     return SubTimeCalc;
   }
   /* ********************************************************************************* */
-  @Override public void Draw_Me(Drawing_Context ParentDC) {
+  @Override public void Draw_Me(Drawing_Context ParentDC) {// IDrawable
+    CajaDelimitadora ChildrenBounds = ParentDC.ClipBounds;// parent is already transformed by my offsetbox
     Point pnt;
-    CajaDelimitadora ChildrenBounds = new CajaDelimitadora();
-    OffsetBox obx = ParentDC.Offset;
-    ParentDC.Bounds.Map(obx, ChildrenBounds);// map to child (my) internal coordinates
     int len = this.CPoints.size();
     for (int pcnt = 0; pcnt < len; pcnt++) {
       pnt = this.CPoints.get(pcnt);
-      // do we have to map bounds before Intersects? 
-      // probably cheaper to map the dc to the children rather than vice versa
-      // but, the children will have to be mapped all the way up to the screen for actual drawing
       if (ChildrenBounds.Intersects(pnt.GetBoundingBox())) {
         pnt.Draw_Me(ParentDC);
       }
     }
   }
   /* ********************************************************************************* */
-  @Override public CajaDelimitadora GetBoundingBox() {
-    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+  @Override public CajaDelimitadora GetBoundingBox() {// IDrawable
+    return this.MyBounds;
   }
   /* ********************************************************************************* */
-  @Override public void UpdateBoundingBox() {
-    /* ew. just realized that every bounding box would have to be in absolute drawing coordinates
-     but since a songlet can exist in multiple places the bounds will probably have be in local coords and then mapped to parent coordinates
-     do this on paper before creating a bunch of interface contracts
-     */
+  @Override public void UpdateBoundingBox() {// IDrawable
     Point pnt;
     this.MyBounds.Reset();
     int len = this.CPoints.size();
     for (int pcnt = 0; pcnt < len; pcnt++) {
       pnt = this.CPoints.get(pcnt);
       pnt.UpdateBoundingBox();
-      this.MyBounds.Include(pnt.MyBounds);// don't have to UnMap in this case because my points are already in my internal coordinates.
+      this.MyBounds.Include(pnt.MyBounds);// Don't have to UnMap in this case because my points are already in my internal coordinates.
     }
   }
   /* ********************************************************************************* */
@@ -230,7 +221,7 @@ public class Voice implements ISonglet, IDrawable {
     @Override public void Draw_Me(Drawing_Context ParentDC) {// IDrawable
       //IDrawable.Drawing_Context mydc = new IDrawable.Drawing_Context(ParentDC, this);
       // Control points have the same space as their parent, so no need to create a local map.
-      
+
       Point2D.Double pnt = ParentDC.To_Screen(this.RealTime, this.Octave);
       ParentDC.gr.setColor(Color.green);
       ParentDC.gr.fillOval((int) (pnt.x) - (int) Radius, (int) (pnt.y) - (int) Radius, (int) Diameter, (int) Diameter);
@@ -298,6 +289,7 @@ public class Voice implements ISonglet, IDrawable {
     public Voice Content;
     /* ********************************************************************************* */
     public VoiceOffsetBox() {
+      MyBounds = new CajaDelimitadora();
       this.Clear();
     }
     /* ********************************************************************************* */
@@ -313,6 +305,21 @@ public class Voice implements ISonglet, IDrawable {
       Voice_Singer ph = this.Content.Spawn_My_Singer();
       ph.MyOffsetBox = this;
       return ph;
+    }
+    /* ********************************************************************************* */
+    @Override public void Draw_Me(Drawing_Context ParentDC) {// IDrawable
+//      CajaDelimitadora ChildrenBounds = new CajaDelimitadora();
+//      OffsetBox obx = ParentDC.Offset;
+//      ParentDC.ClipBounds.Map(obx, ChildrenBounds);// map to child (my) internal coordinates
+      Drawing_Context ChildDC = new Drawing_Context(ParentDC, this);// map to child (my) internal coordinates
+      this.Content.Draw_Me(ChildDC);
+    }
+//    @Override public CajaDelimitadora GetBoundingBox() {// IDrawable
+//      return this.MyBounds;
+//    }
+    @Override public void UpdateBoundingBox() {// IDrawable
+      this.Content.UpdateBoundingBox();
+      this.Content.GetBoundingBox().UnMap(this, MyBounds);// project child limits into parent (my) space
     }
   }
   /* ********************************************************************************* */
