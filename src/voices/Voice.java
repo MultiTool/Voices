@@ -7,6 +7,7 @@ package voices;
 
 import java.awt.Color;
 import java.awt.Graphics2D;
+import java.awt.geom.Path2D;
 import java.awt.geom.Point2D;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -174,6 +175,26 @@ public class Voice implements ISonglet, IDrawable {
     CajaDelimitadora ChildrenBounds = ParentDC.ClipBounds;// parent is already transformed by my offsetbox
     Point pnt;
     int len = this.CPoints.size();
+    Path2D.Double pgon = new Path2D.Double();
+    double xloc, yloc;
+    
+    // work in progress. to do: make a ribbon-shaped polygon whose width is based on point loudness.
+    // do we have to go around and then go backward? if pgon were a real array we could fill both sides at once.
+    // will probably have to use the x array, y array API. bleh. 
+    pnt = this.CPoints.get(0);
+    xloc = ParentDC.GlobalOffset.UnMapTime(pnt.RealTime);
+    yloc = ParentDC.GlobalOffset.UnMapPitch(pnt.Octave);
+    pgon.moveTo(xloc, yloc);
+    for (int pcnt = 1; pcnt < len; pcnt++) {
+      pnt = this.CPoints.get(pcnt);
+      xloc = ParentDC.GlobalOffset.UnMapTime(pnt.RealTime);// map to pixels
+      yloc = ParentDC.GlobalOffset.UnMapPitch(pnt.Octave);
+      pgon.lineTo(xloc, yloc);
+    }
+    pgon.closePath();
+    ParentDC.gr.setColor(Color.yellow);
+    ParentDC.gr.fill(pgon);
+    
     for (int pcnt = 0; pcnt < len; pcnt++) {
       pnt = this.CPoints.get(pcnt);
       if (ChildrenBounds.Intersects(pnt.GetBoundingBox())) {
