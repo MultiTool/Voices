@@ -10,9 +10,15 @@ import voices.ISonglet.Singer;
 /**
  *
  * @author MultiTool
+ * 
+ * OffsetBox handles all affine transformations of your songlet. 
+ * For audio, the only transformations handled are X and Y offsets of timing and pitch. No scaling or shearing etc. 
+ * We do scale for graphics though. 
+ * 
  */
 public class OffsetBox implements IOffsetBox, IDrawable {// location box to transpose in pitch, move in time, etc. 
   public double TimeOrg = 0, OctaveLoc = 0, LoudnessFactor = 1.0;
+  double XRatio = 1.0, YRatio = 1.0;// to be used for pixels per second, pixels per octave
   public CajaDelimitadora MyBounds;
   /* ********************************************************************************* */
   public OffsetBox() {
@@ -40,19 +46,19 @@ public class OffsetBox implements IOffsetBox, IDrawable {// location box to tran
   }
   /* ********************************************************************************* */
   @Override public double MapTime(double ParentTime) {// convert time coordinate from my parent's frame to my child's frame
-    return ParentTime - this.TimeOrg;
+    return (ParentTime - this.TimeOrg) / XRatio;
   }
   /* ********************************************************************************* */
   @Override public double UnMapTime(double ChildTime) {// convert time coordinate from my child's frame to my parent's frame
-    return this.TimeOrg + ChildTime;
+    return this.TimeOrg + (ChildTime * XRatio);
   }
   /* ********************************************************************************* */
   @Override public double MapPitch(double ParentPitch) {// convert octave coordinate from my parent's frame to my child's frame
-    return ParentPitch - this.OctaveLoc;
+    return (ParentPitch - this.OctaveLoc) / YRatio;
   }
   /* ********************************************************************************* */
   @Override public double UnMapPitch(double ChildPitch) {// convert octave coordinate from my child's frame to my parent's frame
-    return this.OctaveLoc + ChildPitch;
+    return this.OctaveLoc + (ChildPitch * YRatio);
   }
   /* ********************************************************************************* */
   @Override public ISonglet GetContent() {

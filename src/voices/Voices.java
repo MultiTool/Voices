@@ -31,7 +31,7 @@ public class Voices {
     Test_Synthesis();
   }
   /* ********************************************************************************* */
-  public static void Test_Synthesis() {
+  public static Project Test_Synthesis() {
     //Globals.BaseFreqC0 = 1.0;
     Project prj = new Project();
     // prj.Compose_Warble_Chorus();
@@ -39,6 +39,7 @@ public class Voices {
 
 //    prj.Compose_Chorus_Test();
 //    prj.Render_Test();
+    return prj;
   }
   /* ********************************************************************************* */
   public static void SaveWave3(Wave wave0, Wave wave1, Wave wave2, String FileName) {

@@ -237,12 +237,11 @@ public class LoopBox implements ISonglet, IDrawable {
     }
     /* ********************************************************************************* */
     @Override public void Draw_Me(Drawing_Context ParentDC) {// IDrawable
-      Drawing_Context ChildDC = new Drawing_Context(ParentDC, this);
-      this.Content.Draw_Me(ChildDC);
+      if (ParentDC.ClipBounds.Intersects(MyBounds)) {
+        Drawing_Context ChildDC = new Drawing_Context(ParentDC, this);
+        this.Content.Draw_Me(ChildDC);
+      }
     }
-//    @Override public CajaDelimitadora GetBoundingBox() {// IDrawable
-//      return this.MyBounds;
-//    }
     @Override public void UpdateBoundingBox() {// IDrawable
       this.Content.UpdateBoundingBox();
       this.Content.GetBoundingBox().UnMap(this, MyBounds);// project child limits into parent (my) space

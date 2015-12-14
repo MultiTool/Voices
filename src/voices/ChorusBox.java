@@ -136,9 +136,9 @@ public class ChorusBox implements ISonglet, IDrawable {
   @Override public CajaDelimitadora GetBoundingBox() {
     return this.MyBounds;
   }
-  @Override public void UpdateBoundingBox() {
+  @Override public void UpdateBoundingBox() {// IDrawable
     OffsetBox ChildOffsetBox;
-    CajaDelimitadora ChildBBoxUnMapped = new CajaDelimitadora();
+    CajaDelimitadora ChildBBoxUnMapped;
     this.MyBounds.Reset();
     int len = this.SubSongs.size();
     for (int pcnt = 0; pcnt < len; pcnt++) {
@@ -280,12 +280,11 @@ public class ChorusBox implements ISonglet, IDrawable {
     }
     /* ********************************************************************************* */
     @Override public void Draw_Me(Drawing_Context ParentDC) {// IDrawable
-      Drawing_Context ChildDC = new Drawing_Context(ParentDC, this);
-      this.Content.Draw_Me(ChildDC);
+      if (ParentDC.ClipBounds.Intersects(MyBounds)) {
+        Drawing_Context ChildDC = new Drawing_Context(ParentDC, this);
+        this.Content.Draw_Me(ChildDC);
+      }
     }
-//    @Override public CajaDelimitadora GetBoundingBox() {// IDrawable
-//      return this.MyBounds;
-//    }
     @Override public void UpdateBoundingBox() {// IDrawable
       this.Content.UpdateBoundingBox();
       this.Content.GetBoundingBox().UnMap(this, MyBounds);// project child limits into parent (my) space

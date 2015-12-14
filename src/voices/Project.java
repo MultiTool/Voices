@@ -5,6 +5,9 @@
  */
 package voices;
 
+import java.awt.Graphics2D;
+import voices.GraphicBox.Graphic_OffsetBox;
+import voices.IDrawable.Drawing_Context;
 import voices.ISonglet.MetricsPacket;
 import voices.ISonglet.Singer;
 import static voices.Voices.SaveWave;
@@ -14,18 +17,31 @@ import static voices.Voices.SaveWave;
  * @author MultiTool
  */
 public class Project {
-  OffsetBox rootbox;
+  OffsetBox AudioRoot;
+  Graphic_OffsetBox GraphicRoot;
+  GraphicBox GBox;
   // public int SampleRate = 100;// Globals.SampleRate;
   public int SampleRate = Globals.SampleRate;
   /* ********************************************************************************* */
   public Project() {
     //this.Compose_Test();
+    this.GBox = new GraphicBox();
+    this.GraphicRoot = this.GBox.Spawn_My_OffsetBox();
+  }
+  /* ********************************************************************************* */
+  public void Draw_Me(Graphics2D g2d) {
+    Drawing_Context dc = new Drawing_Context();
+    dc.gr = g2d;
+    dc.ClipBounds = new CajaDelimitadora();
+    dc.ClipBounds.Assign(0, 0, 10000, 10000);// arbitrarily large
+    dc.Offset = new OffsetBox();
+    dc.GlobalOffset = new OffsetBox();
   }
   /* ********************************************************************************* */
   public void Update_Guts() {
     MetricsPacket metrics = new MetricsPacket();
     metrics.MyProject = this;
-    rootbox.GetContent().Update_Guts(metrics);
+    AudioRoot.GetContent().Update_Guts(metrics);
   }
   /* ********************************************************************************* */
   public Voice Create_Warble_Voice(double TimeOffset, double OctaveOffset, double LoudnessOffset) {
@@ -136,17 +152,17 @@ public class Project {
   public ChorusBox Compose_Warble_Chorus() {
     ChorusBox cbx = new ChorusBox();
     cbx.Set_Project(this);
-    this.rootbox = cbx.Spawn_OffsetBox();
-
+    this.AudioRoot = cbx.Spawn_OffsetBox();
+    
     Voice vc0 = Create_Voice(0, 0, 1);
     cbx.Add_SubSong(vc0, 0, 3, 0.2);
-
+    
     Voice vc1 = Create_Voice(0, 0, 1);
     cbx.Add_SubSong(vc1, 2, 0, 1);
-
+    
     Voice vc2 = Create_Warble_Voice(0, 0, 1);
     cbx.Add_SubSong(vc2, 0, 1.3, 1);
-
+    
     return cbx;
   }
   /* ********************************************************************************* */
@@ -191,43 +207,44 @@ public class Project {
       cbx.Add_SubSong(DMajor, Delay * 2, 0, 1.0);
       DMinor = nm.MakeMinor(2);// D minor
       cbx.Add_SubSong(DMinor, Delay * 3, 0, 1.0);
-
+      
       lbx.Add_Content(cbx);
       lbx.Set_Delay(Delay * 4);
       lbx.Set_Duration(100);
-
+      
       song = lbx;
       song.Set_Project(this);
       obox = song.Spawn_OffsetBox();
       obox.OctaveLoc_s(4);
       break;
     }
-
-    this.rootbox = obox;
-
+    
+    this.AudioRoot = obox;
+    this.GraphicRoot.Attach_Content(this.AudioRoot);
+    
     this.Update_Guts();
-
+    
     Audio_Test();
     Render_Test();
   }
   /* ********************************************************************************* */
   public void Audio_Test() {
     this.SampleRate = Globals.SampleRate;
-    Singer RootPlayer = this.rootbox.Spawn_Singer();
-    RootPlayer.Compound(this.rootbox);
-
-    double FinalTime = this.rootbox.GetContent().Get_Duration();
-
+    Singer RootPlayer = this.AudioRoot.Spawn_Singer();
+    RootPlayer.Compound(this.AudioRoot);
+    
+    double FinalTime = this.AudioRoot.GetContent().Get_Duration();
+    
     Wave wave_render = new Wave();
     wave_render.Init(0, FinalTime, SampleRate);
     Wave wave_scratch = new Wave();
-
+    
     long StartTime, EndTime;
     RootPlayer.Start();
     StartTime = System.currentTimeMillis();
-
+    
     Audio aud = new Audio();
-    // aud.SaveAudio("test.wav", this.rootbox);
+    // aud.SaveAudio("test.wav", this.AudioRoot);
 
     aud.Start();
     int NumSlices = 100;
@@ -249,18 +266,18 @@ public class Project {
   public void Render_Test() {
     //this.SampleRate = Globals.SampleRateTest;
     //this.SampleRate = Globals.SampleRate;
-    Singer RootPlayer = this.rootbox.Spawn_Singer();
-    RootPlayer.Compound(this.rootbox);
+    Singer RootPlayer = this.AudioRoot.Spawn_Singer();
+    RootPlayer.Compound(this.AudioRoot);
+    
+    double FinalTime = this.AudioRoot.GetContent().Get_Duration();
 
-    double FinalTime = this.rootbox.GetContent().Get_Duration();
-
-//    int nsamps = this.rootbox.GetContent().Get_Sample_Count(this.SampleRate);
+//    int nsamps = this.AudioRoot.GetContent().Get_Sample_Count(this.SampleRate);
 //    wave_render.Init(nsamps);
     Wave wave_render = new Wave();
     wave_render.Init(0, FinalTime, SampleRate);
     wave_render.Fill(777.0);
     Wave wave_scratch = new Wave();
-
+    
     long StartTime, EndTime;
     RootPlayer.Start();
     StartTime = System.currentTimeMillis();
@@ -280,7 +297,7 @@ public class Project {
       wave_scratch.Normalize();
       wave_render.Append(wave_scratch);
     }
-
+    
     EndTime = System.currentTimeMillis();
     System.out.println("Render_To time:" + (EndTime - StartTime));// Render_To time: 150 milliseconds per 16 seconds. 
 

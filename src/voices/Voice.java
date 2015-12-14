@@ -176,25 +176,45 @@ public class Voice implements ISonglet, IDrawable {
     Point pnt;
     int len = this.CPoints.size();
     Path2D.Double pgon = new Path2D.Double();
-    double xloc, yloc;
-    
+    double Xloc, Yloc, YlocLow, YlocHigh;
+
     // work in progress. to do: make a ribbon-shaped polygon whose width is based on point loudness.
     // do we have to go around and then go backward? if pgon were a real array we could fill both sides at once.
     // will probably have to use the x array, y array API. bleh. 
-    pnt = this.CPoints.get(0);
-    xloc = ParentDC.GlobalOffset.UnMapTime(pnt.RealTime);
-    yloc = ParentDC.GlobalOffset.UnMapPitch(pnt.Octave);
-    pgon.moveTo(xloc, yloc);
-    for (int pcnt = 1; pcnt < len; pcnt++) {
+    int StartDex, EndDex, Range;
+    StartDex = 0;
+    EndDex = len;
+    Range = EndDex - StartDex;
+    int NumDrawPoints = Range * 2;
+    int[] xpoints = new int[NumDrawPoints];
+    int[] ypoints = new int[NumDrawPoints];
+    double LoudnessHgt;
+    int CntUp = Range, CntDown = Range - 1;
+//    pnt = this.CPoints.get(StartDex);
+//    double LoudnessHgt = pnt.Loudness * pnt.OctavesPerLoudness;
+//    Xloc = ParentDC.GlobalOffset.UnMapTime(pnt.RealTime);
+//    Yloc = ParentDC.GlobalOffset.UnMapPitch(pnt.Octave);
+//    YlocLow = ParentDC.GlobalOffset.UnMapPitch(pnt.Octave - LoudnessHgt);
+//    YlocHigh = ParentDC.GlobalOffset.UnMapPitch(pnt.Octave + LoudnessHgt);
+//    pgon.moveTo(Xloc, Yloc);
+    for (int pcnt = StartDex; pcnt < EndDex; pcnt++) {
       pnt = this.CPoints.get(pcnt);
-      xloc = ParentDC.GlobalOffset.UnMapTime(pnt.RealTime);// map to pixels
-      yloc = ParentDC.GlobalOffset.UnMapPitch(pnt.Octave);
-      pgon.lineTo(xloc, yloc);
+      LoudnessHgt = pnt.Loudness * pnt.OctavesPerLoudness;
+      Xloc = ParentDC.GlobalOffset.UnMapTime(pnt.RealTime);// map to pixels
+      YlocLow = ParentDC.GlobalOffset.UnMapPitch(pnt.Octave - LoudnessHgt);
+      YlocHigh = ParentDC.GlobalOffset.UnMapPitch(pnt.Octave + LoudnessHgt);
+      xpoints[CntUp] = (int) Xloc;
+      ypoints[CntUp] = (int) YlocLow;
+      xpoints[CntDown] = (int) Xloc;
+      ypoints[CntDown] = (int) YlocHigh;
+      //pgon.lineTo(Xloc, Yloc);
+      CntUp++;
+      CntDown--;
     }
-    pgon.closePath();
     ParentDC.gr.setColor(Color.yellow);
-    ParentDC.gr.fill(pgon);
-    
+    ParentDC.gr.fillPolygon(xpoints, ypoints, NumDrawPoints);
+    // pgon.closePath(); ParentDC.gr.fill(pgon);
+
     for (int pcnt = 0; pcnt < len; pcnt++) {
       pnt = this.CPoints.get(pcnt);
       if (ChildrenBounds.Intersects(pnt.GetBoundingBox())) {
@@ -226,6 +246,7 @@ public class Voice implements ISonglet, IDrawable {
     // graphics support
     double Radius = 5, Diameter = Radius * 2.0;
     double PixelsPerLoudness = 20;// to do: loudness will have to be mapped to screen. not a pixel value right?
+    double OctavesPerLoudness = 1.0;
     CajaDelimitadora MyBounds = new CajaDelimitadora();
     /* ********************************************************************************* */
     public void CopyFrom(Point source) {
@@ -300,9 +321,9 @@ public class Voice implements ISonglet, IDrawable {
     }
     /* ********************************************************************************* */
     @Override public void UpdateBoundingBox() {
-      double LoudnessPixels = Loudness * PixelsPerLoudness;// Map loudness to screen pixels.
-      this.MyBounds.Min.setLocation(RealTime - Radius, Octave - Math.min(Radius, LoudnessPixels));
-      this.MyBounds.Max.setLocation(RealTime + Radius, Octave + Math.max(Radius, LoudnessPixels));
+      double LoudnessHeight = Loudness * OctavesPerLoudness;// Map loudness to screen pixels.
+      this.MyBounds.Min.setLocation(RealTime - Radius, Octave - Math.min(Radius, LoudnessHeight));
+      this.MyBounds.Max.setLocation(RealTime + Radius, Octave + Math.max(Radius, LoudnessHeight));
     }
   }
   /* ********************************************************************************* */
@@ -329,15 +350,11 @@ public class Voice implements ISonglet, IDrawable {
     }
     /* ********************************************************************************* */
     @Override public void Draw_Me(Drawing_Context ParentDC) {// IDrawable
-//      CajaDelimitadora ChildrenBounds = new CajaDelimitadora();
-//      OffsetBox obx = ParentDC.Offset;
-//      ParentDC.ClipBounds.Map(obx, ChildrenBounds);// map to child (my) internal coordinates
-      Drawing_Context ChildDC = new Drawing_Context(ParentDC, this);// map to child (my) internal coordinates
-      this.Content.Draw_Me(ChildDC);
+      if (ParentDC.ClipBounds.Intersects(MyBounds)) {
+        Drawing_Context ChildDC = new Drawing_Context(ParentDC, this);// map to child (my) internal coordinates
+        this.Content.Draw_Me(ChildDC);
+      }
     }
-//    @Override public CajaDelimitadora GetBoundingBox() {// IDrawable
-//      return this.MyBounds;
-//    }
     @Override public void UpdateBoundingBox() {// IDrawable
       this.Content.UpdateBoundingBox();
       this.Content.GetBoundingBox().UnMap(this, MyBounds);// project child limits into parent (my) space

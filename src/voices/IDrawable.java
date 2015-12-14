@@ -23,7 +23,7 @@ public interface IDrawable {
   // Drawing will always be called from the top, and the bounding box will define what to draw. 
   /* ********************************************************************************* */
   public final class Drawing_Context {// Let's be final until we can't anymore
-    public double Absolute_X, Absolute_Y;
+    // public double Absolute_X, Absolute_Y;
     public Graphics2D gr;
     public CajaDelimitadora ClipBounds;
     public OffsetBox Offset, GlobalOffset;// Global Offset is transformation to and from pixels

@@ -3,6 +3,7 @@ package voices;
 import java.awt.*;
 import java.awt.event.*;
 import javax.swing.*;
+import voices.IDrawable.Drawing_Context;
 // From http://www.tutorialspoint.com/javaexamples/gui_polygon.htm
 
 public class MainGui {
@@ -14,6 +15,7 @@ public class MainGui {
   }
   /* ********************************************************************************* */
   public void Init() {
+    // this.MyProject = prj;//Project prj
     this.frame = new JFrame();
     this.frame.setTitle("Polygon");
     this.frame.setSize(350, 250);
@@ -38,7 +40,9 @@ public class MainGui {
     /* ********************************************************************************* */
     public final void Init() {
       // alternative: look into KeyBindings 
-      this.setFocusable(true);
+      if (false) {
+        this.setFocusable(true);
+      }
       this.addMouseListener(this);
       this.addMouseMotionListener(this);
       this.addMouseWheelListener(this);
@@ -53,6 +57,14 @@ public class MainGui {
         p.addPoint((int) (100 + 50 * Math.cos(i * 2 * Math.PI / 5)), (int) (100 + 50 * Math.sin(i * 2 * Math.PI / 5)));
       }
       g2d.drawPolygon(p);
+
+      Drawing_Context dc = new Drawing_Context();
+      dc.gr = g2d;
+      dc.ClipBounds = new CajaDelimitadora();
+      dc.ClipBounds.Assign(0, 0, 10000, 10000);// arbitrarily large
+      dc.Offset= new OffsetBox();
+      dc.GlobalOffset= new OffsetBox();
+      //this.MyProject;
     }
     /* ********************************************************************************* */
     @Override public void mouseDragged(MouseEvent me) {
