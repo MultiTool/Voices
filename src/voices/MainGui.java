@@ -27,6 +27,8 @@ public class MainGui {
     Container contentPane = this.frame.getContentPane();
     this.drawpanel = new DrawingPanel();
     contentPane.add(this.drawpanel);
+    MyProject = new Project();
+    MyProject.Create_For_Graphics();
     this.drawpanel.MyProject = this.MyProject;
     frame.setVisible(true);
   }
@@ -62,9 +64,11 @@ public class MainGui {
       dc.gr = g2d;
       dc.ClipBounds = new CajaDelimitadora();
       dc.ClipBounds.Assign(0, 0, 10000, 10000);// arbitrarily large
-      dc.Offset= new OffsetBox();
-      dc.GlobalOffset= new OffsetBox();
+      dc.Offset = new OffsetBox();
+      dc.GlobalOffset = new OffsetBox();
       //this.MyProject;
+
+      MyProject.Draw_Me(g2d);
     }
     /* ********************************************************************************* */
     @Override public void mouseDragged(MouseEvent me) {

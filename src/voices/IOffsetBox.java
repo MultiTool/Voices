@@ -18,6 +18,10 @@ public interface IOffsetBox {// location box to transpose in pitch, move in time
   void OctaveLoc_s(double value);
   double LoudnessLoc_g();
   void LoudnessFactor_s(double value);
+  double ScaleX_g();
+  void ScaleX_s(double value);
+  double ScaleY_g();
+  void ScaleY_s(double value);
   // double TimeLoc, OctaveLoc, LoudnessLoc;
 //  public VoiceBase Content;
   /* ********************************************************************************* */

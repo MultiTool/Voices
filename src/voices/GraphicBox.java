@@ -42,27 +42,16 @@ public class GraphicBox implements IDrawable {// ISonglet,
   }
   /* ********************************************************************************* */
   public class Graphic_OffsetBox extends OffsetBox {
-    //double XRatio = 50, YRatio = 50;// pixels per second, pixels per octave
     GraphicBox Content;
+    /* ********************************************************************************* */
+    public Graphic_OffsetBox() {
+      ScaleX = 50;// pixels per second
+      ScaleY = 50;// pixels per octave
+      MyBounds = new CajaDelimitadora();
+    }
     /* ********************************************************************************* */
     public void Attach_Content(OffsetBox content) {
       this.Content.Attach_Content(content);
-    }
-    /* ********************************************************************************* */
-    @Override public double MapTime(double ParentTime) {// convert time coordinate from my parent's frame to my child's frame
-      return (ParentTime - this.TimeOrg) / XRatio;
-    }
-    /* ********************************************************************************* */
-    @Override public double UnMapTime(double ChildTime) {// convert time coordinate from my child's frame to my parent's frame
-      return this.TimeOrg + (ChildTime * XRatio);
-    }
-    /* ********************************************************************************* */
-    @Override public double MapPitch(double ParentPitch) {// convert octave coordinate from my parent's frame to my child's frame
-      return (ParentPitch - this.OctaveLoc) / YRatio;
-    }
-    /* ********************************************************************************* */
-    @Override public double UnMapPitch(double ChildPitch) {// convert octave coordinate from my child's frame to my parent's frame
-      return this.OctaveLoc + (ChildPitch * YRatio);
     }
     /* ********************************************************************************* */
     @Override public void Draw_Me(Drawing_Context ParentDC) {// IDrawable

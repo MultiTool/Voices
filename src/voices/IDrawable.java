@@ -31,14 +31,17 @@ public interface IDrawable {
     public Drawing_Context() {
       this.GlobalOffset = new OffsetBox();
       this.GlobalOffset.Clear();
+      this.ClipBounds = new CajaDelimitadora();
     }
     /* ********************************************************************************* */
     public Drawing_Context(Drawing_Context Fresh_Parent, OffsetBox Fresh_Transform) {
       this.Offset = Fresh_Transform;
       this.GlobalOffset = Fresh_Parent.GlobalOffset.Clone_Me();
       this.GlobalOffset.Compound(this.Offset);// inherit and further transform parent space
+      this.ClipBounds = new CajaDelimitadora();
       // inherit and transform bounding box.
       Fresh_Parent.ClipBounds.Map(this.Offset, this.ClipBounds);// map to child (my) internal coordinates
+      this.gr = Fresh_Parent.gr;
     }
     /* ********************************************************************************* */
     public Point2D.Double To_Screen(double Absolute_X, double Absolute_Y) {

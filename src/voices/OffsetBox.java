@@ -17,8 +17,9 @@ import voices.ISonglet.Singer;
  * 
  */
 public class OffsetBox implements IOffsetBox, IDrawable {// location box to transpose in pitch, move in time, etc. 
-  public double TimeOrg = 0, OctaveLoc = 0, LoudnessFactor = 1.0;
-  double XRatio = 1.0, YRatio = 1.0;// to be used for pixels per second, pixels per octave
+  public double TimeOrg = 0, OctaveLoc = 0, LoudnessFactor = 1.0;// all of these are in parent coordinates
+  double ScaleX = 1.0, ScaleY = 1.0;// to be used for pixels per second, pixels per octave
+  double ChildXorg = 0, ChildYorg = 0;// These are only non-zero for graphics. Audio origins are always 0,0. 
   public CajaDelimitadora MyBounds;
   /* ********************************************************************************* */
   public OffsetBox() {
@@ -38,6 +39,8 @@ public class OffsetBox implements IOffsetBox, IDrawable {// location box to tran
     this.TimeLoc_s(TimeOrg + donor.TimeLoc_g());
     this.OctaveLoc_s(OctaveLoc + donor.OctaveLoc_g());
     this.LoudnessFactor_s(LoudnessFactor + donor.LoudnessLoc_g());
+    this.ScaleX *= donor.ScaleX_g();
+    this.ScaleY *= donor.ScaleY_g();
     //this.TimeLoc += donor.TimeLoc; this.OctaveLoc += donor.OctaveLoc; this.LoudnessFactor *= donor.LoudnessFactor;
   }
   /* ********************************************************************************* */
@@ -46,19 +49,21 @@ public class OffsetBox implements IOffsetBox, IDrawable {// location box to tran
   }
   /* ********************************************************************************* */
   @Override public double MapTime(double ParentTime) {// convert time coordinate from my parent's frame to my child's frame
-    return (ParentTime - this.TimeOrg) / XRatio;
+    return ((ParentTime - this.TimeOrg) / ScaleX) + ChildXorg; // in the long run we'll probably use a matrix
+//    childX = ((parentX - parentXorg) * ScaleX) + childXorg; // full mapping 
+//    parentX = ((childX - childXorg) / ScaleX) + parentXorg;
   }
   /* ********************************************************************************* */
   @Override public double UnMapTime(double ChildTime) {// convert time coordinate from my child's frame to my parent's frame
-    return this.TimeOrg + (ChildTime * XRatio);
+    return this.TimeOrg + ((ChildTime - ChildXorg) * ScaleX);
   }
   /* ********************************************************************************* */
   @Override public double MapPitch(double ParentPitch) {// convert octave coordinate from my parent's frame to my child's frame
-    return (ParentPitch - this.OctaveLoc) / YRatio;
+    return ((ParentPitch - this.OctaveLoc) / ScaleY) + ChildYorg;
   }
   /* ********************************************************************************* */
   @Override public double UnMapPitch(double ChildPitch) {// convert octave coordinate from my child's frame to my parent's frame
-    return this.OctaveLoc + (ChildPitch * YRatio);
+    return this.OctaveLoc + ((ChildPitch - ChildYorg) * ScaleY);
   }
   /* ********************************************************************************* */
   @Override public ISonglet GetContent() {
@@ -81,6 +86,18 @@ public class OffsetBox implements IOffsetBox, IDrawable {// location box to tran
   }
   @Override public void LoudnessFactor_s(double value) {
     LoudnessFactor = value;
+  }
+  @Override public double ScaleX_g() {
+    return ScaleX;
+  }
+  @Override public void ScaleX_s(double value) {
+    ScaleX = value;
+  }
+  @Override public double ScaleY_g() {
+    return ScaleY;
+  }
+  @Override public void ScaleY_s(double value) {
+    ScaleX = value;
   }
   OffsetBox Clone_Me() {
     OffsetBox child = new OffsetBox();
