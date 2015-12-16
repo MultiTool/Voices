@@ -45,8 +45,16 @@ public class GraphicBox implements IDrawable {// ISonglet,
     GraphicBox Content;
     /* ********************************************************************************* */
     public Graphic_OffsetBox() {
-      ScaleX = 50;// pixels per second
-      ScaleY = 50;// pixels per octave
+      ScaleX = 20;// pixels per second
+      if (false) {
+        ScaleY = 20;// pixels per octave
+        this.OctaveLoc = -50;
+      } else {// inverting the Y axis does not work yet. 
+        ScaleY = -20;// pixels per octave
+        this.OctaveLoc = 10;
+        this.OctaveLoc = 250;
+      }
+      this.TimeOrg = 20;
       MyBounds = new CajaDelimitadora();
     }
     /* ********************************************************************************* */

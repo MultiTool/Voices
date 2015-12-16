@@ -41,6 +41,7 @@ public interface IDrawable {
       this.ClipBounds = new CajaDelimitadora();
       // inherit and transform bounding box.
       Fresh_Parent.ClipBounds.Map(this.Offset, this.ClipBounds);// map to child (my) internal coordinates
+      this.ClipBounds.Sort_Me();
       this.gr = Fresh_Parent.gr;
     }
     /* ********************************************************************************* */

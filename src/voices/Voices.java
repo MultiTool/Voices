@@ -28,7 +28,9 @@ public class Voices {
   public static void main(String[] args) {
     MainGui mg = new MainGui();
     mg.Init();
-    Test_Synthesis();
+    if (true) {
+      Test_Synthesis();
+    }
   }
   /* ********************************************************************************* */
   public static Project Test_Synthesis() {

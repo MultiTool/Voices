@@ -186,10 +186,12 @@ public class Voice implements ISonglet, IDrawable {
     EndDex = len;
     Range = EndDex - StartDex;
     int NumDrawPoints = Range * 2;
-    int[] xpoints = new int[NumDrawPoints];
-    int[] ypoints = new int[NumDrawPoints];
+    int[] OutlineX = new int[NumDrawPoints];
+    int[] OutlineY = new int[NumDrawPoints];
+    int[] SpineX = new int[Range];
+    int[] SpineY = new int[Range];
     double LoudnessHgt;
-    int CntUp = Range, CntDown = Range - 1;
+    int CntUp = Range, CntDown = Range - 1, CntSpine = 0;
 //    pnt = this.CPoints.get(StartDex);
 //    double LoudnessHgt = pnt.Loudness * pnt.OctavesPerLoudness;
 //    Xloc = ParentDC.GlobalOffset.UnMapTime(pnt.RealTime);
@@ -201,19 +203,28 @@ public class Voice implements ISonglet, IDrawable {
       pnt = this.CPoints.get(pcnt);
       LoudnessHgt = pnt.Loudness * pnt.OctavesPerLoudness;
       Xloc = ParentDC.GlobalOffset.UnMapTime(pnt.RealTime);// map to pixels
+      Yloc = ParentDC.GlobalOffset.UnMapPitch(pnt.Octave);// map to pixels
+      SpineX[CntSpine] = (int) Xloc;
+      SpineY[CntSpine] = (int) Yloc;
       YlocLow = ParentDC.GlobalOffset.UnMapPitch(pnt.Octave - LoudnessHgt);
       YlocHigh = ParentDC.GlobalOffset.UnMapPitch(pnt.Octave + LoudnessHgt);
-      xpoints[CntUp] = (int) Xloc;
-      ypoints[CntUp] = (int) YlocLow;
-      xpoints[CntDown] = (int) Xloc;
-      ypoints[CntDown] = (int) YlocHigh;
+      OutlineX[CntUp] = (int) Xloc;
+      OutlineY[CntUp] = (int) YlocLow;
+      OutlineX[CntDown] = (int) Xloc;
+      OutlineY[CntDown] = (int) YlocHigh;
       //pgon.lineTo(Xloc, Yloc);
       CntUp++;
       CntDown--;
+      CntSpine++;
     }
     ParentDC.gr.setColor(Color.yellow);
-    ParentDC.gr.fillPolygon(xpoints, ypoints, NumDrawPoints);
+    ParentDC.gr.fillPolygon(OutlineX, OutlineY, NumDrawPoints);
+    ParentDC.gr.setColor(Color.cyan);
+    ParentDC.gr.drawPolygon(OutlineX, OutlineY, NumDrawPoints);
     // pgon.closePath(); ParentDC.gr.fill(pgon);
+
+    ParentDC.gr.setColor(Color.black);
+    ParentDC.gr.drawPolyline(SpineX, SpineY, Range);
 
     for (int pcnt = 0; pcnt < len; pcnt++) {
       pnt = this.CPoints.get(pcnt);

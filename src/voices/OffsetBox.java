@@ -36,12 +36,23 @@ public class OffsetBox implements IOffsetBox, IDrawable {// location box to tran
   }
   /* ********************************************************************************* */
   @Override public void Compound(IOffsetBox donor) {
-    this.TimeLoc_s(TimeOrg + donor.TimeLoc_g());
-    this.OctaveLoc_s(OctaveLoc + donor.OctaveLoc_g());
+    //double DonorOffset = donor.TimeLoc_g(); double DonorScale = donor.ScaleX_g();
+    this.TimeLoc_s(TimeOrg + (this.ScaleX * donor.TimeLoc_g()));// to do: combine matrices here. 
+    this.OctaveLoc_s(OctaveLoc + (this.ScaleY * donor.OctaveLoc_g()));
     this.LoudnessFactor_s(LoudnessFactor + donor.LoudnessLoc_g());
     this.ScaleX *= donor.ScaleX_g();
     this.ScaleY *= donor.ScaleY_g();
     //this.TimeLoc += donor.TimeLoc; this.OctaveLoc += donor.OctaveLoc; this.LoudnessFactor *= donor.LoudnessFactor;
+  }
+  /* ********************************************************************************* */
+  private void CombineTransform1D(double FirstScale, double FirstOffset, double SecondScale, double SecondOffset) {
+    SecondOffset += (SecondScale * FirstOffset);
+    SecondScale *= FirstScale;
+  }
+  /* ********************************************************************************* */
+  private double ShrinkTransform1D(double FirstOffset, double SecondScale, double SecondOffset) {
+    SecondOffset += (SecondScale * FirstOffset);
+    return SecondOffset;
   }
   /* ********************************************************************************* */
   @Override public Singer Spawn_Singer() {// always always always override this
@@ -104,6 +115,8 @@ public class OffsetBox implements IOffsetBox, IDrawable {// location box to tran
     child.TimeOrg = this.TimeOrg;
     child.OctaveLoc = this.OctaveLoc;
     child.LoudnessFactor = this.LoudnessFactor;
+    child.ScaleX = this.ScaleX;
+    child.ScaleY = this.ScaleY;
     return child;
   }
   /* ********************************************************************************* */

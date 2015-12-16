@@ -35,13 +35,16 @@ public class Project {
     dc.ClipBounds.Assign(0, 0, 10000, 10000);// arbitrarily large
     dc.Offset = new OffsetBox();
     dc.GlobalOffset = new OffsetBox();
+    //dc.GlobalOffset.ScaleX = 50; dc.GlobalOffset.ScaleY = 50;
     GraphicRoot.Draw_Me(dc);
   }
   /* ********************************************************************************* */
   public void Create_For_Graphics() {
     ISonglet song = null;
     OffsetBox obox = null;
-    song = Create_Simple_Note(0, 1, 5, 1);
+    
+    //song = Create_Simple_Note(0, 1, 5, 1);
+    song = Create_Warble_Voice(0, 4, 1.0);
     song.Set_Project(this);
     obox = song.Spawn_OffsetBox();
 
@@ -258,8 +261,9 @@ public class Project {
     StartTime = System.currentTimeMillis();
 
     Audio aud = new Audio();
-    // aud.SaveAudio("test.wav", this.AudioRoot);
-
+    if (false) {
+      aud.SaveAudio("test.wav", this.AudioRoot);
+    }
     aud.Start();
     int NumSlices = 100;
     for (int cnt = 0; cnt < NumSlices; cnt++) {
@@ -315,7 +319,9 @@ public class Project {
     EndTime = System.currentTimeMillis();
     System.out.println("Render_To time:" + (EndTime - StartTime));// Render_To time: 150 milliseconds per 16 seconds. 
 
-    SaveWave(wave_render, "wave_render.csv");
+    if (false) {
+      SaveWave(wave_render, "wave_render.csv");
+    }
     boolean nop = true;
   }
 }
