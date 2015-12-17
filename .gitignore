@@ -6,6 +6,11 @@ nbdist/
 nbactions.xml
 nb-configuration.xml
 
+# Data dump files
+*.wav
+*.csv
+
+# Compiled Java classes
 *.class
 
 # Mobile Tools for Java (J2ME)

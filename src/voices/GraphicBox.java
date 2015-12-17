@@ -71,6 +71,7 @@ public class GraphicBox implements IDrawable {// ISonglet,
     @Override public void UpdateBoundingBox() {// IDrawable
       this.Content.UpdateBoundingBox();
       this.Content.GetBoundingBox().UnMap(this, MyBounds);// project child limits into parent (my) space
+      this.MyBounds.Sort_Me();
     }
   }
 }

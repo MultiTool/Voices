@@ -24,6 +24,13 @@ public class CajaDelimitadora {// DIY BoundingBox
   public void Assign(double MinX, double MinY, double MaxX, double MaxY) {
     this.Min.setLocation(MinX, MinY);
     this.Max.setLocation(MaxX, MaxY);
+    this.Sort_Me();
+  }
+    /* ********************************************************************************* */
+  public void AssignCorner(int CornerNum, double MinLimit, double MaxLimit) {
+    Point2D.Double pnt = this.Limits[CornerNum];
+    pnt.setLocation(MinLimit, MaxLimit);
+    this.Sort_Me();
   }
   /* ********************************************************************************* */
   public boolean Intersects(CajaDelimitadora other) {
@@ -89,6 +96,9 @@ public class CajaDelimitadora {// DIY BoundingBox
   }
   /* ********************************************************************************* */
   public void UnMap(OffsetBox MapBox, CajaDelimitadora results) {
+    if (results == null || MapBox == null) {
+      boolean nop = true;
+    }
     results.Min.x = MapBox.UnMapTime(this.Min.x);
     results.Max.x = MapBox.UnMapTime(this.Max.x);
     results.Min.y = MapBox.UnMapPitch(this.Min.y);

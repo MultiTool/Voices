@@ -28,12 +28,13 @@ public class MainGui {
     this.drawpanel = new DrawingPanel();
     contentPane.add(this.drawpanel);
     MyProject = new Project();
-    MyProject.Create_For_Graphics();
+    //MyProject.Create_For_Graphics();
+    MyProject.Compose_Test();
     this.drawpanel.MyProject = this.MyProject;
     frame.setVisible(true);
   }
   /* ********************************************************************************* */
-  public static class DrawingPanel extends JPanel implements MouseMotionListener, MouseListener, MouseWheelListener, KeyListener {
+  public static class DrawingPanel extends JPanel implements MouseMotionListener, MouseListener, MouseWheelListener, ComponentListener, KeyListener {
     Project MyProject = null;
     /* ********************************************************************************* */
     public DrawingPanel() {
@@ -41,13 +42,12 @@ public class MainGui {
     }
     /* ********************************************************************************* */
     public final void Init() {
-      // alternative: look into KeyBindings 
-      if (false) {
-        this.setFocusable(true);
-      }
       this.addMouseListener(this);
       this.addMouseMotionListener(this);
-      this.addMouseWheelListener(this);
+      this.addMouseWheelListener(this);     
+      if (false) {// alternative: look into KeyBindings 
+        this.setFocusable(true);
+      }
       this.addKeyListener(this);
     }
     /* ********************************************************************************* */
@@ -79,6 +79,7 @@ public class MainGui {
     }
     /* ********************************************************************************* */
     @Override public void mouseClicked(MouseEvent me) {
+      this.MyProject.Audio_Test();
     }
     @Override public void mousePressed(MouseEvent me) {
     }
@@ -90,6 +91,15 @@ public class MainGui {
     }
     /* ********************************************************************************* */
     @Override public void mouseWheelMoved(MouseWheelEvent mwe) {
+    }
+    /* ********************************************************************************* */
+    @Override public void componentResized(ComponentEvent ce) {
+    }
+    @Override public void componentMoved(ComponentEvent ce) {
+    }
+    @Override public void componentShown(ComponentEvent ce) {
+    }
+    @Override public void componentHidden(ComponentEvent ce) {
     }
     /* ********************************************************************************* */
     @Override public void keyTyped(KeyEvent ke) {

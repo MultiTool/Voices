@@ -21,6 +21,10 @@ public class ChorusBox implements ISonglet, IDrawable {
   private double MaxAmplitude = 0.0;
   public CajaDelimitadora MyBounds;
   /* ********************************************************************************* */
+  public ChorusBox(){
+      MyBounds = new CajaDelimitadora();
+  }
+  /* ********************************************************************************* */
   public OffsetBox Add_SubSong(ISonglet songlet, double TimeOffset, double OctaveOffset, double LoudnessFactor) {
     songlet.Set_Project(this.MyProject);// child inherits project from me
     OffsetBox obox = songlet.Spawn_OffsetBox();
@@ -130,10 +134,16 @@ public class ChorusBox implements ISonglet, IDrawable {
     this.MyProject = project;
   }
   /* ********************************************************************************* */
-  @Override public void Draw_Me(Drawing_Context ParentDC) {
-    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+  @Override public void Draw_Me(Drawing_Context ParentDC) {// IDrawable
+    OffsetBox ChildOffsetBox;
+    int len = this.SubSongs.size();
+    // to do: break from loop if subsong starts after MaxX. 
+    for (int pcnt = 0; pcnt < len; pcnt++) {
+      ChildOffsetBox = this.SubSongs.get(pcnt);
+      ChildOffsetBox.Draw_Me(ParentDC);
+    }
   }
-  @Override public CajaDelimitadora GetBoundingBox() {
+  @Override public CajaDelimitadora GetBoundingBox() {// IDrawable
     return this.MyBounds;
   }
   @Override public void UpdateBoundingBox() {// IDrawable
@@ -280,7 +290,7 @@ public class ChorusBox implements ISonglet, IDrawable {
     }
     /* ********************************************************************************* */
     @Override public void Draw_Me(Drawing_Context ParentDC) {// IDrawable
-      if (ParentDC.ClipBounds.Intersects(MyBounds)) {
+      if (ParentDC.ClipBounds.Intersects(MyBounds)) {// If we make ISonglet also drawable then we can stop repeating this code and put it all in OffsetBox.
         Drawing_Context ChildDC = new Drawing_Context(ParentDC, this);
         this.Content.Draw_Me(ChildDC);
       }

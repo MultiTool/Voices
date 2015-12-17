@@ -28,7 +28,7 @@ public class Voices {
   public static void main(String[] args) {
     MainGui mg = new MainGui();
     mg.Init();
-    if (true) {
+    if (false) {
       Test_Synthesis();
     }
   }
@@ -37,7 +37,7 @@ public class Voices {
     //Globals.BaseFreqC0 = 1.0;
     Project prj = new Project();
     // prj.Compose_Warble_Chorus();
-    prj.Compose_Chorus_Test2();
+    prj.Compose_Test();
 
 //    prj.Compose_Chorus_Test();
 //    prj.Render_Test();

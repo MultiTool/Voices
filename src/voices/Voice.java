@@ -161,8 +161,8 @@ public class Voice implements ISonglet, IDrawable {
   /* ********************************************************************************* */
   public static double Integral(double OctaveRate, double TimeAlong) {// to do: optimize this!
     double SubTimeCalc;// given realtime passed and rate of octave change, use integration to get the sum of all subjective time passed.  
-    if (OctaveRate == 0.0) {
-      OctaveRate = Globals.Fudge;// Fudge to avoid div by 0 
+    if (OctaveRate == 0.0) {// do we really have to check this for every sample? more efficient to do it once up front.
+      return TimeAlong;
     }
     // Yep calling log and pow functions for every sample generated is expensive. We will have to optimize later. 
     double Denom = (Math.log(2) * OctaveRate);// returns the integral of (2 ^ (TimeAlong * OctaveRate))
@@ -333,8 +333,9 @@ public class Voice implements ISonglet, IDrawable {
     /* ********************************************************************************* */
     @Override public void UpdateBoundingBox() {
       double LoudnessHeight = Loudness * OctavesPerLoudness;// Map loudness to screen pixels.
-      this.MyBounds.Min.setLocation(RealTime - Radius, Octave - Math.min(Radius, LoudnessHeight));
-      this.MyBounds.Max.setLocation(RealTime + Radius, Octave + Math.max(Radius, LoudnessHeight));
+      this.MyBounds.Assign(RealTime - Radius, Octave - Math.min(Radius, LoudnessHeight), RealTime + Radius, Octave + Math.max(Radius, LoudnessHeight));
+//      this.MyBounds.Min.setLocation(RealTime - Radius, Octave - Math.min(Radius, LoudnessHeight));
+//      this.MyBounds.Max.setLocation(RealTime + Radius, Octave + Math.max(Radius, LoudnessHeight));
     }
   }
   /* ********************************************************************************* */
@@ -361,7 +362,7 @@ public class Voice implements ISonglet, IDrawable {
     }
     /* ********************************************************************************* */
     @Override public void Draw_Me(Drawing_Context ParentDC) {// IDrawable
-      if (ParentDC.ClipBounds.Intersects(MyBounds)) {
+      if (ParentDC.ClipBounds.Intersects(MyBounds)) {// If we make ISonglet also drawable then we can stop repeating this code and put it all in OffsetBox.
         Drawing_Context ChildDC = new Drawing_Context(ParentDC, this);// map to child (my) internal coordinates
         this.Content.Draw_Me(ChildDC);
       }
@@ -467,7 +468,6 @@ public class Voice implements ISonglet, IDrawable {
       }
       double UnMapped_EndTime = this.MyOffsetBox.UnMapTime(EndTime);
       wave.Init(UnMapped_Prev_Time, UnMapped_EndTime, this.MyProject.SampleRate);// wave times are in parent coordinates because the parent will be reading the wave data.
-      //wave.Fill(777.0);
       Prev_Point = this.Cursor_Point;
       int pdex = this.Next_Point_Dex;
 
@@ -591,9 +591,9 @@ public class Voice implements ISonglet, IDrawable {
       // double Inherited_Time = 0.0, Inherited_Loudness = 1.0;// time, octave, and loudness context
       double Octave0 = this.Inherited_Octave + pnt0.Octave, Octave1 = this.Inherited_Octave + pnt1.Octave;
       double OctaveRange = Octave1 - Octave0;
-      if (OctaveRange == 0.0) {
-        OctaveRange = Globals.Fudge;// Fudge to avoid div by 0 
-      }
+//      if (OctaveRange == 0.0) {
+//        OctaveRange = Globals.Fudge;// Fudge to avoid div by 0 
+//      }
       double LoudnessRange = pnt1.Loudness - pnt0.Loudness;
       double OctaveRate = OctaveRange / TimeRange;// octaves per second bend
       OctaveRate += this.Inherited_OctaveRate;// inherit note bend 
@@ -607,6 +607,10 @@ public class Voice implements ISonglet, IDrawable {
       double Amplitude;
       for (int scnt = 0; scnt < NumSamples; scnt++) {
         TimeAlong = scnt * SampleDuration;
+        double AllTime = pnt0.RealTime + TimeAlong;
+        if (AllTime >= pnt1.RealTime) {// testing for range error
+          break;
+        }
         CurrentLoudness = pnt0.Loudness + (TimeAlong * LoudnessRate);
         SubTimeLocal = Integral(OctaveRate, TimeAlong);
         SubTimeAbsolute = (pnt0.SubTime + (FrequencyFactorStart * SubTimeLocal)) * FrequencyFactorInherited;

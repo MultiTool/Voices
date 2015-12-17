@@ -113,6 +113,8 @@ public class LoopBox implements ISonglet, IDrawable {
     this.MyBounds.Include(ChildBBoxUnMapped);// Inefficient. We collect all the X information and then just throw it away. 
     this.MyBounds.Min.x = 0;
     this.MyBounds.Max.x = this.MyDuration;
+    this.MyBounds.Sort_Me();
+    //this.MyBounds.Assign(0, miny, this.MyDuration, maxy);
   }
   /* ********************************************************************************* */
   public static class Loop_Singer extends Singer {
@@ -222,6 +224,10 @@ public class LoopBox implements ISonglet, IDrawable {
   public static class Loop_OffsetBox extends OffsetBox {// location box to transpose in pitch, move in time, etc. 
     public LoopBox Content;
     /* ********************************************************************************* */
+    public Loop_OffsetBox() {
+      this.MyBounds = new CajaDelimitadora();
+    }
+    /* ********************************************************************************* */
     @Override public ISonglet GetContent() {
       return Content;
     }
@@ -237,7 +243,7 @@ public class LoopBox implements ISonglet, IDrawable {
     }
     /* ********************************************************************************* */
     @Override public void Draw_Me(Drawing_Context ParentDC) {// IDrawable
-      if (ParentDC.ClipBounds.Intersects(MyBounds)) {
+      if (ParentDC.ClipBounds.Intersects(MyBounds)) {// If we make ISonglet also drawable then we can stop repeating this code and put it all in OffsetBox.
         Drawing_Context ChildDC = new Drawing_Context(ParentDC, this);
         this.Content.Draw_Me(ChildDC);
       }

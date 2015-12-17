@@ -26,7 +26,7 @@ public class NoteMaker {
     this.Init();
   }
   /* ********************************************************************************* */
-  public Voice Create_Simple_Note(double TimeOffset, double Duration, double OctaveOffset, double LoudnessOffset) {
+  public static Voice Create_Simple_Note(double TimeOffset, double Duration, double OctaveOffset, double LoudnessOffset) {
     Voice voice = new Voice();
     double midfrac0 = 0.03, midfrac1 = 0.5;
     voice.Add_Note(TimeOffset + 0, OctaveOffset + 0, LoudnessOffset * 0);
@@ -55,10 +55,12 @@ public class NoteMaker {
     ChorusBox cbx = new ChorusBox();
     note = Create_Simple_Note(0, Duration, 0, Loudness);
     cbx.Add_SubSong(note, 0, SemitoneFraction * NoteDex0, Loudness);
-    note = Create_Simple_Note(0, Duration, 0, Loudness);
-    cbx.Add_SubSong(note, 0, SemitoneFraction * NoteDex1, Loudness);
-    note = Create_Simple_Note(0, Duration, 0, Loudness);
-    cbx.Add_SubSong(note, 0, SemitoneFraction * NoteDex2, Loudness);
+    if (true) {
+      note = Create_Simple_Note(0, Duration, 0, Loudness);
+      cbx.Add_SubSong(note, 0, SemitoneFraction * NoteDex1, Loudness);
+      note = Create_Simple_Note(0, Duration, 0, Loudness);
+      cbx.Add_SubSong(note, 0, SemitoneFraction * NoteDex2, Loudness);
+    }
     return cbx;
   }
   /* ********************************************************************************* */
