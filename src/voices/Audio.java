@@ -76,7 +76,7 @@ public class Audio {
     double amplitude;
     int iamp, StartBit = BitsPerSample - Byte.SIZE;
     int bufcnt = 0;
-    for (int scnt = 0; scnt < wave.NumSamples; scnt++) {
+    for (int scnt = 0; scnt < wave.NumSamples-2; scnt++) {
       amplitude = (wave.Get(scnt) * Damper * HalfSample);// wave is assumed to be within the range of -1.0 to +1.0 before we start playing it. 
       iamp = (int) amplitude;
       if (true) {

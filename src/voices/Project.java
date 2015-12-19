@@ -157,14 +157,16 @@ public class Project {
   /* ********************************************************************************* */
   public ChorusBox Create_Nested_Chorus(double TimeOffset, double OctaveOffset, double LoudnessOffset, int BoxDepth) {
     Voice note = Create_Simple_Note(0, 1, 0, 1);// for stress testing
-    ISonglet songlet = note;
+    ISonglet songlet0 = note;
+    ISonglet songlet1 = note;
     ChorusBox cbx = null;
     for (int cnt = 0; cnt < BoxDepth; cnt++) {
       cbx = new ChorusBox();
       cbx.MyName = "Chord" + cnt;
       cbx.Set_Project(this);
-      cbx.Add_SubSong(songlet, 1, 1, LoudnessOffset * 1.0);
-      songlet = cbx;
+      cbx.Add_SubSong(songlet0, 1, 1, LoudnessOffset * 1.0);
+      cbx.Add_SubSong(songlet1, 0, 1, LoudnessOffset * 1.0);
+      songlet0 = cbx;
     }
     cbx.MyName = "TopChord";
     return cbx;
@@ -192,14 +194,14 @@ public class Project {
     ISonglet song = null;
     OffsetBox obox = null;
     ChorusBox CMinor, CMajor, DMajor, DMinor;
-    switch (6) {
+    switch (1) {
       case 0:
         song = Create_Random_Chorus(0, 0, 1.0);
         obox = song.Spawn_OffsetBox();
         obox.OctaveLoc_s(4);
         break;
       case 1:
-        song = Create_Nested_Chorus(0, 0, 1.0, 4);
+        song = Create_Nested_Chorus(0, 0, 1.0, 6);
         obox = song.Spawn_OffsetBox();
         break;
       case 2:
@@ -276,11 +278,11 @@ public class Project {
     StartTime = System.currentTimeMillis();
 
     Audio aud = new Audio();
-    if (false) {
+    if (true) {
       aud.SaveAudioChunks("test.wav", this.AudioRoot);
     }
     aud.Start();
-    int NumSlices = 300;
+    int NumSlices = 200;
     for (int cnt = 0; cnt < NumSlices; cnt++) {
       System.out.print("cnt:" + cnt + " ");
       double FractAlong = (((double) (cnt + 1)) / (double) NumSlices);

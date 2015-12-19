@@ -17,7 +17,7 @@ public class MainGui {
   public void Init() {
     this.frame = new JFrame();
     this.frame.setTitle("Polygon");
-    this.frame.setSize(600, 250);
+    this.frame.setSize(600, 400);
     this.frame.addWindowListener(new WindowAdapter() {
       @Override public void windowClosing(WindowEvent e) {
         System.exit(0);
