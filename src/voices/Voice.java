@@ -24,7 +24,7 @@ public class Voice implements ISonglet, IDrawable {
   public ArrayList<Point> CPoints = new ArrayList<>();
   private Project MyProject;
   private double MaxAmplitude;
-  // graphics support 
+  // graphics support
   CajaDelimitadora MyBounds = new CajaDelimitadora();
   /* ********************************************************************************* */
   public Voice() {
@@ -254,7 +254,7 @@ public class Voice implements ISonglet, IDrawable {
     public double Octave = 0.0;
     public double Loudness = 1.0;
 
-    // graphics support
+    // graphics support, will move to separate object
     double Radius = 5, Diameter = Radius * 2.0;
     double PixelsPerLoudness = 20;// to do: loudness will have to be mapped to screen. not a pixel value right?
     double OctavesPerLoudness = 1.0;
@@ -380,8 +380,9 @@ public class Voice implements ISonglet, IDrawable {
     double SubTime;// Subjective time.
     double Current_Octave, Current_Frequency;
     int Prev_Point_Dex, Next_Point_Dex;
-    int Render_Sample_Count, Origin_Sample_Count_Prev, Origin_Sample_Count;
+    int Render_Sample_Count;
     Point Cursor_Point = new Point();
+    private int Bone_Sample_Mark = 0;
     /* ********************************************************************************* */
     private Voice_Singer() {
       this.ParentSinger = null;
@@ -395,8 +396,7 @@ public class Voice implements ISonglet, IDrawable {
       this.Prev_Point_Dex = 0;//this.Parent.CPoints.get(0);
       this.Next_Point_Dex = 1;
       this.Render_Sample_Count = 0;
-      this.Origin_Sample_Count_Prev = 0;
-      this.Origin_Sample_Count = 0;
+      this.Bone_Sample_Mark = 0;
       this.IsFinished = false;
       //if (this.Parent != null) {
       Point ppnt = this.MyPhrase.CPoints.get(this.Prev_Point_Dex);
@@ -407,8 +407,6 @@ public class Voice implements ISonglet, IDrawable {
     @Override public void Skip_To(double EndTime) {// ready for test
       Point Prev_Point, Next_Point;
       EndTime = this.MyOffsetBox.MapTime(EndTime);// EndTime is now time internal to voice's own coordinate system
-      this.Origin_Sample_Count_Prev = this.Origin_Sample_Count;
-      this.Origin_Sample_Count = (int) Math.floor(EndTime);
       this.Render_Sample_Count = 0;
       // this.Origin_Sample_Count += (EndTime-this.Prev_Time);// 
       int NumPoints = this.MyPhrase.CPoints.size();
@@ -416,14 +414,7 @@ public class Voice implements ISonglet, IDrawable {
         this.IsFinished = true;
         return;
       }
-      if (EndTime < Cursor_Point.RealTime) {
-        EndTime = Cursor_Point.RealTime;// clip time
-      }
-      Point Final_Point = this.MyPhrase.CPoints.get(NumPoints - 1);
-      if (EndTime > Final_Point.RealTime) {
-        this.IsFinished = true;
-        EndTime = Final_Point.RealTime;// clip time
-      }
+      EndTime = this.ClipTime(EndTime);
       Prev_Point = this.Cursor_Point;
       int pdex = this.Next_Point_Dex;
       Next_Point = this.MyPhrase.CPoints.get(pdex);
@@ -447,8 +438,6 @@ public class Voice implements ISonglet, IDrawable {
     @Override public void Render_To(double EndTime, Wave wave) {// ready for test
       Point Prev_Point = null, Next_Point = null;
       EndTime = this.MyOffsetBox.MapTime(EndTime);// EndTime is now time internal to voice's own coordinate system
-      this.Origin_Sample_Count_Prev = this.Origin_Sample_Count;
-      this.Origin_Sample_Count = (int) Math.floor(EndTime * (double) this.MyProject.SampleRate);// to do: use this to make sure generated wave is perfectly aligned.
 
       double UnMapped_Prev_Time = this.MyOffsetBox.UnMapTime(this.Cursor_Point.RealTime);// get start time in parent coordinates
       this.Render_Sample_Count = 0;
@@ -458,14 +447,7 @@ public class Voice implements ISonglet, IDrawable {
         wave.Init(UnMapped_Prev_Time, UnMapped_Prev_Time, this.MyProject.SampleRate);
         return;
       }
-      if (EndTime < Cursor_Point.RealTime) {
-        EndTime = Cursor_Point.RealTime;// clip time
-      }
-      Point Final_Point = this.MyPhrase.CPoints.get(NumPoints - 1);
-      if (EndTime > Final_Point.RealTime) {
-        this.IsFinished = true;
-        EndTime = Final_Point.RealTime;// clip time
-      }
+      EndTime = this.ClipTime(EndTime);
       double UnMapped_EndTime = this.MyOffsetBox.UnMapTime(EndTime);
       wave.Init(UnMapped_Prev_Time, UnMapped_EndTime, this.MyProject.SampleRate);// wave times are in parent coordinates because the parent will be reading the wave data.
       Prev_Point = this.Cursor_Point;
@@ -492,9 +474,6 @@ public class Voice implements ISonglet, IDrawable {
           this.Next_Point_Dex++;
         }
       }
-      if (Next_Point.RealTime == EndTime) {
-        boolean nop = true;
-      }
 
       this.Prev_Point_Dex = this.Next_Point_Dex - 1;
 
@@ -509,6 +488,20 @@ public class Voice implements ISonglet, IDrawable {
         }
       }
       wave.Amplify(this.MyOffsetBox.LoudnessFactor);
+      wave.NumSamples = this.Render_Sample_Count;
+    }
+    /* ********************************************************************************* */
+    public double ClipTime(double EndTime) {
+      if (EndTime < Cursor_Point.RealTime) {
+        EndTime = Cursor_Point.RealTime;// clip time
+      }
+      int FinalIndex = this.MyPhrase.CPoints.size() - 1;
+      Point Final_Point = this.MyPhrase.CPoints.get(FinalIndex);
+      if (EndTime > Final_Point.RealTime) {
+        this.IsFinished = true;
+        EndTime = Final_Point.RealTime;// clip time
+      }
+      return EndTime;
     }
     /* ********************************************************************************* */
     @Override public IOffsetBox Get_OffsetBox() {
@@ -584,11 +577,8 @@ public class Voice implements ISonglet, IDrawable {
       double BaseFreq = Globals.BaseFreqC0;
       double SRate = this.MyProject.SampleRate;
       double TimeRange = pnt1.RealTime - pnt0.RealTime;
-      double SampleDuration = 1.0 / SRate;
       double FrequencyFactorStart = pnt0.GetFrequencyFactor();
       double FrequencyFactorInherited = Math.pow(2.0, this.Inherited_Octave);// inherit transposition 
-
-      // double Inherited_Time = 0.0, Inherited_Loudness = 1.0;// time, octave, and loudness context
       double Octave0 = this.Inherited_Octave + pnt0.Octave, Octave1 = this.Inherited_Octave + pnt1.Octave;
       double OctaveRange = Octave1 - Octave0;
 //      if (OctaveRange == 0.0) {
@@ -600,17 +590,13 @@ public class Voice implements ISonglet, IDrawable {
       double LoudnessRate = LoudnessRange / TimeRange;
       double SubTimeLocal;
       double SubTimeAbsolute;
-      int NumSamples = (int) Math.ceil(TimeRange * SRate);
-      // NumSamples = this.Origin_Sample_Count - this.Origin_Sample_Count_Prev;// working on fix for alignment error
+      int EndSample = (int) (pnt1.RealTime * SRate);// absolute
       double TimeAlong;
       double CurrentLoudness;
       double Amplitude;
-      for (int scnt = 0; scnt < NumSamples; scnt++) {
-        TimeAlong = scnt * SampleDuration;
-        double AllTime = pnt0.RealTime + TimeAlong;
-        if (AllTime >= pnt1.RealTime) {// testing for range error
-          break;
-        }
+      int SampleCnt;
+      for (SampleCnt = this.Bone_Sample_Mark; SampleCnt < EndSample; SampleCnt++) {
+        TimeAlong = (SampleCnt / SRate) - pnt0.RealTime;
         CurrentLoudness = pnt0.Loudness + (TimeAlong * LoudnessRate);
         SubTimeLocal = Integral(OctaveRate, TimeAlong);
         SubTimeAbsolute = (pnt0.SubTime + (FrequencyFactorStart * SubTimeLocal)) * FrequencyFactorInherited;
@@ -618,6 +604,7 @@ public class Voice implements ISonglet, IDrawable {
         wave.Set(this.Render_Sample_Count, Amplitude * CurrentLoudness);
         this.Render_Sample_Count++;
       }
+      this.Bone_Sample_Mark = EndSample;
     }
   }
 }

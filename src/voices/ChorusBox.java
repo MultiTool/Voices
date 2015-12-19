@@ -218,7 +218,6 @@ public class ChorusBox implements ISonglet, IDrawable {
       while (cnt < NumPlaying) {// then play the whole pool
         Singer player = this.NowPlaying.get(cnt);
         player.Render_To(Clipped_EndTime, ChildWave);
-        //ChildWave.Shift_Timebase(this.MyOffsetBox.TimeOrg);// shift child data to my parent's time base. hacky? 
         ChildWave.Rebase_Time(this.MyOffsetBox.UnMapTime(ChildWave.StartTime));// shift child data to my parent's time base. hacky? 
         wave.Overdub(ChildWave);// sum/overdub the waves 
         cnt++;

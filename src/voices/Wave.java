@@ -20,6 +20,9 @@ public class Wave {
   public double EndTime = 0;// for debugging
   private double[] wave;
   public static boolean Debugging = false;
+  public static double Debug_Start_Mark = 7;
+  public static double Debug_End_Mark = 10;
+  public static double Debug_Fill = 4;
   /* ********************************************************************************* */
   public Wave() {
     this.NumSamples = 0;
@@ -49,8 +52,8 @@ public class Wave {
     this.StartDex = 0;
     this.Current_Index = 0;
     if (Debugging && this.wave.length > 0) {
-      this.wave[0] = 123.0;
-      this.wave[this.wave.length - 1] = 999.0;
+      this.wave[0] = Debug_Start_Mark;
+      //this.wave[this.wave.length - 1] = Debug_End_Mark;
     }
   }
   /* ********************************************************************************* */
@@ -64,9 +67,9 @@ public class Wave {
     this.NumSamples = nsamps;
     wave = new double[nsamps + 1];// plus 1 because converting from double to int truncates. 
     if (Debugging && this.wave.length > 0) {
-      this.wave[0] = 123.0;
-      this.wave[this.wave.length - 1] = 999.0;
-      this.Fill(777.0);
+      //this.Fill(Debug_Fill);
+      this.wave[0] = Debug_Start_Mark;
+      //this.wave[this.wave.length - 1] = Debug_End_Mark;
     }
     this.Current_Index = 0;
   }
@@ -97,7 +100,7 @@ public class Wave {
   }
   /* ********************************************************************************* */
   public void Amplify(double LoudnessFactor) {
-    for (int cnt = 0; cnt < this.NumSamples; cnt++) {
+    for (int cnt = 0; cnt < this.wave.length; cnt++) {
       this.wave[cnt] *= LoudnessFactor;
     }
   }
@@ -106,6 +109,15 @@ public class Wave {
     int len = this.wave.length;
     for (int cnt = 0; cnt < len; cnt++) {
       this.wave[cnt] = Stuffing;
+    }
+  }
+  /* ********************************************************************************* */
+  public void ZeroCheck() { // for debugging
+    int len = this.wave.length;
+    for (int cnt = 0; cnt < len; cnt++) {
+      if (this.wave[cnt] == 0.0) {
+        this.wave[cnt] = Debug_Start_Mark;
+      }
     }
   }
   /* ********************************************************************************* */
@@ -129,9 +141,9 @@ public class Wave {
   }
   /* ********************************************************************************* */
   public void Normalize() {
-    int len = this.wave.length;
     double MaxAmp = 0.0;
     double AbsVal;
+    int len = this.wave.length;
     for (int cnt = 0; cnt < len; cnt++) {
       if (MaxAmp < (AbsVal = Math.abs(this.wave[cnt]))) {
         MaxAmp = AbsVal;
@@ -144,10 +156,11 @@ public class Wave {
     int StartPlace = other.StartDex;
     int nextsize = StartPlace + other.NumSamples;
     this.wave = Arrays.copyOf(this.wave, nextsize);
+    // StartPlace = StartPlace > 0 ? StartPlace - 1 : StartPlace;
     System.arraycopy(other.wave, 0, this.wave, StartPlace, other.NumSamples);
-    if (Debugging && this.wave.length > 0) {
-      this.wave[0] = 123.0;
-      this.wave[this.wave.length - 1] = 999.0;
+    if (false && Debugging && this.wave.length > 0) {
+      this.wave[0] = Debug_Start_Mark;
+      this.wave[this.wave.length - 1] = Debug_End_Mark;
     }
     this.NumSamples = nextsize;
   }
@@ -157,9 +170,9 @@ public class Wave {
     int nextsize = StartPlace + other.NumSamples;
     this.wave = Arrays.copyOf(this.wave, nextsize);
     System.arraycopy(other.wave, 0, this.wave, StartPlace, other.NumSamples);
-    if (Debugging && this.wave.length > 0) {
-      this.wave[0] = 123.0;
-      this.wave[this.wave.length - 1] = 999.0;
+    if (false && Debugging && this.wave.length > 0) {
+      this.wave[0] = Debug_Start_Mark;
+      this.wave[this.wave.length - 1] = Debug_End_Mark;
     }
     this.NumSamples = nextsize;
   }
@@ -179,7 +192,7 @@ public class Wave {
     }
   }
   /* ********************************************************************************* */
-  public double[] GetWave(){// just for testing. remove later
+  public double[] GetWave() {// just for testing. remove later
     return this.wave;
   }
 }

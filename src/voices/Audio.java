@@ -140,7 +140,32 @@ public class Audio {
       System.out.println(e);
     }
   }
+  /* ********************************************************************************* */
+  public void SaveAudioChunks(String filename, OffsetBox song) {
+    ISonglet.Singer RootPlayer = song.Spawn_Singer();
+    RootPlayer.Compound(song);
 
+    double FinalTime = song.GetContent().Get_Duration();
+    Wave wave_render = new Wave();
+    wave_render.Init(0, FinalTime, SampleRate);
+    wave_render.Fill(Wave.Debug_Fill);
+    Wave wave_scratch = new Wave();
+
+    long StartTime, EndTime;
+    RootPlayer.Start();
+    StartTime = System.currentTimeMillis();
+
+    int NumSlices = 16;
+    for (int cnt = 0; cnt < NumSlices; cnt++) {
+      double FractAlong = (((double) (cnt + 1)) / (double) NumSlices);
+      RootPlayer.Render_To(FinalTime * FractAlong, wave_scratch);
+      wave_render.Append(wave_scratch);
+    }
+    wave_render.ZeroCheck();
+    wave_render.Normalize();
+    wave_render.Amplify(0.99);
+    this.Save(filename, wave_render.GetWave());
+  }
   /* ********************************************************************************* */
   public void SaveAudio(String filename, OffsetBox song) {
     ISonglet.Singer RootPlayer = song.Spawn_Singer();

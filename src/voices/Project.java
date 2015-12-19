@@ -66,10 +66,11 @@ public class Project {
   /* ********************************************************************************* */
   public Voice Create_Warble_Voice(double TimeOffset, double OctaveOffset, double LoudnessOffset) {
     Voice voice = new Voice();// for fuzz testing
-    double TDiff, OctaveRand, LoudnessRand;
+    double TDiff, OctaveRand, LoudnessRand = 1.0;
+    double TimeScale = 2.0;
     double TimeCnt = 0;
     for (int cnt = 0; cnt < 12; cnt++) {
-      TDiff = (Globals.RandomGenerator.nextDouble() * 2) + 1;
+      TDiff = (Globals.RandomGenerator.nextDouble() * TimeScale) + TimeScale / 2.0;
       OctaveRand = Globals.RandomGenerator.nextDouble() * 2;
       LoudnessRand = (Globals.RandomGenerator.nextDouble() * 0.5) + 0.5;
       voice.Add_Note(TimeCnt, OctaveOffset + OctaveRand, LoudnessOffset * LoudnessRand);
@@ -174,12 +175,13 @@ public class Project {
     cbx.Set_Project(this);
     this.AudioRoot = cbx.Spawn_OffsetBox();
 
-    Voice vc0 = Create_Voice(0, 0, 1);
-    cbx.Add_SubSong(vc0, 0, 3, 0.2);
+    if (false) {
+      Voice vc0 = Create_Voice(0, 0, 1);
+      cbx.Add_SubSong(vc0, 0, 3, 0.2);
 
-    Voice vc1 = Create_Voice(0, 0, 1);
-    cbx.Add_SubSong(vc1, 2, 0, 1);
-
+      Voice vc1 = Create_Voice(0, 0, 1);
+      cbx.Add_SubSong(vc1, 2, 0, 1);
+    }
     Voice vc2 = Create_Warble_Voice(0, 0, 1);
     cbx.Add_SubSong(vc2, 0, 1.3, 1);
 
@@ -191,59 +193,59 @@ public class Project {
     OffsetBox obox = null;
     ChorusBox CMinor, CMajor, DMajor, DMinor;
     switch (6) {
-    case 0:
-      song = Create_Random_Chorus(0, 0, 1.0);
-      obox = song.Spawn_OffsetBox();
-      obox.OctaveLoc_s(4);
-      break;
-    case 1:
-      song = Create_Nested_Chorus(0, 0, 1.0, 4);
-      obox = song.Spawn_OffsetBox();
-      break;
-    case 2:
-      song = Create_Chord(0, 2, 1.0, 3);
-      obox = song.Spawn_OffsetBox();
-      break;
-    case 3:
-      //song = Create_Simple_Note(0, 2.3, 1);
-      song = Create_Simple_Note(0, 1, 5, 1);
-      //song = NoteMaker.Create_Simple_Note(0, 1, 5, 1);
-      song.Set_Project(this);
-      obox = song.Spawn_OffsetBox();
-      break;
-    case 4:
-      song = Compose_Loop();
-      obox = song.Spawn_OffsetBox();
-      break;
-    case 5:
-      double Delay = 1.5;
-      //Delay = 3;
-      ChorusBox cbx = new ChorusBox();
-      NoteMaker nm = new NoteMaker();
-      LoopBox lbx = new LoopBox();
-      CMajor = nm.MakeMajor(0);// C major
-      cbx.Add_SubSong(CMajor, 0, 0, 1.0);
-      CMinor = nm.MakeMinor(0);// C minor
-      cbx.Add_SubSong(CMinor, Delay * 1, 0, 1.0);
-      DMajor = nm.MakeMajor(2);// D major
-      cbx.Add_SubSong(DMajor, Delay * 2, 0, 1.0);
-      DMinor = nm.MakeMinor(2);// D minor
-      cbx.Add_SubSong(DMinor, Delay * 3, 0, 1.0);
+      case 0:
+        song = Create_Random_Chorus(0, 0, 1.0);
+        obox = song.Spawn_OffsetBox();
+        obox.OctaveLoc_s(4);
+        break;
+      case 1:
+        song = Create_Nested_Chorus(0, 0, 1.0, 4);
+        obox = song.Spawn_OffsetBox();
+        break;
+      case 2:
+        song = Create_Chord(0, 2, 1.0, 3);
+        obox = song.Spawn_OffsetBox();
+        break;
+      case 3:
+        //song = Create_Simple_Note(0, 2.3, 1);
+        song = Create_Simple_Note(0, 1, 5, 1);
+        //song = NoteMaker.Create_Simple_Note(0, 1, 5, 1);
+        song.Set_Project(this);
+        obox = song.Spawn_OffsetBox();
+        break;
+      case 4:
+        song = Compose_Loop();
+        obox = song.Spawn_OffsetBox();
+        break;
+      case 5:
+        double Delay = 1.5;
+        //Delay = 3;
+        ChorusBox cbx = new ChorusBox();
+        NoteMaker nm = new NoteMaker();
+        LoopBox lbx = new LoopBox();
+        CMajor = nm.MakeMajor(0);// C major
+        cbx.Add_SubSong(CMajor, 0, 0, 1.0);
+        CMinor = nm.MakeMinor(0);// C minor
+        cbx.Add_SubSong(CMinor, Delay * 1, 0, 1.0);
+        DMajor = nm.MakeMajor(2);// D major
+        cbx.Add_SubSong(DMajor, Delay * 2, 0, 1.0);
+        DMinor = nm.MakeMinor(2);// D minor
+        cbx.Add_SubSong(DMinor, Delay * 3, 0, 1.0);
 
-      lbx.Add_Content(cbx);
-      lbx.Set_Delay(Delay * 4);
-      lbx.Set_Duration(100);
+        lbx.Add_Content(cbx);
+        lbx.Set_Delay(Delay * 4);
+        lbx.Set_Duration(100);
 
-      song = lbx;
-      song.Set_Project(this);
-      obox = song.Spawn_OffsetBox();
-      obox.OctaveLoc_s(4);
-      break;
-    case 6:
-      song = Compose_Warble_Chorus();
-      song.Set_Project(this);
-      obox = song.Spawn_OffsetBox();
-      obox.OctaveLoc_s(4);
+        song = lbx;
+        song.Set_Project(this);
+        obox = song.Spawn_OffsetBox();
+        obox.OctaveLoc_s(4);
+        break;
+      case 6:
+        song = Compose_Warble_Chorus();
+        song.Set_Project(this);
+        obox = song.Spawn_OffsetBox();
+        obox.OctaveLoc_s(4);
     }
 
 //    this.AudioRoot = obox;
@@ -274,19 +276,18 @@ public class Project {
     StartTime = System.currentTimeMillis();
 
     Audio aud = new Audio();
-    if (true) {
-      aud.SaveAudio("test.wav", this.AudioRoot);
+    if (false) {
+      aud.SaveAudioChunks("test.wav", this.AudioRoot);
     }
     aud.Start();
-    int NumSlices = 100;
-    //NumSlices = 8;
+    int NumSlices = 300;
     for (int cnt = 0; cnt < NumSlices; cnt++) {
       System.out.print("cnt:" + cnt + " ");
       double FractAlong = (((double) (cnt + 1)) / (double) NumSlices);
       RootPlayer.Render_To(FinalTime * FractAlong, wave_scratch);
       //wave_scratch.Normalize();
       wave_scratch.Amplify(0.2);
-      wave_render.Append(wave_scratch);
+      //wave_render.Append(wave_scratch);
       aud.Feed(wave_scratch);
       System.out.println(" done.");
     }
@@ -307,7 +308,7 @@ public class Project {
 //    wave_render.Init(nsamps);
     Wave wave_render = new Wave();
     wave_render.Init(0, FinalTime, SampleRate);
-    wave_render.Fill(777.0);
+    wave_render.Fill(Wave.Debug_Fill);
     Wave wave_scratch = new Wave();
 
     long StartTime, EndTime;

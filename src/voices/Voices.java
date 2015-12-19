@@ -5,11 +5,8 @@
  */
 package voices;
 
-import java.awt.geom.Point2D;
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
-import voices.Voice.Voice_Singer;
-import voices.ISonglet.Singer;
 //import voices.VoiceBase.Point;
 
 /**
