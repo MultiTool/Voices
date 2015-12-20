@@ -303,9 +303,18 @@ each songlet has 1. an update timestamp, and 2. a refcount.
 
 I like the idea of giving every offsetbox two personalities, one for graphics and one for sound. 
 
-
-
-
+to do:
+Create LoopBox Draw_Me(). 
+Rename ChorusBox to GroupBox everywhere.
+make ISonglet inherit IDrawable and remove redundant code.
+import TunePad colors and alpha tricks.
+test live audio on faster machines.
+start grabbing mouse clicks and creating hit stacks.
+(Someday) create a sample_voice type. 
+Make IDeleteable interface and apply to *everything* to get ready for C++ port. 
+All IDeleteables have a global creation counter and a global deletion counter. 
+Add refcounting for eventual serialization, and C++ port. 
+Do we need update_guts timestamps?
 
 
 
