@@ -315,6 +315,7 @@ Make IDeleteable interface and apply to *everything* to get ready for C++ port.
 All IDeleteables have a global creation counter and a global deletion counter. 
 Add refcounting for eventual serialization, and C++ port. 
 Do we need update_guts timestamps?
+Big code cleanup. Consolidate all weird testing code into one place. 
 
 
 
