@@ -170,6 +170,9 @@ public class Voice implements ISonglet, IDrawable {
     SubTimeCalc = ((Math.pow(2, (TimeAlong * OctaveRate)) - 1.0) / Denom);
     return SubTimeCalc;
   }
+  private static Color ToAlpha(Color col, int Alpha) {
+    return new Color(col.getRed(), col.getGreen(), col.getBlue(), Alpha);// rgba 
+  }
   /* ********************************************************************************* */
   @Override public void Draw_Me(Drawing_Context ParentDC) {// IDrawable
     CajaDelimitadora ChildrenBounds = ParentDC.ClipBounds;// parent is already transformed by my offsetbox
@@ -217,13 +220,15 @@ public class Voice implements ISonglet, IDrawable {
       CntDown--;
       CntSpine++;
     }
-    ParentDC.gr.setColor(Color.yellow);
+    //int colorToSet = Color.argb(alpha, red, green, blue); 
+    ParentDC.gr.setColor(ToAlpha(Color.yellow, 200));// Color.yellow
+
     ParentDC.gr.fillPolygon(OutlineX, OutlineY, NumDrawPoints);
     ParentDC.gr.setColor(Color.cyan);
     ParentDC.gr.drawPolygon(OutlineX, OutlineY, NumDrawPoints);
     // pgon.closePath(); ParentDC.gr.fill(pgon);
 
-    ParentDC.gr.setColor(Color.black);
+    ParentDC.gr.setColor(ToAlpha(Color.black, 200));
     ParentDC.gr.drawPolyline(SpineX, SpineY, Range);
 
     for (int pcnt = 0; pcnt < len; pcnt++) {
@@ -256,8 +261,7 @@ public class Voice implements ISonglet, IDrawable {
 
     // graphics support, will move to separate object
     double Radius = 5, Diameter = Radius * 2.0;
-    double PixelsPerLoudness = 20;// to do: loudness will have to be mapped to screen. not a pixel value right?
-    double OctavesPerLoudness = 1.0;
+    double OctavesPerLoudness = 0.25;// to do: loudness will have to be mapped to screen. not a pixel value right?
     CajaDelimitadora MyBounds = new CajaDelimitadora();
     /* ********************************************************************************* */
     public void CopyFrom(Point source) {
@@ -276,7 +280,8 @@ public class Voice implements ISonglet, IDrawable {
       // Control points have the same space as their parent, so no need to create a local map.
 
       Point2D.Double pnt = ParentDC.To_Screen(this.RealTime, this.Octave);
-      ParentDC.gr.setColor(Color.green);
+      // ParentDC.gr.setColor(Color.green);
+      ParentDC.gr.setColor(ToAlpha(Color.green, 100));
       ParentDC.gr.fillOval((int) (pnt.x) - (int) Radius, (int) (pnt.y) - (int) Radius, (int) Diameter, (int) Diameter);
       /* 
        IDrawable.Drawing_Context mydc = new IDrawable.Drawing_Context(dc, this);

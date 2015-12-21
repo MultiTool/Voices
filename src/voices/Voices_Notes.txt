@@ -304,18 +304,25 @@ each songlet has 1. an update timestamp, and 2. a refcount.
 I like the idea of giving every offsetbox two personalities, one for graphics and one for sound. 
 
 to do:
-Create LoopBox Draw_Me(). 
-Rename ChorusBox to GroupBox everywhere.
-make ISonglet inherit IDrawable and remove redundant code.
-import TunePad colors and alpha tricks.
-test live audio on faster machines.
+Create LoopBox Draw_Me(). - done
+Rename ChorusBox to GroupBox everywhere. - done
+GroupBox Draw_Me needs to draw its own vine spine. Draw it behind its children. - done, touch it up more. 
+test live audio on faster machines. - done, too much clicking, seek fix. 
+Import TunePad colors and alpha tricks. - working, more to do.
+More zoomed-in octave scale.
+Put playing and drawing in separate threads. 
+Make ISonglet inherit IDrawable and remove redundant code.
+Big code cleanup. Consolidate all weird testing code into one place. 
+Add 'excitement' double to drawing context, and animate drawings as we play. 
 start grabbing mouse clicks and creating hit stacks.
-(Someday) create a sample_voice type. 
+Add zoom, Xzoom, and Yzoom. 
+Customize colors for each songlet! 
+Widgets! SFGUI? 
+(Someday) create a sample_voice type. http://soundbible.com/37-Chain-Saw.html 
 Make IDeleteable interface and apply to *everything* to get ready for C++ port. 
 All IDeleteables have a global creation counter and a global deletion counter. 
 Add refcounting for eventual serialization, and C++ port. 
 Do we need update_guts timestamps?
-Big code cleanup. Consolidate all weird testing code into one place. 
 
 
 

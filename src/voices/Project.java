@@ -128,9 +128,9 @@ public class Project {
     return lbx;
   }
   /* ********************************************************************************* */
-  public ChorusBox Create_Chord(double TimeOffset, double OctaveOffset, double LoudnessOffset, int NumNotes) {// a test
+  public GroupBox Create_Chord(double TimeOffset, double OctaveOffset, double LoudnessOffset, int NumNotes) {// a test
     double OctaveChange, LoudnessChange;// for stress testing
-    ChorusBox cbx = new ChorusBox();
+    GroupBox cbx = new GroupBox();
     cbx.Set_Project(this);
     for (int cnt = 0; cnt < NumNotes; cnt++) {
       Voice note = Create_Simple_Note(0, 1, 0, 1);
@@ -141,9 +141,9 @@ public class Project {
     return cbx;
   }
   /* ********************************************************************************* */
-  public ChorusBox Create_Random_Chorus(double TimeOffset, double OctaveOffset, double LoudnessOffset) {// a test
+  public GroupBox Create_Random_Chorus(double TimeOffset, double OctaveOffset, double LoudnessOffset) {// a test
     double TDiff, OctaveRand, LoudnessRand;// for fuzz testing
-    ChorusBox cbx = new ChorusBox();
+    GroupBox cbx = new GroupBox();
     cbx.Set_Project(this);
     for (int cnt = 0; cnt < 4; cnt++) {
       Voice note = Create_Simple_Note(0, 1, 0, 1);
@@ -155,13 +155,13 @@ public class Project {
     return cbx;
   }
   /* ********************************************************************************* */
-  public ChorusBox Create_Nested_Chorus(double TimeOffset, double OctaveOffset, double LoudnessOffset, int BoxDepth) {
+  public GroupBox Create_Nested_Chorus(double TimeOffset, double OctaveOffset, double LoudnessOffset, int BoxDepth) {
     Voice note = Create_Simple_Note(0, 1, 0, 1);// for stress testing
     ISonglet songlet0 = note;
     ISonglet songlet1 = note;
-    ChorusBox cbx = null;
+    GroupBox cbx = null;
     for (int cnt = 0; cnt < BoxDepth; cnt++) {
-      cbx = new ChorusBox();
+      cbx = new GroupBox();
       cbx.MyName = "Chord" + cnt;
       cbx.Set_Project(this);
       cbx.Add_SubSong(songlet0, 1, 1, LoudnessOffset * 1.0);
@@ -172,8 +172,8 @@ public class Project {
     return cbx;
   }
   /* ********************************************************************************* */
-  public ChorusBox Compose_Warble_Chorus() {
-    ChorusBox cbx = new ChorusBox();
+  public GroupBox Compose_Warble_Chorus() {
+    GroupBox cbx = new GroupBox();
     cbx.Set_Project(this);
     this.AudioRoot = cbx.Spawn_OffsetBox();
 
@@ -193,8 +193,8 @@ public class Project {
   public void Compose_Test() {
     ISonglet song = null;
     OffsetBox obox = null;
-    ChorusBox CMinor, CMajor, DMajor, DMinor;
-    switch (1) {
+    GroupBox CMinor, CMajor, DMajor, DMinor;
+    switch (5) {
       case 0:
         song = Create_Random_Chorus(0, 0, 1.0);
         obox = song.Spawn_OffsetBox();
@@ -222,7 +222,7 @@ public class Project {
       case 5:
         double Delay = 1.5;
         //Delay = 3;
-        ChorusBox cbx = new ChorusBox();
+        GroupBox cbx = new GroupBox();
         NoteMaker nm = new NoteMaker();
         LoopBox lbx = new LoopBox();
         CMajor = nm.MakeMajor(0);// C major
@@ -236,7 +236,7 @@ public class Project {
 
         lbx.Add_Content(cbx);
         lbx.Set_Delay(Delay * 4);
-        lbx.Set_Duration(100);
+        lbx.Set_Duration(30);
 
         song = lbx;
         song.Set_Project(this);

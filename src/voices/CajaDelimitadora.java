@@ -65,6 +65,14 @@ public class CajaDelimitadora {// DIY BoundingBox
     }
   }
   /* ********************************************************************************* */
+  public double GetWidth() {
+    return Math.abs(this.Max.x - this.Min.x);
+  }
+  /* ********************************************************************************* */
+  public double GetHeight() {
+    return Math.abs(this.Max.y - this.Min.y);
+  }
+  /* ********************************************************************************* */
   public void Reset() {// reset for min, max comparisons
     this.Min.setLocation(Double.POSITIVE_INFINITY, Double.POSITIVE_INFINITY);
     this.Max.setLocation(Double.NEGATIVE_INFINITY, Double.NEGATIVE_INFINITY);

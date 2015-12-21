@@ -98,39 +98,18 @@ public class LoopBox implements ISonglet, IDrawable {
   }
   /* ********************************************************************************* */
   @Override public void Draw_Me(Drawing_Context ParentDC) {// IDrawable
-    //Drawing_Context ChildDC =  ParentDC
-    // To do: Must clip or expand ParentDC's width to my own duration
-    // To do: need fancy looped drawing code in here, this won't do
-    this.ContentOBox.Draw_Me(ParentDC);
-    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-/*
-
-we can cycle through our children from the start until their bounds start to intersect the DC drawing bounds.
-but, we can start at the left of our current bounds, 
-first start with DC left bound minus child bounds width (if negative then 0), and 
-then round to the right child start phase, and 
-then start drawing, cycling rightward until we hit another child whose left bound is greater than our DC right bound.
-can also skip the whole thing if first child upper or lower bound is not in DC bounds. 
-
-each temporary offsetbox will need to have its bounds set though yes?  can be done without waste?  
-ah, in this case we can just re-use the same offset box.  no simultaneous drawing needed.  
-
-rounding to child start phase
-start with xloc, 
-divide by delay,
-take ceil of result,
-multiply by delay, start child there. 
-
-    double EndTime = ParentDC.
+    double LeftBound = ParentDC.ClipBounds.Min.x - this.ContentOBox.GetBoundingBox().GetWidth();
+    LeftBound = Math.max(0, LeftBound);
+    int IterationStart = (int) Math.ceil(LeftBound / this.Delay);
+    double RightBound = ParentDC.ClipBounds.Max.x;
+    OffsetBox obox = this.Content.Spawn_OffsetBox();// problematic. may have to create a dedicated render time-only offset box
+    int loopcnt = IterationStart;
     double Time;
-    OffsetBox obox;
-    while ((Time = this.LoopCount * this.MySonglet.Delay) <= EndTime) {// first find new songlets in this time range and add them to pool
-      obox = MySonglet.Content.Spawn_OffsetBox();// problematic. may have to create a dedicated render time-only offset box
+    while ((Time = (loopcnt * this.Delay)) <= RightBound) {// keep drawing until child song's start is beyond our max X. 
       obox.TimeOrg = Time;
       obox.Draw_Me(ParentDC);
-      this.LoopCount++;
+      loopcnt++;
     }
-*/
   }
   @Override public CajaDelimitadora GetBoundingBox() {// IDrawable
     return this.MyBounds;
@@ -232,7 +211,7 @@ multiply by delay, start child there.
       }
       double Time;
       OffsetBox obox;
-      while ((Time = this.LoopCount * this.MySonglet.Delay) <= EndTime) {// first find new songlets in this time range and add them to pool
+      while ((Time = (this.LoopCount * this.MySonglet.Delay)) <= EndTime) {// first find new songlets in this time range and add them to pool
         obox = MySonglet.Content.Spawn_OffsetBox();// problematic. may have to create a dedicated render time-only offset box
         obox.TimeOrg = Time;
         Singer singer = obox.Spawn_Singer();

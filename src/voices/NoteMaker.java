@@ -37,8 +37,8 @@ public class NoteMaker {
     return voice;
   }
   /* ********************************************************************************* */
-  public ChorusBox Create_Triad(ISonglet s0, ISonglet s1, ISonglet s2) {
-    ChorusBox cbx = new ChorusBox();
+  public GroupBox Create_Triad(ISonglet s0, ISonglet s1, ISonglet s2) {
+    GroupBox cbx = new GroupBox();
     for (int cnt = 0; cnt < NumNotes; cnt++) {
       cbx.Add_SubSong(s0, 0, 0, 1.0);
       cbx.Add_SubSong(s1, 0, 0, 1.0);
@@ -48,11 +48,11 @@ public class NoteMaker {
     return cbx;
   }
   /* ********************************************************************************* */
-  public ChorusBox Create_Triad(int NoteDex0, int NoteDex1, int NoteDex2) {
+  public GroupBox Create_Triad(int NoteDex0, int NoteDex1, int NoteDex2) {
     double Loudness = 1.0;// NoteDex0 is usually the key
     double Duration = 2.0;
     ISonglet note;
-    ChorusBox cbx = new ChorusBox();
+    GroupBox cbx = new GroupBox();
     note = Create_Simple_Note(0, Duration, 0, Loudness);
     cbx.Add_SubSong(note, 0, SemitoneFraction * NoteDex0, Loudness);
     if (true) {
@@ -64,29 +64,29 @@ public class NoteMaker {
     return cbx;
   }
   /* ********************************************************************************* */
-  public ChorusBox Create_Seventh(int NoteDex0, int NoteDex1, int NoteDex2, int NoteDex3) {
+  public GroupBox Create_Seventh(int NoteDex0, int NoteDex1, int NoteDex2, int NoteDex3) {
     double Loudness = 1.0;// NoteDex0 is usually the key
     double Duration = 2.0;
     ISonglet note;
-    ChorusBox cbx = Create_Triad(NoteDex0, NoteDex1, NoteDex2);
+    GroupBox cbx = Create_Triad(NoteDex0, NoteDex1, NoteDex2);
     note = Create_Simple_Note(0, Duration, 0, Loudness);
     cbx.Add_SubSong(note, 0, SemitoneFraction * NoteDex3, Loudness);
     return cbx;
   }
   /* ********************************************************************************* */
-  public ChorusBox MakeMajor(int Key) {
+  public GroupBox MakeMajor(int Key) {
     return Create_Triad(Key, (Key + 4), (Key + 7));
   }
   /* ********************************************************************************* */
-  public ChorusBox MakeMinor(int Key) {
+  public GroupBox MakeMinor(int Key) {
     return Create_Triad(Key, (Key + 3), (Key + 7));
   }
   /* ********************************************************************************* */
-  public ChorusBox MakeAugmented(int Key) {
+  public GroupBox MakeAugmented(int Key) {
     return Create_Triad(Key, (Key + 4), (Key + 8));
   }
   /* ********************************************************************************* */
-  public ChorusBox MakeDiminished(int Key) {
+  public GroupBox MakeDiminished(int Key) {
     return Create_Triad(Key, (Key + 3), (Key + 6));
   }
   /* ********************************************************************************* */

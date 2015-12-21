@@ -5,6 +5,10 @@
  */
 package voices;
 
+import java.awt.BasicStroke;
+import java.awt.Color;
+import java.awt.Stroke;
+import java.awt.geom.Point2D;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -13,7 +17,7 @@ import java.util.Comparator;
  *
  * @author MultiTool
  */
-public class ChorusBox implements ISonglet, IDrawable {
+public class GroupBox implements ISonglet, IDrawable {
   public ArrayList<OffsetBox> SubSongs = new ArrayList<>();
   public double Duration = 0.0;
   private Project MyProject;
@@ -21,8 +25,8 @@ public class ChorusBox implements ISonglet, IDrawable {
   private double MaxAmplitude = 0.0;
   public CajaDelimitadora MyBounds;
   /* ********************************************************************************* */
-  public ChorusBox(){
-      MyBounds = new CajaDelimitadora();
+  public GroupBox() {
+    MyBounds = new CajaDelimitadora();
   }
   /* ********************************************************************************* */
   public OffsetBox Add_SubSong(ISonglet songlet, double TimeOffset, double OctaveOffset, double LoudnessFactor) {
@@ -104,8 +108,8 @@ public class ChorusBox implements ISonglet, IDrawable {
     return this.Spawn_My_OffsetBox();
   }
   /* ********************************************************************************* */
-  public Chorus_OffsetBox Spawn_My_OffsetBox() {// for compose time
-    Chorus_OffsetBox lbox = new Chorus_OffsetBox();// Deliver an OffsetBox specific to this type of songlet.
+  public Group_OffsetBox Spawn_My_OffsetBox() {// for compose time
+    Group_OffsetBox lbox = new Group_OffsetBox();// Deliver an OffsetBox specific to this type of songlet.
     lbox.Clear();
     lbox.Content = this;
     return lbox;
@@ -115,11 +119,11 @@ public class ChorusBox implements ISonglet, IDrawable {
     return this.Spawn_My_Singer();
   }
   /* ********************************************************************************* */
-  public ChorusBox_Singer Spawn_My_Singer() {
-    ChorusBox_Singer ChorusPlayer = new ChorusBox_Singer();
-    ChorusPlayer.MySonglet = this;
-    ChorusPlayer.MyProject = this.MyProject;// inherit project
-    return ChorusPlayer;
+  public GroupBox_Singer Spawn_My_Singer() {
+    GroupBox_Singer GroupPlayer = new GroupBox_Singer();
+    GroupPlayer.MySonglet = this;
+    GroupPlayer.MyProject = this.MyProject;// inherit project
+    return GroupPlayer;
   }
   /* ********************************************************************************* */
   @Override public int Get_Sample_Count(int SampleRate) {
@@ -137,6 +141,23 @@ public class ChorusBox implements ISonglet, IDrawable {
   @Override public void Draw_Me(Drawing_Context ParentDC) {// IDrawable
     OffsetBox ChildOffsetBox;
     int len = this.SubSongs.size();
+
+    // Draw Group spine
+    Point2D.Double pntprev, pnt;
+    Stroke oldStroke = ParentDC.gr.getStroke();
+    ParentDC.gr.setColor(Color.BLACK);
+    ParentDC.gr.setStroke(new BasicStroke(5));
+    ChildOffsetBox = this.SubSongs.get(0);
+    pntprev = ParentDC.To_Screen(ChildOffsetBox.TimeOrg, ChildOffsetBox.OctaveLoc);
+    for (int pcnt = 1; pcnt < len; pcnt++) {
+      ChildOffsetBox = this.SubSongs.get(pcnt);
+      pnt = ParentDC.To_Screen(ChildOffsetBox.TimeOrg, ChildOffsetBox.OctaveLoc);
+      ParentDC.gr.drawLine((int) pntprev.x, (int) pntprev.y, (int) pnt.x, (int) pnt.y);
+      pntprev = pnt;
+    }
+    
+    // Draw children
+    ParentDC.gr.setStroke(oldStroke);
     // to do: break from loop if subsong starts after MaxX. 
     for (int pcnt = 0; pcnt < len; pcnt++) {
       ChildOffsetBox = this.SubSongs.get(pcnt);
@@ -159,12 +180,12 @@ public class ChorusBox implements ISonglet, IDrawable {
     }
   }
   /* ********************************************************************************* */
-  public static class ChorusBox_Singer extends Singer {
-    protected ChorusBox MySonglet;
+  public static class GroupBox_Singer extends Singer {
+    protected GroupBox MySonglet;
     public ArrayList<Singer> NowPlaying = new ArrayList<>();// pool of currently playing voices
     public int Current_Dex = 0;
     double Prev_Time = 0;
-    private Chorus_OffsetBox MyOffsetBox;
+    private Group_OffsetBox MyOffsetBox;
     /* ********************************************************************************* */
     @Override public void Start() {
       IsFinished = false;
@@ -174,7 +195,7 @@ public class ChorusBox implements ISonglet, IDrawable {
     }
     /* ********************************************************************************* */
     @Override public void Skip_To(double EndTime) {
-      EndTime = this.MyOffsetBox.MapTime(EndTime);// EndTime is now time internal to ChorusBox's own coordinate system
+      EndTime = this.MyOffsetBox.MapTime(EndTime);// EndTime is now time internal to GroupBox's own coordinate system
       if (this.MySonglet.SubSongs.size() <= 0) {
         this.IsFinished = true;
         this.Prev_Time = EndTime;
@@ -201,7 +222,7 @@ public class ChorusBox implements ISonglet, IDrawable {
     }
     /* ********************************************************************************* */
     @Override public void Render_To(double EndTime, Wave wave) {
-      EndTime = this.MyOffsetBox.MapTime(EndTime);// EndTime is now time internal to ChorusBox's own coordinate system
+      EndTime = this.MyOffsetBox.MapTime(EndTime);// EndTime is now time internal to GroupBox's own coordinate system
       double UnMapped_Prev_Time = this.MyOffsetBox.UnMapTime(this.Prev_Time);// get start time in parent coordinates
       if (this.MySonglet.SubSongs.size() <= 0) {
         this.IsFinished = true;
@@ -267,10 +288,10 @@ public class ChorusBox implements ISonglet, IDrawable {
     }
   }
   /* ********************************************************************************* */
-  public static class Chorus_OffsetBox extends OffsetBox {// location box to transpose in pitch, move in time, etc. 
-    public ChorusBox Content = null;
+  public static class Group_OffsetBox extends OffsetBox {// location box to transpose in pitch, move in time, etc. 
+    public GroupBox Content = null;
     /* ********************************************************************************* */
-    public Chorus_OffsetBox() {
+    public Group_OffsetBox() {
       MyBounds = new CajaDelimitadora();
     }
     /* ********************************************************************************* */
@@ -282,8 +303,8 @@ public class ChorusBox implements ISonglet, IDrawable {
       return this.Spawn_My_Singer();
     }
     /* ********************************************************************************* */
-    public ChorusBox_Singer Spawn_My_Singer() {// for render time
-      ChorusBox_Singer ph = this.Content.Spawn_My_Singer();
+    public GroupBox_Singer Spawn_My_Singer() {// for render time
+      GroupBox_Singer ph = this.Content.Spawn_My_Singer();
       ph.MyOffsetBox = this;// to do: also transfer all of this box's offsets to player head. 
       return ph;
     }
