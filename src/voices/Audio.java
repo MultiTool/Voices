@@ -71,12 +71,12 @@ public class Audio {
       return;
     }
     seconds = ((double) wave.NumSamples) / (double) SampleRate;
-    byte[] buf = new byte[(int) (SampleRate * seconds * BytesPerSample)];
+    byte[] buf = new byte[(int) (Math.ceil(seconds * SampleRate) * BytesPerSample)];
     double Damper = 1.0;// 1.0;// 0.5;//0.75
     double amplitude;
     int iamp, StartBit = BitsPerSample - Byte.SIZE;
     int bufcnt = 0;
-    for (int scnt = 0; scnt < wave.NumSamples-2; scnt++) {
+    for (int scnt = 0; scnt < wave.NumSamples; scnt++) {
       amplitude = (wave.Get(scnt) * Damper * HalfSample);// wave is assumed to be within the range of -1.0 to +1.0 before we start playing it. 
       iamp = (int) amplitude;
       if (true) {

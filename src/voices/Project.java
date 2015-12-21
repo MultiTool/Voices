@@ -122,7 +122,7 @@ public class Project {
     lbx.Add_Content(note);
     //lbx.Set_Delay(0.75);
     //lbx.Set_Duration(8.0);
-    lbx.Set_Delay(0.001);
+    lbx.Set_Delay(0.1);
     lbx.Set_Duration(0.9);
     lbx.Sort_Me();
     return lbx;
@@ -194,7 +194,7 @@ public class Project {
     ISonglet song = null;
     OffsetBox obox = null;
     GroupBox CMinor, CMajor, DMajor, DMinor;
-    switch (5) {
+    switch (6) {
       case 0:
         song = Create_Random_Chorus(0, 0, 1.0);
         obox = song.Spawn_OffsetBox();
