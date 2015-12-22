@@ -38,30 +38,53 @@ public class NoteMaker {
   }
   /* ********************************************************************************* */
   public GroupBox Create_Triad(ISonglet s0, ISonglet s1, ISonglet s2) {
-    GroupBox cbx = new GroupBox();
+    GroupBox grpbx = new GroupBox();
     for (int cnt = 0; cnt < NumNotes; cnt++) {
-      cbx.Add_SubSong(s0, 0, 0, 1.0);
-      cbx.Add_SubSong(s1, 0, 0, 1.0);
-      cbx.Add_SubSong(s2, 0, 0, 1.0);
+      grpbx.Add_SubSong(s0, 0, 0, 1.0);
+      grpbx.Add_SubSong(s1, 0, 0, 1.0);
+      grpbx.Add_SubSong(s2, 0, 0, 1.0);
     }
-    cbx.Sort_Me();
-    return cbx;
+    grpbx.Sort_Me();
+    return grpbx;
   }
   /* ********************************************************************************* */
   public GroupBox Create_Triad(int NoteDex0, int NoteDex1, int NoteDex2) {
     double Loudness = 1.0;// NoteDex0 is usually the key
     double Duration = 2.0;
     ISonglet note;
-    GroupBox cbx = new GroupBox();
+    GroupBox grpbx = new GroupBox();
     note = Create_Simple_Note(0, Duration, 0, Loudness);
-    cbx.Add_SubSong(note, 0, SemitoneFraction * NoteDex0, Loudness);
+    grpbx.Add_SubSong(note, 0, SemitoneFraction * NoteDex0, Loudness);
     if (true) {
       note = Create_Simple_Note(0, Duration, 0, Loudness);
-      cbx.Add_SubSong(note, 0, SemitoneFraction * NoteDex1, Loudness);
+      grpbx.Add_SubSong(note, 0, SemitoneFraction * NoteDex1, Loudness);
       note = Create_Simple_Note(0, Duration, 0, Loudness);
-      cbx.Add_SubSong(note, 0, SemitoneFraction * NoteDex2, Loudness);
+      grpbx.Add_SubSong(note, 0, SemitoneFraction * NoteDex2, Loudness);
     }
-    return cbx;
+    return grpbx;
+  }
+  /* ********************************************************************************* */
+  public OffsetBox Create_Triad_OBox(int KeyOffset0, int KeyOffset1) {// int Key,
+    double Loudness = 1.0;
+    double Duration = 2.0;
+    ISonglet note;
+    OffsetBox obox;
+    GroupBox grpbx = new GroupBox();
+
+    note = Create_Simple_Note(0, Duration, 0, Loudness);
+
+    obox = note.Spawn_OffsetBox();
+    grpbx.Add_SubSong(obox, 0, 0, Loudness);// key note, needs no offset
+
+    obox = note.Spawn_OffsetBox();
+    grpbx.Add_SubSong(obox, 0, SemitoneFraction * KeyOffset0, Loudness);
+
+    obox = note.Spawn_OffsetBox();
+    grpbx.Add_SubSong(obox, 0, SemitoneFraction * KeyOffset1, Loudness);
+
+    obox = grpbx.Spawn_OffsetBox();
+    //obox.OctaveLoc = SemitoneFraction * Key;
+    return obox;
   }
   /* ********************************************************************************* */
   public GroupBox Create_Seventh(int NoteDex0, int NoteDex1, int NoteDex2, int NoteDex3) {
@@ -78,8 +101,20 @@ public class NoteMaker {
     return Create_Triad(Key, (Key + 4), (Key + 7));
   }
   /* ********************************************************************************* */
+  public OffsetBox MakeMajor_OBox(int Key) {
+    OffsetBox obx = Create_Triad_OBox(4, 7);
+    obx.OctaveLoc = SemitoneFraction * Key;
+    return obx;
+  }
+  /* ********************************************************************************* */
   public GroupBox MakeMinor(int Key) {
     return Create_Triad(Key, (Key + 3), (Key + 7));
+  }
+  /* ********************************************************************************* */
+  public OffsetBox MakeMinor_OBox(int Key) {
+    OffsetBox obx = Create_Triad_OBox(3, 7);
+    obx.OctaveLoc = SemitoneFraction * Key;
+    return obx;
   }
   /* ********************************************************************************* */
   public GroupBox MakeAugmented(int Key) {

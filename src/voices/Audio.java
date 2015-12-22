@@ -71,7 +71,7 @@ public class Audio {
       return;
     }
     seconds = ((double) wave.NumSamples) / (double) SampleRate;
-    byte[] buf = new byte[(int) (Math.ceil(seconds * SampleRate) * BytesPerSample)];
+    byte[] buf = new byte[(wave.NumSamples * BytesPerSample)];
     double Damper = 1.0;// 1.0;// 0.5;//0.75
     double amplitude;
     int iamp, StartBit = BitsPerSample - Byte.SIZE;

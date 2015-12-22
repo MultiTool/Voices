@@ -6,6 +6,7 @@
 package voices;
 
 import java.awt.Graphics2D;
+import java.awt.geom.Rectangle2D;
 import voices.GraphicBox.Graphic_OffsetBox;
 import voices.IDrawable.Drawing_Context;
 import voices.ISonglet.MetricsPacket;
@@ -28,14 +29,20 @@ public class Project {
     this.GraphicRoot = this.GBox.Spawn_My_OffsetBox();
   }
   /* ********************************************************************************* */
-  public void Draw_Me(Graphics2D g2d) {
+  public void Draw_Me(Graphics2D g2d) {    
+    // to do: move this to MainGui, and base clipping, zoom etc. on canvas size. 
     Drawing_Context dc = new Drawing_Context();
     dc.gr = g2d;
-    dc.ClipBounds = new CajaDelimitadora();
-    dc.ClipBounds.Assign(0, 0, 10000, 10000);// arbitrarily large
+    if (false) {// clip test - seems to work, yay
+      Rectangle2D rect = new Rectangle2D.Float();
+      rect.setRect(0, 0, 300, 300);
+      g2d.setClip(rect);
+      dc.ClipBounds.Assign(0, 0, 300, 300);
+    } else {
+      dc.ClipBounds.Assign(0, 0, 10000, 10000);// arbitrarily large
+    }
     dc.Offset = new OffsetBox();
     dc.GlobalOffset = new OffsetBox();
-    //dc.GlobalOffset.ScaleX = 50; dc.GlobalOffset.ScaleY = 50;
     GraphicRoot.Draw_Me(dc);
   }
   /* ********************************************************************************* */
@@ -194,60 +201,88 @@ public class Project {
     ISonglet song = null;
     OffsetBox obox = null;
     GroupBox CMinor, CMajor, DMajor, DMinor;
+    OffsetBox CMinorObx, CMajorObx, DMajorObx, DMinorObx;
+    double Delay;
+    GroupBox cbx;
+    NoteMaker nm;
+    LoopBox lbx;
     switch (6) {
-      case 0:
-        song = Create_Random_Chorus(0, 0, 1.0);
-        obox = song.Spawn_OffsetBox();
-        obox.OctaveLoc_s(4);
-        break;
-      case 1:
-        song = Create_Nested_Chorus(0, 0, 1.0, 6);
-        obox = song.Spawn_OffsetBox();
-        break;
-      case 2:
-        song = Create_Chord(0, 2, 1.0, 3);
-        obox = song.Spawn_OffsetBox();
-        break;
-      case 3:
-        //song = Create_Simple_Note(0, 2.3, 1);
-        song = Create_Simple_Note(0, 1, 5, 1);
-        //song = NoteMaker.Create_Simple_Note(0, 1, 5, 1);
-        song.Set_Project(this);
-        obox = song.Spawn_OffsetBox();
-        break;
-      case 4:
-        song = Compose_Loop();
-        obox = song.Spawn_OffsetBox();
-        break;
-      case 5:
-        double Delay = 1.5;
-        //Delay = 3;
-        GroupBox cbx = new GroupBox();
-        NoteMaker nm = new NoteMaker();
-        LoopBox lbx = new LoopBox();
-        CMajor = nm.MakeMajor(0);// C major
-        cbx.Add_SubSong(CMajor, 0, 0, 1.0);
-        CMinor = nm.MakeMinor(0);// C minor
-        cbx.Add_SubSong(CMinor, Delay * 1, 0, 1.0);
-        DMajor = nm.MakeMajor(2);// D major
-        cbx.Add_SubSong(DMajor, Delay * 2, 0, 1.0);
-        DMinor = nm.MakeMinor(2);// D minor
-        cbx.Add_SubSong(DMinor, Delay * 3, 0, 1.0);
+    case 0:
+      song = Create_Random_Chorus(0, 0, 1.0);
+      obox = song.Spawn_OffsetBox();
+      obox.OctaveLoc_s(4);
+      break;
+    case 1:
+      song = Create_Nested_Chorus(0, 0, 1.0, 6);
+      obox = song.Spawn_OffsetBox();
+      break;
+    case 2:
+      song = Create_Chord(0, 2, 1.0, 3);
+      obox = song.Spawn_OffsetBox();
+      break;
+    case 3:
+      //song = Create_Simple_Note(0, 2.3, 1);
+      song = Create_Simple_Note(0, 1, 5, 1);
+      //song = NoteMaker.Create_Simple_Note(0, 1, 5, 1);
+      song.Set_Project(this);
+      obox = song.Spawn_OffsetBox();
+      break;
+    case 4:
+      song = Compose_Loop();
+      obox = song.Spawn_OffsetBox();
+      break;
+    case 5:
+      Delay = 1.5;
+      //Delay = 3;
+      cbx = new GroupBox();
+      nm = new NoteMaker();
+      lbx = new LoopBox();
+      CMajor = nm.MakeMajor(0);// C major
+      cbx.Add_SubSong(CMajor, 0, 0, 1.0);
+      CMinor = nm.MakeMinor(0);// C minor
+      cbx.Add_SubSong(CMinor, Delay * 1, 0, 1.0);
+      DMajor = nm.MakeMajor(2);// D major
+      cbx.Add_SubSong(DMajor, Delay * 2, 0, 1.0);
+      DMinor = nm.MakeMinor(2);// D minor
+      cbx.Add_SubSong(DMinor, Delay * 3, 0, 1.0);
 
-        lbx.Add_Content(cbx);
-        lbx.Set_Delay(Delay * 4);
-        lbx.Set_Duration(30);
+      lbx.Add_Content(cbx);
+      lbx.Set_Delay(Delay * 4);
+      lbx.Set_Duration(30);
 
-        song = lbx;
-        song.Set_Project(this);
-        obox = song.Spawn_OffsetBox();
-        obox.OctaveLoc_s(4);
-        break;
-      case 6:
-        song = Compose_Warble_Chorus();
-        song.Set_Project(this);
-        obox = song.Spawn_OffsetBox();
-        obox.OctaveLoc_s(4);
+      song = lbx;
+      song.Set_Project(this);
+      obox = song.Spawn_OffsetBox();
+      obox.OctaveLoc_s(4);
+      break;
+    case 6:
+      Delay = 1.5;
+      cbx = new GroupBox();
+      nm = new NoteMaker();
+      lbx = new LoopBox();
+      CMajorObx = nm.MakeMajor_OBox(0);// C major
+      cbx.Add_SubSong(CMajorObx, Delay * 0, CMajorObx.OctaveLoc, 1.0);
+      CMinorObx = nm.MakeMinor_OBox(0);// C minor
+      cbx.Add_SubSong(CMinorObx, Delay * 1, CMinorObx.OctaveLoc, 1.0);// yuck, redundant
+      DMajorObx = nm.MakeMajor_OBox(2);// D major
+      cbx.Add_SubSong(DMajorObx, Delay * 2, DMajorObx.OctaveLoc, 1.0);
+      DMinorObx = nm.MakeMinor_OBox(2);// D minor
+      cbx.Add_SubSong(DMinorObx, Delay * 3, DMinorObx.OctaveLoc, 1.0);
+
+      lbx.Add_Content(cbx);
+      lbx.Set_Delay(Delay * 4);
+      lbx.Set_Duration(30);
+
+      song = lbx;
+      song.Set_Project(this);
+      obox = song.Spawn_OffsetBox();
+      obox.OctaveLoc_s(4);
+      break;
+    case 7:
+      song = Compose_Warble_Chorus();
+      song.Set_Project(this);
+      obox = song.Spawn_OffsetBox();
+      obox.OctaveLoc_s(4);
     }
 
 //    this.AudioRoot = obox;

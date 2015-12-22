@@ -221,11 +221,11 @@ public class Voice implements ISonglet, IDrawable {
       CntSpine++;
     }
     //int colorToSet = Color.argb(alpha, red, green, blue); 
-    ParentDC.gr.setColor(ToAlpha(Color.yellow, 200));// Color.yellow
-
-    ParentDC.gr.fillPolygon(OutlineX, OutlineY, NumDrawPoints);
-    ParentDC.gr.setColor(Color.cyan);
-    ParentDC.gr.drawPolygon(OutlineX, OutlineY, NumDrawPoints);
+    ParentDC.gr.setColor(ToAlpha(Color.cyan, 100));// Color.yellow
+    ParentDC.gr.fillPolygon(OutlineX, OutlineY, NumDrawPoints);// voice fill
+    
+    ParentDC.gr.setColor(ToAlpha(Color.darkGray, 100));
+    ParentDC.gr.drawPolygon(OutlineX, OutlineY, NumDrawPoints);// voice outline
     // pgon.closePath(); ParentDC.gr.fill(pgon);
 
     ParentDC.gr.setColor(ToAlpha(Color.black, 200));
@@ -276,60 +276,13 @@ public class Voice implements ISonglet, IDrawable {
     }
     /* ********************************************************************************* */
     @Override public void Draw_Me(Drawing_Context ParentDC) {// IDrawable
-      //IDrawable.Drawing_Context mydc = new IDrawable.Drawing_Context(ParentDC, this);
       // Control points have the same space as their parent, so no need to create a local map.
-
       Point2D.Double pnt = ParentDC.To_Screen(this.RealTime, this.Octave);
-      // ParentDC.gr.setColor(Color.green);
-      ParentDC.gr.setColor(ToAlpha(Color.green, 100));
+      // ParentDC.gr.setColor(ToAlpha(Color.green, 200));
+      ParentDC.gr.setColor(ToAlpha(Color.yellow, 200));// control point just looks like a dot
       ParentDC.gr.fillOval((int) (pnt.x) - (int) Radius, (int) (pnt.y) - (int) Radius, (int) Diameter, (int) Diameter);
-      /* 
-       IDrawable.Drawing_Context mydc = new IDrawable.Drawing_Context(dc, this);
-       
-       // Point2D.Double pnt = mydc.To_Screen(this.Start_Time_G(),this.Get_Pitch());
-       Point2D.Double pnt = mydc.To_Screen(mydc.Absolute_X, mydc.Absolute_Y);
-       mydc.gr.fillOval((int) (pnt.x) - 5, (int) (pnt.y) - 5, 10, 10);
-       //mydc.gr.fillOval((int) (mydc.Absolute_X * xscale) - 5, (int) (mydc.Absolute_Y * yscale) - 5, 10, 10);
-       My_Note.Draw_Me(mydc);
-       */
-      /*
-       Drawing_Context mydc = new Drawing_Context(dc, this);
-       Point2D.Double pnt = mydc.To_Screen(mydc.Absolute_X, mydc.Absolute_Y);
-       mydc.gr.fillOval((int) (pnt.x) - (int) Radius, (int) (pnt.y) - (int) Radius, (int) Diameter, (int) Diameter);
-       //mydc.gr.fillOval((int) (mydc.Absolute_X * xscale) - 5, (int) (mydc.Absolute_Y * yscale) - 5, 10, 10);
-       // fill triangle here.
-       double amphgt = 0.2;
-       Polygon pgon = new Polygon();
-       int[] xpoints = new int[3];
-       int[] ypoints = new int[3];
-
-       Point2D.Double endpnt = mydc.To_Screen(mydc.Absolute_X + this.Duration_G(), mydc.Absolute_Y);
-       Point2D.Double pnt0 = mydc.To_Screen(mydc.Absolute_X, mydc.Absolute_Y - amphgt);
-       Point2D.Double pnt1 = mydc.To_Screen(mydc.Absolute_X, mydc.Absolute_Y + amphgt);
-
-       xpoints[0] = (int) pnt0.x;
-       ypoints[0] = (int) pnt0.y;
-
-       xpoints[1] = (int) pnt1.x;
-       ypoints[1] = (int) pnt1.y;
-
-       xpoints[2] = (int) endpnt.x;
-       ypoints[2] = (int) endpnt.y;
-
-       mydc.gr.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.2f));
-
-       Color color = Color.cyan;
-       //color = new Color(color.getRed(), color.getGreen(), color.getBlue(), 0.1f); //Red
-
-       //Color color = new Color(1, 0, 0, 0.5); //Red
-       //color.getAlpha();  mydc.gr.setPaint(color);
-
-       mydc.gr.setColor(color);
-       //mydc.gr.drawPolygon(xpoints, ypoints, 3);
-       mydc.gr.fillPolygon(xpoints, ypoints, 3);
-
-       mydc.gr.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1.0f));
-       */
+      ParentDC.gr.setColor(ToAlpha(Color.darkGray, 200));
+      ParentDC.gr.drawOval((int) (pnt.x) - (int) Radius, (int) (pnt.y) - (int) Radius, (int) Diameter, (int) Diameter);
     }
     /* ********************************************************************************* */
     @Override public CajaDelimitadora GetBoundingBox() {

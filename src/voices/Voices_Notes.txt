@@ -303,26 +303,54 @@ each songlet has 1. an update timestamp, and 2. a refcount.
 
 I like the idea of giving every offsetbox two personalities, one for graphics and one for sound. 
 
+http://stackoverflow.com/questions/11163925/drawing-your-own-buffered-image-on-frame
+BufferedImage off_Image = new BufferedImage(100, 50, BufferedImage.TYPE_INT_ARGB);
+Graphics2D g2 = off_Image.createGraphics();
+
+Graphics g = whatever;
+BufferedImage bufferedImage;
+g.drawImage(bufferedImage, 0, 0, WIDTH, HEIGHT, null);
+
+private Rectangle2D rect = new Rectangle2D.Float();
+ellipse.setFrame(x, y, ew, eh);
+g2.setClip(ellipse);
+
+
 to do:
 Create LoopBox Draw_Me(). - done
 Rename ChorusBox to GroupBox everywhere. - done
+Put playing and drawing in separate threads. - done
+More zoomed-in octave scale. - done
 GroupBox Draw_Me needs to draw its own vine spine. Draw it behind its children. - done, touch it up more. 
-test live audio on faster machines. - done, too much clicking, seek fix. 
+Test live audio on faster machines. - done, TOO MUCH CLICKING, seek fix. 
+Fix graphic clipping to work right. - done
 Import TunePad colors and alpha tricks. - working, more to do.
-More zoomed-in octave scale.
-Put playing and drawing in separate threads. 
-Make ISonglet inherit IDrawable and remove redundant code.
-Big code cleanup. Consolidate all weird testing code into one place. 
+Update and test all Skip_To. 
+Clean: Make ISonglet inherit IDrawable and remove redundant code.
+Clean: Get rid of IOffsetBox.  
+Clean: Big code cleanup. Consolidate all weird testing code into one place. 
+LoopBox graphics - mayabe an arc, Ellipse2D.Double?  Or a very rounded rectangle behind each unit cell? Put handles on the rectangle and change Delay. 
+Add Zoom, ZoomX, and ZoomY. ctrl or shift or alt-scrollwheel? 
+Put grid in background, seconds by octaves. 
+On load, zoom to object bounds. 
+** Start grabbing mouse clicks and creating hit stacks. !!! 
+Add moving cursor during play. 
+Draw to buffer and draw buffer as a strip to main image. 
 Add 'excitement' double to drawing context, and animate drawings as we play. 
-start grabbing mouse clicks and creating hit stacks.
-Add zoom, Xzoom, and Yzoom. 
+Let user draw box on screen to trigger play within range. 
 Customize colors for each songlet! 
 Widgets! SFGUI? 
 (Someday) create a sample_voice type. http://soundbible.com/37-Chain-Saw.html 
 Make IDeleteable interface and apply to *everything* to get ready for C++ port. 
-All IDeleteables have a global creation counter and a global deletion counter. 
-Add refcounting for eventual serialization, and C++ port. 
+All IDeleteable have a global creation counter and a global deletion counter. 
+Add refcounting for eventual serialization, IDeleteable, and C++ port. 
+Add ISerializable for saving and loading! 
 Do we need update_guts timestamps?
+Separate out the drawing/graphics layer. 
+Undo/Redo?  probably need IClonable and or ICopyable, like ISerializable.  Clone invokes Copy, and copy just copies all guts. 
+Optimize voice polygon graphic clipping. 
+
+
 
 
 

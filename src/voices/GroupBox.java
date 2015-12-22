@@ -39,6 +39,19 @@ public class GroupBox implements ISonglet, IDrawable {
     return obox;
   }
   /* ********************************************************************************* */
+  public void Add_SubSong(OffsetBox obox, double TimeOffset, double OctaveOffset, double LoudnessFactor) {// Add a songlet with its offsetbox already created.
+    obox.GetContent().Set_Project(this.MyProject);// child inherits project from me
+    obox.TimeLoc_s(TimeOffset);
+    obox.OctaveLoc_s(OctaveOffset);
+    obox.LoudnessFactor_s(LoudnessFactor);
+    SubSongs.add(obox);
+  }
+  /* ********************************************************************************* */
+  public void Add_SubSong(OffsetBox obox) {// Add a songlet with its offsetbox already created and filled out.
+    obox.GetContent().Set_Project(this.MyProject);// child inherits project from me
+    SubSongs.add(obox);
+  }
+  /* ********************************************************************************* */
   @Override public double Get_Duration() {
     return this.Duration;
   }
@@ -145,8 +158,11 @@ public class GroupBox implements ISonglet, IDrawable {
     // Draw Group spine
     Point2D.Double pntprev, pnt;
     Stroke oldStroke = ParentDC.gr.getStroke();
-    ParentDC.gr.setColor(Color.BLACK);
-    ParentDC.gr.setStroke(new BasicStroke(5));
+    ParentDC.gr.setColor(Color.darkGray);
+    
+    // thinner lines for more distal sub-branches
+    BasicStroke bs = new BasicStroke((1.0f / ParentDC.RecurseDepth) * 40.0f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND);
+    ParentDC.gr.setStroke(bs);
     ChildOffsetBox = this.SubSongs.get(0);
     pntprev = ParentDC.To_Screen(ChildOffsetBox.TimeOrg, ChildOffsetBox.OctaveLoc);
     for (int pcnt = 1; pcnt < len; pcnt++) {
@@ -155,7 +171,7 @@ public class GroupBox implements ISonglet, IDrawable {
       ParentDC.gr.drawLine((int) pntprev.x, (int) pntprev.y, (int) pnt.x, (int) pnt.y);
       pntprev = pnt;
     }
-    
+
     // Draw children
     ParentDC.gr.setStroke(oldStroke);
     // to do: break from loop if subsong starts after MaxX. 

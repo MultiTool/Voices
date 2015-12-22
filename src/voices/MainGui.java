@@ -10,8 +10,10 @@ public class MainGui {
   public JFrame frame;
   public DrawingPanel drawpanel;
   Project MyProject = null;
+  GoLive MyThread;
   /* ********************************************************************************* */
   public MainGui() {
+    this.MyThread = new GoLive();
   }
   /* ********************************************************************************* */
   public void Init() {
@@ -27,14 +29,17 @@ public class MainGui {
     this.drawpanel = new DrawingPanel();
     contentPane.add(this.drawpanel);
     MyProject = new Project();
+    this.MyThread.MyProject = this.MyProject;
     //MyProject.Create_For_Graphics();
     MyProject.Compose_Test();
+    this.drawpanel.BigApp = this;
     this.drawpanel.MyProject = this.MyProject;
     frame.setVisible(true);
   }
   /* ********************************************************************************* */
   public static class DrawingPanel extends JPanel implements MouseMotionListener, MouseListener, MouseWheelListener, ComponentListener, KeyListener {
     Project MyProject = null;
+    MainGui BigApp;
     /* ********************************************************************************* */
     public DrawingPanel() {
       this.Init();
@@ -43,7 +48,7 @@ public class MainGui {
     public final void Init() {
       this.addMouseListener(this);
       this.addMouseMotionListener(this);
-      this.addMouseWheelListener(this);     
+      this.addMouseWheelListener(this);
       if (false) {// alternative: look into KeyBindings 
         this.setFocusable(true);
       }
@@ -53,32 +58,28 @@ public class MainGui {
     @Override public void paintComponent(Graphics g) {
       super.paintComponent(g);
       Graphics2D g2d = (Graphics2D) g;
+
       Polygon p = new Polygon();
       for (int i = 0; i < 5; i++) {
         p.addPoint((int) (100 + 50 * Math.cos(i * 2 * Math.PI / 5)), (int) (100 + 50 * Math.sin(i * 2 * Math.PI / 5)));
       }
       g2d.drawPolygon(p);
 
-      Drawing_Context dc = new Drawing_Context();
-      dc.gr = g2d;
-      dc.ClipBounds = new CajaDelimitadora();
-      dc.ClipBounds.Assign(0, 0, 10000, 10000);// arbitrarily large
-      dc.Offset = new OffsetBox();
-      dc.GlobalOffset = new OffsetBox();
-      //this.MyProject;
-
+//      Drawing_Context dc = new Drawing_Context();
+//      dc.gr = g2d;
+      // dc.ClipBounds.Assign(0, 0, 10000, 10000);// arbitrarily large
+//      dc.Offset = new OffsetBox(); dc.GlobalOffset = new OffsetBox();
       MyProject.Draw_Me(g2d);
     }
     /* ********************************************************************************* */
     @Override public void mouseDragged(MouseEvent me) {
-      // throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
     @Override public void mouseMoved(MouseEvent me) {
-      // throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
     /* ********************************************************************************* */
     @Override public void mouseClicked(MouseEvent me) {
-      this.MyProject.Audio_Test();
+      // this.MyProject.Audio_Test();
+      BigApp.MyThread.start();
     }
     @Override public void mousePressed(MouseEvent me) {
     }
