@@ -5,11 +5,14 @@
  */
 package voices;
 
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 /**
  *
  * @author MultiTool
  */
-public class GoLive implements Runnable {
+public class GoLive implements Runnable, IDeletable {
   private Thread thread;
   private final String ThreadName;
   public Project MyProject;
@@ -22,7 +25,9 @@ public class GoLive implements Runnable {
   /* ********************************************************************************* */
   public GoLive() {
     this.ThreadName = "GoLive";
+    this.thread = null;
     this.audio = new Audio();
+    this.Create_Me();
   }
   /* ********************************************************************************* */
   public void start() {
@@ -41,8 +46,8 @@ public class GoLive implements Runnable {
     this.audio.Start();
     if (thread == null) {
       thread = new Thread(this, ThreadName);
-      thread.start();
     }
+    thread.start();
   }
   /* ********************************************************************************* */
   @Override public void run() {
@@ -56,12 +61,18 @@ public class GoLive implements Runnable {
     this.stop();
   }
   /* ********************************************************************************* */
+  public boolean IsRunning() {
+    return !this.KeepGoing;// do not use this it is broken
+  }
+  /* ********************************************************************************* */
   public void PleaseStop() {// polite stopping without interrupt
     this.KeepGoing = false;
   }
   /* ********************************************************************************* */
   public void stop() {
+    thread = null;// is there no way to reset a thread without destroying it? 
     audio.Stop();
+    this.RootPlayer.Delete_Me();
   }
   /* ********************************************************************************* */
   public void Audio_Test() {// using this for scrap
@@ -91,5 +102,13 @@ public class GoLive implements Runnable {
     audio.Stop();
     EndTime = System.currentTimeMillis();
     System.out.println("Audio_Test time:" + (EndTime - StartTime));// Render_To time: 150 milliseconds per 16 seconds. 
+  }
+  /* ********************************************************************************* */
+  @Override public boolean Create_Me() {// IDeletable
+    return true;
+  }
+  @Override public void Delete_Me() {// IDeletable
+    this.stop();
+    this.audio.Delete_Me();
   }
 }

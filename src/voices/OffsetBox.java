@@ -5,6 +5,7 @@
  */
 package voices;
 
+import java.awt.Color;
 import voices.ISonglet.Singer;
 
 /**
@@ -16,7 +17,7 @@ import voices.ISonglet.Singer;
  * We do scale for graphics though. 
  * 
  */
-public class OffsetBox implements IOffsetBox, IDrawable {// location box to transpose in pitch, move in time, etc. 
+public class OffsetBox implements IDrawable, IDeletable {// location box to transpose in pitch, move in time, etc.  //IOffsetBox, 
   public double TimeOrg = 0, OctaveLoc = 0, LoudnessFactor = 1.0;// all of these are in parent coordinates
   double ScaleX = 1.0, ScaleY = 1.0;// to be used for pixels per second, pixels per octave
   double ChildXorg = 0, ChildYorg = 0;// These are only non-zero for graphics. Audio origins are always 0,0. 
@@ -24,6 +25,7 @@ public class OffsetBox implements IOffsetBox, IDrawable {// location box to tran
   /* ********************************************************************************* */
   public OffsetBox() {
     //this.Clear();
+    this.Create_Me();
   }
   /* ********************************************************************************* */
   public void Clear() {// set all coordinates to identity, no transformation for content
@@ -35,7 +37,7 @@ public class OffsetBox implements IOffsetBox, IDrawable {// location box to tran
     return this.GetContent().Get_Max_Amplitude() * this.LoudnessFactor;
   }
   /* ********************************************************************************* */
-  @Override public void Compound(IOffsetBox donor) {
+  public void Compound(OffsetBox donor) {
     //double DonorOffset = donor.TimeLoc_g(); double DonorScale = donor.ScaleX_g();
     this.TimeLoc_s(TimeOrg + (this.ScaleX * donor.TimeLoc_g()));// to do: combine matrices here. 
     this.OctaveLoc_s(OctaveLoc + (this.ScaleY * donor.OctaveLoc_g()));
@@ -45,69 +47,69 @@ public class OffsetBox implements IOffsetBox, IDrawable {// location box to tran
     //this.TimeLoc += donor.TimeLoc; this.OctaveLoc += donor.OctaveLoc; this.LoudnessFactor *= donor.LoudnessFactor;
   }
   /* ********************************************************************************* */
-  private void CombineTransform1D(double FirstScale, double FirstOffset, double SecondScale, double SecondOffset) {
+  private void CombineTransform1D(double FirstScale, double FirstOffset, double SecondScale, double SecondOffset) {// note to self
     SecondOffset += (SecondScale * FirstOffset);
     SecondScale *= FirstScale;
   }
   /* ********************************************************************************* */
-  private double ShrinkTransform1D(double FirstOffset, double SecondScale, double SecondOffset) {
+  private double ShrinkTransform1D(double FirstOffset, double SecondScale, double SecondOffset) {// note to self
     SecondOffset += (SecondScale * FirstOffset);
     return SecondOffset;
   }
   /* ********************************************************************************* */
-  @Override public Singer Spawn_Singer() {// always always always override this
+  public Singer Spawn_Singer() {// always always always override this
     throw new UnsupportedOperationException("Not supported yet.");
   }
   /* ********************************************************************************* */
-  @Override public double MapTime(double ParentTime) {// convert time coordinate from my parent's frame to my child's frame
+  public double MapTime(double ParentTime) {// convert time coordinate from my parent's frame to my child's frame
     return ((ParentTime - this.TimeOrg) / ScaleX) + ChildXorg; // in the long run we'll probably use a matrix
 //    childX = ((parentX - parentXorg) * ScaleX) + childXorg; // full mapping 
 //    parentX = ((childX - childXorg) / ScaleX) + parentXorg;
   }
   /* ********************************************************************************* */
-  @Override public double UnMapTime(double ChildTime) {// convert time coordinate from my child's frame to my parent's frame
+  public double UnMapTime(double ChildTime) {// convert time coordinate from my child's frame to my parent's frame
     return this.TimeOrg + ((ChildTime - ChildXorg) * ScaleX);
   }
   /* ********************************************************************************* */
-  @Override public double MapPitch(double ParentPitch) {// convert octave coordinate from my parent's frame to my child's frame
+  public double MapPitch(double ParentPitch) {// convert octave coordinate from my parent's frame to my child's frame
     return ((ParentPitch - this.OctaveLoc) / ScaleY) + ChildYorg;
   }
   /* ********************************************************************************* */
-  @Override public double UnMapPitch(double ChildPitch) {// convert octave coordinate from my child's frame to my parent's frame
+  public double UnMapPitch(double ChildPitch) {// convert octave coordinate from my child's frame to my parent's frame
     return this.OctaveLoc + ((ChildPitch - ChildYorg) * ScaleY);
   }
   /* ********************************************************************************* */
-  @Override public ISonglet GetContent() {
+  public ISonglet GetContent() {
     throw new UnsupportedOperationException("Not supported yet.");
   }
-  @Override public double TimeLoc_g() {
+  public double TimeLoc_g() {
     return TimeOrg;
   }
-  @Override public void TimeLoc_s(double value) {
+  public void TimeLoc_s(double value) {
     TimeOrg = value;
   }
-  @Override public double OctaveLoc_g() {
+  public double OctaveLoc_g() {
     return OctaveLoc;
   }
-  @Override public void OctaveLoc_s(double value) {
+  public void OctaveLoc_s(double value) {
     OctaveLoc = value;
   }
-  @Override public double LoudnessLoc_g() {
+  public double LoudnessLoc_g() {
     return LoudnessFactor;
   }
-  @Override public void LoudnessFactor_s(double value) {
+  public void LoudnessFactor_s(double value) {
     LoudnessFactor = value;
   }
-  @Override public double ScaleX_g() {
+  public double ScaleX_g() {
     return ScaleX;
   }
-  @Override public void ScaleX_s(double value) {
+  public void ScaleX_s(double value) {
     ScaleX = value;
   }
-  @Override public double ScaleY_g() {
+  public double ScaleY_g() {
     return ScaleY;
   }
-  @Override public void ScaleY_s(double value) {
+  public void ScaleY_s(double value) {
     ScaleX = value;
   }
   OffsetBox Clone_Me() {
@@ -121,12 +123,44 @@ public class OffsetBox implements IOffsetBox, IDrawable {// location box to tran
   }
   /* ********************************************************************************* */
   @Override public void Draw_Me(Drawing_Context ParentDC) {// IDrawable
-    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    if (false) {
+      this.MyBounds.Sort_Me();
+      int rx0 = (int) ParentDC.GlobalOffset.UnMapTime(this.MyBounds.Min.x);
+      int rx1 = (int) ParentDC.GlobalOffset.UnMapTime(this.MyBounds.Max.x);
+      int ry0 = (int) ParentDC.GlobalOffset.UnMapPitch(this.MyBounds.Min.y);
+      int ry1 = (int) ParentDC.GlobalOffset.UnMapPitch(this.MyBounds.Max.y);
+      if (ry1 < ry0) {// swap
+        int temp = ry1;
+        ry1 = ry0;
+        ry0 = temp;
+      }
+      int wdt = rx1 - rx0;
+      int hgt = ry1 - ry0;
+      int cint = Globals.RandomGenerator.nextInt() % 256;
+      Color col = new Color(cint);
+      ParentDC.gr.setColor(col);//Color.magenta
+      ParentDC.gr.drawRect(rx0, ry0, wdt, hgt);
+    }
+    if (ParentDC.ClipBounds.Intersects(MyBounds)) {// If we make ISonglet also drawable then we can stop repeating this code and put it all in OffsetBox.
+      Drawing_Context ChildDC = new Drawing_Context(ParentDC, this);
+      ISonglet Content = this.GetContent();
+      Content.Draw_Me(ChildDC);
+    }
   }
   @Override public CajaDelimitadora GetBoundingBox() {// IDrawable
     return this.MyBounds;
   }
   @Override public void UpdateBoundingBox() {// IDrawable
-    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    ISonglet Content = this.GetContent();
+    Content.UpdateBoundingBox();
+    Content.GetBoundingBox().UnMap(this, MyBounds);// project child limits into parent (my) space
+    this.MyBounds.Sort_Me();// almost never needed
+  }
+  /* ********************************************************************************* */
+  @Override public boolean Create_Me() {// IDeletable
+    return true;
+  }
+  @Override public void Delete_Me() {// IDeletable
+    this.MyBounds.Delete_Me();
   }
 }

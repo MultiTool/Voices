@@ -155,11 +155,14 @@ public class GroupBox implements ISonglet, IDrawable {
     OffsetBox ChildOffsetBox;
     int len = this.SubSongs.size();
 
+    // to do: clip length to real drawing width
+    // double RightBound = Math.min(ParentDC.ClipBounds.Max.x, this.MyDuration);
+    
     // Draw Group spine
     Point2D.Double pntprev, pnt;
     Stroke oldStroke = ParentDC.gr.getStroke();
     ParentDC.gr.setColor(Color.darkGray);
-    
+
     // thinner lines for more distal sub-branches
     BasicStroke bs = new BasicStroke((1.0f / ParentDC.RecurseDepth) * 40.0f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND);
     ParentDC.gr.setStroke(bs);
@@ -196,6 +199,18 @@ public class GroupBox implements ISonglet, IDrawable {
     }
   }
   /* ********************************************************************************* */
+  @Override public boolean Create_Me() {// IDeletable
+    return true;
+  }
+  @Override public void Delete_Me() {// IDeletable
+    this.MyBounds.Delete_Me();
+    int len = this.SubSongs.size();
+    for (int cnt = 0; cnt < len; cnt++) {
+      this.SubSongs.get(cnt).Delete_Me();
+    }
+    this.SubSongs.clear();
+  }
+  /* ********************************************************************************* */
   public static class GroupBox_Singer extends Singer {
     protected GroupBox MySonglet;
     public ArrayList<Singer> NowPlaying = new ArrayList<>();// pool of currently playing voices
@@ -230,6 +245,7 @@ public class GroupBox implements ISonglet, IDrawable {
         Singer player = this.NowPlaying.get(cnt);
         if (player.IsFinished) {
           this.NowPlaying.remove(player);
+          player.Delete_Me();
         } else {
           cnt++;
         }
@@ -264,6 +280,7 @@ public class GroupBox implements ISonglet, IDrawable {
         Singer player = this.NowPlaying.get(cnt);
         if (player.IsFinished) {
           this.NowPlaying.remove(player);
+          player.Delete_Me();
         } else {
           cnt++;
         }
@@ -299,8 +316,21 @@ public class GroupBox implements ISonglet, IDrawable {
       return EndTime;
     }
     /* ********************************************************************************* */
-    @Override public IOffsetBox Get_OffsetBox() {
+    @Override public OffsetBox Get_OffsetBox() {
       return this.MyOffsetBox;
+    }
+    /* ********************************************************************************* */
+    @Override public boolean Create_Me() {// IDeletable
+      super.Create_Me();
+      return true;
+    }
+    @Override public void Delete_Me() {// IDeletable
+      super.Delete_Me();
+      int len = this.NowPlaying.size();
+      for (int cnt = 0; cnt < len; cnt++) {
+        this.NowPlaying.get(cnt).Delete_Me();
+      }
+      this.NowPlaying.clear();
     }
   }
   /* ********************************************************************************* */
@@ -308,7 +338,9 @@ public class GroupBox implements ISonglet, IDrawable {
     public GroupBox Content = null;
     /* ********************************************************************************* */
     public Group_OffsetBox() {
+      super();
       MyBounds = new CajaDelimitadora();
+      this.Create_Me();
     }
     /* ********************************************************************************* */
     @Override public ISonglet GetContent() {
@@ -325,15 +357,15 @@ public class GroupBox implements ISonglet, IDrawable {
       return ph;
     }
     /* ********************************************************************************* */
-    @Override public void Draw_Me(Drawing_Context ParentDC) {// IDrawable
-      if (ParentDC.ClipBounds.Intersects(MyBounds)) {// If we make ISonglet also drawable then we can stop repeating this code and put it all in OffsetBox.
-        Drawing_Context ChildDC = new Drawing_Context(ParentDC, this);
-        this.Content.Draw_Me(ChildDC);
-      }
-    }
-    @Override public void UpdateBoundingBox() {// IDrawable
-      this.Content.UpdateBoundingBox();
-      this.Content.GetBoundingBox().UnMap(this, MyBounds);// project child limits into parent (my) space
-    }
+//    @Override public void Draw_Me(Drawing_Context ParentDC) {// IDrawable
+//      if (ParentDC.ClipBounds.Intersects(MyBounds)) {// If we make ISonglet also drawable then we can stop repeating this code and put it all in OffsetBox.
+//        Drawing_Context ChildDC = new Drawing_Context(ParentDC, this);
+//        this.Content.Draw_Me(ChildDC);
+//      }
+//    }
+//    @Override public void UpdateBoundingBox() {// IDrawable
+//      this.Content.UpdateBoundingBox();
+//      this.Content.GetBoundingBox().UnMap(this, MyBounds);// project child limits into parent (my) space
+//    }
   }
 }

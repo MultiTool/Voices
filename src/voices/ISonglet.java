@@ -9,16 +9,20 @@ package voices;
  *
  * @author MultiTool
  */
-public interface ISonglet {// Cancionita
+public interface ISonglet extends IDrawable, IDeletable {// Cancionita
   /* ********************************************************************************* */
-  public static class Singer {// Cantante
+  public static class Singer implements IDeletable {// Cantante
     // public static class Singer extends OffsetBox { // Cantante
-    // public static class Singer implements IOffsetBox {// Cantante
     public Project MyProject;
     double Inherited_Time = 0.0, Inherited_Octave = 0.0, Inherited_Loudness = 1.0;// time, octave, and loudness context
     double Inherited_OctaveRate = 0.0;// bend context, change dyanimcally while rendering
     public boolean IsFinished = false;
     public Singer ParentSinger;
+    // boolean exists = Create_Me();
+    /* ********************************************************************************* */
+    public Singer() {
+      this.Create_Me();
+    }
     /* ********************************************************************************* */
     public void Start() {
       IsFinished = false;
@@ -42,14 +46,20 @@ public interface ISonglet {// Cancionita
       this.Compound(this.Get_OffsetBox());
     }
     /* ********************************************************************************* */
-    public void Compound(IOffsetBox donor) {// accumulate my own transformation
+    public void Compound(OffsetBox donor) {// accumulate my own transformation
       Inherited_Time += donor.TimeLoc_g();
       Inherited_Octave += donor.OctaveLoc_g();
       Inherited_Loudness *= donor.LoudnessLoc_g();
     }
     /* ********************************************************************************* */
-    public IOffsetBox Get_OffsetBox() {
+    public OffsetBox Get_OffsetBox() {
       return null;
+    }
+    /* ********************************************************************************* */
+    @Override public boolean Create_Me() {// IDeletable
+      return true;
+    }
+    @Override public void Delete_Me() {// IDeletable
     }
   }
   /* ********************************************************************************* */

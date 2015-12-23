@@ -170,9 +170,6 @@ public class Voice implements ISonglet, IDrawable {
     SubTimeCalc = ((Math.pow(2, (TimeAlong * OctaveRate)) - 1.0) / Denom);
     return SubTimeCalc;
   }
-  private static Color ToAlpha(Color col, int Alpha) {
-    return new Color(col.getRed(), col.getGreen(), col.getBlue(), Alpha);// rgba 
-  }
   /* ********************************************************************************* */
   @Override public void Draw_Me(Drawing_Context ParentDC) {// IDrawable
     CajaDelimitadora ChildrenBounds = ParentDC.ClipBounds;// parent is already transformed by my offsetbox
@@ -221,14 +218,14 @@ public class Voice implements ISonglet, IDrawable {
       CntSpine++;
     }
     //int colorToSet = Color.argb(alpha, red, green, blue); 
-    ParentDC.gr.setColor(ToAlpha(Color.cyan, 100));// Color.yellow
+    ParentDC.gr.setColor(Globals.ToAlpha(Color.cyan, 100));// Color.yellow
     ParentDC.gr.fillPolygon(OutlineX, OutlineY, NumDrawPoints);// voice fill
-    
-    ParentDC.gr.setColor(ToAlpha(Color.darkGray, 100));
+
+    ParentDC.gr.setColor(Globals.ToAlpha(Color.darkGray, 100));
     ParentDC.gr.drawPolygon(OutlineX, OutlineY, NumDrawPoints);// voice outline
     // pgon.closePath(); ParentDC.gr.fill(pgon);
 
-    ParentDC.gr.setColor(ToAlpha(Color.black, 200));
+    ParentDC.gr.setColor(Globals.ToAlpha(Color.black, 200));
     ParentDC.gr.drawPolyline(SpineX, SpineY, Range);
 
     for (int pcnt = 0; pcnt < len; pcnt++) {
@@ -254,7 +251,19 @@ public class Voice implements ISonglet, IDrawable {
     }
   }
   /* ********************************************************************************* */
-  public static class Point implements IDrawable {
+  @Override public boolean Create_Me() {// IDeletable
+    return true;
+  }
+  @Override public void Delete_Me() {// IDeletable
+    this.MyBounds.Delete_Me();
+    int len = this.CPoints.size();
+    for (int cnt = 0; cnt < len; cnt++) {
+      this.CPoints.get(cnt).Delete_Me();
+    }
+    this.CPoints.clear();
+  }
+  /* ********************************************************************************* */
+  public static class Point implements IDrawable, IDeletable {
     public double RealTime = 0.0, SubTime = 0.0;// SubTime is cumulative subjective time.
     public double Octave = 0.0;
     public double Loudness = 1.0;
@@ -263,6 +272,10 @@ public class Voice implements ISonglet, IDrawable {
     double Radius = 5, Diameter = Radius * 2.0;
     double OctavesPerLoudness = 0.25;// to do: loudness will have to be mapped to screen. not a pixel value right?
     CajaDelimitadora MyBounds = new CajaDelimitadora();
+    /* ********************************************************************************* */
+    public Point() {
+      this.Create_Me();
+    }
     /* ********************************************************************************* */
     public void CopyFrom(Point source) {
       this.RealTime = source.RealTime;
@@ -279,9 +292,9 @@ public class Voice implements ISonglet, IDrawable {
       // Control points have the same space as their parent, so no need to create a local map.
       Point2D.Double pnt = ParentDC.To_Screen(this.RealTime, this.Octave);
       // ParentDC.gr.setColor(ToAlpha(Color.green, 200));
-      ParentDC.gr.setColor(ToAlpha(Color.yellow, 200));// control point just looks like a dot
+      ParentDC.gr.setColor(Globals.ToAlpha(Color.yellow, 200));// control point just looks like a dot
       ParentDC.gr.fillOval((int) (pnt.x) - (int) Radius, (int) (pnt.y) - (int) Radius, (int) Diameter, (int) Diameter);
-      ParentDC.gr.setColor(ToAlpha(Color.darkGray, 200));
+      ParentDC.gr.setColor(Globals.ToAlpha(Color.darkGray, 200));
       ParentDC.gr.drawOval((int) (pnt.x) - (int) Radius, (int) (pnt.y) - (int) Radius, (int) Diameter, (int) Diameter);
     }
     /* ********************************************************************************* */
@@ -295,12 +308,20 @@ public class Voice implements ISonglet, IDrawable {
 //      this.MyBounds.Min.setLocation(RealTime - Radius, Octave - Math.min(Radius, LoudnessHeight));
 //      this.MyBounds.Max.setLocation(RealTime + Radius, Octave + Math.max(Radius, LoudnessHeight));
     }
+    /* ********************************************************************************* */
+    @Override public boolean Create_Me() {// IDeletable
+      return true;
+    }
+    @Override public void Delete_Me() {// IDeletable
+      this.MyBounds.Delete_Me();
+    }
   }
   /* ********************************************************************************* */
   public static class VoiceOffsetBox extends OffsetBox {// location box to transpose in pitch, move in time, etc. 
     public Voice Content;
     /* ********************************************************************************* */
     public VoiceOffsetBox() {
+      super();
       MyBounds = new CajaDelimitadora();
       this.Clear();
     }
@@ -319,16 +340,16 @@ public class Voice implements ISonglet, IDrawable {
       return ph;
     }
     /* ********************************************************************************* */
-    @Override public void Draw_Me(Drawing_Context ParentDC) {// IDrawable
-      if (ParentDC.ClipBounds.Intersects(MyBounds)) {// If we make ISonglet also drawable then we can stop repeating this code and put it all in OffsetBox.
-        Drawing_Context ChildDC = new Drawing_Context(ParentDC, this);// map to child (my) internal coordinates
-        this.Content.Draw_Me(ChildDC);
-      }
-    }
-    @Override public void UpdateBoundingBox() {// IDrawable
-      this.Content.UpdateBoundingBox();
-      this.Content.GetBoundingBox().UnMap(this, MyBounds);// project child limits into parent (my) space
-    }
+//    @Override public void Draw_Me(Drawing_Context ParentDC) {// IDrawable
+//      if (ParentDC.ClipBounds.Intersects(MyBounds)) {// If we make ISonglet also drawable then we can stop repeating this code and put it all in OffsetBox.
+//        Drawing_Context ChildDC = new Drawing_Context(ParentDC, this);// map to child (my) internal coordinates
+//        this.Content.Draw_Me(ChildDC);
+//      }
+//    }
+//    @Override public void UpdateBoundingBox() {// IDrawable
+//      this.Content.UpdateBoundingBox();
+//      this.Content.GetBoundingBox().UnMap(this, MyBounds);// project child limits into parent (my) space
+//    }
   }
   /* ********************************************************************************* */
   public static class Voice_Singer extends Singer {
@@ -343,8 +364,8 @@ public class Voice implements ISonglet, IDrawable {
     private int Bone_Sample_Mark = 0;
     /* ********************************************************************************* */
     private Voice_Singer() {
+      this.Create_Me();
       this.ParentSinger = null;
-      //this.Start();
     }
     /* ********************************************************************************* */
     @Override public void Start() {
@@ -366,7 +387,6 @@ public class Voice implements ISonglet, IDrawable {
       Point Prev_Point, Next_Point;
       EndTime = this.MyOffsetBox.MapTime(EndTime);// EndTime is now time internal to voice's own coordinate system
       this.Render_Sample_Count = 0;
-      // this.Origin_Sample_Count += (EndTime-this.Prev_Time);// 
       int NumPoints = this.MyPhrase.CPoints.size();
       if (NumPoints < 2) {// this should really just throw an error
         this.IsFinished = true;
@@ -391,6 +411,9 @@ public class Voice implements ISonglet, IDrawable {
           Interpolate_ControlPoint(Prev_Point, Next_Point, EndTime, this.Cursor_Point);
         }
       }
+      //int EndSample = (int) (pnt1.RealTime * SRate);// absolute
+      int EndSample = (int) (EndTime * this.MyProject.SampleRate);// absolute
+      this.Bone_Sample_Mark = EndSample;
     }
     /* ********************************************************************************* */
     @Override public void Render_To(double EndTime, Wave wave) {// ready for test
@@ -462,7 +485,7 @@ public class Voice implements ISonglet, IDrawable {
       return EndTime;
     }
     /* ********************************************************************************* */
-    @Override public IOffsetBox Get_OffsetBox() {
+    @Override public OffsetBox Get_OffsetBox() {
       return this.MyOffsetBox;
     }
     /* ********************************************************************************* */
@@ -563,6 +586,14 @@ public class Voice implements ISonglet, IDrawable {
         this.Render_Sample_Count++;
       }
       this.Bone_Sample_Mark = EndSample;
+    }
+    /* ********************************************************************************* */
+    @Override public boolean Create_Me() {// IDeletable
+      return true;
+    }
+    @Override public void Delete_Me() {// IDeletable
+      super.Delete_Me();
+      this.Cursor_Point.Delete_Me();
     }
   }
 }

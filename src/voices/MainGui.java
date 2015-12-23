@@ -2,6 +2,7 @@ package voices;
 
 import java.awt.*;
 import java.awt.event.*;
+import java.awt.geom.Rectangle2D;
 import javax.swing.*;
 import voices.IDrawable.Drawing_Context;
 // From http://www.tutorialspoint.com/javaexamples/gui_polygon.htm
@@ -55,6 +56,25 @@ public class MainGui {
       this.addKeyListener(this);
     }
     /* ********************************************************************************* */
+    public void Draw_Me(Graphics2D g2d) {
+      // to do: move this to MainGui, and base clipping, zoom etc. on canvas size. 
+      Drawing_Context dc = new Drawing_Context();
+      dc.gr = g2d;
+      int wdt = this.getWidth() / 1;
+      int hgt = this.getHeight() / 1;
+      if (true) {// clip test - seems to work, yay
+        Rectangle2D rect = new Rectangle2D.Float();
+        rect.setRect(0, 0, wdt, hgt);
+        g2d.setClip(rect);
+        dc.ClipBounds.Assign(0, 0, wdt, hgt);// problem: why does project disappear when clip bounds cover its root? 
+      } else {
+        dc.ClipBounds.Assign(0, 0, 10000, 10000);// arbitrarily large
+      }
+      dc.Offset = new OffsetBox();
+      dc.GlobalOffset = new OffsetBox();
+      this.MyProject.GraphicRoot.Draw_Me(dc);
+    }
+    /* ********************************************************************************* */
     @Override public void paintComponent(Graphics g) {
       super.paintComponent(g);
       Graphics2D g2d = (Graphics2D) g;
@@ -69,17 +89,24 @@ public class MainGui {
 //      dc.gr = g2d;
       // dc.ClipBounds.Assign(0, 0, 10000, 10000);// arbitrarily large
 //      dc.Offset = new OffsetBox(); dc.GlobalOffset = new OffsetBox();
-      MyProject.Draw_Me(g2d);
+      //MyProject.Draw_Me(g2d);
+      Draw_Me(g2d);
     }
     /* ********************************************************************************* */
     @Override public void mouseDragged(MouseEvent me) {
     }
     @Override public void mouseMoved(MouseEvent me) {
     }
+    boolean Toggle = true;// temporary until we have better ui
     /* ********************************************************************************* */
     @Override public void mouseClicked(MouseEvent me) {
-      //this.MyProject.Audio_Test();
-      BigApp.MyThread.start();
+      if (Toggle) {
+        BigApp.MyThread.start();
+        Toggle = false;
+      } else {
+        BigApp.MyThread.PleaseStop();
+        Toggle = true;
+      }
     }
     @Override public void mousePressed(MouseEvent me) {
     }
@@ -91,6 +118,13 @@ public class MainGui {
     }
     /* ********************************************************************************* */
     @Override public void mouseWheelMoved(MouseWheelEvent mwe) {
+      int rotation = mwe.getWheelRotation();
+      double finerotation = mwe.getPreciseWheelRotation();
+      int amount = mwe.getScrollAmount();
+      mwe.getX();
+      mwe.getY();
+      mwe.isControlDown();
+      mwe.isAltDown();
     }
     /* ********************************************************************************* */
     @Override public void componentResized(ComponentEvent ce) {

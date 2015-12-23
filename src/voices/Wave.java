@@ -11,7 +11,7 @@ import java.util.Arrays;
  *
  * @author MultiTool
  */
-public class Wave {
+public class Wave implements IDeletable {
   public int NumSamples;
   private int Current_Index;
   public int StartDex = 0;
@@ -30,6 +30,7 @@ public class Wave {
     this.StartTime = 0.0;
     this.StartDex = 0;
     this.Current_Index = 0;
+    this.Create_Me();
   }
   /* ********************************************************************************* */
   public void Rebase_Time(double TimeBase) {
@@ -185,14 +186,17 @@ public class Wave {
     Current_Index++;
   }
   public void Set(int dex, double value) {
-    if (this.wave.length <= dex) {
-      boolean nop = true;
-    } else {
-      this.wave[dex] = value;
-    }
+    this.wave[dex] = value;
   }
   /* ********************************************************************************* */
   public double[] GetWave() {// just for testing. remove later
     return this.wave;
+  }
+  /* ********************************************************************************* */
+  @Override public boolean Create_Me() {// IDeletable
+    return true;
+  }
+  @Override public void Delete_Me() {// IDeletable
+    this.wave = null;// without GC we would just free this memory
   }
 }

@@ -5,6 +5,7 @@
  */
 package voices;
 
+import java.awt.Color;
 import java.util.Random;
 
 /**
@@ -19,4 +20,8 @@ public class Globals {
   public static double TwoPi = Math.PI * 2.0;// hz
   public static double Fudge = 0.00000000001;
   public static Random RandomGenerator = new Random();
+  /* ********************************************************************************* */
+  public static Color ToAlpha(Color col, int Alpha) {
+    return new Color(col.getRed(), col.getGreen(), col.getBlue(), Alpha);// rgba 
+  }
 }

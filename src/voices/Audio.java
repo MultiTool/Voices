@@ -31,12 +31,16 @@ import javax.sound.sampled.SourceDataLine;
  https://docs.oracle.com/javase/6/docs/api/javax/sound/sampled/DataLine.html
    
  */
-public class Audio {
+public class Audio implements IDeletable {
   public int SampleRate = 44100;
   public int BitsPerSample = 16;
   int BytesPerSample;
   double HalfSample;// 127.0 for 8 bit, 32767.0 for 16 bit
   SourceDataLine source = null;
+  /* ********************************************************************************* */
+  public Audio() {
+    this.Create_Me();
+  }
   /* ********************************************************************************* */
   public void Start() {
     this.BytesPerSample = BitsPerSample / Byte.SIZE;
@@ -55,7 +59,7 @@ public class Audio {
       source = (SourceDataLine) AudioSystem.getLine(info);
       source.open(af);
       source.start();
-      
+
       // http://www.javaworld.com/article/2077521/learn-java/java-tip-24--how-to-play-audio-in-applications.html
       // ContinuousAudioDataStream cas = new ContinuousAudioDataStream (data);
       // http://web.deu.edu.tr/doc/oreily/java/awt/ch14_05.htm
@@ -191,6 +195,7 @@ public class Audio {
   /* ********************************************************************************* */
   /**
    * Save the double array as a sound file (using .wav or .au format).
+   * 
    */
   public void Save(String filename, double[] input) {
     //double[] input;
@@ -223,6 +228,16 @@ public class Audio {
     Thread_Sounder ss = new Thread_Sounder();
     ss.wave = wave0;
     ss.start();
+  }
+  /* ********************************************************************************* */
+  @Override public boolean Create_Me() {// IDeletable
+    return true;
+  }
+  @Override public void Delete_Me() {// IDeletable
+    if (this.source != null) {
+      this.source.close();
+      this.source = null;
+    }
   }
   /* ********************************************************************************* */
   public class Thread_Sounder extends Thread {

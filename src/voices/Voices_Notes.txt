@@ -324,31 +324,35 @@ More zoomed-in octave scale. - done
 GroupBox Draw_Me needs to draw its own vine spine. Draw it behind its children. - done, touch it up more. 
 Test live audio on faster machines. - done, TOO MUCH CLICKING, seek fix. 
 Fix graphic clipping to work right. - done
+Clean: Make ISonglet inherit IDrawable and remove redundant code. - done
+Clean: Get rid of IOffsetBox.  - done
+Clean: Big code cleanup. Consolidate all weird testing code into one place. - done
+Put grid in background, seconds by octaves. - done
+*** Fix bounds bug where covering origin of main branch hides everything, and bounds width is too short too. 
+MemLeaks: Make IDeleteable interface and apply to *everything* to get ready for C++ port. - done
+MemLeaks: All IDeleteable have a global creation counter and a global deletion counter. 
+MemLeaks: Add refcounting for eventual serialization, IDeleteable, and C++ port. 
 Import TunePad colors and alpha tricks. - working, more to do.
-Update and test all Skip_To. 
-Clean: Make ISonglet inherit IDrawable and remove redundant code.
-Clean: Get rid of IOffsetBox.  
-Clean: Big code cleanup. Consolidate all weird testing code into one place. 
+SubRange: Update and test all Skip_To.  
+SubRange: Let user draw box on screen to trigger play within range. 
 LoopBox graphics - mayabe an arc, Ellipse2D.Double?  Or a very rounded rectangle behind each unit cell? Put handles on the rectangle and change Delay. 
-Add Zoom, ZoomX, and ZoomY. ctrl or shift or alt-scrollwheel? 
-Put grid in background, seconds by octaves. 
+Add Zoom, ZoomX, and ZoomY. ctrl or shift or alt-scrollwheel?  Also add panning. 
 On load, zoom to object bounds. 
 ** Start grabbing mouse clicks and creating hit stacks. !!! 
 Add moving cursor during play. 
 Draw to buffer and draw buffer as a strip to main image. 
 Add 'excitement' double to drawing context, and animate drawings as we play. 
-Let user draw box on screen to trigger play within range. 
 Customize colors for each songlet! 
 Widgets! SFGUI? 
 (Someday) create a sample_voice type. http://soundbible.com/37-Chain-Saw.html 
-Make IDeleteable interface and apply to *everything* to get ready for C++ port. 
-All IDeleteable have a global creation counter and a global deletion counter. 
-Add refcounting for eventual serialization, IDeleteable, and C++ port. 
 Add ISerializable for saving and loading! 
 Do we need update_guts timestamps?
 Separate out the drawing/graphics layer. 
 Undo/Redo?  probably need IClonable and or ICopyable, like ISerializable.  Clone invokes Copy, and copy just copies all guts. 
 Optimize voice polygon graphic clipping. 
+Control points of a songlet should only show up when the songlet is selected. 
+Line widths should scale with zooming. 
+FX box, with sigmoid clipping, reverb etc. 
 
 
 

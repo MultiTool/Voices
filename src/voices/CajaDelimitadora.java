@@ -13,7 +13,7 @@ import java.awt.geom.Point2D;
  */
 
 /* ********************************************************************************* */
-public class CajaDelimitadora {// DIY BoundingBox
+public class CajaDelimitadora implements IDeletable {// DIY BoundingBox
   public Point2D.Double Min = new Point2D.Double(), Max = new Point2D.Double();
   public Point2D.Double[] Limits;
   /* ********************************************************************************* */
@@ -26,7 +26,7 @@ public class CajaDelimitadora {// DIY BoundingBox
     this.Max.setLocation(MaxX, MaxY);
     this.Sort_Me();
   }
-    /* ********************************************************************************* */
+  /* ********************************************************************************* */
   public void AssignCorner(int CornerNum, double MinLimit, double MaxLimit) {
     Point2D.Double pnt = this.Limits[CornerNum];
     pnt.setLocation(MinLimit, MaxLimit);
@@ -34,10 +34,14 @@ public class CajaDelimitadora {// DIY BoundingBox
   }
   /* ********************************************************************************* */
   public boolean Intersects(CajaDelimitadora other) {
-    if (!this.LineFramed(this.Min.x, this.Max.x, other.Min.x, other.Max.x)) {
-      return false;
-    } else if (!this.LineFramed(this.Min.y, this.Max.y, other.Min.y, other.Max.y)) {
-      return false;
+    try {
+      if (!this.LineFramed(this.Min.x, this.Max.x, other.Min.x, other.Max.x)) {
+        return false;
+      } else if (!this.LineFramed(this.Min.y, this.Max.y, other.Min.y, other.Max.y)) {
+        return false;
+      }
+    } catch (Exception ex) {
+      boolean nop = true;
     }
     return true;
   }
@@ -111,5 +115,14 @@ public class CajaDelimitadora {// DIY BoundingBox
     results.Max.x = MapBox.UnMapTime(this.Max.x);
     results.Min.y = MapBox.UnMapPitch(this.Min.y);
     results.Max.y = MapBox.UnMapPitch(this.Max.y);
+  }
+  /* ********************************************************************************* */
+  @Override public boolean Create_Me() {// IDeletable
+    return true;
+  }
+  @Override public void Delete_Me() {// IDeletable
+    this.Min = null;// if you can't delete it, at least mess it up so it can't be reused without exploding
+    this.Max = null;
+    this.Limits = null;
   }
 }

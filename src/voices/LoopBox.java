@@ -101,7 +101,7 @@ public class LoopBox implements ISonglet, IDrawable {
     double LeftBound = ParentDC.ClipBounds.Min.x - this.ContentOBox.GetBoundingBox().GetWidth();
     LeftBound = Math.max(0, LeftBound);
     int IterationStart = (int) Math.ceil(LeftBound / this.Delay);
-    double RightBound = ParentDC.ClipBounds.Max.x;
+    double RightBound = Math.min(ParentDC.ClipBounds.Max.x, this.MyDuration);
     OffsetBox obox = this.Content.Spawn_OffsetBox();// problematic. may have to create a dedicated render time-only offset box
     int loopcnt = IterationStart;
     double Time;
@@ -110,6 +110,7 @@ public class LoopBox implements ISonglet, IDrawable {
       obox.Draw_Me(ParentDC);
       loopcnt++;
     }
+    obox.Delete_Me();
   }
   @Override public CajaDelimitadora GetBoundingBox() {// IDrawable
     return this.MyBounds;
@@ -124,11 +125,19 @@ public class LoopBox implements ISonglet, IDrawable {
     //this.MyBounds.Assign(0, miny, this.MyDuration, maxy);
   }
   /* ********************************************************************************* */
+  @Override public boolean Create_Me() {// IDeletable
+    return true;
+  }
+  @Override public void Delete_Me() {// IDeletable
+    this.MyBounds.Delete_Me();
+    this.ContentOBox.Delete_Me();
+  }
+  /* ********************************************************************************* */
   public static class Loop_Singer extends Singer {
     protected LoopBox MySonglet;
+    private Loop_OffsetBox MyOffsetBox;
     public ArrayList<Singer> NowPlaying = new ArrayList<>();// pool of currently playing voices
     double Prev_Time = 0;
-    private Loop_OffsetBox MyOffsetBox;
     public int LoopCount;
     /* ********************************************************************************* */
     @Override public void Start() {
@@ -158,6 +167,7 @@ public class LoopBox implements ISonglet, IDrawable {
         Singer player = this.NowPlaying.get(cnt);
         if (player.IsFinished) {
           this.NowPlaying.remove(player);
+          player.Delete_Me();
         } else {
           cnt++;
         }
@@ -192,6 +202,8 @@ public class LoopBox implements ISonglet, IDrawable {
         Singer player = this.NowPlaying.get(cnt);
         if (player.IsFinished) {
           this.NowPlaying.remove(player);
+          // to do: obox.Delete_Me(); must happen here! or we should go with locally-defined oboxes. 
+          player.Delete_Me();
         } else {
           cnt++;
         }
@@ -223,8 +235,21 @@ public class LoopBox implements ISonglet, IDrawable {
       return EndTime;
     }
     /* ********************************************************************************* */
-    @Override public IOffsetBox Get_OffsetBox() {
+    @Override public OffsetBox Get_OffsetBox() {
       return this.MyOffsetBox;
+    }
+    /* ********************************************************************************* */
+    @Override public boolean Create_Me() {// IDeletable
+      super.Create_Me();
+      return true;
+    }
+    @Override public void Delete_Me() {// IDeletable
+      super.Delete_Me();
+      int len = this.NowPlaying.size();
+      for (int cnt = 0; cnt < len; cnt++) {
+        this.NowPlaying.get(cnt).Delete_Me();
+      }
+      this.NowPlaying.clear();
     }
   }
   /* ********************************************************************************* */
@@ -249,15 +274,15 @@ public class LoopBox implements ISonglet, IDrawable {
       return ph;
     }
     /* ********************************************************************************* */
-    @Override public void Draw_Me(Drawing_Context ParentDC) {// IDrawable
-      if (ParentDC.ClipBounds.Intersects(MyBounds)) {// If we make ISonglet also drawable then we can stop repeating this code and put it all in OffsetBox.
-        Drawing_Context ChildDC = new Drawing_Context(ParentDC, this);
-        this.Content.Draw_Me(ChildDC);
-      }
-    }
-    @Override public void UpdateBoundingBox() {// IDrawable
-      this.Content.UpdateBoundingBox();
-      this.Content.GetBoundingBox().UnMap(this, MyBounds);// project child limits into parent (my) space
-    }
+//    @Override public void Draw_Me(Drawing_Context ParentDC) {// IDrawable
+//      if (ParentDC.ClipBounds.Intersects(MyBounds)) {// If we make ISonglet also drawable then we can stop repeating this code and put it all in OffsetBox.
+//        Drawing_Context ChildDC = new Drawing_Context(ParentDC, this);
+//        this.Content.Draw_Me(ChildDC);
+//      }
+//    }
+//    @Override public void UpdateBoundingBox() {// IDrawable
+//      this.Content.UpdateBoundingBox();
+//      this.Content.GetBoundingBox().UnMap(this, MyBounds);// project child limits into parent (my) space
+//    }
   }
 }
