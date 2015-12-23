@@ -13,6 +13,7 @@ import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.DataLine;
 import javax.sound.sampled.SourceDataLine;
+//import sun.audio.ContinuousAudioDataStream;
 
 /**
   
@@ -54,6 +55,11 @@ public class Audio {
       source = (SourceDataLine) AudioSystem.getLine(info);
       source.open(af);
       source.start();
+      
+      // http://www.javaworld.com/article/2077521/learn-java/java-tip-24--how-to-play-audio-in-applications.html
+      // ContinuousAudioDataStream cas = new ContinuousAudioDataStream (data);
+      // http://web.deu.edu.tr/doc/oreily/java/awt/ch14_05.htm
+      // ByteArrayInputStream
     } catch (Exception e) {
       System.out.println(e);
     }
