@@ -32,15 +32,15 @@ public class GraphicBox implements IDrawable, IDeletable {// ISonglet,
     return lbox;
   }
   /* ********************************************************************************* */
-  @Override public void Draw_Me(Drawing_Context ParentDC) {
+  @Override public void Draw_Me(Drawing_Context ParentDC) {// IDrawable
     AntiAlias(ParentDC.gr);
     Draw_Grid(ParentDC);
     this.ContentOBox.Draw_Me(ParentDC);
   }
-  @Override public CajaDelimitadora GetBoundingBox() {
+  @Override public CajaDelimitadora GetBoundingBox() {// IDrawable
     return this.ContentOBox.GetBoundingBox();
   }
-  @Override public void UpdateBoundingBox() {
+  @Override public void UpdateBoundingBox() {// IDrawable
     this.MyBounds.Reset();
     this.ContentOBox.UpdateBoundingBox();
     CajaDelimitadora ChildBBoxUnMapped = this.ContentOBox.GetBoundingBox();// project child limits into parent (my) space
@@ -126,36 +126,27 @@ public class GraphicBox implements IDrawable, IDeletable {// ISonglet,
       this.Content.Attach_Content(content);
     }
     /* ********************************************************************************* */
-//    @Override public ISonglet GetContent() {
+//    @Override public ISonglet GetContent() {// Problem: Need to override this, but GraphicBox is not an ISonglet
 //      return this.Content;
 //    }
     /* ********************************************************************************* */
     @Override public void Draw_Me(Drawing_Context ParentDC) {// IDrawable
-      if (true) {
-        this.MyBounds.Sort_Me();
-        int rx0 = (int) ParentDC.GlobalOffset.UnMapTime(this.MyBounds.Min.x);
-        int rx1 = (int) ParentDC.GlobalOffset.UnMapTime(this.MyBounds.Max.x);
-        int ry0 = (int) ParentDC.GlobalOffset.UnMapPitch(this.MyBounds.Min.y);
-        int ry1 = (int) ParentDC.GlobalOffset.UnMapPitch(this.MyBounds.Max.y);
-        if (ry1 < ry0) {// swap
-          int temp = ry1;
-          ry1 = ry0;
-          ry0 = temp;
-        }
-        int wdt = rx1 - rx0;
-        int hgt = ry1 - ry0;
-        ParentDC.gr.setColor(Color.red);
-        ParentDC.gr.drawRect(rx0, ry0, wdt, hgt);
-      }
       if (ParentDC.ClipBounds.Intersects(MyBounds)) {
         Drawing_Context ChildDC = new Drawing_Context(ParentDC, this);// map to child (my) internal coordinates
         this.Content.Draw_Me(ChildDC);
       }
     }
     @Override public void UpdateBoundingBox() {// IDrawable
-      this.Content.UpdateBoundingBox();
+      this.Content.UpdateBoundingBox();// Problem: Overriding this because GraphicBox is not an ISonglet
       this.Content.GetBoundingBox().UnMap(this, MyBounds);// project child limits into parent (my) space
       this.MyBounds.Sort_Me();
+    }
+    /* ********************************************************************************* */
+    @Override public OffsetBox Clone_Me() {// always override this thusly
+      Graphic_OffsetBox child = new Graphic_OffsetBox();
+      child.Copy_From(this);
+      child.Content = this.Content;
+      return child;
     }
   }
 }

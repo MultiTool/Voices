@@ -31,6 +31,7 @@ public class CajaDelimitadora implements IDeletable {// DIY BoundingBox
     Point2D.Double pnt = this.Limits[CornerNum];
     pnt.setLocation(MinLimit, MaxLimit);
     this.Sort_Me();
+    this.ZeroCheck();
   }
   /* ********************************************************************************* */
   public boolean Intersects(CajaDelimitadora other) {
@@ -55,6 +56,36 @@ public class CajaDelimitadora implements IDeletable {// DIY BoundingBox
     return true;
   }
   /* ********************************************************************************* */
+  public void Rebase_Time(double TimeBase) {
+    double TimeRange = this.Max.x - this.Min.x;
+    this.Min.x = TimeBase;
+    this.Max.x = this.Min.x + TimeRange;
+  }
+  /* ********************************************************************************* */
+  public void Copy_From(CajaDelimitadora donor) {
+    this.Min.setLocation(donor.Min);
+    this.Max.setLocation(donor.Max);
+  }
+  /* ********************************************************************************* */
+  public CajaDelimitadora Clone_Me() {
+    CajaDelimitadora child = new CajaDelimitadora();
+    child.Copy_From(this);
+    return child;
+  }
+  /* ********************************************************************************* */
+  public boolean ZeroCheck() { // for debugging
+    if (this.Min.x == 0.0) {
+      if (this.Min.y == 0.0) {
+        if (this.Max.x == 0.0) {
+          if (this.Max.y == 0.0) {
+            return true;
+          }
+        }
+      }
+    }
+    return false;
+  }
+  /* ********************************************************************************* */
   public void Sort_Me() {
     double temp;
     if (this.Max.x < this.Min.x) {
@@ -67,6 +98,7 @@ public class CajaDelimitadora implements IDeletable {// DIY BoundingBox
       this.Max.y = this.Min.y;
       this.Min.y = temp;
     }
+    this.ZeroCheck();
   }
   /* ********************************************************************************* */
   public double GetWidth() {
@@ -80,6 +112,7 @@ public class CajaDelimitadora implements IDeletable {// DIY BoundingBox
   public void Reset() {// reset for min, max comparisons
     this.Min.setLocation(Double.POSITIVE_INFINITY, Double.POSITIVE_INFINITY);
     this.Max.setLocation(Double.NEGATIVE_INFINITY, Double.NEGATIVE_INFINITY);
+    this.ZeroCheck();
   }
   /* ********************************************************************************* */
   public void Include(CajaDelimitadora other) {// for aggregating with all of my child boxes
@@ -87,10 +120,12 @@ public class CajaDelimitadora implements IDeletable {// DIY BoundingBox
     this.Min.y = Math.min(this.Min.y, other.Min.y);
     this.Max.x = Math.max(this.Max.x, other.Max.x);
     this.Max.y = Math.max(this.Max.y, other.Max.y);
+    this.ZeroCheck();
   }
   /* ********************************************************************************* */
   public void IncludePoint(Point2D.Double other) {// for aggregating with vertices
     IncludePoint(other.x, other.y);
+    this.ZeroCheck();
   }
   /* ********************************************************************************* */
   public void IncludePoint(double OtherX, double OtherY) {// for aggregating with vertices
@@ -98,6 +133,7 @@ public class CajaDelimitadora implements IDeletable {// DIY BoundingBox
     this.Min.y = Math.min(this.Min.y, OtherY);
     this.Max.x = Math.max(this.Max.x, OtherX);
     this.Max.y = Math.max(this.Max.y, OtherY);
+    this.ZeroCheck();
   }
   /* ********************************************************************************* */
   public void Map(OffsetBox MapBox, CajaDelimitadora results) {
@@ -105,6 +141,7 @@ public class CajaDelimitadora implements IDeletable {// DIY BoundingBox
     results.Max.x = MapBox.MapTime(this.Max.x);
     results.Min.y = MapBox.MapPitch(this.Min.y);
     results.Max.y = MapBox.MapPitch(this.Max.y);
+    results.ZeroCheck();
   }
   /* ********************************************************************************* */
   public void UnMap(OffsetBox MapBox, CajaDelimitadora results) {
@@ -115,6 +152,7 @@ public class CajaDelimitadora implements IDeletable {// DIY BoundingBox
     results.Max.x = MapBox.UnMapTime(this.Max.x);
     results.Min.y = MapBox.UnMapPitch(this.Min.y);
     results.Max.y = MapBox.UnMapPitch(this.Max.y);
+    results.ZeroCheck();
   }
   /* ********************************************************************************* */
   @Override public boolean Create_Me() {// IDeletable

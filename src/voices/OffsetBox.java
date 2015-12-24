@@ -5,7 +5,9 @@
  */
 package voices;
 
+import java.awt.BasicStroke;
 import java.awt.Color;
+import java.awt.Stroke;
 import voices.ISonglet.Singer;
 
 /**
@@ -22,10 +24,30 @@ public class OffsetBox implements IDrawable, IDeletable {// location box to tran
   double ScaleX = 1.0, ScaleY = 1.0;// to be used for pixels per second, pixels per octave
   double ChildXorg = 0, ChildYorg = 0;// These are only non-zero for graphics. Audio origins are always 0,0. 
   public CajaDelimitadora MyBounds;
+  public ISonglet MyParentSong;// can do this but not used yet
   /* ********************************************************************************* */
   public OffsetBox() {
     //this.Clear();
     this.Create_Me();
+    MyBounds = new CajaDelimitadora();
+    this.MyBounds.Reset();
+  }
+  /* ********************************************************************************* */
+  public OffsetBox Clone_Me() {
+    OffsetBox child = new OffsetBox();
+    child.Copy_From(this);
+    return child;
+  }
+  /* ********************************************************************************* */
+  public void Copy_From(OffsetBox donor) {
+    this.TimeOrg = donor.TimeOrg;
+    this.OctaveLoc = donor.OctaveLoc;
+    this.LoudnessFactor = donor.LoudnessFactor;
+    this.ScaleX = donor.ScaleX;
+    this.ScaleY = donor.ScaleY;
+    this.ChildXorg = donor.ChildXorg;
+    this.ChildYorg = donor.ChildYorg;
+    this.MyBounds.Copy_From(donor.MyBounds);
   }
   /* ********************************************************************************* */
   public void Clear() {// set all coordinates to identity, no transformation for content
@@ -79,9 +101,11 @@ public class OffsetBox implements IDrawable, IDeletable {// location box to tran
     return this.OctaveLoc + ((ChildPitch - ChildYorg) * ScaleY);
   }
   /* ********************************************************************************* */
-  public ISonglet GetContent() {
+//  public abstract ISonglet GetContent();
+  public ISonglet GetContent() {// always always override this
     throw new UnsupportedOperationException("Not supported yet.");
   }
+  /* ********************************************************************************* */
   public double TimeLoc_g() {
     return TimeOrg;
   }
@@ -112,18 +136,17 @@ public class OffsetBox implements IDrawable, IDeletable {// location box to tran
   public void ScaleY_s(double value) {
     ScaleX = value;
   }
-  OffsetBox Clone_Me() {
-    OffsetBox child = new OffsetBox();
-    child.TimeOrg = this.TimeOrg;
-    child.OctaveLoc = this.OctaveLoc;
-    child.LoudnessFactor = this.LoudnessFactor;
-    child.ScaleX = this.ScaleX;
-    child.ScaleY = this.ScaleY;
-    return child;
-  }
   /* ********************************************************************************* */
   @Override public void Draw_Me(Drawing_Context ParentDC) {// IDrawable
-    if (false) {
+    if (ParentDC.ClipBounds.Intersects(MyBounds)) {// If we make ISonglet also drawable then we can stop repeating this code and put it all in OffsetBox.
+      Drawing_Context ChildDC = new Drawing_Context(ParentDC, this);
+      ISonglet Content = this.GetContent();
+      Content.Draw_Me(ChildDC);
+    }
+  }
+  /* ********************************************************************************* */
+  public void Draw_Me_Debug(Drawing_Context ParentDC) {// break glass in case of emergency
+    if (true) {
       this.MyBounds.Sort_Me();
       int rx0 = (int) ParentDC.GlobalOffset.UnMapTime(this.MyBounds.Min.x);
       int rx1 = (int) ParentDC.GlobalOffset.UnMapTime(this.MyBounds.Max.x);
@@ -138,8 +161,18 @@ public class OffsetBox implements IDrawable, IDeletable {// location box to tran
       int hgt = ry1 - ry0;
       int cint = Globals.RandomGenerator.nextInt() % 256;
       Color col = new Color(cint);
-      ParentDC.gr.setColor(col);//Color.magenta
+
+      Stroke oldStroke = ParentDC.gr.getStroke();
+      ParentDC.gr.setColor(Color.red);
+
+      // thinner lines for more distal sub-branches
+      BasicStroke bs = new BasicStroke(4.0f, BasicStroke.CAP_SQUARE, BasicStroke.JOIN_MITER);
+      ParentDC.gr.setStroke(bs);
+
+      //ParentDC.gr.setColor(col);//Color.magenta
       ParentDC.gr.drawRect(rx0, ry0, wdt, hgt);
+
+      ParentDC.gr.setStroke(oldStroke);
     }
     if (ParentDC.ClipBounds.Intersects(MyBounds)) {// If we make ISonglet also drawable then we can stop repeating this code and put it all in OffsetBox.
       Drawing_Context ChildDC = new Drawing_Context(ParentDC, this);

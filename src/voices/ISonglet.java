@@ -11,7 +11,7 @@ package voices;
  */
 public interface ISonglet extends IDrawable, IDeletable {// Cancionita
   /* ********************************************************************************* */
-  public static class Singer implements IDeletable {// Cantante
+  public abstract static class Singer implements IDeletable {// Cantante
     // public static class Singer extends OffsetBox { // Cantante
     public Project MyProject;
     double Inherited_Time = 0.0, Inherited_Octave = 0.0, Inherited_Loudness = 1.0;// time, octave, and loudness context
@@ -52,9 +52,7 @@ public interface ISonglet extends IDrawable, IDeletable {// Cancionita
       Inherited_Loudness *= donor.LoudnessLoc_g();
     }
     /* ********************************************************************************* */
-    public OffsetBox Get_OffsetBox() {
-      return null;
-    }
+    public abstract OffsetBox Get_OffsetBox();
     /* ********************************************************************************* */
     @Override public boolean Create_Me() {// IDeletable
       return true;

@@ -132,11 +132,24 @@ public class GroupBox implements ISonglet, IDrawable {
     return this.Spawn_My_Singer();
   }
   /* ********************************************************************************* */
-  public GroupBox_Singer Spawn_My_Singer() {
-    GroupBox_Singer GroupPlayer = new GroupBox_Singer();
+  public Group_Singer Spawn_My_Singer() {
+    Group_Singer GroupPlayer = new Group_Singer();
     GroupPlayer.MySonglet = this;
     GroupPlayer.MyProject = this.MyProject;// inherit project
     return GroupPlayer;
+  }
+  /* ************************************************************************************************************************ */
+  public int Tree_Search(double Time, int minloc, int maxloc) {// finds place where time would be inserted or replaced
+    int medloc;
+    while (minloc < maxloc) {
+      medloc = (minloc + maxloc) >> 1; // >>1 is same as div 2, only faster.
+      if (Time <= this.SubSongs.get(medloc).TimeOrg) {
+        maxloc = medloc;
+      }/* has to go through here to be found. */ else {
+        minloc = medloc + 1;
+      }
+    }
+    return minloc;
   }
   /* ********************************************************************************* */
   @Override public int Get_Sample_Count(int SampleRate) {
@@ -155,9 +168,9 @@ public class GroupBox implements ISonglet, IDrawable {
     OffsetBox ChildOffsetBox;
     int len = this.SubSongs.size();
 
-    // to do: clip length to real drawing width
-    // double RightBound = Math.min(ParentDC.ClipBounds.Max.x, this.MyDuration);
-    
+    int StartDex = 0;// not sure how to get the first within clip box without just iterating from 0. 
+    int EndDex = len;
+
     // Draw Group spine
     Point2D.Double pntprev, pnt;
     Stroke oldStroke = ParentDC.gr.getStroke();
@@ -166,19 +179,24 @@ public class GroupBox implements ISonglet, IDrawable {
     // thinner lines for more distal sub-branches
     BasicStroke bs = new BasicStroke((1.0f / ParentDC.RecurseDepth) * 40.0f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND);
     ParentDC.gr.setStroke(bs);
-    ChildOffsetBox = this.SubSongs.get(0);
+    int pcnt = StartDex;
+    ChildOffsetBox = this.SubSongs.get(pcnt++);
     pntprev = ParentDC.To_Screen(ChildOffsetBox.TimeOrg, ChildOffsetBox.OctaveLoc);
-    for (int pcnt = 1; pcnt < len; pcnt++) {
+    while (pcnt < EndDex) {//for (int pcnt = StartDex; pcnt < EndDex; pcnt++) {
       ChildOffsetBox = this.SubSongs.get(pcnt);
       pnt = ParentDC.To_Screen(ChildOffsetBox.TimeOrg, ChildOffsetBox.OctaveLoc);
       ParentDC.gr.drawLine((int) pntprev.x, (int) pntprev.y, (int) pnt.x, (int) pnt.y);
       pntprev = pnt;
+      if (ParentDC.ClipBounds.Max.x < ChildOffsetBox.TimeOrg) {// break from loop if subsong starts after MaxX. 
+        EndDex = pcnt;
+        break;
+      }
+      pcnt++;
     }
+    ParentDC.gr.setStroke(oldStroke);// restore line stroke
 
     // Draw children
-    ParentDC.gr.setStroke(oldStroke);
-    // to do: break from loop if subsong starts after MaxX. 
-    for (int pcnt = 0; pcnt < len; pcnt++) {
+    for (pcnt = StartDex; pcnt < EndDex; pcnt++) {
       ChildOffsetBox = this.SubSongs.get(pcnt);
       ChildOffsetBox.Draw_Me(ParentDC);
     }
@@ -211,7 +229,7 @@ public class GroupBox implements ISonglet, IDrawable {
     this.SubSongs.clear();
   }
   /* ********************************************************************************* */
-  public static class GroupBox_Singer extends Singer {
+  public static class Group_Singer extends Singer {
     protected GroupBox MySonglet;
     public ArrayList<Singer> NowPlaying = new ArrayList<>();// pool of currently playing voices
     public int Current_Dex = 0;
@@ -351,21 +369,17 @@ public class GroupBox implements ISonglet, IDrawable {
       return this.Spawn_My_Singer();
     }
     /* ********************************************************************************* */
-    public GroupBox_Singer Spawn_My_Singer() {// for render time
-      GroupBox_Singer ph = this.Content.Spawn_My_Singer();
+    public Group_Singer Spawn_My_Singer() {// for render time
+      Group_Singer ph = this.Content.Spawn_My_Singer();
       ph.MyOffsetBox = this;// to do: also transfer all of this box's offsets to player head. 
       return ph;
     }
     /* ********************************************************************************* */
-//    @Override public void Draw_Me(Drawing_Context ParentDC) {// IDrawable
-//      if (ParentDC.ClipBounds.Intersects(MyBounds)) {// If we make ISonglet also drawable then we can stop repeating this code and put it all in OffsetBox.
-//        Drawing_Context ChildDC = new Drawing_Context(ParentDC, this);
-//        this.Content.Draw_Me(ChildDC);
-//      }
-//    }
-//    @Override public void UpdateBoundingBox() {// IDrawable
-//      this.Content.UpdateBoundingBox();
-//      this.Content.GetBoundingBox().UnMap(this, MyBounds);// project child limits into parent (my) space
-//    }
+    @Override public OffsetBox Clone_Me() {// always override this thusly
+      Group_OffsetBox child = new Group_OffsetBox();
+      child.Copy_From(this);
+      child.Content = this.Content;
+      return child;
+    }
   }
 }

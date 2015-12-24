@@ -9,8 +9,8 @@ package voices;
  *
  * @author MultiTool
  * 
- * In case we want to port to a non-garbage-collecting environment such as C++, IDeletable will help do accounting for memory leaks. 
- * We will probably switch this out for a reference counting scheme. Ref counting will only be useful for objects with multiple references. 
+ * IDeletable exists to help porting to a non-garbage-collecting environment such as C++, It helps do accounting for memory leaks. 
+ * We will probably switch this out for a reference counting scheme. Ref counting will only be useful for objects with multiple references such as Songlets. 
  * 
  */
 public interface IDeletable {
@@ -19,3 +19,7 @@ public interface IDeletable {
 //  int Ref_Me();// increment ref counter and return new value just for kicks
 //  int UnRef_Me();// decrement ref counter and return new value just for kicks
 }
+//  Possible pattern:
+//  (MyPointer = DeletableObject).Ref_Me();// ref pattern 
+//  MyPointer = MyPointer.UnRef_Me();// unref pattern, unref returns null?
+

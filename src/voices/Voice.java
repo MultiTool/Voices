@@ -5,8 +5,10 @@
  */
 package voices;
 
+import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Graphics2D;
+import java.awt.Stroke;
 import java.awt.geom.Path2D;
 import java.awt.geom.Point2D;
 import java.util.ArrayList;
@@ -269,7 +271,8 @@ public class Voice implements ISonglet, IDrawable {
     public double Loudness = 1.0;
 
     // graphics support, will move to separate object
-    double Radius = 5, Diameter = Radius * 2.0;
+    double RadiusPerOctave = 10, Diameter = RadiusPerOctave * 2.0;
+    double OctavesPerRadius = 0.02;
     double OctavesPerLoudness = 0.25;// to do: loudness will have to be mapped to screen. not a pixel value right?
     CajaDelimitadora MyBounds = new CajaDelimitadora();
     /* ********************************************************************************* */
@@ -291,22 +294,28 @@ public class Voice implements ISonglet, IDrawable {
     @Override public void Draw_Me(Drawing_Context ParentDC) {// IDrawable
       // Control points have the same space as their parent, so no need to create a local map.
       Point2D.Double pnt = ParentDC.To_Screen(this.RealTime, this.Octave);
+      double RadiusPixels = Math.abs(ParentDC.GlobalOffset.ScaleY) * OctavesPerRadius;
+      RadiusPixels = Math.ceil(RadiusPixels);
+      double DiameterPixels = RadiusPixels * 2.0;
       // ParentDC.gr.setColor(ToAlpha(Color.green, 200));
       ParentDC.gr.setColor(Globals.ToAlpha(Color.yellow, 200));// control point just looks like a dot
-      ParentDC.gr.fillOval((int) (pnt.x) - (int) Radius, (int) (pnt.y) - (int) Radius, (int) Diameter, (int) Diameter);
+      ParentDC.gr.fillOval((int) (pnt.x - RadiusPixels), (int) (pnt.y - RadiusPixels), (int) DiameterPixels, (int) DiameterPixels);
       ParentDC.gr.setColor(Globals.ToAlpha(Color.darkGray, 200));
-      ParentDC.gr.drawOval((int) (pnt.x) - (int) Radius, (int) (pnt.y) - (int) Radius, (int) Diameter, (int) Diameter);
+      ParentDC.gr.drawOval((int) (pnt.x - RadiusPixels), (int) (pnt.y - RadiusPixels), (int) DiameterPixels, (int) DiameterPixels);
     }
     /* ********************************************************************************* */
     @Override public CajaDelimitadora GetBoundingBox() {
       return this.MyBounds;
     }
     /* ********************************************************************************* */
-    @Override public void UpdateBoundingBox() {
+    @Override public void UpdateBoundingBox() {// IDrawable
       double LoudnessHeight = Loudness * OctavesPerLoudness;// Map loudness to screen pixels.
-      this.MyBounds.Assign(RealTime - Radius, Octave - Math.min(Radius, LoudnessHeight), RealTime + Radius, Octave + Math.max(Radius, LoudnessHeight));
-//      this.MyBounds.Min.setLocation(RealTime - Radius, Octave - Math.min(Radius, LoudnessHeight));
-//      this.MyBounds.Max.setLocation(RealTime + Radius, Octave + Math.max(Radius, LoudnessHeight));
+      double MinX = RealTime - OctavesPerRadius;
+      double MaxX = RealTime + OctavesPerRadius;
+      double HeightRad = Math.max(OctavesPerRadius, LoudnessHeight);
+      double MinY = Octave - HeightRad;
+      double MaxY = Octave + HeightRad;
+      this.MyBounds.Assign(MinX, MinY, MaxX, MaxY);
     }
     /* ********************************************************************************* */
     @Override public boolean Create_Me() {// IDeletable
@@ -340,16 +349,12 @@ public class Voice implements ISonglet, IDrawable {
       return ph;
     }
     /* ********************************************************************************* */
-//    @Override public void Draw_Me(Drawing_Context ParentDC) {// IDrawable
-//      if (ParentDC.ClipBounds.Intersects(MyBounds)) {// If we make ISonglet also drawable then we can stop repeating this code and put it all in OffsetBox.
-//        Drawing_Context ChildDC = new Drawing_Context(ParentDC, this);// map to child (my) internal coordinates
-//        this.Content.Draw_Me(ChildDC);
-//      }
-//    }
-//    @Override public void UpdateBoundingBox() {// IDrawable
-//      this.Content.UpdateBoundingBox();
-//      this.Content.GetBoundingBox().UnMap(this, MyBounds);// project child limits into parent (my) space
-//    }
+    @Override public OffsetBox Clone_Me() {// always override this thusly
+      VoiceOffsetBox child = new VoiceOffsetBox();
+      child.Copy_From(this);
+      child.Content = this.Content;
+      return child;
+    }
   }
   /* ********************************************************************************* */
   public static class Voice_Singer extends Singer {

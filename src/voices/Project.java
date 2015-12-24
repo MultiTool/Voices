@@ -35,7 +35,9 @@ public class Project implements IDeletable {
     if (false) {// clip test - seems to work, yay
       Rectangle2D rect = new Rectangle2D.Float();
       rect.setRect(0, 0, 300, 300);
-      g2d.setClip(rect);
+      if (false) {
+        g2d.setClip(rect);
+      }
       dc.ClipBounds.Assign(0, 0, 300, 300);
     } else {
       dc.ClipBounds.Assign(0, 0, 10000, 10000);// arbitrarily large

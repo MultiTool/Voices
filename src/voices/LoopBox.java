@@ -102,11 +102,12 @@ public class LoopBox implements ISonglet, IDrawable {
     LeftBound = Math.max(0, LeftBound);
     int IterationStart = (int) Math.ceil(LeftBound / this.Delay);
     double RightBound = Math.min(ParentDC.ClipBounds.Max.x, this.MyDuration);
-    OffsetBox obox = this.Content.Spawn_OffsetBox();// problematic. may have to create a dedicated render time-only offset box
+    OffsetBox obox = this.ContentOBox.Clone_Me();// problematic. may have to create a dedicated render time-only offset box
     int loopcnt = IterationStart;
     double Time;
     while ((Time = (loopcnt * this.Delay)) <= RightBound) {// keep drawing until child song's start is beyond our max X. 
       obox.TimeOrg = Time;
+      obox.MyBounds.Rebase_Time(Time);
       obox.Draw_Me(ParentDC);
       loopcnt++;
     }
@@ -167,6 +168,7 @@ public class LoopBox implements ISonglet, IDrawable {
         Singer player = this.NowPlaying.get(cnt);
         if (player.IsFinished) {
           this.NowPlaying.remove(player);
+          player.Get_OffsetBox().Delete_Me();// this offsetbox was temporary and not part of the composition
           player.Delete_Me();
         } else {
           cnt++;
@@ -202,7 +204,7 @@ public class LoopBox implements ISonglet, IDrawable {
         Singer player = this.NowPlaying.get(cnt);
         if (player.IsFinished) {
           this.NowPlaying.remove(player);
-          // to do: obox.Delete_Me(); must happen here! or we should go with locally-defined oboxes. 
+          player.Get_OffsetBox().Delete_Me();// this offsetbox was temporary and not part of the composition
           player.Delete_Me();
         } else {
           cnt++;
@@ -274,15 +276,11 @@ public class LoopBox implements ISonglet, IDrawable {
       return ph;
     }
     /* ********************************************************************************* */
-//    @Override public void Draw_Me(Drawing_Context ParentDC) {// IDrawable
-//      if (ParentDC.ClipBounds.Intersects(MyBounds)) {// If we make ISonglet also drawable then we can stop repeating this code and put it all in OffsetBox.
-//        Drawing_Context ChildDC = new Drawing_Context(ParentDC, this);
-//        this.Content.Draw_Me(ChildDC);
-//      }
-//    }
-//    @Override public void UpdateBoundingBox() {// IDrawable
-//      this.Content.UpdateBoundingBox();
-//      this.Content.GetBoundingBox().UnMap(this, MyBounds);// project child limits into parent (my) space
-//    }
+    @Override public OffsetBox Clone_Me() {// always override this thusly
+      Loop_OffsetBox child = new Loop_OffsetBox();
+      child.Copy_From(this);
+      child.Content = this.Content;
+      return child;
+    }
   }
 }

@@ -328,7 +328,7 @@ Clean: Make ISonglet inherit IDrawable and remove redundant code. - done
 Clean: Get rid of IOffsetBox.  - done
 Clean: Big code cleanup. Consolidate all weird testing code into one place. - done
 Put grid in background, seconds by octaves. - done
-*** Fix bounds bug where covering origin of main branch hides everything, and bounds width is too short too. 
+*** Fix bounds bug where covering origin of main branch hides everything, and bounds width is too short too.  - done
 MemLeaks: Make IDeleteable interface and apply to *everything* to get ready for C++ port. - done
 MemLeaks: All IDeleteable have a global creation counter and a global deletion counter. 
 MemLeaks: Add refcounting for eventual serialization, IDeleteable, and C++ port. 

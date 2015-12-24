@@ -60,12 +60,16 @@ public class MainGui {
       // to do: move this to MainGui, and base clipping, zoom etc. on canvas size. 
       Drawing_Context dc = new Drawing_Context();
       dc.gr = g2d;
-      int wdt = this.getWidth() / 1;
-      int hgt = this.getHeight() / 1;
+      int wdt = this.getWidth() * 7 / 8;
+      int hgt = this.getHeight() * 7 / 8;
       if (true) {// clip test - seems to work, yay
         Rectangle2D rect = new Rectangle2D.Float();
         rect.setRect(0, 0, wdt, hgt);
-        g2d.setClip(rect);
+        if (false) {// disable real clipping to see how much unnecessary drawing is being done.
+          g2d.setClip(rect);
+        }
+        g2d.setColor(Color.red);
+        g2d.draw(rect);// red rectangle confidence check for clipping
         dc.ClipBounds.Assign(0, 0, wdt, hgt);// problem: why does project disappear when clip bounds cover its root? 
       } else {
         dc.ClipBounds.Assign(0, 0, 10000, 10000);// arbitrarily large
