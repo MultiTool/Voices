@@ -136,17 +136,19 @@ public class MainGui {
     }
     /* ********************************************************************************* */
     @Override public void mouseWheelMoved(MouseWheelEvent mwe) {
-      double XCtr, YCtr, Scale;
-      int rotation = mwe.getWheelRotation();
-      double finerotation = mwe.getPreciseWheelRotation();
-      int amount = mwe.getScrollAmount();
-      Scale = Math.pow(2, finerotation);// range 0 to 1 to positive infinity
+      double XCtr, YCtr, Rescale;
       XCtr = mwe.getX();
       YCtr = mwe.getY();
-      mwe.isControlDown();
-      mwe.isAltDown();
+      double finerotation = mwe.getPreciseWheelRotation();
+      Rescale = Math.pow(2, finerotation);// range 0 to 1 to positive infinity
+      if (false) {// use these later
+        int rotation = mwe.getWheelRotation();
+        int amount = mwe.getScrollAmount();
+        mwe.isControlDown();
+        mwe.isAltDown();
+      }
       GraphicBox.Graphic_OffsetBox gb = this.MyProject.GraphicRoot;
-      gb.Zoom(XCtr, YCtr, Scale);
+      gb.Zoom(XCtr, YCtr, Rescale);
       this.repaint();
     }
     /* ********************************************************************************* */
