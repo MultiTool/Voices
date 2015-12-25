@@ -59,6 +59,17 @@ public class OffsetBox implements IDrawable, IDeletable {// location box to tran
     return this.GetContent().Get_Max_Amplitude() * this.LoudnessFactor;
   }
   /* ********************************************************************************* */
+  public void Zoom(double XCtr, double YCtr, double Scale) {
+    double XMov = XCtr - (Scale * XCtr);
+    double YMov = YCtr - (Scale * YCtr);
+
+    this.TimeOrg = XMov + (Scale * this.TimeOrg);
+    this.OctaveLoc = YMov + (Scale * this.OctaveLoc);
+
+    this.ScaleX *= Scale;
+    this.ScaleY *= Scale;
+  }
+  /* ********************************************************************************* */
   public void Compound(OffsetBox donor) {
     //double DonorOffset = donor.TimeLoc_g(); double DonorScale = donor.ScaleX_g();
     this.TimeLoc_s(TimeOrg + (this.ScaleX * donor.TimeLoc_g()));// to do: combine matrices here. 

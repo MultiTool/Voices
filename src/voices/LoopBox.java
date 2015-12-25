@@ -249,7 +249,11 @@ public class LoopBox implements ISonglet, IDrawable {
       super.Delete_Me();
       int len = this.NowPlaying.size();
       for (int cnt = 0; cnt < len; cnt++) {
-        this.NowPlaying.get(cnt).Delete_Me();
+        try {
+          this.NowPlaying.get(cnt).Delete_Me();
+        } catch (Exception ex) {
+          boolean nop = true;
+        }
       }
       this.NowPlaying.clear();
     }

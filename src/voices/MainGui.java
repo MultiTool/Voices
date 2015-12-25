@@ -115,6 +115,20 @@ public class MainGui {
     @Override public void mousePressed(MouseEvent me) {
     }
     @Override public void mouseReleased(MouseEvent me) {
+      double XCtr, YCtr, Scale;
+      if (false) {// for testing without mouse wheel
+        Scale = 1.1;
+        if (me.getButton() == MouseEvent.BUTTON1) {
+          Scale = 1.1;;
+        } else {
+          Scale = 0.9;
+        }
+        XCtr = me.getX();
+        YCtr = me.getY();
+        GraphicBox.Graphic_OffsetBox gb = this.MyProject.GraphicRoot;
+        gb.Zoom(XCtr, YCtr, Scale);
+        this.repaint();
+      }
     }
     @Override public void mouseEntered(MouseEvent me) {
     }
@@ -122,13 +136,18 @@ public class MainGui {
     }
     /* ********************************************************************************* */
     @Override public void mouseWheelMoved(MouseWheelEvent mwe) {
+      double XCtr, YCtr, Scale;
       int rotation = mwe.getWheelRotation();
       double finerotation = mwe.getPreciseWheelRotation();
       int amount = mwe.getScrollAmount();
-      mwe.getX();
-      mwe.getY();
+      Scale = Math.pow(2, finerotation);// range 0 to 1 to positive infinity
+      XCtr = mwe.getX();
+      YCtr = mwe.getY();
       mwe.isControlDown();
       mwe.isAltDown();
+      GraphicBox.Graphic_OffsetBox gb = this.MyProject.GraphicRoot;
+      gb.Zoom(XCtr, YCtr, Scale);
+      this.repaint();
     }
     /* ********************************************************************************* */
     @Override public void componentResized(ComponentEvent ce) {

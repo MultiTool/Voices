@@ -50,6 +50,7 @@ public class GraphicBox implements IDrawable, IDeletable {// ISonglet,
   public void Draw_Grid(Drawing_Context ParentDC) {
     double xloc, yloc;
     int MinX, MinY, MaxX, MaxY;
+    int X0, Y0;
     int width, height;
 
     MinX = (int) ParentDC.GlobalOffset.UnMapTime(Math.floor(ParentDC.ClipBounds.Min.x));
@@ -75,6 +76,13 @@ public class GraphicBox implements IDrawable, IDeletable {// ISonglet,
       yloc = ParentDC.GlobalOffset.UnMapPitch(ycnt);
       ParentDC.gr.drawLine(MinX, (int) yloc, width, (int) yloc);
     }
+
+    ParentDC.gr.setColor(Globals.ToAlpha(Color.magenta, 100));
+    X0 = (int) ParentDC.GlobalOffset.UnMapTime(0);
+    ParentDC.gr.drawLine(X0, MinY, X0, height);
+
+    Y0 = (int) ParentDC.GlobalOffset.UnMapPitch(0);
+    ParentDC.gr.drawLine(MinX, Y0, width, Y0);
   }
   /* ********************************************************************************* */
   public static void AntiAlias(Graphics2D g2d) {//http://www.exampledepot.com/egs/java.awt/AntiAlias.html?l=rel
