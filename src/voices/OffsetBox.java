@@ -201,14 +201,46 @@ public class OffsetBox implements IDrawable.IMoveable, IDeletable {// location b
     Content.GetBoundingBox().UnMap(this, MyBounds);// project child limits into parent (my) space
     this.MyBounds.Sort_Me();// almost never needed
   }
-  @Override public void GoFishing(HookAndLure Scoop) {// IDrawable.IMoveable
-    if (Scoop.ClipBounds.Intersects(MyBounds)) {
-//      // map to child here
+  @Override public void GoFishing(HookAndLure Scoop) {// IDrawable
+    if (Scoop.SearchBounds.Intersects(MyBounds)) {
+      Scoop.AddBoxToStack(this);// map to child 
+      // here, if my cpoint is a direct hit for Scoop, make me the leaf. but keep looking down.
+      // as I am more distal and forward-drawn to the incumbent leaf (if any) I always win here
+      // unless the incumbent leaf was down a separate branch and more distal. (oy in that case we've wiped its stack even if it was to win) 
+      //  RETHINK ALL OF THIS
+      this.GetContent().GoFishing(Scoop);
+      /* 
+       Whether we have hit an OffsetBox or a voice control point, we never use the final-hit object as a mapper.
+       So mapping always happens one level above each thing hit? 
+       maybe keep one Leaf object at the end of the chain, and the whole stack
+       is pure offsetboxes? 
+       Leaf is IMovable type, stack is obox type. all oboxes are moveable, so that works for the return structure.
+       though, how do we go down looking? 
+       does every obox GoFishing add itself as temporary leaf? leaf is the current winner. 
+       so any QUALIFIED obox adds itself as leaf, but then loses that position for any better leaf.
+       problem, if an obox's child wins the leaf, obox must move to the stack. 
+       maybe we only compete for leafdom on the way OUT of recursion. That way:
+       inward - all oboxes add themselves to stack and search down.
+       found a leaf or dead end, returning.
+       outward - compare every obox with the current leaf.  if local obox wins
+       . pop the stack back to me, including myself. put me in the leaf.
+       . else keep going up and out, leave stack unchanged. 
+      
+      
+       */
+
 //      ISonglet Content = this.GetContent();
-//      Content.GoFishing(results);
+      //Content.GoFishing(Scoop);
+      //var myList = {"a", "b", "c"};// does this really work for truncating? 
+      //myList.subList( 0, 2 ).clear();
+      //print( myList ) // prints ["c"]
     }
   }
   @Override public void MoveTo(double XLoc, double YLoc) {// IDrawable.IMoveable
+    if (XLoc >= 0) {// don't go backward in time
+      this.TimeOrg = XLoc;
+      this.OctaveLoc = YLoc;
+    }
   }
   /* ********************************************************************************* */
   @Override public boolean Create_Me() {// IDeletable

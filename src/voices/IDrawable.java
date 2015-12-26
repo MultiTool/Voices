@@ -19,8 +19,8 @@ public interface IDrawable {
   void Draw_Me(Drawing_Context ParentDC);
   CajaDelimitadora GetBoundingBox();
   void UpdateBoundingBox();
-  public interface IMoveable extends IDrawable {
-    void GoFishing(HookAndLure Scoop);
+  void GoFishing(HookAndLure Scoop);
+  public interface IMoveable extends IDrawable {// IMoveable is for things that can be selected, dragged, copied, pasted, deleted etc. through the UI.
     void MoveTo(double XLoc, double YLoc);
   }
   /*
@@ -35,7 +35,7 @@ public interface IDrawable {
    lowest-hanging fruit is NoReTopo, select points to drag them. Just burrow in to tree with a point and bounds box and dig up the winner hit. 
   
    */
-  // Every IDrawable will have a bounding box, and every Drawing_Context will also have a bounding box. 
+  // Every IDrawable will have a bounding box, and every Drawing_Context will also have a bounding box for clipping. 
   // Drawing will always be called from the top, and the bounding box will define what to draw. 
   /* ********************************************************************************* */
   public final class Drawing_Context implements IDeletable {// Let's be final until we can't anymore

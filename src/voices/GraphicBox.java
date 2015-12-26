@@ -47,7 +47,7 @@ public class GraphicBox implements IDrawable, IDeletable {// ISonglet,
     this.MyBounds.Include(ChildBBoxUnMapped);// Inefficient. Could be just assigned or copied.
   }
   /* ********************************************************************************* */
-  public void GoFishing(HookAndLure Scoop) {// Container
+  @Override public void GoFishing(HookAndLure Scoop) {// IDrawable
     throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
   }
   /* ********************************************************************************* */
@@ -154,10 +154,13 @@ public class GraphicBox implements IDrawable, IDeletable {// ISonglet,
       this.MyBounds.Sort_Me();
     }
     /* ********************************************************************************* */
-    @Override public void GoFishing(HookAndLure Scoop) {// IDrawable.IMoveable
+    @Override public void GoFishing(HookAndLure Scoop) {// IDrawable
       throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
-    @Override public void MoveTo(double XLoc,double YLoc){// IDrawable.IMoveable
+    @Override public void MoveTo(double XLoc, double YLoc) {// IDrawable.IMoveable
+      // if (XLoc >= 0) {// don't go backward in time
+      this.TimeOrg = XLoc;
+      this.OctaveLoc = YLoc;
     }
     /* ********************************************************************************* */
     @Override public OffsetBox Clone_Me() {// always override this thusly

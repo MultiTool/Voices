@@ -217,7 +217,7 @@ public class GroupBox implements ISonglet, IDrawable {
     }
   }
   /* ********************************************************************************* */
-  public void GoFishing(HookAndLure Scoop) {// Container
+  @Override public void GoFishing(HookAndLure Scoop) {// IDrawable
     throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
   }
   /* ********************************************************************************* */
