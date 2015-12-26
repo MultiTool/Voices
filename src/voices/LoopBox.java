@@ -126,6 +126,10 @@ public class LoopBox implements ISonglet, IDrawable {
     //this.MyBounds.Assign(0, miny, this.MyDuration, maxy);
   }
   /* ********************************************************************************* */
+  public void GoFishing(HookAndLure Scoop) {// Container
+    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+  }
+  /* ********************************************************************************* */
   @Override public boolean Create_Me() {// IDeletable
     return true;
   }

@@ -253,6 +253,10 @@ public class Voice implements ISonglet, IDrawable {
     }
   }
   /* ********************************************************************************* */
+  public void GoFishing(HookAndLure Scoop) {// Container
+    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+  }
+  /* ********************************************************************************* */
   @Override public boolean Create_Me() {// IDeletable
     return true;
   }
@@ -265,7 +269,7 @@ public class Voice implements ISonglet, IDrawable {
     this.CPoints.clear();
   }
   /* ********************************************************************************* */
-  public static class Point implements IDrawable, IDeletable {
+  public static class Point implements IDrawable.IMoveable, IDeletable {
     public double RealTime = 0.0, SubTime = 0.0;// SubTime is cumulative subjective time.
     public double Octave = 0.0;
     public double Loudness = 1.0;
@@ -316,6 +320,12 @@ public class Voice implements ISonglet, IDrawable {
       double MinY = Octave - HeightRad;
       double MaxY = Octave + HeightRad;
       this.MyBounds.Assign(MinX, MinY, MaxX, MaxY);
+    }
+    /* ********************************************************************************* */
+    @Override public void GoFishing(HookAndLure Scoop) {// IDrawable.IMoveable
+      throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+    @Override public void MoveTo(double XLoc, double YLoc) {// IDrawable.IMoveable
     }
     /* ********************************************************************************* */
     @Override public boolean Create_Me() {// IDeletable

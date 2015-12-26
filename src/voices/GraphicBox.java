@@ -47,6 +47,10 @@ public class GraphicBox implements IDrawable, IDeletable {// ISonglet,
     this.MyBounds.Include(ChildBBoxUnMapped);// Inefficient. Could be just assigned or copied.
   }
   /* ********************************************************************************* */
+  public void GoFishing(HookAndLure Scoop) {// Container
+    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+  }
+  /* ********************************************************************************* */
   public void Draw_Grid(Drawing_Context ParentDC) {
     double xloc, yloc;
     int MinX, MinY, MaxX, MaxY;
@@ -148,6 +152,12 @@ public class GraphicBox implements IDrawable, IDeletable {// ISonglet,
       this.Content.UpdateBoundingBox();// Problem: Overriding this because GraphicBox is not an ISonglet
       this.Content.GetBoundingBox().UnMap(this, MyBounds);// project child limits into parent (my) space
       this.MyBounds.Sort_Me();
+    }
+    /* ********************************************************************************* */
+    @Override public void GoFishing(HookAndLure Scoop) {// IDrawable.IMoveable
+      throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+    @Override public void MoveTo(double XLoc,double YLoc){// IDrawable.IMoveable
     }
     /* ********************************************************************************* */
     @Override public OffsetBox Clone_Me() {// always override this thusly

@@ -19,7 +19,7 @@ import voices.ISonglet.Singer;
  * We do scale for graphics though. 
  * 
  */
-public class OffsetBox implements IDrawable, IDeletable {// location box to transpose in pitch, move in time, etc.  //IOffsetBox, 
+public class OffsetBox implements IDrawable.IMoveable, IDeletable {// location box to transpose in pitch, move in time, etc.  //IOffsetBox, 
   public double TimeOrg = 0, OctaveLoc = 0, LoudnessFactor = 1.0;// all of these are in parent coordinates
   double ScaleX = 1.0, ScaleY = 1.0;// to be used for pixels per second, pixels per octave
   double ChildXorg = 0, ChildYorg = 0;// These are only non-zero for graphics. Audio origins are always 0,0. 
@@ -150,9 +150,10 @@ public class OffsetBox implements IDrawable, IDeletable {// location box to tran
   /* ********************************************************************************* */
   @Override public void Draw_Me(Drawing_Context ParentDC) {// IDrawable
     if (ParentDC.ClipBounds.Intersects(MyBounds)) {// If we make ISonglet also drawable then we can stop repeating this code and put it all in OffsetBox.
-      Drawing_Context ChildDC = new Drawing_Context(ParentDC, this);
+      Drawing_Context ChildDC = new Drawing_Context(ParentDC, this);// In C++ ChildDC will be a local variable from the stack, not heap. 
       ISonglet Content = this.GetContent();
       Content.Draw_Me(ChildDC);
+      ChildDC.Delete_Me();
     }
   }
   /* ********************************************************************************* */
@@ -199,6 +200,15 @@ public class OffsetBox implements IDrawable, IDeletable {// location box to tran
     Content.UpdateBoundingBox();
     Content.GetBoundingBox().UnMap(this, MyBounds);// project child limits into parent (my) space
     this.MyBounds.Sort_Me();// almost never needed
+  }
+  @Override public void GoFishing(HookAndLure Scoop) {// IDrawable.IMoveable
+    if (Scoop.ClipBounds.Intersects(MyBounds)) {
+//      // map to child here
+//      ISonglet Content = this.GetContent();
+//      Content.GoFishing(results);
+    }
+  }
+  @Override public void MoveTo(double XLoc, double YLoc) {// IDrawable.IMoveable
   }
   /* ********************************************************************************* */
   @Override public boolean Create_Me() {// IDeletable
