@@ -238,7 +238,7 @@ public class GroupBox implements ISonglet, IDrawable {
     public ArrayList<Singer> NowPlaying = new ArrayList<>();// pool of currently playing voices
     public int Current_Dex = 0;
     double Prev_Time = 0;
-    private Group_OffsetBox MyOffsetBox;
+    //private Group_OffsetBox MyOffsetBox;
     /* ********************************************************************************* */
     @Override public void Start() {
       IsFinished = false;
@@ -375,7 +375,7 @@ public class GroupBox implements ISonglet, IDrawable {
     /* ********************************************************************************* */
     public Group_Singer Spawn_My_Singer() {// for render time
       Group_Singer ph = this.Content.Spawn_My_Singer();
-      ph.MyOffsetBox = this;// to do: also transfer all of this box's offsets to player head. 
+      ph.MyOffsetBox = this;// Transfer all of this box's offsets to singer. 
       return ph;
     }
     /* ********************************************************************************* */

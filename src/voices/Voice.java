@@ -69,6 +69,19 @@ public class Voice implements ISonglet, IDrawable {
     this.CPoints.add(pnt);
     return pnt;
   }
+  /* ************************************************************************************************************************ */
+  public int Tree_Search(double Time, int minloc, int maxloc) {// finds place where time would be inserted or replaced
+    int medloc;
+    while (minloc < maxloc) {
+      medloc = (minloc + maxloc) >> 1; // >>1 is same as div 2, only faster.
+      if (Time <= this.CPoints.get(medloc).RealTime) {
+        maxloc = medloc;
+      }/* has to go through here to be found. */ else {
+        minloc = medloc + 1;
+      }
+    }
+    return minloc;
+  }
   /* ********************************************************************************* */
   @Override public int Get_Sample_Count(int SampleRate) {
     int len = this.CPoints.size();
@@ -373,7 +386,6 @@ public class Voice implements ISonglet, IDrawable {
   /* ********************************************************************************* */
   public static class Voice_Singer extends Singer {
     protected Voice MyPhrase;
-    protected OffsetBox MyOffsetBox = new OffsetBox();
     double Phase, Cycles;// Cycles is the number of cycles we've rotated since the start of this voice. The fractional part is the phase information. 
     double SubTime;// Subjective time.
     double Current_Octave, Current_Frequency;

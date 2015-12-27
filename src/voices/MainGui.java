@@ -68,8 +68,12 @@ public class MainGui {
         if (false) {// disable real clipping to see how much unnecessary drawing is being done.
           g2d.setClip(rect);
         }
+        Stroke oldStroke = g2d.getStroke();
+        BasicStroke bs = new BasicStroke(5f, BasicStroke.CAP_SQUARE, BasicStroke.JOIN_MITER);
+        g2d.setStroke(bs);
         g2d.setColor(Color.red);
         g2d.draw(rect);// red rectangle confidence check for clipping
+        g2d.setStroke(oldStroke);
         dc.ClipBounds.Assign(0, 0, wdt, hgt);// problem: why does project disappear when clip bounds cover its root? 
       } else {
         dc.ClipBounds.Assign(0, 0, 10000, 10000);// arbitrarily large

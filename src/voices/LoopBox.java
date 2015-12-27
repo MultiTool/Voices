@@ -102,6 +102,27 @@ public class LoopBox implements ISonglet, IDrawable {
     LeftBound = Math.max(0, LeftBound);
     int IterationStart = (int) Math.ceil(LeftBound / this.Delay);
     double RightBound = Math.min(ParentDC.ClipBounds.Max.x, this.MyDuration);
+    Ghost_OffsetBox ghost = new Ghost_OffsetBox();
+    ghost.Copy_From(this.ContentOBox);
+    ghost.Assign_Songlet(this);
+    int loopcnt = IterationStart;
+    double Time;
+    while ((Time = (loopcnt * this.Delay)) <= RightBound) {// keep drawing until child song's start is beyond our max X. 
+      ghost.TimeOrg = Time;
+      ghost.MyIteration = loopcnt;
+      ghost.MyBounds.Rebase_Time(Time);
+      ghost.Draw_Me(ParentDC);
+      loopcnt++;
+    }
+    ghost.Delete_Me();
+  }
+  /* ********************************************************************************* */
+  // @Override 
+  public void Draw_Me_old(Drawing_Context ParentDC) {// IDrawable
+    double LeftBound = ParentDC.ClipBounds.Min.x - this.ContentOBox.GetBoundingBox().GetWidth();
+    LeftBound = Math.max(0, LeftBound);
+    int IterationStart = (int) Math.ceil(LeftBound / this.Delay);
+    double RightBound = Math.min(ParentDC.ClipBounds.Max.x, this.MyDuration);
     OffsetBox obox = this.ContentOBox.Clone_Me();// problematic. may have to create a dedicated render time-only offset box
     int loopcnt = IterationStart;
     double Time;
@@ -140,7 +161,7 @@ public class LoopBox implements ISonglet, IDrawable {
   /* ********************************************************************************* */
   public static class Loop_Singer extends Singer {
     protected LoopBox MySonglet;
-    private Loop_OffsetBox MyOffsetBox;
+    //private Loop_OffsetBox MyOffsetBox;
     public ArrayList<Singer> NowPlaying = new ArrayList<>();// pool of currently playing voices
     double Prev_Time = 0;
     public int LoopCount;
@@ -218,7 +239,7 @@ public class LoopBox implements ISonglet, IDrawable {
       this.Prev_Time = EndTime;
     }
     /* ********************************************************************************* */
-    private double Tee_Up(double EndTime) {// consolidating identical code 
+    private double Tee_Up_2(double EndTime) {// consolidating identical code 
       if (EndTime < 0) {
         EndTime = 0;// clip time
       }
@@ -233,6 +254,31 @@ public class LoopBox implements ISonglet, IDrawable {
         obox = MySonglet.Content.Spawn_OffsetBox();// problematic. may have to create a dedicated render time-only offset box
         obox.TimeOrg = Time;
         Singer singer = obox.Spawn_Singer();
+        singer.Inherit(this);
+        this.NowPlaying.add(singer);
+        singer.Start();
+        this.LoopCount++;
+      }
+      return EndTime;
+    }
+    /* ********************************************************************************* */
+    private double Tee_Up(double EndTime) {// consolidating identical code 
+      if (EndTime < 0) {
+        EndTime = 0;// clip time
+      }
+      double Final_Time = this.MySonglet.Get_Duration();
+      if (EndTime > Final_Time) {
+        this.IsFinished = true;
+        EndTime = Final_Time;// clip time
+      }
+      double Time;
+      Ghost_OffsetBox ghost;
+      while ((Time = (this.LoopCount * this.MySonglet.Delay)) <= EndTime) {// first find new songlets in this time range and add them to pool
+        ghost = new Ghost_OffsetBox();
+        ghost.Assign_Songlet(this.MySonglet);
+        ghost.MyIteration = this.LoopCount;
+        ghost.TimeOrg = Time;
+        Singer singer = ghost.Spawn_Singer();
         singer.Inherit(this);
         this.NowPlaying.add(singer);
         singer.Start();
@@ -263,7 +309,7 @@ public class LoopBox implements ISonglet, IDrawable {
     }
   }
   /* ********************************************************************************* */
-  public static class Loop_OffsetBox extends OffsetBox {// location box to transpose in pitch, move in time, etc. 
+  public static class Loop_OffsetBox extends OffsetBox {// location box to transpose LoopBox in pitch, move in time, etc. 
     public LoopBox Content;
     /* ********************************************************************************* */
     public Loop_OffsetBox() {
@@ -288,6 +334,70 @@ public class LoopBox implements ISonglet, IDrawable {
       Loop_OffsetBox child = new Loop_OffsetBox();
       child.Copy_From(this);
       child.Content = this.Content;
+      return child;
+    }
+  }
+  /* ********************************************************************************* */
+  private static class Ghost_OffsetBox extends OffsetBox {// TEMPORARY location box to shift child in time
+    // UNDER CONSTRUCTION, not used yet
+    // Ghost obox is a filmy wrapper around LoopBox's child's real offset box. Ghost simply translates outside-world coordinates into looped coordinates and back.
+    // Ghost wrapper is needed in LoopBox for 1) MoveTo, 2) Draw_Me (optional), and hopefully for 3) Singer. 
+    public LoopBox Parent;
+    public OffsetBox ContentLayer;
+    OffsetBox TempObox = null;
+    public int MyIteration = 0;// which loop iteration I represent
+    /* ********************************************************************************* */
+    public void Assign_Songlet(LoopBox Parent) {
+      this.Parent = Parent;
+      this.ContentLayer = this.Parent.ContentOBox;
+    }
+    /* ********************************************************************************* */
+    @Override public void Draw_Me(Drawing_Context ParentDC) {// IDrawable
+      if (ParentDC.ClipBounds.Intersects(MyBounds)) {// MyBounds keep moving
+        Drawing_Context ChildDC = new Drawing_Context(ParentDC, this);// In C++ ChildDC will be a local variable from the stack, not heap. 
+        // to do: map the real-time movements to our parent's Delay value, then reset the child obox's values 
+        if (false) {// do we include the child's personal offset or skip around it? 
+          this.ContentLayer.Draw_Me(ParentDC);
+        } else {
+          ISonglet Content = this.GetContent();// skip around real offset box
+          Content.Draw_Me(ChildDC);
+        }
+        ChildDC.Delete_Me();
+      }
+    }
+    /* ********************************************************************************* */
+    @Override public ISonglet GetContent() {
+      return ContentLayer.GetContent();
+    }
+    /* ********************************************************************************* */
+    @Override public ISonglet.Singer Spawn_Singer() {// always always always override this
+      Singer singer;
+      if (false) {// darn. maybe here is where we could spawn the offset, assign the offset, then spawn its singer? eeeee. 
+        this.TempObox = this.ContentLayer.GetContent().Spawn_OffsetBox();
+        singer = this.TempObox.Spawn_Singer();
+      } else {
+        singer = this.ContentLayer.Spawn_Singer();
+        singer.MyOffsetBox = this;// Point the singer's offset ref to me, the ghost, and shift the ghost as needed. 
+      }
+      return singer;
+    }
+    @Override public void MoveTo(double XLoc, double YLoc) {// IDrawable.IMoveable
+      if (XLoc >= 0) {// don't go backward in time
+        this.TimeOrg = XLoc;// do we use and keep these coordinates or are we just a wrapper around ContentLayer?
+        this.OctaveLoc = YLoc;// no we have the coordinates but our child has different ones
+        // to do: map the real-time movements to our parent's Delay value, then reset the child obox's values 
+        double TempDelay = XLoc / this.MyIteration;
+        this.Parent.Delay = TempDelay;
+        if (false) {// maybe we don't really need to save Delay as part of our child's obox. 
+          this.ContentLayer.MoveTo(TempDelay, YLoc);
+        }
+      }
+    }
+    /* ********************************************************************************* */
+    @Override public OffsetBox Clone_Me() {// always override this thusly
+      Ghost_OffsetBox child = new Ghost_OffsetBox();
+      child.Copy_From(this);
+      child.ContentLayer = this.ContentLayer;
       return child;
     }
   }

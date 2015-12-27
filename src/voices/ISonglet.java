@@ -18,7 +18,8 @@ public interface ISonglet extends IDrawable, IDeletable {// Cancionita
     double Inherited_OctaveRate = 0.0;// bend context, change dyanimcally while rendering
     public boolean IsFinished = false;
     public Singer ParentSinger;
-    // boolean exists = Create_Me();
+    protected OffsetBox MyOffsetBox = null;
+    // public boolean exists = Create_Me();
     /* ********************************************************************************* */
     public Singer() {
       this.Create_Me();

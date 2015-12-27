@@ -19,7 +19,8 @@ public class HookAndLure {
   public double XHit, YHit;// exact mouse click point
   public CajaDelimitadora SearchBounds;
   public int Stack_Depth = 0;
-  public ArrayList<StackItem> Hit_Stack;
+  public ArrayList<StackItem> Explore_Stack;
+  public ArrayList<StackItem> Best_Stack;
   public IDrawable.IMoveable Leaf;// thing we hit and are going to move or copy or whatever
   /* 
    to do: put a hit stack here for best item found,
@@ -37,20 +38,20 @@ public class HookAndLure {
   
    */
   public CajaDelimitadora AddBoxToStack(OffsetBox target) {
-    StackItem prev = this.Hit_Stack.get(Stack_Depth - 1);// ack, possible range check error
+    StackItem prev = this.Explore_Stack.get(Stack_Depth - 1);// ack, possible range check error
     StackItem si = new StackItem();
     si.Target = target;
     prev.SearchBounds.Map(target, si.SearchBounds);
-    this.Hit_Stack.add(si);
+    this.Explore_Stack.add(si);
     Stack_Depth++;
     return this.SearchBounds;
   }
   public void TruncateStack(int resize) {
-    int len = this.Hit_Stack.size();
+    int len = this.Explore_Stack.size();
     for (int cnt = resize; cnt < len; cnt++) {
-      this.Hit_Stack.get(cnt).Delete_Me();
+      this.Explore_Stack.get(cnt).Delete_Me();
     }
-    this.Hit_Stack.subList(resize, len).clear();// does this really work? 
+    this.Explore_Stack.subList(resize, len).clear();// does this really work? 
   }
   public IDrawable.IMoveable PickAWinner(IDrawable.IMoveable thing0, IDrawable.IMoveable thing1) {// always override this
     return null;// compare for which one is the best match
