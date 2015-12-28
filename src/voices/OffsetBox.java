@@ -8,6 +8,7 @@ package voices;
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Stroke;
+import java.awt.geom.Point2D;
 import voices.ISonglet.Singer;
 
 /**
@@ -25,6 +26,9 @@ public class OffsetBox implements IDrawable.IMoveable, IDeletable {// location b
   double ChildXorg = 0, ChildYorg = 0;// These are only non-zero for graphics. Audio origins are always 0,0. 
   public CajaDelimitadora MyBounds;
   public ISonglet MyParentSong;// can do this but not used yet
+
+  // graphics support, will move to separate object
+  double OctavesPerRadius = 0.025;
   /* ********************************************************************************* */
   public OffsetBox() {
     //this.Clear();
@@ -112,9 +116,28 @@ public class OffsetBox implements IDrawable.IMoveable, IDeletable {// location b
     return this.OctaveLoc + ((ChildPitch - ChildYorg) * ScaleY);
   }
   /* ********************************************************************************* */
-//  public abstract ISonglet GetContent();
+  public Point2D.Double MapTo(double XLoc, double YLoc) {
+    Point2D.Double pnt = new Point2D.Double(this.UnMapTime(XLoc), this.UnMapPitch(YLoc));
+    return pnt;
+  }
+  /* ********************************************************************************* */
+  public Point2D.Double UnMap(double XLoc, double YLoc) {
+    Point2D.Double pnt = new Point2D.Double(this.MapTime(XLoc), this.MapPitch(YLoc));
+    return pnt;
+  }
+  /* ********************************************************************************* */
+  public void MapTo(Point2D.Double pnt, Point2D.Double results) {
+    results.x = this.UnMapTime(pnt.x);
+    results.y = UnMapPitch(pnt.y);
+  }
+  /* ********************************************************************************* */
+  public void MapTo(CajaDelimitadora source, CajaDelimitadora results) {
+    this.MapTo(source.Min, results.Min);
+    this.MapTo(source.Max, results.Max);
+  }
+  /* ********************************************************************************* */
   public ISonglet GetContent() {// always always override this
-    throw new UnsupportedOperationException("Not supported yet.");
+    throw new UnsupportedOperationException("Not supported yet.");//  public abstract ISonglet GetContent(); ? 
   }
   /* ********************************************************************************* */
   public double TimeLoc_g() {
@@ -150,6 +173,20 @@ public class OffsetBox implements IDrawable.IMoveable, IDeletable {// location b
   /* ********************************************************************************* */
   @Override public void Draw_Me(Drawing_Context ParentDC) {// IDrawable
     if (ParentDC.ClipBounds.Intersects(MyBounds)) {// If we make ISonglet also drawable then we can stop repeating this code and put it all in OffsetBox.
+      {
+        Point2D.Double pnt = ParentDC.To_Screen(this.TimeOrg, this.OctaveLoc);
+        double extra = (1.0 / (double) ParentDC.RecurseDepth);
+        //extra *= 0.02;
+        double RadiusPixels = Math.abs(ParentDC.GlobalOffset.ScaleY) * (OctavesPerRadius + extra * 0.02);
+        RadiusPixels = Math.ceil(RadiusPixels);
+        double DiameterPixels = RadiusPixels * 2.0;
+        Color col = Globals.ToRainbow(extra);
+        ParentDC.gr.setColor(Globals.ToAlpha(col, 200));// control point just looks like a dot
+        ParentDC.gr.fillOval((int) (pnt.x - RadiusPixels), (int) (pnt.y - RadiusPixels), (int) DiameterPixels, (int) DiameterPixels);
+        ParentDC.gr.setColor(Globals.ToAlpha(Color.darkGray, 200));
+        ParentDC.gr.drawOval((int) (pnt.x - RadiusPixels), (int) (pnt.y - RadiusPixels), (int) DiameterPixels, (int) DiameterPixels);
+      }
+
       Drawing_Context ChildDC = new Drawing_Context(ParentDC, this);// In C++ ChildDC will be a local variable from the stack, not heap. 
       ISonglet Content = this.GetContent();
       Content.Draw_Me(ChildDC);
@@ -203,37 +240,12 @@ public class OffsetBox implements IDrawable.IMoveable, IDeletable {// location b
   }
   @Override public void GoFishing(HookAndLure Scoop) {// IDrawable
     if (Scoop.SearchBounds.Intersects(MyBounds)) {
-      Scoop.AddBoxToStack(this);// map to child 
-      // here, if my cpoint is a direct hit for Scoop, make me the leaf. but keep looking down.
-      // as I am more distal and forward-drawn to the incumbent leaf (if any) I always win here
-      // unless the incumbent leaf was down a separate branch and more distal. (oy in that case we've wiped its stack even if it was to win) 
-      //  RETHINK ALL OF THIS
+      if (this.HitsMe(Scoop.CurrentContext.Loc.x, Scoop.CurrentContext.Loc.y)) {
+        Scoop.ConsiderLeaf(this);
+      }
+      Scoop.AddBoxToStack(this);
       this.GetContent().GoFishing(Scoop);
-      /* 
-       Whether we have hit an OffsetBox or a voice control point, we never use the final-hit object as a mapper.
-       So mapping always happens one level above each thing hit? 
-       maybe keep one Leaf object at the end of the chain, and the whole stack
-       is pure offsetboxes? 
-       Leaf is IMovable type, stack is obox type. all oboxes are moveable, so that works for the return structure.
-       though, how do we go down looking? 
-       does every obox GoFishing add itself as temporary leaf? leaf is the current winner. 
-       so any QUALIFIED obox adds itself as leaf, but then loses that position for any better leaf.
-       problem, if an obox's child wins the leaf, obox must move to the stack. 
-       maybe we only compete for leafdom on the way OUT of recursion. That way:
-       inward - all oboxes add themselves to stack and search down.
-       found a leaf or dead end, returning.
-       outward - compare every obox with the current leaf.  if local obox wins
-       . pop the stack back to me, including myself. put me in the leaf.
-       . else keep going up and out, leave stack unchanged. 
-      
-      
-       */
-
-//      ISonglet Content = this.GetContent();
-      //Content.GoFishing(Scoop);
-      //var myList = {"a", "b", "c"};// does this really work for truncating? 
-      //myList.subList( 0, 2 ).clear();
-      //print( myList ) // prints ["c"]
+      Scoop.DecrementStack();
     }
   }
   @Override public void MoveTo(double XLoc, double YLoc) {// IDrawable.IMoveable
@@ -241,6 +253,15 @@ public class OffsetBox implements IDrawable.IMoveable, IDeletable {// location b
       this.TimeOrg = XLoc;
       this.OctaveLoc = YLoc;
     }
+  }
+  @Override public boolean HitsMe(double XLoc, double YLoc) {// IDrawable.IMoveable
+    if (this.MyBounds.Contains(XLoc, YLoc)) {// redundant test
+      double dist = Math.hypot(XLoc - this.TimeOrg, YLoc - this.OctaveLoc);
+      if (dist <= this.OctavesPerRadius) {
+        return true;
+      }
+    }
+    return false;
   }
   /* ********************************************************************************* */
   @Override public boolean Create_Me() {// IDeletable

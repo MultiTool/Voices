@@ -6,6 +6,7 @@
 package voices;
 
 import java.awt.List;
+import java.awt.geom.Point2D;
 import java.util.ArrayList;
 
 /**
@@ -17,10 +18,11 @@ import java.util.ArrayList;
  */
 public class HookAndLure {
   public double XHit, YHit;// exact mouse click point
-  public CajaDelimitadora SearchBounds;
-  public int Stack_Depth = 0;
-  public ArrayList<StackItem> Explore_Stack;
-  public ArrayList<StackItem> Best_Stack;
+  public CajaDelimitadora SearchBounds = new CajaDelimitadora();
+  public StackItem CurrentContext = null;
+  public int Stack_Depth = 0, Stack_Depth_Best = 0;
+  public ArrayList<StackItem> Explore_Stack = new ArrayList<StackItem>();
+  public ArrayList<StackItem> Best_Stack = new ArrayList<StackItem>();
   public IDrawable.IMoveable Leaf;// thing we hit and are going to move or copy or whatever
   /* 
    to do: put a hit stack here for best item found,
@@ -37,14 +39,46 @@ public class HookAndLure {
    candidate.GetType() == Types.VoicePoint; 
   
    */
-  public CajaDelimitadora AddBoxToStack(OffsetBox target) {
-    StackItem prev = this.Explore_Stack.get(Stack_Depth - 1);// ack, possible range check error
-    StackItem si = new StackItem();
-    si.Target = target;
-    prev.SearchBounds.Map(target, si.SearchBounds);
-    this.Explore_Stack.add(si);
+  public void ConsiderLeaf(IDrawable.IMoveable CandidateLeaf) {
+    if (this.Stack_Depth_Best <= this.Stack_Depth) {// prefer the most distal
+      this.Stack_Depth_Best = this.Stack_Depth;// or if equal, prefer the last drawn (most recent hit)
+      this.Leaf = CandidateLeaf;
+    }
+    // this.Compare(this.Leaf, leaf);
+  }
+  public void Init(double XLoc, double YLoc) {// add first space map at start of search
+    OffsetBox child = new OffsetBox();// first layer place holder.  not a great solution. 
+    child.MyBounds.Assign(Double.NEGATIVE_INFINITY, Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY, Double.POSITIVE_INFINITY);
+    StackItem next = new StackItem();
+    next.PossibleLeaf = child;
+    next.Loc.x = XLoc;// Next's location values exist in the space above it. At the top they are mouse coordinates. 
+    next.Loc.y = YLoc;
+    double Radius = 5;
+    this.SearchBounds.Assign(XLoc - Radius, YLoc - Radius, XLoc + Radius, YLoc + Radius);
+    this.Explore_Stack.add(next);
+    this.CurrentContext = next;
+    Stack_Depth = 1;// Now we have one element, whee!
+  }
+  public void AddBoxToStack(OffsetBox child) {
+    StackItem prev = this.CurrentContext;
+    StackItem next = new StackItem();
+    next.PossibleLeaf = child;
+
+    // map to child space
+    child.MapTo(prev.SearchBounds, next.SearchBounds);// prev.SearchBounds.Map(child, next.SearchBounds);
+    child.MapTo(prev.Loc, next.Loc);
+    //Fresh_Parent.ClipBounds.Map(this.Offset, this.ClipBounds);// map to child (my) internal coordinates
+
+    this.Explore_Stack.add(next);
+    this.CurrentContext = next;
     Stack_Depth++;
-    return this.SearchBounds;
+  }
+  public void DecrementStack() {
+    int resize = this.Stack_Depth - 1;
+    if (resize >= 0) {
+      TruncateStack(resize);
+      this.Stack_Depth--;
+    }
   }
   public void TruncateStack(int resize) {
     int len = this.Explore_Stack.size();
@@ -53,8 +87,9 @@ public class HookAndLure {
     }
     this.Explore_Stack.subList(resize, len).clear();// does this really work? 
   }
-  public IDrawable.IMoveable PickAWinner(IDrawable.IMoveable thing0, IDrawable.IMoveable thing1) {// always override this
-    return null;// compare for which one is the best match
+  public int Compare(IDrawable.IMoveable thing0, IDrawable.IMoveable thing1) {// always override this
+    // if thing0<thing1 then return -1,  if thing0>thing1 then return 1.
+    return 0;// compare for which one is the best match
     /*
      Who usually wins?  1. it must be a direct hit, and 2. more distal wins over proximal (voice cpoints over oboxes)
      proximal cpoints are generally bigger but in the background. 
@@ -67,14 +102,16 @@ public class HookAndLure {
   /* ********************************************************************************* */
   public class StackItem implements IDeletable {
     public CajaDelimitadora SearchBounds = new CajaDelimitadora();
-    public IDrawable.IMoveable Target;
+    public IDrawable.IMoveable PossibleLeaf;
+    Point2D.Double Loc = new Point2D.Double();
     @Override public boolean Create_Me() {// IDeletable
       return true;
     }
     @Override public void Delete_Me() {// IDeletable
       this.SearchBounds.Delete_Me();
       this.SearchBounds = null;
-      this.Target = null;
+      this.PossibleLeaf = null;
+      this.Loc = null;
     }
   }
 }

@@ -41,6 +41,7 @@ public class MainGui {
   public static class DrawingPanel extends JPanel implements MouseMotionListener, MouseListener, MouseWheelListener, ComponentListener, KeyListener {
     Project MyProject = null;
     MainGui BigApp;
+    HookAndLure Query;
     /* ********************************************************************************* */
     public DrawingPanel() {
       this.Init();
@@ -54,6 +55,7 @@ public class MainGui {
         this.setFocusable(true);
       }
       this.addKeyListener(this);
+      this.Query = new HookAndLure();
     }
     /* ********************************************************************************* */
     public void Draw_Me(Graphics2D g2d) {
@@ -102,6 +104,7 @@ public class MainGui {
     }
     /* ********************************************************************************* */
     @Override public void mouseDragged(MouseEvent me) {
+      //this.Query.Init(this.MyProject.GraphicRoot, me.getX(), me.getY());
     }
     @Override public void mouseMoved(MouseEvent me) {
     }
@@ -117,13 +120,16 @@ public class MainGui {
       }
     }
     @Override public void mousePressed(MouseEvent me) {
+      this.Query.Init(me.getX(), me.getY());
+      this.MyProject.GraphicRoot.GoFishing(this.Query);
+      //this.Query.DecrementStack();
     }
     @Override public void mouseReleased(MouseEvent me) {
       double XCtr, YCtr, Scale;
       if (false) {// for testing without mouse wheel
         Scale = 1.1;
         if (me.getButton() == MouseEvent.BUTTON1) {
-          Scale = 1.1;;
+          Scale = 1.1;
         } else {
           Scale = 0.9;
         }
@@ -144,6 +150,7 @@ public class MainGui {
       XCtr = mwe.getX();
       YCtr = mwe.getY();
       double finerotation = mwe.getPreciseWheelRotation();
+      finerotation = -finerotation * 0.2;
       Rescale = Math.pow(2, finerotation);// range 0 to 1 to positive infinity
       if (false) {// use these later
         int rotation = mwe.getWheelRotation();

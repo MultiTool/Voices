@@ -24,4 +24,14 @@ public class Globals {
   public static Color ToAlpha(Color col, int Alpha) {
     return new Color(col.getRed(), col.getGreen(), col.getBlue(), Alpha);// rgba 
   }
+  /* ********************************************************************************* */
+  public static Color ToRainbow(double Fraction) {
+    if (Fraction < 0.5) {
+      Fraction *= 2;
+      return new Color((float) (1.0 - Fraction), (float) Fraction, 0);
+    } else {
+      Fraction = Math.min((Fraction - 0.5) * 2, 1.0);
+      return new Color(0, (float) (1.0 - Fraction), (float) Fraction);
+    }
+  }
 }

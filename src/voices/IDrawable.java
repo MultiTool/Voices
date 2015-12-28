@@ -22,6 +22,7 @@ public interface IDrawable {
   void GoFishing(HookAndLure Scoop);
   public interface IMoveable extends IDrawable {// IMoveable is for things that can be selected, dragged, copied, pasted, deleted etc. through the UI.
     void MoveTo(double XLoc, double YLoc);
+    boolean HitsMe(double XLoc, double YLoc);// click detection
   }
   /*
    boolean IsHittable();  ?
@@ -67,8 +68,8 @@ public interface IDrawable {
       this.Create_Me();
     }
     /* ********************************************************************************* */
-    public Point2D.Double To_Screen(double Absolute_X, double Absolute_Y) {
-      Point2D.Double pnt = new Point2D.Double(this.GlobalOffset.UnMapTime(Absolute_X), this.GlobalOffset.UnMapPitch(Absolute_Y));
+    public Point2D.Double To_Screen(double XLoc, double YLoc) {
+      Point2D.Double pnt = new Point2D.Double(this.GlobalOffset.UnMapTime(XLoc), this.GlobalOffset.UnMapPitch(YLoc));
       return pnt;
     }
     /* ********************************************************************************* */

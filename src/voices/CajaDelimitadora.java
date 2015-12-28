@@ -163,4 +163,16 @@ public class CajaDelimitadora implements IDeletable {// DIY BoundingBox
     this.Max = null;
     this.Limits = null;
   }
+  public boolean Contains(double XLoc, double YLoc) {
+    if (this.Min.x <= XLoc) {
+      if (XLoc <= this.Max.x) {
+        if (this.Min.y <= YLoc) {
+          if (YLoc <= this.Max.y) {
+            return true;
+          }
+        }
+      }
+    }
+    return false;
+  }
 }

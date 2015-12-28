@@ -218,7 +218,14 @@ public class GroupBox implements ISonglet, IDrawable {
   }
   /* ********************************************************************************* */
   @Override public void GoFishing(HookAndLure Scoop) {// IDrawable
-    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    if (Scoop.SearchBounds.Intersects(MyBounds)) {
+      int len = this.SubSongs.size();
+      OffsetBox child;
+      for (int pcnt = 0; pcnt < len; pcnt++) {
+        child = this.SubSongs.get(pcnt);
+        child.GoFishing(Scoop);
+      }
+    }
   }
   /* ********************************************************************************* */
   @Override public boolean Create_Me() {// IDeletable

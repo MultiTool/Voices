@@ -48,7 +48,9 @@ public class GraphicBox implements IDrawable, IDeletable {// ISonglet,
   }
   /* ********************************************************************************* */
   @Override public void GoFishing(HookAndLure Scoop) {// IDrawable
-    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    if (Scoop.SearchBounds.Intersects(MyBounds)) {
+      this.ContentOBox.GoFishing(Scoop);
+    }
   }
   /* ********************************************************************************* */
   public void Draw_Grid(Drawing_Context ParentDC) {
@@ -122,14 +124,8 @@ public class GraphicBox implements IDrawable, IDeletable {// ISonglet,
     /* ********************************************************************************* */
     public Graphic_OffsetBox() {
       ScaleX = 40;// pixels per second
-      if (false) {
-        ScaleY = 20;// pixels per octave
-        this.OctaveLoc = -50;
-      } else {// inverting the Y axis does not work yet. 
-        ScaleY = -40;// pixels per octave
-        this.OctaveLoc = 10;
-        this.OctaveLoc = 500;
-      }
+      ScaleY = -40;// pixels per octave
+      this.OctaveLoc = 500;
       this.TimeOrg = 20;
       MyBounds = new CajaDelimitadora();
     }
@@ -153,10 +149,17 @@ public class GraphicBox implements IDrawable, IDeletable {// ISonglet,
       this.Content.GetBoundingBox().UnMap(this, MyBounds);// project child limits into parent (my) space
       this.MyBounds.Sort_Me();
     }
-    /* ********************************************************************************* */
     @Override public void GoFishing(HookAndLure Scoop) {// IDrawable
-      throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+      if (Scoop.SearchBounds.Intersects(MyBounds)) {
+        if (this.HitsMe(Scoop.CurrentContext.Loc.x, Scoop.CurrentContext.Loc.y)) {
+          Scoop.ConsiderLeaf(this);
+        }
+        Scoop.AddBoxToStack(this);
+        this.Content.GoFishing(Scoop);
+        Scoop.DecrementStack();
+      }
     }
+    /* ********************************************************************************* */
     @Override public void MoveTo(double XLoc, double YLoc) {// IDrawable.IMoveable
       // if (XLoc >= 0) {// don't go backward in time
       this.TimeOrg = XLoc;

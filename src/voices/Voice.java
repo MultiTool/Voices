@@ -267,7 +267,14 @@ public class Voice implements ISonglet, IDrawable {
   }
   /* ********************************************************************************* */
   @Override public void GoFishing(HookAndLure Scoop) {// IDrawable
-    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    if (Scoop.SearchBounds.Intersects(MyBounds)) {
+      int len = this.CPoints.size();
+      Point pnt;
+      for (int pcnt = 0; pcnt < len; pcnt++) {
+        pnt = this.CPoints.get(pcnt);
+        pnt.GoFishing(Scoop);
+      }
+    }
   }
   /* ********************************************************************************* */
   @Override public boolean Create_Me() {// IDeletable
@@ -288,7 +295,6 @@ public class Voice implements ISonglet, IDrawable {
     public double Loudness = 1.0;
 
     // graphics support, will move to separate object
-    double RadiusPerOctave = 10, Diameter = RadiusPerOctave * 2.0;
     double OctavesPerRadius = 0.02;
     double OctavesPerLoudness = 0.25;// to do: loudness will have to be mapped to screen. not a pixel value right?
     CajaDelimitadora MyBounds = new CajaDelimitadora();
@@ -336,7 +342,20 @@ public class Voice implements ISonglet, IDrawable {
     }
     /* ********************************************************************************* */
     @Override public void GoFishing(HookAndLure Scoop) {// IDrawable
-      throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+      if (Scoop.SearchBounds.Intersects(MyBounds)) {
+        if (this.HitsMe(Scoop.CurrentContext.Loc.x, Scoop.CurrentContext.Loc.y)) {
+          Scoop.ConsiderLeaf(this);
+        }
+      }
+    }
+    @Override public boolean HitsMe(double XLoc, double YLoc) {// IDrawable.IMoveable
+      if (this.MyBounds.Contains(XLoc, YLoc)) {
+        double dist = Math.hypot(XLoc - this.RealTime, YLoc - this.Octave);
+        if (dist <= this.OctavesPerRadius) {
+          return true;
+        }
+      }
+      return false;
     }
     @Override public void MoveTo(double XLoc, double YLoc) {// IDrawable.IMoveable
       if (XLoc >= 0) {// don't go backward in time
