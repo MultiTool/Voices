@@ -218,7 +218,7 @@ public class GroupBox implements ISonglet, IDrawable {
   }
   /* ********************************************************************************* */
   @Override public void GoFishing(HookAndLure Scoop) {// IDrawable
-    if (Scoop.SearchBounds.Intersects(MyBounds)) {
+    if (Scoop.CurrentContext.SearchBounds.Intersects(MyBounds)) {// current search bounds are in parent coords
       int len = this.SubSongs.size();
       OffsetBox child;
       for (int pcnt = 0; pcnt < len; pcnt++) {

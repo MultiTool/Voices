@@ -19,9 +19,11 @@ public class LoopBox implements ISonglet, IDrawable {
   private ISonglet Content = null;
   private OffsetBox ContentOBox = null;
   private CajaDelimitadora MyBounds = new CajaDelimitadora();
+  Ghost_OffsetBox ghost = new Ghost_OffsetBox();// oy, this has to be refcounted because it may be used after recursion is done. 
   /* ********************************************************************************* */
   public LoopBox() {
     MyBounds = new CajaDelimitadora();
+    ghost.Assign_Parent_Songlet(this);
   }
   /* ********************************************************************************* */
   @Override public OffsetBox Spawn_OffsetBox() {
@@ -94,6 +96,8 @@ public class LoopBox implements ISonglet, IDrawable {
     OffsetBox obox = songlet.Spawn_OffsetBox();
     this.ContentOBox = obox;
     this.Content = songlet;
+    ghost.Copy_From(this.ContentOBox);
+    ghost.Assign_Parent_Songlet(this);
     return obox;
   }
   /* ********************************************************************************* */
@@ -104,7 +108,7 @@ public class LoopBox implements ISonglet, IDrawable {
     double RightBound = Math.min(ParentDC.ClipBounds.Max.x, this.MyDuration);
     Ghost_OffsetBox ghost = new Ghost_OffsetBox();
     ghost.Copy_From(this.ContentOBox);
-    ghost.Assign_Songlet(this);
+    ghost.Assign_Parent_Songlet(this);
     int loopcnt = IterationStart;
     double Time;
     while ((Time = (loopcnt * this.Delay)) <= RightBound) {// keep drawing until child song's start is beyond our max X. 
@@ -148,13 +152,13 @@ public class LoopBox implements ISonglet, IDrawable {
   }
   /* ********************************************************************************* */
   @Override public void GoFishing(HookAndLure Scoop) {// IDrawable
-    if (Scoop.SearchBounds.Intersects(MyBounds)) {
-//      int len = this.SubSongs.size();
-//      OffsetBox child;
-//      for (int pcnt = 0; pcnt < len; pcnt++) {
-//        child = this.SubSongs.get(pcnt);
-//        child.GoFishing(Scoop);
-//      }
+    if (Scoop.CurrentContext.SearchBounds.Intersects(MyBounds)) {
+      int loopcnt = (int) Math.floor(Scoop.CurrentContext.Loc.x / this.Delay);
+      ghost.Copy_From(this.ContentOBox);
+      ghost.Assign_Parent_Songlet(this);
+      ghost.MyIteration = loopcnt;
+      ghost.TimeOrg = loopcnt * this.Delay;
+      ghost.GoFishing(Scoop);
     }
   }
   /* ********************************************************************************* */
@@ -163,6 +167,7 @@ public class LoopBox implements ISonglet, IDrawable {
   }
   @Override public void Delete_Me() {// IDeletable
     this.MyBounds.Delete_Me();
+    this.ghost.Delete_Me();
     this.ContentOBox.Delete_Me();
   }
   /* ********************************************************************************* */
@@ -282,7 +287,7 @@ public class LoopBox implements ISonglet, IDrawable {
       Ghost_OffsetBox ghost;
       while ((Time = (this.LoopCount * this.MySonglet.Delay)) <= EndTime) {// first find new songlets in this time range and add them to pool
         ghost = new Ghost_OffsetBox();
-        ghost.Assign_Songlet(this.MySonglet);
+        ghost.Assign_Parent_Songlet(this.MySonglet);
         ghost.MyIteration = this.LoopCount;
         ghost.TimeOrg = Time;
         Singer singer = ghost.Spawn_Singer();
@@ -354,8 +359,8 @@ public class LoopBox implements ISonglet, IDrawable {
     OffsetBox TempObox = null;
     public int MyIteration = 0;// which loop iteration I represent
     /* ********************************************************************************* */
-    public void Assign_Songlet(LoopBox Parent) {
-      this.Parent = Parent;
+    public void Assign_Parent_Songlet(LoopBox Parent) {
+      this.MyParentSong = this.Parent = Parent;
       this.ContentLayer = this.Parent.ContentOBox;
     }
     /* ********************************************************************************* */

@@ -267,7 +267,7 @@ public class Voice implements ISonglet, IDrawable {
   }
   /* ********************************************************************************* */
   @Override public void GoFishing(HookAndLure Scoop) {// IDrawable
-    if (Scoop.SearchBounds.Intersects(MyBounds)) {
+    if (Scoop.CurrentContext.SearchBounds.Intersects(MyBounds)) {
       int len = this.CPoints.size();
       Point pnt;
       for (int pcnt = 0; pcnt < len; pcnt++) {
@@ -342,19 +342,22 @@ public class Voice implements ISonglet, IDrawable {
     }
     /* ********************************************************************************* */
     @Override public void GoFishing(HookAndLure Scoop) {// IDrawable
-      if (Scoop.SearchBounds.Intersects(MyBounds)) {
+      if (Scoop.CurrentContext.SearchBounds.Intersects(MyBounds)) {
         if (this.HitsMe(Scoop.CurrentContext.Loc.x, Scoop.CurrentContext.Loc.y)) {
           Scoop.ConsiderLeaf(this);
         }
       }
     }
     @Override public boolean HitsMe(double XLoc, double YLoc) {// IDrawable.IMoveable
+      System.out.print("Point HitsMe:");
       if (this.MyBounds.Contains(XLoc, YLoc)) {
         double dist = Math.hypot(XLoc - this.RealTime, YLoc - this.Octave);
         if (dist <= this.OctavesPerRadius) {
+          System.out.println("true");
           return true;
         }
       }
+      System.out.println("false");
       return false;
     }
     @Override public void MoveTo(double XLoc, double YLoc) {// IDrawable.IMoveable

@@ -2,6 +2,7 @@ package voices;
 
 import java.awt.*;
 import java.awt.event.*;
+import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import javax.swing.*;
 import voices.IDrawable.Drawing_Context;
@@ -104,7 +105,12 @@ public class MainGui {
     }
     /* ********************************************************************************* */
     @Override public void mouseDragged(MouseEvent me) {
-      //this.Query.Init(this.MyProject.GraphicRoot, me.getX(), me.getY());
+      if (this.Query.Leaf != null) {
+        Point2D.Double results = new Point2D.Double();
+        this.Query.MapThroughStack(me.getX(), me.getY(), results);
+        this.Query.Leaf.MoveTo(results.x, results.y);
+        this.repaint();
+      }
     }
     @Override public void mouseMoved(MouseEvent me) {
     }
@@ -120,9 +126,11 @@ public class MainGui {
       }
     }
     @Override public void mousePressed(MouseEvent me) {
-      this.Query.Init(me.getX(), me.getY());
-      this.MyProject.GraphicRoot.GoFishing(this.Query);
-      //this.Query.DecrementStack();
+      this.Query.AddFirstBox(this.MyProject.GraphicRoot, me.getX(), me.getY());
+      //this.MyProject.GraphicRoot.GoFishing(this.Query);
+      // this is really ugly. 
+      this.MyProject.GraphicRoot.Content.ContentOBox.GoFishing(Query);// call this on graphic songlet's child obox. 
+      this.Query.DecrementStack();
     }
     @Override public void mouseReleased(MouseEvent me) {
       double XCtr, YCtr, Scale;

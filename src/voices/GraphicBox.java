@@ -14,7 +14,7 @@ import java.awt.RenderingHints;
  * @author MultiTool
  */
 public class GraphicBox implements IDrawable, IDeletable {// ISonglet, 
-  private OffsetBox ContentOBox = null;
+  public OffsetBox ContentOBox = null;
   private CajaDelimitadora MyBounds = new CajaDelimitadora();
   /* ********************************************************************************* */
   public void Attach_Content(OffsetBox content) {
@@ -48,7 +48,7 @@ public class GraphicBox implements IDrawable, IDeletable {// ISonglet,
   }
   /* ********************************************************************************* */
   @Override public void GoFishing(HookAndLure Scoop) {// IDrawable
-    if (Scoop.SearchBounds.Intersects(MyBounds)) {
+    if (Scoop.CurrentContext.SearchBounds.Intersects(MyBounds)) {//wrong
       this.ContentOBox.GoFishing(Scoop);
     }
   }
@@ -150,14 +150,15 @@ public class GraphicBox implements IDrawable, IDeletable {// ISonglet,
       this.MyBounds.Sort_Me();
     }
     @Override public void GoFishing(HookAndLure Scoop) {// IDrawable
-      if (Scoop.SearchBounds.Intersects(MyBounds)) {
+      Scoop.AddFirstBox(this, Scoop.CurrentContext.Loc.x, Scoop.CurrentContext.Loc.y);
+      if (Scoop.CurrentContext.SearchBounds.Intersects(MyBounds)) {
         if (this.HitsMe(Scoop.CurrentContext.Loc.x, Scoop.CurrentContext.Loc.y)) {
           Scoop.ConsiderLeaf(this);
         }
-        Scoop.AddBoxToStack(this);
+        // Scoop.AddFirstBox(this, Scoop.CurrentContext.Loc.x, Scoop.CurrentContext.Loc.y);
         this.Content.GoFishing(Scoop);
-        Scoop.DecrementStack();
       }
+      Scoop.DecrementStack();
     }
     /* ********************************************************************************* */
     @Override public void MoveTo(double XLoc, double YLoc) {// IDrawable.IMoveable

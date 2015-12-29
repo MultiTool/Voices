@@ -7,6 +7,7 @@ package voices;
 
 import java.awt.BasicStroke;
 import java.awt.Color;
+import java.awt.Graphics2D;
 import java.awt.Stroke;
 import java.awt.geom.Point2D;
 import voices.ISonglet.Singer;
@@ -51,6 +52,8 @@ public class OffsetBox implements IDrawable.IMoveable, IDeletable {// location b
     this.ScaleY = donor.ScaleY;
     this.ChildXorg = donor.ChildXorg;
     this.ChildYorg = donor.ChildYorg;
+    this.MyParentSong = donor.MyParentSong;
+    this.OctavesPerRadius = donor.OctavesPerRadius;
     this.MyBounds.Copy_From(donor.MyBounds);
   }
   /* ********************************************************************************* */
@@ -127,8 +130,8 @@ public class OffsetBox implements IDrawable.IMoveable, IDeletable {// location b
   }
   /* ********************************************************************************* */
   public void MapTo(Point2D.Double pnt, Point2D.Double results) {
-    results.x = this.UnMapTime(pnt.x);
-    results.y = UnMapPitch(pnt.y);
+    results.x = this.MapTime(pnt.x);
+    results.y = this.MapPitch(pnt.y);
   }
   /* ********************************************************************************* */
   public void MapTo(CajaDelimitadora source, CajaDelimitadora results) {
@@ -172,6 +175,7 @@ public class OffsetBox implements IDrawable.IMoveable, IDeletable {// location b
   }
   /* ********************************************************************************* */
   @Override public void Draw_Me(Drawing_Context ParentDC) {// IDrawable
+    // Draw_My_Bounds(ParentDC.GlobalOffset, ParentDC.gr);
     if (ParentDC.ClipBounds.Intersects(MyBounds)) {// If we make ISonglet also drawable then we can stop repeating this code and put it all in OffsetBox.
       {
         Point2D.Double pnt = ParentDC.To_Screen(this.TimeOrg, this.OctaveLoc);
@@ -194,41 +198,35 @@ public class OffsetBox implements IDrawable.IMoveable, IDeletable {// location b
     }
   }
   /* ********************************************************************************* */
-  public void Draw_Me_Debug(Drawing_Context ParentDC) {// break glass in case of emergency
-    if (true) {
-      this.MyBounds.Sort_Me();
-      int rx0 = (int) ParentDC.GlobalOffset.UnMapTime(this.MyBounds.Min.x);
-      int rx1 = (int) ParentDC.GlobalOffset.UnMapTime(this.MyBounds.Max.x);
-      int ry0 = (int) ParentDC.GlobalOffset.UnMapPitch(this.MyBounds.Min.y);
-      int ry1 = (int) ParentDC.GlobalOffset.UnMapPitch(this.MyBounds.Max.y);
-      if (ry1 < ry0) {// swap
-        int temp = ry1;
-        ry1 = ry0;
-        ry0 = temp;
-      }
-      int wdt = rx1 - rx0;
-      int hgt = ry1 - ry0;
-      int cint = Globals.RandomGenerator.nextInt() % 256;
-      Color col = new Color(cint);
-
-      Stroke oldStroke = ParentDC.gr.getStroke();
-      ParentDC.gr.setColor(Color.red);
-
-      // thinner lines for more distal sub-branches
-      BasicStroke bs = new BasicStroke(4.0f, BasicStroke.CAP_SQUARE, BasicStroke.JOIN_MITER);
-      ParentDC.gr.setStroke(bs);
-
-      //ParentDC.gr.setColor(col);//Color.magenta
-      ParentDC.gr.drawRect(rx0, ry0, wdt, hgt);
-
-      ParentDC.gr.setStroke(oldStroke);
+  public void Draw_My_Bounds(OffsetBox GlobalOffset, Graphics2D gr) {// for debugging. break glass in case of emergency
+    this.MyBounds.Sort_Me();
+    int rx0 = (int) GlobalOffset.UnMapTime(this.MyBounds.Min.x);
+    int rx1 = (int) GlobalOffset.UnMapTime(this.MyBounds.Max.x);
+    int ry0 = (int) GlobalOffset.UnMapPitch(this.MyBounds.Min.y);
+    int ry1 = (int) GlobalOffset.UnMapPitch(this.MyBounds.Max.y);
+    if (ry1 < ry0) {// swap
+      int temp = ry1;
+      ry1 = ry0;
+      ry0 = temp;
     }
-    if (ParentDC.ClipBounds.Intersects(MyBounds)) {// If we make ISonglet also drawable then we can stop repeating this code and put it all in OffsetBox.
-      Drawing_Context ChildDC = new Drawing_Context(ParentDC, this);
-      ISonglet Content = this.GetContent();
-      Content.Draw_Me(ChildDC);
-    }
+    int wdt = rx1 - rx0;
+    int hgt = ry1 - ry0;
+    int cint = Globals.RandomGenerator.nextInt() % 256;
+    Color col = new Color(cint);
+
+    Stroke oldStroke = gr.getStroke();
+    gr.setColor(col);
+
+    // thinner lines for more distal sub-branches
+    BasicStroke bs = new BasicStroke(1.0f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND);
+    gr.setStroke(bs);
+
+    //ParentDC.gr.setColor(col);//Color.magenta
+    gr.drawRect(rx0, ry0, wdt, hgt);
+
+    gr.setStroke(oldStroke);
   }
+  /* ********************************************************************************* */
   @Override public CajaDelimitadora GetBoundingBox() {// IDrawable
     return this.MyBounds;
   }
@@ -239,7 +237,7 @@ public class OffsetBox implements IDrawable.IMoveable, IDeletable {// location b
     this.MyBounds.Sort_Me();// almost never needed
   }
   @Override public void GoFishing(HookAndLure Scoop) {// IDrawable
-    if (Scoop.SearchBounds.Intersects(MyBounds)) {
+    if (Scoop.CurrentContext.SearchBounds.Intersects(MyBounds)) {
       if (this.HitsMe(Scoop.CurrentContext.Loc.x, Scoop.CurrentContext.Loc.y)) {
         Scoop.ConsiderLeaf(this);
       }
@@ -255,12 +253,15 @@ public class OffsetBox implements IDrawable.IMoveable, IDeletable {// location b
     }
   }
   @Override public boolean HitsMe(double XLoc, double YLoc) {// IDrawable.IMoveable
+    System.out.print("HitsMe:");
     if (this.MyBounds.Contains(XLoc, YLoc)) {// redundant test
       double dist = Math.hypot(XLoc - this.TimeOrg, YLoc - this.OctaveLoc);
       if (dist <= this.OctavesPerRadius) {
+        System.out.println("true");
         return true;
       }
     }
+    System.out.println("false");
     return false;
   }
   /* ********************************************************************************* */

@@ -18,12 +18,13 @@ import java.util.ArrayList;
  */
 public class HookAndLure {
   public double XHit, YHit;// exact mouse click point
-  public CajaDelimitadora SearchBounds = new CajaDelimitadora();
+  //public CajaDelimitadora SearchBounds = new CajaDelimitadora();
   public StackItem CurrentContext = null;
   public int Stack_Depth = 0, Stack_Depth_Best = 0;
   public ArrayList<StackItem> Explore_Stack = new ArrayList<StackItem>();
   public ArrayList<StackItem> Best_Stack = new ArrayList<StackItem>();
   public IDrawable.IMoveable Leaf;// thing we hit and are going to move or copy or whatever
+  double Radius = 5;
   /* 
    to do: put a hit stack here for best item found,
    or a list of everything hit, each with a compressed affine transform
@@ -43,18 +44,39 @@ public class HookAndLure {
     if (this.Stack_Depth_Best <= this.Stack_Depth) {// prefer the most distal
       this.Stack_Depth_Best = this.Stack_Depth;// or if equal, prefer the last drawn (most recent hit)
       this.Leaf = CandidateLeaf;
+      Copy_Stack(this.Explore_Stack, this.Best_Stack);
     }
     // this.Compare(this.Leaf, leaf);
   }
-  public void Init(double XLoc, double YLoc) {// add first space map at start of search
+  public void Init(OffsetBox starter, double XLoc, double YLoc) {// add first space map at start of search
     OffsetBox child = new OffsetBox();// first layer place holder.  not a great solution. 
     child.MyBounds.Assign(Double.NEGATIVE_INFINITY, Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY, Double.POSITIVE_INFINITY);
     StackItem next = new StackItem();
     next.PossibleLeaf = child;
     next.Loc.x = XLoc;// Next's location values exist in the space above it. At the top they are mouse coordinates. 
     next.Loc.y = YLoc;
-    double Radius = 5;
-    this.SearchBounds.Assign(XLoc - Radius, YLoc - Radius, XLoc + Radius, YLoc + Radius);
+    next.SearchBounds.Assign(XLoc - Radius, YLoc - Radius, XLoc + Radius, YLoc + Radius);
+    this.Explore_Stack.add(next);
+    this.CurrentContext = next;
+    Stack_Depth = 1;// Now we have one element, whee!
+  }
+  public void AddFirstBox(OffsetBox starter, double XLoc, double YLoc) {// add first space map at start of search
+    this.Leaf = null;
+    TruncateStack(this.Explore_Stack, 0);
+    StackItem next = new StackItem();
+    next.PossibleLeaf = starter;
+//    next.Loc.x = XLoc;// Next's location values exist in the space above it. At the top they are mouse coordinates. 
+//    next.Loc.y = YLoc;
+//    next.SearchBounds.Assign(XLoc - Radius, YLoc - Radius, XLoc + Radius, YLoc + Radius);
+
+    // map to child space
+    CajaDelimitadora SearchBoundsTemp = new CajaDelimitadora();
+    SearchBoundsTemp.Assign(XLoc - Radius, YLoc - Radius, XLoc + Radius, YLoc + Radius);
+    
+    starter.MapTo(SearchBoundsTemp, next.SearchBounds);// prev.SearchBounds.Map(child, next.SearchBounds);
+    SearchBoundsTemp.Delete_Me();
+    starter.MapTo(new Point2D.Double(XLoc, YLoc), next.Loc);
+    
     this.Explore_Stack.add(next);
     this.CurrentContext = next;
     Stack_Depth = 1;// Now we have one element, whee!
@@ -76,16 +98,21 @@ public class HookAndLure {
   public void DecrementStack() {
     int resize = this.Stack_Depth - 1;
     if (resize >= 0) {
-      TruncateStack(resize);
+      TruncateStack(this.Explore_Stack, resize);
       this.Stack_Depth--;
+      if (resize > 0) {
+        this.CurrentContext = this.Explore_Stack.get(resize - 1);
+      } else {
+        this.CurrentContext = null;
+      }
     }
   }
-  public void TruncateStack(int resize) {
-    int len = this.Explore_Stack.size();
+  public static void TruncateStack(ArrayList<StackItem> Stack, int resize) {
+    int len = Stack.size();
     for (int cnt = resize; cnt < len; cnt++) {
-      this.Explore_Stack.get(cnt).Delete_Me();
+      Stack.get(cnt).Delete_Me();
     }
-    this.Explore_Stack.subList(resize, len).clear();// does this really work? 
+    Stack.subList(resize, len).clear();// does this really work? 
   }
   public int Compare(IDrawable.IMoveable thing0, IDrawable.IMoveable thing1) {// always override this
     // if thing0<thing1 then return -1,  if thing0>thing1 then return 1.
@@ -100,10 +127,40 @@ public class HookAndLure {
      */
   }
   /* ********************************************************************************* */
-  public class StackItem implements IDeletable {
+  public static void Copy_Stack(ArrayList<StackItem> StackPrev, ArrayList<StackItem> StackNext) {
+    TruncateStack(StackNext, 0);
+    int len = StackPrev.size();
+    StackItem siprev, sinext;
+    for (int cnt = 0; cnt < len; cnt++) {
+      siprev = StackPrev.get(cnt);
+      sinext = new StackItem();
+      sinext.Copy_From(siprev);
+      StackNext.add(sinext);
+    }
+  }
+  /* ********************************************************************************* */
+  public void MapThroughStack(double XLoc, double YLoc, Point2D.Double results) {
+    int len = this.Best_Stack.size();
+    Point2D.Double pntfrom = new Point2D.Double(), pntto = new Point2D.Double();
+    pntfrom.setLocation(XLoc, YLoc);
+    StackItem si;
+    for (int cnt = 0; cnt < len; cnt++) {
+      si = this.Best_Stack.get(cnt);
+      si.PossibleLeaf.MapTo(pntfrom, pntto);
+      pntfrom.setLocation(pntto);
+    }
+    results.setLocation(pntto);
+  }
+  /* ********************************************************************************* */
+  public static class StackItem implements IDeletable {
     public CajaDelimitadora SearchBounds = new CajaDelimitadora();
-    public IDrawable.IMoveable PossibleLeaf;
+    public OffsetBox PossibleLeaf;
     Point2D.Double Loc = new Point2D.Double();
+    public void Copy_From(StackItem donor) {
+      this.SearchBounds.Copy_From(donor.SearchBounds);
+      this.PossibleLeaf = donor.PossibleLeaf;
+      this.Loc.setLocation(donor.Loc);
+    }
     @Override public boolean Create_Me() {// IDeletable
       return true;
     }
