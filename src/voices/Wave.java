@@ -186,7 +186,11 @@ public class Wave implements IDeletable {
     Current_Index++;
   }
   public void Set(int dex, double value) {
-    this.wave[dex] = value;
+    if (dex < this.wave.length) {
+      this.wave[dex] = value;
+    } else {
+      boolean nop = true;// range check
+    }
   }
   /* ********************************************************************************* */
   public double[] GetWave() {// just for testing. remove later

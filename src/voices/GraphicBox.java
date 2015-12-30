@@ -13,7 +13,7 @@ import java.awt.RenderingHints;
  *
  * @author MultiTool
  */
-public class GraphicBox implements IDrawable, IDeletable {// ISonglet, 
+public class GraphicBox implements IDrawable, ISonglet, IDeletable {// 
   public OffsetBox ContentOBox = null;
   private CajaDelimitadora MyBounds = new CajaDelimitadora();
   /* ********************************************************************************* */
@@ -21,8 +21,7 @@ public class GraphicBox implements IDrawable, IDeletable {// ISonglet,
     this.ContentOBox = content;
   }
   /* ********************************************************************************* */
-  //@Override 
-  public OffsetBox Spawn_OffsetBox() {// for compose time
+  @Override public OffsetBox Spawn_OffsetBox() {// for compose time
     return this.Spawn_My_OffsetBox();
   }
   /* ********************************************************************************* */
@@ -41,8 +40,11 @@ public class GraphicBox implements IDrawable, IDeletable {// ISonglet,
     return this.ContentOBox.GetBoundingBox();
   }
   @Override public void UpdateBoundingBox() {// IDrawable
-    this.MyBounds.Reset();
     this.ContentOBox.UpdateBoundingBox();
+    this.UpdateBoundingBoxLocal();
+  }
+  @Override public void UpdateBoundingBoxLocal() {// IDrawable
+    this.MyBounds.Reset();
     CajaDelimitadora ChildBBoxUnMapped = this.ContentOBox.GetBoundingBox();// project child limits into parent (my) space
     this.MyBounds.Include(ChildBBoxUnMapped);// Inefficient. Could be just assigned or copied.
   }
@@ -119,13 +121,42 @@ public class GraphicBox implements IDrawable, IDeletable {// ISonglet,
     this.ContentOBox.Delete_Me();
   }
   /* ********************************************************************************* */
+  // this is all junk that is never used
+  @Override public Singer Spawn_Singer() {
+    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+  }
+  @Override public int Get_Sample_Count(int SampleRate) {
+    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+  }
+  @Override public double Get_Duration() {
+    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+  }
+  @Override public double Get_Max_Amplitude() {
+    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+  }
+  @Override public double Update_Durations() {
+    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+  }
+  @Override public void Update_Guts(MetricsPacket metrics) {
+    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+  }
+  @Override public void Sort_Me() {
+    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+  }
+  @Override public Project Get_Project() {
+    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+  }
+  @Override public void Set_Project(Project project) {
+    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+  }
+  /* ********************************************************************************* */
   public class Graphic_OffsetBox extends OffsetBox {
     GraphicBox Content;
     /* ********************************************************************************* */
     public Graphic_OffsetBox() {
       ScaleX = 40;// pixels per second
       ScaleY = -40;// pixels per octave
-      this.OctaveLoc = 500;
+      this.OctaveLoc = 400;
       this.TimeOrg = 20;
       MyBounds = new CajaDelimitadora();
     }
@@ -134,9 +165,9 @@ public class GraphicBox implements IDrawable, IDeletable {// ISonglet,
       this.Content.Attach_Content(content);
     }
     /* ********************************************************************************* */
-//    @Override public ISonglet GetContent() {// Problem: Need to override this, but GraphicBox is not an ISonglet
-//      return this.Content;
-//    }
+    @Override public ISonglet GetContent() {// Problem: Need to override this, but GraphicBox is not an ISonglet
+      return this.Content;
+    }
     /* ********************************************************************************* */
     @Override public void Draw_Me(Drawing_Context ParentDC) {// IDrawable
       if (ParentDC.ClipBounds.Intersects(MyBounds)) {
@@ -146,6 +177,9 @@ public class GraphicBox implements IDrawable, IDeletable {// ISonglet,
     }
     @Override public void UpdateBoundingBox() {// IDrawable
       this.Content.UpdateBoundingBox();// Problem: Overriding this because GraphicBox is not an ISonglet
+      this.UpdateBoundingBoxLocal();
+    }
+    @Override public void UpdateBoundingBoxLocal() {// IDrawable
       this.Content.GetBoundingBox().UnMap(this, MyBounds);// project child limits into parent (my) space
       this.MyBounds.Sort_Me();
     }

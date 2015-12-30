@@ -62,6 +62,8 @@ public class HookAndLure {
   }
   public void AddFirstBox(OffsetBox starter, double XLoc, double YLoc) {// add first space map at start of search
     this.Leaf = null;
+    this.Stack_Depth_Best = 0;
+    this.Stack_Depth = 0;
     TruncateStack(this.Explore_Stack, 0);
     StackItem next = new StackItem();
     next.PossibleLeaf = starter;
@@ -72,11 +74,11 @@ public class HookAndLure {
     // map to child space
     CajaDelimitadora SearchBoundsTemp = new CajaDelimitadora();
     SearchBoundsTemp.Assign(XLoc - Radius, YLoc - Radius, XLoc + Radius, YLoc + Radius);
-    
+
     starter.MapTo(SearchBoundsTemp, next.SearchBounds);// prev.SearchBounds.Map(child, next.SearchBounds);
     SearchBoundsTemp.Delete_Me();
     starter.MapTo(new Point2D.Double(XLoc, YLoc), next.Loc);
-    
+
     this.Explore_Stack.add(next);
     this.CurrentContext = next;
     Stack_Depth = 1;// Now we have one element, whee!
@@ -150,6 +152,17 @@ public class HookAndLure {
       pntfrom.setLocation(pntto);
     }
     results.setLocation(pntto);
+  }
+  /* ********************************************************************************* */
+  public void UpdateBoundingBoxes() {
+    this.Leaf.UpdateBoundingBoxLocal();
+    int lastitem = this.Best_Stack.size() - 1;
+    StackItem si;
+    for (int cnt = lastitem; cnt >= 0; cnt--) {
+      si = this.Best_Stack.get(cnt);
+      si.PossibleLeaf.GetContent().UpdateBoundingBoxLocal();// either this
+      si.PossibleLeaf.UpdateBoundingBoxLocal();
+    }
   }
   /* ********************************************************************************* */
   public static class StackItem implements IDeletable {

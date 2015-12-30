@@ -175,22 +175,25 @@ public class OffsetBox implements IDrawable.IMoveable, IDeletable {// location b
   }
   /* ********************************************************************************* */
   @Override public void Draw_Me(Drawing_Context ParentDC) {// IDrawable
-    // Draw_My_Bounds(ParentDC.GlobalOffset, ParentDC.gr);
+    Draw_My_Bounds(ParentDC);
     if (ParentDC.ClipBounds.Intersects(MyBounds)) {// If we make ISonglet also drawable then we can stop repeating this code and put it all in OffsetBox.
-      {
-        Point2D.Double pnt = ParentDC.To_Screen(this.TimeOrg, this.OctaveLoc);
-        double extra = (1.0 / (double) ParentDC.RecurseDepth);
-        //extra *= 0.02;
-        double RadiusPixels = Math.abs(ParentDC.GlobalOffset.ScaleY) * (OctavesPerRadius + extra * 0.02);
-        RadiusPixels = Math.ceil(RadiusPixels);
-        double DiameterPixels = RadiusPixels * 2.0;
-        Color col = Globals.ToRainbow(extra);
+
+      Point2D.Double pnt = ParentDC.To_Screen(this.TimeOrg, this.OctaveLoc);
+      double extra = (1.0 / (double) ParentDC.RecurseDepth);
+      //extra *= 0.02;
+      double RadiusPixels = Math.abs(ParentDC.GlobalOffset.ScaleY) * (OctavesPerRadius + extra * 0.02);
+      RadiusPixels = Math.ceil(RadiusPixels);
+      double DiameterPixels = RadiusPixels * 2.0;
+      Color col = Globals.ToRainbow(extra);
+      if (false) {
         ParentDC.gr.setColor(Globals.ToAlpha(col, 200));// control point just looks like a dot
         ParentDC.gr.fillOval((int) (pnt.x - RadiusPixels), (int) (pnt.y - RadiusPixels), (int) DiameterPixels, (int) DiameterPixels);
         ParentDC.gr.setColor(Globals.ToAlpha(Color.darkGray, 200));
         ParentDC.gr.drawOval((int) (pnt.x - RadiusPixels), (int) (pnt.y - RadiusPixels), (int) DiameterPixels, (int) DiameterPixels);
       }
-
+      this.Draw_Dot(ParentDC, col);
+      // maybe reduce ChildDC's clipbounds to intersect with my own bounds? after all none of my children should go outside my bounds
+      // eh, that would conflict with dragging my child outside of my bounds - it would stop being drawn during the drag. 
       Drawing_Context ChildDC = new Drawing_Context(ParentDC, this);// In C++ ChildDC will be a local variable from the stack, not heap. 
       ISonglet Content = this.GetContent();
       Content.Draw_Me(ChildDC);
@@ -198,7 +201,24 @@ public class OffsetBox implements IDrawable.IMoveable, IDeletable {// location b
     }
   }
   /* ********************************************************************************* */
-  public void Draw_My_Bounds(OffsetBox GlobalOffset, Graphics2D gr) {// for debugging. break glass in case of emergency
+  public void Draw_Dot(Drawing_Context ParentDC, Color col) {
+    Point2D.Double pnt = ParentDC.To_Screen(this.TimeOrg, this.OctaveLoc);
+    double extra = (1.0 / (double) ParentDC.RecurseDepth);
+//    double RadiusPixels = Math.abs(ParentDC.GlobalOffset.ScaleY) * (OctavesPerRadius + extra * 0.02);
+    double RadiusPixels = Math.abs(ParentDC.GlobalOffset.ScaleY) * (OctavesPerRadius);
+    RadiusPixels = Math.ceil(RadiusPixels);
+    double DiameterPixels = RadiusPixels * 2.0;
+//    Color col = Globals.ToRainbow(extra);
+//    col = Color.MAGENTA;
+    ParentDC.gr.setColor(Globals.ToAlpha(col, 200));// control point just looks like a dot
+    ParentDC.gr.fillOval((int) (pnt.x - RadiusPixels), (int) (pnt.y - RadiusPixels), (int) DiameterPixels, (int) DiameterPixels);
+    ParentDC.gr.setColor(Globals.ToAlpha(Color.darkGray, 200));
+    ParentDC.gr.drawOval((int) (pnt.x - RadiusPixels), (int) (pnt.y - RadiusPixels), (int) DiameterPixels, (int) DiameterPixels);
+  }
+  /* ********************************************************************************* */
+  public void Draw_My_Bounds(Drawing_Context ParentDC) {// for debugging. break glass in case of emergency
+    OffsetBox GlobalOffset = ParentDC.GlobalOffset;
+    Graphics2D gr = ParentDC.gr;
     this.MyBounds.Sort_Me();
     int rx0 = (int) GlobalOffset.UnMapTime(this.MyBounds.Min.x);
     int rx1 = (int) GlobalOffset.UnMapTime(this.MyBounds.Max.x);
@@ -209,16 +229,24 @@ public class OffsetBox implements IDrawable.IMoveable, IDeletable {// location b
       ry1 = ry0;
       ry0 = temp;
     }
+
+    // thinner lines for more distal sub-branches
+    double extra = (2.0 / (double) ParentDC.RecurseDepth);
+
+    int buf = (int) Math.ceil(extra * 2);
+    rx0 -= buf;
+    rx1 += buf;
+    ry0 -= buf;
+    ry1 += buf;
     int wdt = rx1 - rx0;
     int hgt = ry1 - ry0;
     int cint = Globals.RandomGenerator.nextInt() % 256;
     Color col = new Color(cint);
 
     Stroke oldStroke = gr.getStroke();
-    gr.setColor(col);
+    gr.setColor(Globals.ToAlpha(col, 100));
 
-    // thinner lines for more distal sub-branches
-    BasicStroke bs = new BasicStroke(1.0f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND);
+    BasicStroke bs = new BasicStroke((float) (1.0 + extra), BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND);
     gr.setStroke(bs);
 
     //ParentDC.gr.setColor(col);//Color.magenta
@@ -233,8 +261,18 @@ public class OffsetBox implements IDrawable.IMoveable, IDeletable {// location b
   @Override public void UpdateBoundingBox() {// IDrawable
     ISonglet Content = this.GetContent();
     Content.UpdateBoundingBox();
+    this.UpdateBoundingBoxLocal();
+//    Content.GetBoundingBox().UnMap(this, MyBounds);// project child limits into parent (my) space
+//    this.MyBounds.Sort_Me();// almost never needed
+  }
+  @Override public void UpdateBoundingBoxLocal() {// IDrawable
+    ISonglet Content = this.GetContent();
+    Content.UpdateBoundingBoxLocal();// either this
     Content.GetBoundingBox().UnMap(this, MyBounds);// project child limits into parent (my) space
     this.MyBounds.Sort_Me();// almost never needed
+    // include my bubble in bounds
+    this.MyBounds.IncludePoint(this.TimeOrg - OctavesPerRadius, this.OctaveLoc - OctavesPerRadius);
+    this.MyBounds.IncludePoint(this.TimeOrg + OctavesPerRadius, this.OctaveLoc + OctavesPerRadius);
   }
   @Override public void GoFishing(HookAndLure Scoop) {// IDrawable
     if (Scoop.CurrentContext.SearchBounds.Intersects(MyBounds)) {

@@ -21,7 +21,7 @@ public class MainGui {
   public void Init() {
     this.frame = new JFrame();
     this.frame.setTitle("Polygon");
-    this.frame.setSize(600, 400);
+    this.frame.setSize(700, 400);
     this.frame.addWindowListener(new WindowAdapter() {
       @Override public void windowClosing(WindowEvent e) {
         System.exit(0);
@@ -65,22 +65,20 @@ public class MainGui {
       dc.gr = g2d;
       int wdt = this.getWidth() * 7 / 8;
       int hgt = this.getHeight() * 7 / 8;
-      if (true) {// clip test - seems to work, yay
-        Rectangle2D rect = new Rectangle2D.Float();
-        rect.setRect(0, 0, wdt, hgt);
-        if (false) {// disable real clipping to see how much unnecessary drawing is being done.
-          g2d.setClip(rect);
-        }
-        Stroke oldStroke = g2d.getStroke();
-        BasicStroke bs = new BasicStroke(5f, BasicStroke.CAP_SQUARE, BasicStroke.JOIN_MITER);
-        g2d.setStroke(bs);
-        g2d.setColor(Color.red);
-        g2d.draw(rect);// red rectangle confidence check for clipping
-        g2d.setStroke(oldStroke);
-        dc.ClipBounds.Assign(0, 0, wdt, hgt);// problem: why does project disappear when clip bounds cover its root? 
-      } else {
-        dc.ClipBounds.Assign(0, 0, 10000, 10000);// arbitrarily large
+
+      Rectangle2D rect = new Rectangle2D.Float();
+      rect.setRect(0, 0, wdt, hgt);
+      if (false) {// disable real clipping to see how much unnecessary drawing is being done.
+        g2d.setClip(rect);
       }
+      Stroke oldStroke = g2d.getStroke();
+      BasicStroke bs = new BasicStroke(5f, BasicStroke.CAP_SQUARE, BasicStroke.JOIN_MITER);
+      g2d.setStroke(bs);
+      g2d.setColor(Color.red);
+      g2d.draw(rect);// red rectangle confidence check for clipping
+      g2d.setStroke(oldStroke);
+      dc.ClipBounds.Assign(0, 0, wdt, hgt);
+
       dc.Offset = new OffsetBox();
       dc.GlobalOffset = new OffsetBox();
       this.MyProject.GraphicRoot.Draw_Me(dc);
@@ -106,6 +104,10 @@ public class MainGui {
     /* ********************************************************************************* */
     @Override public void mouseDragged(MouseEvent me) {
       if (this.Query.Leaf != null) {
+        {
+          BigApp.MyThread.PleaseStop();
+          Toggle = true;
+        }
         Point2D.Double results = new Point2D.Double();
         this.Query.MapThroughStack(me.getX(), me.getY(), results);
         this.Query.Leaf.MoveTo(results.x, results.y);
@@ -117,23 +119,31 @@ public class MainGui {
     boolean Toggle = true;// temporary until we have better ui
     /* ********************************************************************************* */
     @Override public void mouseClicked(MouseEvent me) {
-      if (Toggle) {
-        BigApp.MyThread.start();
-        Toggle = false;
-      } else {
-        BigApp.MyThread.PleaseStop();
-        Toggle = true;
+      boolean nop = true;
+      if (true) {
+        if (Toggle) {
+          BigApp.MyThread.start();
+          Toggle = false;
+        } else {
+          BigApp.MyThread.PleaseStop();
+          Toggle = true;
+        }
       }
     }
     @Override public void mousePressed(MouseEvent me) {
       this.Query.AddFirstBox(this.MyProject.GraphicRoot, me.getX(), me.getY());
       //this.MyProject.GraphicRoot.GoFishing(this.Query);
-      // this is really ugly. 
+      // this is really ugly.  #kludgey
       this.MyProject.GraphicRoot.Content.ContentOBox.GoFishing(Query);// call this on graphic songlet's child obox. 
       this.Query.DecrementStack();
+      System.out.println();
     }
     @Override public void mouseReleased(MouseEvent me) {
       double XCtr, YCtr, Scale;
+      if (this.Query.Leaf != null) {
+        this.Query.UpdateBoundingBoxes();
+        this.repaint();
+      }
       if (false) {// for testing without mouse wheel
         Scale = 1.1;
         if (me.getButton() == MouseEvent.BUTTON1) {

@@ -257,11 +257,21 @@ public class Voice implements ISonglet, IDrawable {
   /* ********************************************************************************* */
   @Override public void UpdateBoundingBox() {// IDrawable
     Point pnt;
-    this.MyBounds.Reset();
+    //this.MyBounds.Reset();
     int len = this.CPoints.size();
     for (int pcnt = 0; pcnt < len; pcnt++) {
       pnt = this.CPoints.get(pcnt);
       pnt.UpdateBoundingBox();
+      //this.MyBounds.Include(pnt.MyBounds);// Don't have to UnMap in this case because my points are already in my internal coordinates.
+    }
+    this.UpdateBoundingBoxLocal();
+  }
+  @Override public void UpdateBoundingBoxLocal() {// IDrawable
+    Point pnt;
+    this.MyBounds.Reset();
+    int len = this.CPoints.size();
+    for (int pcnt = 0; pcnt < len; pcnt++) {
+      pnt = this.CPoints.get(pcnt);
       this.MyBounds.Include(pnt.MyBounds);// Don't have to UnMap in this case because my points are already in my internal coordinates.
     }
   }
@@ -332,6 +342,9 @@ public class Voice implements ISonglet, IDrawable {
     }
     /* ********************************************************************************* */
     @Override public void UpdateBoundingBox() {// IDrawable
+      this.UpdateBoundingBoxLocal();// Points have no children, nothing else to do.
+    }
+    @Override public void UpdateBoundingBoxLocal() {// IDrawable
       double LoudnessHeight = Loudness * OctavesPerLoudness;// Map loudness to screen pixels.
       double MinX = RealTime - OctavesPerRadius;
       double MaxX = RealTime + OctavesPerRadius;
@@ -349,7 +362,7 @@ public class Voice implements ISonglet, IDrawable {
       }
     }
     @Override public boolean HitsMe(double XLoc, double YLoc) {// IDrawable.IMoveable
-      System.out.print("Point HitsMe:");
+      System.out.print("** Point HitsMe:");
       if (this.MyBounds.Contains(XLoc, YLoc)) {
         double dist = Math.hypot(XLoc - this.RealTime, YLoc - this.Octave);
         if (dist <= this.OctavesPerRadius) {
@@ -430,6 +443,10 @@ public class Voice implements ISonglet, IDrawable {
       this.Render_Sample_Count = 0;
       this.Bone_Sample_Mark = 0;
       this.IsFinished = false;
+      if (this.MyPhrase.CPoints.size() > 0) {
+        Point pnt = this.MyPhrase.CPoints.get(0);
+        this.Bone_Sample_Mark = (int) (pnt.RealTime * this.MyProject.SampleRate);
+      }
       //if (this.Parent != null) {
       Point ppnt = this.MyPhrase.CPoints.get(this.Prev_Point_Dex);
       this.Cursor_Point.CopyFrom(ppnt);

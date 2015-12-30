@@ -5,6 +5,10 @@
  */
 package voices;
 
+import java.awt.BasicStroke;
+import java.awt.Color;
+import java.awt.Graphics2D;
+import java.awt.Stroke;
 import java.util.ArrayList;
 
 /**
@@ -143,21 +147,26 @@ public class LoopBox implements ISonglet, IDrawable {
   }
   @Override public void UpdateBoundingBox() {// IDrawable
     this.ContentOBox.UpdateBoundingBox();
+    this.UpdateBoundingBoxLocal();
+  }
+  @Override public void UpdateBoundingBoxLocal() {// IDrawable
     CajaDelimitadora ChildBBoxUnMapped = this.ContentOBox.GetBoundingBox();// project child limits into parent (my) space
     this.MyBounds.Include(ChildBBoxUnMapped);// Inefficient. We collect all the X information and then just throw it away. 
     this.MyBounds.Min.x = 0;
-    this.MyBounds.Max.x = this.MyDuration;
+    this.MyBounds.Max.x = this.MyDuration;// #kludgey
     this.MyBounds.Sort_Me();
     //this.MyBounds.Assign(0, miny, this.MyDuration, maxy);
   }
   /* ********************************************************************************* */
   @Override public void GoFishing(HookAndLure Scoop) {// IDrawable
     if (Scoop.CurrentContext.SearchBounds.Intersects(MyBounds)) {
-      int loopcnt = (int) Math.floor(Scoop.CurrentContext.Loc.x / this.Delay);
+      int IterationNum = (int) Math.floor(Scoop.CurrentContext.Loc.x / this.Delay);
       ghost.Copy_From(this.ContentOBox);
+      ghost.MyBounds.Min.x = 0;
+      ghost.MyBounds.Max.x = this.MyDuration;// #kludgey
       ghost.Assign_Parent_Songlet(this);
-      ghost.MyIteration = loopcnt;
-      ghost.TimeOrg = loopcnt * this.Delay;
+      ghost.MyIteration = IterationNum;
+      ghost.TimeOrg = IterationNum * this.Delay;
       ghost.GoFishing(Scoop);
     }
   }
@@ -348,10 +357,53 @@ public class LoopBox implements ISonglet, IDrawable {
       child.Content = this.Content;
       return child;
     }
+    /* ********************************************************************************* */
+    @Override public void Draw_Me(Drawing_Context ParentDC) {// for debugging. 
+      super.Draw_Me(ParentDC);
+      this.Draw_My_Bounds(ParentDC);
+    }
+    /* ********************************************************************************* */
+    public void Draw_My_Bounds(Drawing_Context ParentDC) {// for debugging. break glass in case of emergency
+      OffsetBox GlobalOffset = ParentDC.GlobalOffset;
+      Graphics2D gr = ParentDC.gr;
+      this.MyBounds.Sort_Me();
+      int rx0 = (int) GlobalOffset.UnMapTime(this.MyBounds.Min.x);
+      int rx1 = (int) GlobalOffset.UnMapTime(this.MyBounds.Max.x);
+      int ry0 = (int) GlobalOffset.UnMapPitch(this.MyBounds.Min.y);
+      int ry1 = (int) GlobalOffset.UnMapPitch(this.MyBounds.Max.y);
+      if (ry1 < ry0) {// swap
+        int temp = ry1;
+        ry1 = ry0;
+        ry0 = temp;
+      }
+
+      // thinner lines for more distal sub-branches
+      double extra = (2.0 / (double) ParentDC.RecurseDepth);
+
+      int buf = (int) Math.ceil(extra * 2);
+      rx0 -= buf;
+      rx1 += buf;
+      ry0 -= buf;
+      ry1 += buf;
+      int wdt = rx1 - rx0;
+      int hgt = ry1 - ry0;
+      int cint = Globals.RandomGenerator.nextInt() % 256;
+      Color col = new Color(cint);
+
+      Stroke oldStroke = gr.getStroke();
+      gr.setColor(Globals.ToAlpha(Color.red, 100));
+
+      BasicStroke bs = new BasicStroke((float) (10.0), BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND);
+      gr.setStroke(bs);
+
+      //ParentDC.gr.setColor(col);//Color.magenta
+      gr.drawRect(rx0, ry0, wdt, hgt);
+
+      gr.setStroke(oldStroke);
+    }
   }
   /* ********************************************************************************* */
   private static class Ghost_OffsetBox extends OffsetBox {// TEMPORARY location box to shift child in time
-    // UNDER CONSTRUCTION, not used yet
     // Ghost obox is a filmy wrapper around LoopBox's child's real offset box. Ghost simply translates outside-world coordinates into looped coordinates and back.
     // Ghost wrapper is needed in LoopBox for 1) MoveTo, 2) Draw_Me (optional), and hopefully for 3) Singer. 
     public LoopBox Parent;
@@ -366,13 +418,14 @@ public class LoopBox implements ISonglet, IDrawable {
     /* ********************************************************************************* */
     @Override public void Draw_Me(Drawing_Context ParentDC) {// IDrawable
       if (ParentDC.ClipBounds.Intersects(MyBounds)) {// MyBounds keep moving
+        super.Draw_Dot(ParentDC, Color.magenta);
         Drawing_Context ChildDC = new Drawing_Context(ParentDC, this);// In C++ ChildDC will be a local variable from the stack, not heap. 
         // to do: map the real-time movements to our parent's Delay value, then reset the child obox's values 
         if (false) {// do we include the child's personal offset or skip around it? 
           this.ContentLayer.Draw_Me(ParentDC);
         } else {
-          ISonglet Content = this.GetContent();// skip around real offset box
-          Content.Draw_Me(ChildDC);
+          ISonglet songlet = this.GetContent();// skip around real offset box
+          songlet.Draw_Me(ChildDC);
         }
         ChildDC.Delete_Me();
       }

@@ -206,12 +206,24 @@ public class GroupBox implements ISonglet, IDrawable {
   }
   @Override public void UpdateBoundingBox() {// IDrawable
     OffsetBox ChildOffsetBox;
+//    CajaDelimitadora ChildBBoxUnMapped;
+//    this.MyBounds.Reset();
+    int len = this.SubSongs.size();
+    for (int pcnt = 0; pcnt < len; pcnt++) {
+      ChildOffsetBox = this.SubSongs.get(pcnt);
+      ChildOffsetBox.UpdateBoundingBox();
+//      ChildBBoxUnMapped = ChildOffsetBox.GetBoundingBox();// project child limits into parent (my) space
+//      this.MyBounds.Include(ChildBBoxUnMapped);
+    }
+    this.UpdateBoundingBoxLocal();
+  }
+  @Override public void UpdateBoundingBoxLocal() {// IDrawable
+    OffsetBox ChildOffsetBox;
     CajaDelimitadora ChildBBoxUnMapped;
     this.MyBounds.Reset();
     int len = this.SubSongs.size();
     for (int pcnt = 0; pcnt < len; pcnt++) {
       ChildOffsetBox = this.SubSongs.get(pcnt);
-      ChildOffsetBox.UpdateBoundingBox();
       ChildBBoxUnMapped = ChildOffsetBox.GetBoundingBox();// project child limits into parent (my) space
       this.MyBounds.Include(ChildBBoxUnMapped);
     }
