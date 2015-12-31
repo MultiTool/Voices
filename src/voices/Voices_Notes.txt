@@ -355,6 +355,40 @@ Line widths should scale with zooming.
 FX box, with sigmoid clipping, reverb etc. 
 
 
+why we want directed graph
+1 looping. can we do this differently? how? 
+  loops are predictable. all dupe instances are under same roof. 
+  it's true that a looper will draw many instances of the same thing.  these things might have absolute pitch, but not time. 
+  play a loop - temp simulboxes, not to be clicked.
+  click and drag a loop - ghost wrapper. 
+  draw a loop - again ghost wrapper. 
+  edit a loop child - percolate updatebounds, but only within loop bounds. 
+  
+2 transposing same thing up and down.  why not just copy-paste? 
+3 same thing with different beats. again why not copy paste? 
+voice bending does not need directed graph, can be unique in every place. 
+4 can bend many voices together. - possibly replace with bend envelope.
+
+what are the big pitas for directed graph?
+must update bounds everywhere for every little change. 
+user might hate everything being stuck together. 
+feels like skating on the edge with every little decision.
+
+put iteration num in every stack item, and pass it to -? 
+so best stack keeps all the indexes that led to the winner. 
+loop uses index
+group uses index
+voice uses index
+graphic does not use index, but is only one instance ever
+
+ok maybe for loopbox we really have like 100 offsetboxes. We're just a groupbox with 1 child who is auto-repeated. 
+that means that for dragging we have to update the whole array. meh, we have to redraw it all anyway. 
+problem with that is every time you change duration or delay, we have to redefine the whole array. 
+that means that if anything outside links to a ghostbox in the array, it could get messed up. 
+hm, reduce array means delete some ghostboxes and update the rest. increase array means add some and then update all. 
+change array for duration means don't update any existing ghostboxes.
+change array for delay means update all ghostboxes after change event. 
+
 
 
 

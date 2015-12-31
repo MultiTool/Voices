@@ -262,8 +262,6 @@ public class OffsetBox implements IDrawable.IMoveable, IDeletable {// location b
     ISonglet Content = this.GetContent();
     Content.UpdateBoundingBox();
     this.UpdateBoundingBoxLocal();
-//    Content.GetBoundingBox().UnMap(this, MyBounds);// project child limits into parent (my) space
-//    this.MyBounds.Sort_Me();// almost never needed
   }
   @Override public void UpdateBoundingBoxLocal() {// IDrawable
     ISonglet Content = this.GetContent();

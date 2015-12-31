@@ -16,7 +16,7 @@ import java.util.ArrayList;
  * HookAndLure is basically a spatial query which also carries back all the results data.
  *
  */
-public class HookAndLure {
+public class HookAndLure {// to do: rename this class to Grabber
   public double XHit, YHit;// exact mouse click point
   //public CajaDelimitadora SearchBounds = new CajaDelimitadora();
   public StackItem CurrentContext = null;
@@ -52,7 +52,7 @@ public class HookAndLure {
     OffsetBox child = new OffsetBox();// first layer place holder.  not a great solution. 
     child.MyBounds.Assign(Double.NEGATIVE_INFINITY, Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY, Double.POSITIVE_INFINITY);
     StackItem next = new StackItem();
-    next.PossibleLeaf = child;
+    next.OBox = child;
     next.Loc.x = XLoc;// Next's location values exist in the space above it. At the top they are mouse coordinates. 
     next.Loc.y = YLoc;
     next.SearchBounds.Assign(XLoc - Radius, YLoc - Radius, XLoc + Radius, YLoc + Radius);
@@ -66,7 +66,7 @@ public class HookAndLure {
     this.Stack_Depth = 0;
     TruncateStack(this.Explore_Stack, 0);
     StackItem next = new StackItem();
-    next.PossibleLeaf = starter;
+    next.OBox = starter;
 //    next.Loc.x = XLoc;// Next's location values exist in the space above it. At the top they are mouse coordinates. 
 //    next.Loc.y = YLoc;
 //    next.SearchBounds.Assign(XLoc - Radius, YLoc - Radius, XLoc + Radius, YLoc + Radius);
@@ -86,7 +86,7 @@ public class HookAndLure {
   public void AddBoxToStack(OffsetBox child) {
     StackItem prev = this.CurrentContext;
     StackItem next = new StackItem();
-    next.PossibleLeaf = child;
+    next.OBox = child;
 
     // map to child space
     child.MapTo(prev.SearchBounds, next.SearchBounds);// prev.SearchBounds.Map(child, next.SearchBounds);
@@ -148,7 +148,7 @@ public class HookAndLure {
     StackItem si;
     for (int cnt = 0; cnt < len; cnt++) {
       si = this.Best_Stack.get(cnt);
-      si.PossibleLeaf.MapTo(pntfrom, pntto);
+      si.OBox.MapTo(pntfrom, pntto);
       pntfrom.setLocation(pntto);
     }
     results.setLocation(pntto);
@@ -160,18 +160,25 @@ public class HookAndLure {
     StackItem si;
     for (int cnt = lastitem; cnt >= 0; cnt--) {
       si = this.Best_Stack.get(cnt);
-      si.PossibleLeaf.GetContent().UpdateBoundingBoxLocal();// either this
-      si.PossibleLeaf.UpdateBoundingBoxLocal();
+      si.OBox.GetContent().UpdateBoundingBoxLocal();// either this
+      si.OBox.UpdateBoundingBoxLocal();
     }
   }
   /* ********************************************************************************* */
   public static class StackItem implements IDeletable {
     public CajaDelimitadora SearchBounds = new CajaDelimitadora();
-    public OffsetBox PossibleLeaf;
+    public OffsetBox OBox;
+    public int HitDex;
+    /* so do we pass HitDex to all songlets, or to all oboxes? only songlets can use it directly. 
+     and when do we use it? we use it when we move the thing we grabbed, in MapThroughStack
+     we would have to pass it through every mapto.  ack.  
+    why not just give 
+     */
     Point2D.Double Loc = new Point2D.Double();
     public void Copy_From(StackItem donor) {
       this.SearchBounds.Copy_From(donor.SearchBounds);
-      this.PossibleLeaf = donor.PossibleLeaf;
+      this.OBox = donor.OBox;
+      this.HitDex = donor.HitDex;
       this.Loc.setLocation(donor.Loc);
     }
     @Override public boolean Create_Me() {// IDeletable
@@ -180,7 +187,7 @@ public class HookAndLure {
     @Override public void Delete_Me() {// IDeletable
       this.SearchBounds.Delete_Me();
       this.SearchBounds = null;
-      this.PossibleLeaf = null;
+      this.OBox = null;
       this.Loc = null;
     }
   }

@@ -141,7 +141,9 @@ public class MainGui {
     @Override public void mouseReleased(MouseEvent me) {
       double XCtr, YCtr, Scale;
       if (this.Query.Leaf != null) {
-        this.Query.UpdateBoundingBoxes();
+        this.MyProject.Update_Guts();
+        this.MyProject.GraphicRoot.UpdateBoundingBox();
+        //this.Query.UpdateBoundingBoxes();
         this.repaint();
       }
       if (false) {// for testing without mouse wheel
