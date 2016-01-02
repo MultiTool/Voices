@@ -175,7 +175,7 @@ public class OffsetBox implements IDrawable.IMoveable, IDeletable {// location b
   }
   /* ********************************************************************************* */
   @Override public void Draw_Me(Drawing_Context ParentDC) {// IDrawable
-    Draw_My_Bounds(ParentDC);
+    //Draw_My_Bounds(ParentDC);
     if (ParentDC.ClipBounds.Intersects(MyBounds)) {// If we make ISonglet also drawable then we can stop repeating this code and put it all in OffsetBox.
 
       Point2D.Double pnt = ParentDC.To_Screen(this.TimeOrg, this.OctaveLoc);

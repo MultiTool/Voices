@@ -101,9 +101,9 @@ public class LoopBox implements ISonglet, IDrawable {
     OffsetBox obox = songlet.Spawn_OffsetBox();
     this.ContentOBox = obox;
     this.Content = songlet;
-    
+
     this.SubSongs.clear();
-    
+
     ghost.Copy_From(this.ContentOBox);
     ghost.Assign_Parent_Songlet(this);
     return obox;
@@ -173,11 +173,13 @@ public class LoopBox implements ISonglet, IDrawable {
         LeftBound = Math.max(0, LeftBound);
         int IterationStart = (int) Math.ceil(LeftBound / this.Delay);
         double RightBound = Math.min(SearchBounds.Max.x, this.MyDuration);
-        ghost.Copy_From(this.ContentOBox);
-        ghost.Assign_Parent_Songlet(this);
+        Ghost_OffsetBox ghost;
         int loopcnt = IterationStart;
         double Time;
         while ((Time = (loopcnt * this.Delay)) <= RightBound) {// keep looking until child song's start is beyond our max X. 
+          ghost = new Ghost_OffsetBox();// #kludgey, this would be a memory leak in C++. 
+          ghost.Copy_From(this.ContentOBox);
+          ghost.Assign_Parent_Songlet(this);
           ghost.TimeOrg = Time;
           ghost.MyIteration = loopcnt;
           ghost.MyBounds.Rebase_Time(Time);
