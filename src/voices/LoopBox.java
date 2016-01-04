@@ -101,9 +101,9 @@ public class LoopBox implements ISonglet, IDrawable {
     OffsetBox obox = songlet.Spawn_OffsetBox();
     this.ContentOBox = obox;
     this.Content = songlet;
-
+    
     this.SubSongs.clear();
-
+    
     ghost.Copy_From(this.ContentOBox);
     ghost.Assign_Parent_Songlet(this);
     return obox;

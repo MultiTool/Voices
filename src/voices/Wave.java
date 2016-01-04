@@ -64,6 +64,9 @@ public class Wave implements IDeletable {
     this.SampleRate = SampleRate0;
     double TimeSpan = EndTime0 - StartTime0;
     int nsamps = (int) Math.ceil(TimeSpan * SampleRate0);
+    if (nsamps < 0) {
+      boolean nop = true;
+    }
     this.StartDex = (int) (this.StartTime * SampleRate0);// StartDex is the number of empty samples from Time=0 to wave[0]
     this.NumSamples = nsamps;
     wave = new double[nsamps + 1];// plus 1 because converting from double to int truncates. 

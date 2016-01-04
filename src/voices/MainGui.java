@@ -122,7 +122,7 @@ public class MainGui {
       boolean nop = true;
       if (true) {
         if (Toggle) {
-          BigApp.MyThread.start();
+          BigApp.MyThread.Play_All();
           Toggle = false;
         } else {
           BigApp.MyThread.PleaseStop();
@@ -144,6 +144,14 @@ public class MainGui {
         this.MyProject.Update_Guts();
         this.MyProject.GraphicRoot.UpdateBoundingBox();
         //this.Query.UpdateBoundingBoxes();
+        {
+          double TimeRadius = 0.25;
+          double Time = this.MyProject.GraphicRoot.MapTime(me.getX());
+          BigApp.MyThread.Skip_To(Time - TimeRadius);
+          BigApp.MyThread.Assign_Stop_Time(Time + TimeRadius);
+          BigApp.MyThread.start();
+          Toggle = false;
+        }
         this.repaint();
       }
       if (false) {// for testing without mouse wheel

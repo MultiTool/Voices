@@ -80,6 +80,12 @@ public class GraphicBox implements IDrawable, ISonglet, IDeletable {//
       xloc = ParentDC.GlobalOffset.UnMapTime(xcnt);
       ParentDC.gr.drawLine((int) xloc, MinY, (int) xloc, height);
     }
+    ParentDC.gr.setColor(Globals.ToAlpha(Color.lightGray, 70));
+    for (double ysemi = MinY; ysemi < MaxY; ysemi += 1.0 / 12.0) {
+      yloc = ParentDC.GlobalOffset.UnMapPitch(ysemi);
+      ParentDC.gr.drawLine(MinX, (int) yloc, width, (int) yloc);
+    }
+    ParentDC.gr.setColor(Globals.ToAlpha(Color.lightGray, 100));
     for (int ycnt = MinY; ycnt < MaxY; ycnt++) {
       yloc = ParentDC.GlobalOffset.UnMapPitch(ycnt);
       ParentDC.gr.drawLine(MinX, (int) yloc, width, (int) yloc);

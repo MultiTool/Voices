@@ -11,6 +11,19 @@ package voices;
  */
 public class JunkyardTests {
   /* ********************************************************************************* */
+  public static Voice Create_Voice_Ribbon(double TimeOffset, double OctaveOffset, double LoudnessOffset) {
+    Voice voice = new Voice();// for fuzz testing
+    double TDiff;
+    double TimeScale = 0.125;
+    double TimeCnt = 0;
+    for (int cnt = 0; cnt < 20; cnt++) {
+      TDiff = TimeScale;
+      voice.Add_Note(TimeCnt, OctaveOffset, LoudnessOffset);
+      TimeCnt += TDiff;
+    }
+    return voice;
+  }
+  /* ********************************************************************************* */
   public static Voice Create_Warble_Voice(double TimeOffset, double OctaveOffset, double LoudnessOffset) {
     Voice voice = new Voice();// for fuzz testing
     double TDiff, OctaveRand, LoudnessRand = 1.0;
@@ -126,6 +139,21 @@ public class JunkyardTests {
     }
     Voice vc2 = Create_Warble_Voice(0, 0, 1);
     cbx.Add_SubSong(vc2, 0, 1.3, 1);
+    return obox;
+  }
+  /* ********************************************************************************* */
+  public static OffsetBox Compose_Ribbon_Chorus() {
+    GroupBox cbx = new GroupBox();
+    OffsetBox obox = cbx.Spawn_OffsetBox();
+
+    Voice vc0 = Create_Voice_Ribbon(0, 0, 1);
+    cbx.Add_SubSong(vc0, 0, 0, 0.2);
+
+    Voice vc1 = Create_Voice_Ribbon(0, 0, 1);
+    cbx.Add_SubSong(vc1, 0, 1, 1);
+
+    Voice vc2 = Create_Voice_Ribbon(0, 0, 1);
+    cbx.Add_SubSong(vc2, 0, 2, 1);
     return obox;
   }
 }

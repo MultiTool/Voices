@@ -267,6 +267,9 @@ public class GroupBox implements ISonglet, IDrawable {
     }
     /* ********************************************************************************* */
     @Override public void Skip_To(double EndTime) {
+      if (this.IsFinished) {
+        return;
+      }
       EndTime = this.MyOffsetBox.MapTime(EndTime);// EndTime is now time internal to GroupBox's own coordinate system
       if (this.MySonglet.SubSongs.size() <= 0) {
         this.IsFinished = true;
@@ -295,6 +298,9 @@ public class GroupBox implements ISonglet, IDrawable {
     }
     /* ********************************************************************************* */
     @Override public void Render_To(double EndTime, Wave wave) {
+      if (this.IsFinished) {
+        return;
+      }
       EndTime = this.MyOffsetBox.MapTime(EndTime);// EndTime is now time internal to GroupBox's own coordinate system
       double UnMapped_Prev_Time = this.MyOffsetBox.UnMapTime(this.Prev_Time);// get start time in parent coordinates
       if (this.MySonglet.SubSongs.size() <= 0) {

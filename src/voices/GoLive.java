@@ -16,6 +16,7 @@ public class GoLive implements Runnable, IDeletable {
   private Thread thread;
   private final String ThreadName;
   public Project MyProject;
+  //public double StartTime = 0;
   Audio audio;
   ISonglet.Singer RootPlayer;
   double TimeIncrement = (20.0 / 1000.0);// milliseconds
@@ -27,13 +28,14 @@ public class GoLive implements Runnable, IDeletable {
     this.ThreadName = "GoLive";
     this.thread = null;
     this.audio = new Audio();
+    this.CurrentTime = 0;
     this.Create_Me();
   }
   /* ********************************************************************************* */
   public void start() {
     System.out.println("Starting " + ThreadName);
-    this.CurrentTime = 0;
-    FinalTime = this.MyProject.AudioRoot.GetContent().Get_Duration();
+    //this.CurrentTime = 0;
+    //FinalTime = this.MyProject.AudioRoot.GetContent().Get_Duration();
     wave_render.Init(0, TimeIncrement, this.MyProject.SampleRate);
 
     RootPlayer = this.MyProject.AudioRoot.Spawn_Singer();
@@ -50,6 +52,21 @@ public class GoLive implements Runnable, IDeletable {
     thread.start();
   }
   /* ********************************************************************************* */
+  public void Play_All() {
+    this.CurrentTime = 0;
+    FinalTime = this.MyProject.AudioRoot.GetContent().Get_Duration();
+    this.start();
+  }
+  /* ********************************************************************************* */
+  public void Skip_To(double Time) {
+    this.CurrentTime = Time;
+  }
+  /* ********************************************************************************* */
+  public void Assign_Stop_Time(double Time) {
+    //this.CurrentTime = Time;
+    FinalTime = Math.max(this.CurrentTime, Time);
+  }
+  /* ********************************************************************************* */
   @Override public void run() {
     while (this.CurrentTime < this.FinalTime && this.KeepGoing) {
       this.wave_render.Rebase_Time(this.CurrentTime);
@@ -57,6 +74,9 @@ public class GoLive implements Runnable, IDeletable {
       this.wave_render.Amplify(0.2);
       audio.Feed(this.wave_render);
       this.CurrentTime += this.TimeIncrement;
+      if (this.RootPlayer.IsFinished) {
+        break;
+      }
     }
     this.stop();
   }

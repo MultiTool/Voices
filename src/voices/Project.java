@@ -78,7 +78,7 @@ public class Project implements IDeletable {
     GroupBox cbx;
     NoteMaker nm;
     LoopBox lbx;
-    switch (6) {
+    switch (8) {
     case 0:
       song = JunkyardTests.Create_Random_Chorus(0, 0, 1.0);
       obox = song.Spawn_OffsetBox();
@@ -154,6 +154,10 @@ public class Project implements IDeletable {
     case 7:
       obox = JunkyardTests.Compose_Warble_Chorus();
       obox.OctaveLoc_s(4);
+    case 8:
+      obox = JunkyardTests.Compose_Ribbon_Chorus();
+      obox.OctaveLoc_s(4);
+      break;
     }
     Wrap_For_Graphics(obox);
     if (false) {
