@@ -539,7 +539,20 @@ public class Voice implements ISonglet, IDrawable {
         }
       }
       wave.Amplify(this.MyOffsetBox.LoudnessFactor);
+      if (false) {
+        this.Distortion_Effect(wave, 4.0);
+      }
       wave.NumSamples = this.Render_Sample_Count;
+    }
+    /* ********************************************************************************* */
+    public void Distortion_Effect(Wave wave, double gain) {
+      double power = 2.0;// sigmoid clipping 
+      int len = wave.NumSamples;
+      for (int cnt = 0; cnt < len; cnt++) {
+        double val = wave.Get(cnt) * gain;
+        val = val / Math.pow(1 + Math.abs(Math.pow(val, power)), 1.0 / power);
+        wave.Set(val);
+      }
     }
     /* ********************************************************************************* */
     public double ClipTime(double EndTime) {

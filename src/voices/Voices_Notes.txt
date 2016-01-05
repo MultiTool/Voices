@@ -389,6 +389,31 @@ hm, reduce array means delete some ghostboxes and update the rest. increase arra
 change array for duration means don't update any existing ghostboxes.
 change array for delay means update all ghostboxes after change event. 
 
+process for porting:
+replace all 'public ' with 'jpublic '
+replace all 'private ' with 'jprivate '
+replace all this. with this-> 
+replace all 'static class' with 'class' 
+find all @Override blah fn(bleh) { and replace with blah fn(bleh) override {
+redefine all implements and extends as : (can do automatically)
+find all interfaces, turn to classes with virtual stubs inside. 
+put all #include "stuff.hpp" at top of everything. 
+put this around everything:  #ifndef OffsetBox_hpp   #define OffsetBox_hpp 
+make all object parameters fn(Object& obj) 
+end all classes with }; 
+will need some forward class defs, add manually. 
+remove all import and package lines from tops. 
+replace all Math.what calls
+comment out all graphics
+replace ArrayList with vector 
+ugh, comb out circular dependencies
+
+OffsetBoxBase (MapTo, everything but GoFishing)
+Grabber uses OffsetBoxBase
+OffsetBox:OffsetBoxBase and uses Grabber
+
+
+
 
 
 

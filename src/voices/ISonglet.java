@@ -48,9 +48,9 @@ public interface ISonglet extends IDrawable, IDeletable {// Cancionita
     }
     /* ********************************************************************************* */
     public void Compound(OffsetBox donor) {// accumulate my own transformation
-      Inherited_Time += donor.TimeLoc_g();
-      Inherited_Octave += donor.OctaveLoc_g();
-      Inherited_Loudness *= donor.LoudnessLoc_g();
+			Inherited_Time += donor.TimeOrg;
+			Inherited_Octave += donor.OctaveLoc;
+			Inherited_Loudness *= donor.LoudnessFactor;
     }
     /* ********************************************************************************* */
     public abstract OffsetBox Get_OffsetBox();

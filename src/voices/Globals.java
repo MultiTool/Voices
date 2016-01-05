@@ -11,6 +11,13 @@ import java.util.Random;
 /**
  *
  * @author MultiTool
+// C++ stuff
+#define boolean bool 
+#define jpublic 
+#define jprivate
+#define implements :
+#define extends :
+
  */
 public class Globals {
   public static int SampleRate = 44100;
