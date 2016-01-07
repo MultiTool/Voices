@@ -101,9 +101,7 @@ public class LoopBox implements ISonglet, IDrawable {
     OffsetBox obox = songlet.Spawn_OffsetBox();
     this.ContentOBox = obox;
     this.Content = songlet;
-    
     this.SubSongs.clear();
-    
     ghost.Copy_From(this.ContentOBox);
     ghost.Assign_Parent_Songlet(this);
     return obox;
@@ -114,19 +112,19 @@ public class LoopBox implements ISonglet, IDrawable {
     LeftBound = Math.max(0, LeftBound);
     int IterationStart = (int) Math.ceil(LeftBound / this.Delay);
     double RightBound = Math.min(ParentDC.ClipBounds.Max.x, this.MyDuration);
-    Ghost_OffsetBox ghost = new Ghost_OffsetBox();
-    ghost.Copy_From(this.ContentOBox);
-    ghost.Assign_Parent_Songlet(this);
+    Ghost_OffsetBox LGhost = new Ghost_OffsetBox();
+    LGhost.Copy_From(this.ghost);
+    LGhost.Assign_Parent_Songlet(this);
     int loopcnt = IterationStart;
     double Time;
     while ((Time = (loopcnt * this.Delay)) <= RightBound) {// keep drawing until child song's start is beyond our max X. 
-      ghost.TimeOrg = Time;
-      ghost.MyIteration = loopcnt;
-      ghost.MyBounds.Rebase_Time(Time);
-      ghost.Draw_Me(ParentDC);
+      LGhost.TimeOrg = Time;
+      LGhost.MyIteration = loopcnt;
+      LGhost.MyBounds.Rebase_Time(Time + this.ghost.MyBounds.Min.x);
+      LGhost.Draw_Me(ParentDC);
       loopcnt++;
     }
-    ghost.Delete_Me();
+    LGhost.Delete_Me();
   }
   /* ********************************************************************************* */
   // @Override 
@@ -140,7 +138,7 @@ public class LoopBox implements ISonglet, IDrawable {
     double Time;
     while ((Time = (loopcnt * this.Delay)) <= RightBound) {// keep drawing until child song's start is beyond our max X. 
       obox.TimeOrg = Time;
-      obox.MyBounds.Rebase_Time(Time);
+      obox.MyBounds.Rebase_Time(Time - obox.MyBounds.Min.x);
       obox.Draw_Me(ParentDC);
       loopcnt++;
     }
@@ -173,17 +171,19 @@ public class LoopBox implements ISonglet, IDrawable {
         LeftBound = Math.max(0, LeftBound);
         int IterationStart = (int) Math.ceil(LeftBound / this.Delay);
         double RightBound = Math.min(SearchBounds.Max.x, this.MyDuration);
-        Ghost_OffsetBox ghost;
+        Ghost_OffsetBox LGhost;
         int loopcnt = IterationStart;
         double Time;
+        // to do: fix click error by making left bound less than loopcnt * Delay.
         while ((Time = (loopcnt * this.Delay)) <= RightBound) {// keep looking until child song's start is beyond our max X. 
-          ghost = new Ghost_OffsetBox();// #kludgey, this would be a memory leak in C++. 
-          ghost.Copy_From(this.ContentOBox);
-          ghost.Assign_Parent_Songlet(this);
-          ghost.TimeOrg = Time;
-          ghost.MyIteration = loopcnt;
-          ghost.MyBounds.Rebase_Time(Time);
-          ghost.GoFishing(Scoop);
+          LGhost = new Ghost_OffsetBox();// #kludgey, this would be a memory leak in C++. 
+          LGhost.Copy_From(this.ghost);
+          LGhost.Assign_Parent_Songlet(this);
+          LGhost.TimeOrg = Time;
+          LGhost.MyIteration = loopcnt;
+          LGhost.MyBounds.Rebase_Time(Time + this.ghost.MyBounds.Min.x);
+          //LGhost.MyBounds.Rebase_Time(Time);
+          LGhost.GoFishing(Scoop);
           loopcnt++;
         }
       } else {

@@ -412,6 +412,17 @@ OffsetBoxBase (MapTo, everything but GoFishing)
 Grabber uses OffsetBoxBase
 OffsetBox:OffsetBoxBase and uses Grabber
 
+http://musicdsp.org/showone.php?id=168
+http://www.musicdsp.org/archive.php?classid=0#129
+
+int num = 3;
+double sum = 0.0;
+for (int cnt=0;cnt<num;cnt++){
+  sum+=frand();
+}
+sum = (sum/num)-0.5;
+// gaussian range -0.5 to +0.5
+
 
 
 

@@ -137,6 +137,7 @@ public class OffsetBox implements IDrawable.IMoveable, IDeletable {// location b
   public void MapTo(CajaDelimitadora source, CajaDelimitadora results) {
     this.MapTo(source.Min, results.Min);
     this.MapTo(source.Max, results.Max);
+    results.Sort_Me();
   }
   /* ********************************************************************************* */
   public ISonglet GetContent() {// always always override this

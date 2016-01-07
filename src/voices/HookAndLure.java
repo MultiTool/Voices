@@ -74,7 +74,6 @@ public class HookAndLure {// to do: rename this class to Grabber
     // map to child space
     CajaDelimitadora SearchBoundsTemp = new CajaDelimitadora();
     SearchBoundsTemp.Assign(XLoc - Radius, YLoc - Radius, XLoc + Radius, YLoc + Radius);
-
     starter.MapTo(SearchBoundsTemp, next.SearchBounds);// prev.SearchBounds.Map(child, next.SearchBounds);
     SearchBoundsTemp.Delete_Me();
     starter.MapTo(new Point2D.Double(XLoc, YLoc), next.Loc);
@@ -172,7 +171,7 @@ public class HookAndLure {// to do: rename this class to Grabber
     /* so do we pass HitDex to all songlets, or to all oboxes? only songlets can use it directly. 
      and when do we use it? we use it when we move the thing we grabbed, in MapThroughStack
      we would have to pass it through every mapto.  ack.  
-    why not just give 
+     why not just give 
      */
     Point2D.Double Loc = new Point2D.Double();
     public void Copy_From(StackItem donor) {

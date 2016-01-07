@@ -233,11 +233,11 @@ public class Voice implements ISonglet, IDrawable {
       CntSpine++;
     }
     //int colorToSet = Color.argb(alpha, red, green, blue); 
-    ParentDC.gr.setColor(Globals.ToAlpha(Color.cyan, 100));// Color.yellow
+    ParentDC.gr.setColor(Globals.ToAlpha(Color.cyan, 60));// Color.yellow
     ParentDC.gr.fillPolygon(OutlineX, OutlineY, NumDrawPoints);// voice fill
 
     ParentDC.gr.setColor(Globals.ToAlpha(Color.darkGray, 100));
-    ParentDC.gr.drawPolygon(OutlineX, OutlineY, NumDrawPoints);// voice outline
+    //ParentDC.gr.drawPolygon(OutlineX, OutlineY, NumDrawPoints);// voice outline
     // pgon.closePath(); ParentDC.gr.fill(pgon);
 
     ParentDC.gr.setColor(Globals.ToAlpha(Color.black, 200));
@@ -277,14 +277,17 @@ public class Voice implements ISonglet, IDrawable {
   }
   /* ********************************************************************************* */
   @Override public void GoFishing(HookAndLure Scoop) {// IDrawable
+    System.out.print(" Voice GoFishing: ");
     if (Scoop.CurrentContext.SearchBounds.Intersects(MyBounds)) {
       int len = this.CPoints.size();
       Point pnt;
       for (int pcnt = 0; pcnt < len; pcnt++) {
+        System.out.print("" + pcnt + ", ");
         pnt = this.CPoints.get(pcnt);
         pnt.GoFishing(Scoop);
       }
     }
+    System.out.println();
   }
   /* ********************************************************************************* */
   @Override public boolean Create_Me() {// IDeletable
@@ -355,23 +358,32 @@ public class Voice implements ISonglet, IDrawable {
     }
     /* ********************************************************************************* */
     @Override public void GoFishing(HookAndLure Scoop) {// IDrawable
+      System.out.print(" Point GoFishing: ");
       if (Scoop.CurrentContext.SearchBounds.Intersects(MyBounds)) {
+        System.out.print(" InBounds, ");
         if (this.HitsMe(Scoop.CurrentContext.Loc.x, Scoop.CurrentContext.Loc.y)) {
+          System.out.print(" Was Hit, ");
           Scoop.ConsiderLeaf(this);
         }
       }
+      System.out.println();
     }
     @Override public boolean HitsMe(double XLoc, double YLoc) {// IDrawable.IMoveable
       System.out.print("** Point HitsMe:");
+      boolean Hit = false;
       if (this.MyBounds.Contains(XLoc, YLoc)) {
+        System.out.print(" InBounds ");
         double dist = Math.hypot(XLoc - this.RealTime, YLoc - this.Octave);
         if (dist <= this.OctavesPerRadius) {
-          System.out.println("true");
-          return true;
+          System.out.print(" Hit!");
+          Hit = true;
+        } else {
+          System.out.print(" Missed!");
         }
+      } else {
+        System.out.print(" OutBounds ");
       }
-      System.out.println("false");
-      return false;
+      return Hit;
     }
     @Override public void MoveTo(double XLoc, double YLoc) {// IDrawable.IMoveable
       if (XLoc >= 0) {// don't go backward in time

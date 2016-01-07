@@ -28,25 +28,6 @@ public class Project implements IDeletable {
     this.GraphicRoot = this.GBox.Spawn_My_OffsetBox();
   }
   /* ********************************************************************************* */
-//  public void Draw_Me(Graphics2D g2d) {
-//    // to do: move this to MainGui, and base clipping, zoom etc. on canvas size. 
-//    Drawing_Context dc = new Drawing_Context();
-//    dc.gr = g2d;
-//    if (false) {// clip test - seems to work, yay
-//      Rectangle2D rect = new Rectangle2D.Float();
-//      rect.setRect(0, 0, 300, 300);
-//      if (false) {
-//        g2d.setClip(rect);
-//      }
-//      dc.ClipBounds.Assign(0, 0, 300, 300);
-//    } else {
-//      dc.ClipBounds.Assign(0, 0, 10000, 10000);// arbitrarily large
-//    }
-//    dc.Offset = new OffsetBox();
-//    dc.GlobalOffset = new OffsetBox();
-//    GraphicRoot.Draw_Me(dc);
-//  }
-  /* ********************************************************************************* */
   public void Wrap_For_Graphics(OffsetBox obox) {
     obox.GetContent().Set_Project(this);
     this.AudioRoot = obox;
@@ -78,7 +59,7 @@ public class Project implements IDeletable {
     GroupBox cbx;
     NoteMaker nm;
     LoopBox lbx;
-    switch (8) {
+    switch (6) {
     case 0:
       song = JunkyardTests.Create_Random_Chorus(0, 0, 1.0);
       obox = song.Spawn_OffsetBox();
