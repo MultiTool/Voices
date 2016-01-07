@@ -423,8 +423,42 @@ for (int cnt=0;cnt<num;cnt++){
 sum = (sum/num)-0.5;
 // gaussian range -0.5 to +0.5
 
+make grid darker
+add many songlets below hearing
+offset dots for grabbing
+add buttons, play stop save
+
+okButton.addActionListener(new ActionListener() {
+ public void actionPerformed(ActionEvent e) {
+	statusLabel.setText("Ok Button clicked.");
+ }          
+});
 
 
+} else {
+  BigApp.MyThread.PleaseStop();
+  Toggle = true;
+}
+}
 
 
+Audio, Thread_Sounder,
+CajaDelimitadora,
+Globals,
+GoLive,
+GraphicBox, Graphic_OffsetBox,
+GroupBox, Group_Singer, Group_OffsetBox,
+HookAndLure, to, StackItem,
+IDeletable,
+IDrawable, IMoveable, Drawing_Context,
+ISonglet, Singer, MetricsPacket,
+JunkyardTests,
+LoopBox, Loop_Singer, Loop_OffsetBox, Ghost_OffsetBox,
+MainGui, Act, DrawingPanel,
+NoteMaker, Note, Indexes,
+OffsetBox,
+Project,
+Voice, Point, VoiceOffsetBox, Voice_Singer,
+Voices,
+Wave,
 

@@ -72,6 +72,7 @@ public class Project implements IDeletable {
     case 2:
       song = JunkyardTests.Create_Chord(0, 2, 1.0, 3);
       obox = song.Spawn_OffsetBox();
+      obox.TimeOrg += NoteMaker.OffsetTime;
       break;
     case 3:
       //song = Create_Simple_Note(0, 2.3, 1);
@@ -79,10 +80,12 @@ public class Project implements IDeletable {
       //song = NoteMaker.Create_Simple_Note(0, 1, 5, 1);
       song.Set_Project(this);
       obox = song.Spawn_OffsetBox();
+      obox.TimeOrg += NoteMaker.OffsetTime;
       break;
     case 4:
       song = JunkyardTests.Compose_Loop();
       obox = song.Spawn_OffsetBox();
+      obox.TimeOrg += NoteMaker.OffsetTime;
       break;
     case 5:
       Delay = 1.5;
@@ -106,6 +109,7 @@ public class Project implements IDeletable {
       song = lbx;
       song.Set_Project(this);
       obox = song.Spawn_OffsetBox();
+      obox.TimeOrg += NoteMaker.OffsetTime;
       obox.OctaveLoc_s(4);
       break;
     case 6:
@@ -114,13 +118,13 @@ public class Project implements IDeletable {
       nm = new NoteMaker();
       lbx = new LoopBox();
       CMajorObx = nm.MakeMajor_OBox(0);// C major
-      cbx.Add_SubSong(CMajorObx, Delay * 0, CMajorObx.OctaveLoc, 1.0);
+      cbx.Add_SubSong(CMajorObx, NoteMaker.OffsetTime + Delay * 0, CMajorObx.OctaveLoc, 1.0);
       CMinorObx = nm.MakeMinor_OBox(0);// C minor
-      cbx.Add_SubSong(CMinorObx, Delay * 1, CMinorObx.OctaveLoc, 1.0);// yuck, redundant
+      cbx.Add_SubSong(CMinorObx, NoteMaker.OffsetTime + Delay * 1, CMinorObx.OctaveLoc, 1.0);// yuck, redundant
       DMajorObx = nm.MakeMajor_OBox(2);// D major
-      cbx.Add_SubSong(DMajorObx, Delay * 2, DMajorObx.OctaveLoc, 1.0);
+      cbx.Add_SubSong(DMajorObx, NoteMaker.OffsetTime + Delay * 2, DMajorObx.OctaveLoc, 1.0);
       DMinorObx = nm.MakeMinor_OBox(2);// D minor
-      cbx.Add_SubSong(DMinorObx, Delay * 3, DMinorObx.OctaveLoc, 1.0);
+      cbx.Add_SubSong(DMinorObx, NoteMaker.OffsetTime + Delay * 3, DMinorObx.OctaveLoc, 1.0);
 
       lbx.Add_Content(cbx);
       lbx.Set_Delay(Delay * 4);
@@ -130,13 +134,16 @@ public class Project implements IDeletable {
       song = lbx;
       song.Set_Project(this);
       obox = song.Spawn_OffsetBox();
+      obox.TimeOrg += NoteMaker.OffsetTime;
       obox.OctaveLoc_s(4);
       break;
     case 7:
       obox = JunkyardTests.Compose_Warble_Chorus();
+      obox.TimeOrg += NoteMaker.OffsetTime;
       obox.OctaveLoc_s(4);
     case 8:
       obox = JunkyardTests.Compose_Ribbon_Chorus();
+      obox.TimeOrg += NoteMaker.OffsetTime;
       obox.OctaveLoc_s(4);
       break;
     }

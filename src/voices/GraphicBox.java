@@ -75,23 +75,28 @@ public class GraphicBox implements IDrawable, ISonglet, IDeletable {//
 
     width = MaxX - MinX;// (int) ParentDC.GlobalOffset.UnMapTime(100);
     height = MaxY - MinY;//(int) ParentDC.GlobalOffset.UnMapPitch(100);
+    
+    // draw horizontal lines
     ParentDC.gr.setColor(Globals.ToAlpha(Color.lightGray, 100));
-    for (int xcnt = MinX; xcnt < MaxX; xcnt++) {
-      xloc = ParentDC.GlobalOffset.UnMapTime(xcnt);
-      ParentDC.gr.drawLine((int) xloc, MinY, (int) xloc, height);
-    }
-    ParentDC.gr.setColor(Globals.ToAlpha(Color.lightGray, 70));
     for (double ysemi = MinY; ysemi < MaxY; ysemi += 1.0 / 12.0) {
       yloc = ParentDC.GlobalOffset.UnMapPitch(ysemi);
       ParentDC.gr.drawLine(MinX, (int) yloc, width, (int) yloc);
     }
-    ParentDC.gr.setColor(Globals.ToAlpha(Color.lightGray, 100));
+    ParentDC.gr.setColor(Globals.ToAlpha(Color.darkGray, 100));
+    for (int xcnt = MinX; xcnt < MaxX; xcnt++) {
+      xloc = ParentDC.GlobalOffset.UnMapTime(xcnt);
+      ParentDC.gr.drawLine((int) xloc, MinY, (int) xloc, height);
+    }
+
+    // draw vertical lines
+    ParentDC.gr.setColor(Globals.ToAlpha(Color.darkGray, 100));
     for (int ycnt = MinY; ycnt < MaxY; ycnt++) {
       yloc = ParentDC.GlobalOffset.UnMapPitch(ycnt);
       ParentDC.gr.drawLine(MinX, (int) yloc, width, (int) yloc);
     }
 
-    ParentDC.gr.setColor(Globals.ToAlpha(Color.magenta, 100));
+    // draw origin lines
+    ParentDC.gr.setColor(Globals.ToAlpha(Color.red, 255));
     X0 = (int) ParentDC.GlobalOffset.UnMapTime(0);
     ParentDC.gr.drawLine(X0, MinY, X0, height);
 

@@ -12,6 +12,7 @@ package voices;
 public class NoteMaker {
   public static int NumNotes = 12;
   public static double SemitoneFraction = (1.0 / (double) NumNotes);
+  public static double OffsetTime = 0.022;
   /* ********************************************************************************* */
   public double Cn, Cs, Dn, Ds, En, Fn, Fs, Gn, Gs, An, As, Bn;// naturals and sharps
   public double[] NoteRatios;

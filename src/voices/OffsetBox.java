@@ -87,6 +87,12 @@ public class OffsetBox implements IDrawable.IMoveable, IDeletable {// location b
     //this.TimeLoc += donor.TimeLoc; this.OctaveLoc += donor.OctaveLoc; this.LoudnessFactor *= donor.LoudnessFactor;
   }
   /* ********************************************************************************* */
+  public void Rebase_Time(double Time) {
+    this.TimeOrg = Time;
+    double RelativeMinBound = this.MyBounds.Min.x;// preserve the relative relationship of my bounds and my origin.
+    this.MyBounds.Rebase_Time(Time + RelativeMinBound);
+  }
+  /* ********************************************************************************* */
   private void CombineTransform1D(double FirstScale, double FirstOffset, double SecondScale, double SecondOffset) {// note to self
     SecondOffset += (SecondScale * FirstOffset);
     SecondScale *= FirstScale;
@@ -103,8 +109,6 @@ public class OffsetBox implements IDrawable.IMoveable, IDeletable {// location b
   /* ********************************************************************************* */
   public double MapTime(double ParentTime) {// convert time coordinate from my parent's frame to my child's frame
     return ((ParentTime - this.TimeOrg) / ScaleX) + ChildXorg; // in the long run we'll probably use a matrix
-//    childX = ((parentX - parentXorg) * ScaleX) + childXorg; // full mapping 
-//    parentX = ((childX - childXorg) / ScaleX) + parentXorg;
   }
   /* ********************************************************************************* */
   public double UnMapTime(double ChildTime) {// convert time coordinate from my child's frame to my parent's frame
@@ -134,9 +138,20 @@ public class OffsetBox implements IDrawable.IMoveable, IDeletable {// location b
     results.y = this.MapPitch(pnt.y);
   }
   /* ********************************************************************************* */
+  public void UnMap(Point2D.Double pnt, Point2D.Double results) {
+    results.x = this.UnMapTime(pnt.x);
+    results.y = this.UnMapPitch(pnt.y);
+  }
+  /* ********************************************************************************* */
   public void MapTo(CajaDelimitadora source, CajaDelimitadora results) {
     this.MapTo(source.Min, results.Min);
     this.MapTo(source.Max, results.Max);
+    results.Sort_Me();
+  }
+  /* ********************************************************************************* */
+  public void UnMap(CajaDelimitadora source, CajaDelimitadora results) {
+    this.UnMap(source.Min, results.Min);
+    this.UnMap(source.Max, results.Max);
     results.Sort_Me();
   }
   /* ********************************************************************************* */

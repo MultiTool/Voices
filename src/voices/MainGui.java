@@ -36,7 +36,55 @@ public class MainGui {
     MyProject.Compose_Test();
     this.drawpanel.BigApp = this;
     this.drawpanel.MyProject = this.MyProject;
+    MakeButtons();
     frame.setVisible(true);
+  }
+  /* ********************************************************************************* */
+  public void MakeButtons() {
+    javax.swing.JButton PlayButton = new JButton("Play");
+    PlayButton.setVerticalTextPosition(AbstractButton.CENTER);
+    PlayButton.setHorizontalTextPosition(AbstractButton.CENTER);
+    this.drawpanel.add(PlayButton);
+    PlayButton.addActionListener(new Act(this) {
+      @Override public void actionPerformed(ActionEvent e) {
+        this.BigApp.MyThread.Play_All();
+      }
+    });
+
+    JButton StopButton = new JButton("Stop");
+    StopButton.setVerticalTextPosition(AbstractButton.CENTER);
+    StopButton.setHorizontalTextPosition(AbstractButton.CENTER);
+    this.drawpanel.add(StopButton);
+    StopButton.addActionListener(new Act(this) {
+      @Override public void actionPerformed(ActionEvent e) {
+        this.BigApp.MyThread.PleaseStop();
+      }
+    });
+
+    JButton SaveButton = new JButton("Export Audio");
+    SaveButton.setVerticalTextPosition(AbstractButton.CENTER);
+    SaveButton.setHorizontalTextPosition(AbstractButton.CENTER);
+    this.drawpanel.add(SaveButton);
+    SaveButton.addActionListener(new Act(this) {
+      @Override public void actionPerformed(ActionEvent e) {
+        this.BigApp.SaveAudio();
+      }
+    });
+  }
+  /* ********************************************************************************* */
+  class Act implements ActionListener {
+    MainGui BigApp;
+    public Act(MainGui App) {
+      this.BigApp = App;
+    }
+    @Override public void actionPerformed(ActionEvent ae) {
+      throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+  }
+  /* ********************************************************************************* */
+  public void SaveAudio() {
+    Audio aud = new Audio();
+    aud.SaveAudio("sample.wav", this.drawpanel.MyProject.AudioRoot);
   }
   /* ********************************************************************************* */
   public static class DrawingPanel extends JPanel implements MouseMotionListener, MouseListener, MouseWheelListener, ComponentListener, KeyListener {
@@ -63,8 +111,10 @@ public class MainGui {
       // to do: move this to MainGui, and base clipping, zoom etc. on canvas size. 
       Drawing_Context dc = new Drawing_Context();
       dc.gr = g2d;
-      int wdt = this.getWidth() * 7 / 8;
-      int hgt = this.getHeight() * 7 / 8;
+      int wdt, hgt;
+//      wdt = this.getWidth() * 7 / 8; hgt = this.getHeight() * 7 / 8;
+      wdt = this.getWidth();
+      hgt = this.getHeight();
 
       Rectangle2D rect = new Rectangle2D.Float();
       rect.setRect(0, 0, wdt, hgt);
@@ -74,7 +124,7 @@ public class MainGui {
       Stroke oldStroke = g2d.getStroke();
       BasicStroke bs = new BasicStroke(5f, BasicStroke.CAP_SQUARE, BasicStroke.JOIN_MITER);
       g2d.setStroke(bs);
-      g2d.setColor(Color.red);
+      g2d.setColor(Color.green);
       g2d.draw(rect);// red rectangle confidence check for clipping
       g2d.setStroke(oldStroke);
       dc.ClipBounds.Assign(0, 0, wdt, hgt);
@@ -119,8 +169,7 @@ public class MainGui {
     boolean Toggle = true;// temporary until we have better ui
     /* ********************************************************************************* */
     @Override public void mouseClicked(MouseEvent me) {
-      boolean nop = true;
-      if (true) {
+      if (false) {
         if (Toggle) {
           BigApp.MyThread.Play_All();
           Toggle = false;

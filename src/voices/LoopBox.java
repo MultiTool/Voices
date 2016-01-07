@@ -9,6 +9,8 @@ import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.Stroke;
+import java.awt.geom.Point2D;
+import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
 
 /**
@@ -108,6 +110,18 @@ public class LoopBox implements ISonglet, IDrawable {
   }
   /* ********************************************************************************* */
   @Override public void Draw_Me(Drawing_Context ParentDC) {// IDrawable
+
+    if (true) {
+      // clip to loop duration
+      CajaDelimitadora tempbounds = new CajaDelimitadora();
+      ParentDC.GlobalOffset.UnMap(this.MyBounds, tempbounds);
+      Rectangle2D rect = new Rectangle2D.Float();
+      double YBuf = 200;
+      rect.setRect(tempbounds.Min.x, tempbounds.Min.y - YBuf, tempbounds.Max.x - tempbounds.Min.x, (tempbounds.Max.y - tempbounds.Min.y) + YBuf * 2);
+      tempbounds.Delete_Me();
+      ParentDC.gr.clip(rect);
+    }
+
     double LeftBound = ParentDC.ClipBounds.Min.x - this.ContentOBox.GetBoundingBox().GetWidth();
     LeftBound = Math.max(0, LeftBound);
     int IterationStart = (int) Math.ceil(LeftBound / this.Delay);
@@ -125,6 +139,7 @@ public class LoopBox implements ISonglet, IDrawable {
       loopcnt++;
     }
     LGhost.Delete_Me();
+    ParentDC.gr.setClip(null);
   }
   /* ********************************************************************************* */
   // @Override 
@@ -173,16 +188,15 @@ public class LoopBox implements ISonglet, IDrawable {
         double RightBound = Math.min(SearchBounds.Max.x, this.MyDuration);
         Ghost_OffsetBox LGhost;
         int loopcnt = IterationStart;
-        double Time;
-        // to do: fix click error by making left bound less than loopcnt * Delay.
-        while ((Time = (loopcnt * this.Delay)) <= RightBound) {// keep looking until child song's start is beyond our max X. 
+        double Time, MovingLeftBound;
+        double RelativeMinBound = this.ghost.MyBounds.Min.x;// ghost graphic left bound is a little bit negative due to its grab circle.
+        while ((MovingLeftBound = (Time = (loopcnt * this.Delay)) + RelativeMinBound) <= RightBound) {// keep looking until child song's start is beyond our max X. 
           LGhost = new Ghost_OffsetBox();// #kludgey, this would be a memory leak in C++. 
           LGhost.Copy_From(this.ghost);
           LGhost.Assign_Parent_Songlet(this);
           LGhost.TimeOrg = Time;
+          LGhost.MyBounds.Rebase_Time(MovingLeftBound);
           LGhost.MyIteration = loopcnt;
-          LGhost.MyBounds.Rebase_Time(Time + this.ghost.MyBounds.Min.x);
-          //LGhost.MyBounds.Rebase_Time(Time);
           LGhost.GoFishing(Scoop);
           loopcnt++;
         }
@@ -366,9 +380,20 @@ public class LoopBox implements ISonglet, IDrawable {
       return child;
     }
     /* ********************************************************************************* */
-    @Override public void Draw_Me(Drawing_Context ParentDC) {// for debugging. 
+    @Override public void Draw_Me(Drawing_Context ParentDC) {
+      if (false) {
+        // clip to loop duration
+        CajaDelimitadora tempbounds = new CajaDelimitadora();
+        ParentDC.GlobalOffset.UnMap(this.MyBounds, tempbounds);
+        Rectangle2D rect = new Rectangle2D.Float();
+        rect.setRect(tempbounds.Min.x, tempbounds.Min.y, tempbounds.Max.x, tempbounds.Max.y);
+        tempbounds.Delete_Me();
+        ParentDC.gr.clip(rect);
+      }
+
       super.Draw_Me(ParentDC);
       this.Draw_My_Bounds(ParentDC);
+      ParentDC.gr.setClip(null);
     }
     /* ********************************************************************************* */
     public void Draw_My_Bounds(Drawing_Context ParentDC) {// for debugging. break glass in case of emergency
@@ -388,7 +413,7 @@ public class LoopBox implements ISonglet, IDrawable {
       // thinner lines for more distal sub-branches
       double extra = (2.0 / (double) ParentDC.RecurseDepth);
 
-      int buf = (int) Math.ceil(extra * 2);
+      int buf = 0;// (int) Math.ceil(extra * 2);
       rx0 -= buf;
       rx1 += buf;
       ry0 -= buf;
@@ -398,16 +423,24 @@ public class LoopBox implements ISonglet, IDrawable {
       int cint = Globals.RandomGenerator.nextInt() % 256;
       Color col = new Color(cint);
 
-      Stroke oldStroke = gr.getStroke();
-      gr.setColor(Globals.ToAlpha(Color.red, 100));
+      if (false) {
+        Rectangle2D rect = new Rectangle2D.Float();
+        rect.setRect(rx0, ry0, rx1 - rx0, ry1 - ry0);
+        ParentDC.gr.clip(rect);
+      }
 
+      Stroke oldStroke = gr.getStroke();
+      if (false) {
+        gr.setColor(Globals.ToAlpha(Color.red, 100));// draw box around loopbox 
+      }
       BasicStroke bs = new BasicStroke((float) (10.0), BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND);
-      gr.setStroke(bs);
+      //gr.setStroke(bs);
 
       //ParentDC.gr.setColor(col);//Color.magenta
       gr.drawRect(rx0, ry0, wdt, hgt);
 
       gr.setStroke(oldStroke);
+      ParentDC.gr.setClip(null);
     }
   }
   /* ********************************************************************************* */

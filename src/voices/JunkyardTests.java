@@ -11,6 +11,95 @@ package voices;
  */
 public class JunkyardTests {
   /* ********************************************************************************* */
+  public void Compose_Test() {
+    ISonglet song = null;
+    OffsetBox obox = null;
+    GroupBox CMinor, CMajor, DMajor, DMinor;
+    OffsetBox CMinorObx, CMajorObx, DMajorObx, DMinorObx;
+    double Delay;
+    GroupBox cbx;
+    NoteMaker nm;
+    LoopBox lbx;
+    switch (6) {
+    case 0:
+      song = JunkyardTests.Create_Random_Chorus(0, 0, 1.0);
+      obox = song.Spawn_OffsetBox();
+      obox.OctaveLoc_s(4);
+      break;
+    case 1:
+      song = JunkyardTests.Create_Nested_Chorus(0, 0, 1.0, 6);
+      obox = song.Spawn_OffsetBox();
+      break;
+    case 2:
+      song = JunkyardTests.Create_Chord(0, 2, 1.0, 3);
+      obox = song.Spawn_OffsetBox();
+      break;
+    case 3:
+      song = JunkyardTests.Create_Simple_Note(0, 1, 5, 1);
+      obox = song.Spawn_OffsetBox();
+      break;
+    case 4:
+      song = JunkyardTests.Compose_Loop();
+      obox = song.Spawn_OffsetBox();
+      break;
+    case 5:
+      Delay = 1.5;
+      cbx = new GroupBox();
+      nm = new NoteMaker();
+      lbx = new LoopBox();
+      CMajor = nm.MakeMajor(0);// C major
+      cbx.Add_SubSong(CMajor, 0, 0, 1.0);
+      CMinor = nm.MakeMinor(0);// C minor
+      cbx.Add_SubSong(CMinor, Delay * 1, 0, 1.0);
+      DMajor = nm.MakeMajor(2);// D major
+      cbx.Add_SubSong(DMajor, Delay * 2, 0, 1.0);
+      DMinor = nm.MakeMinor(2);// D minor
+      cbx.Add_SubSong(DMinor, Delay * 3, 0, 1.0);
+
+      lbx.Add_Content(cbx);
+      lbx.Set_Delay(Delay * 4);
+      lbx.Set_Duration(30);
+
+      song = lbx;
+      obox = song.Spawn_OffsetBox();
+      obox.OctaveLoc_s(4);
+      break;
+    case 6:
+      Delay = 1.5;
+      cbx = new GroupBox();
+      nm = new NoteMaker();
+      lbx = new LoopBox();
+      CMajorObx = nm.MakeMajor_OBox(0);// C major
+      cbx.Add_SubSong(CMajorObx, Delay * 0, CMajorObx.OctaveLoc, 1.0);
+      CMinorObx = nm.MakeMinor_OBox(0);// C minor
+      cbx.Add_SubSong(CMinorObx, Delay * 1, CMinorObx.OctaveLoc, 1.0);// yuck, redundant
+      DMajorObx = nm.MakeMajor_OBox(2);// D major
+      cbx.Add_SubSong(DMajorObx, Delay * 2, DMajorObx.OctaveLoc, 1.0);
+      DMinorObx = nm.MakeMinor_OBox(2);// D minor
+      cbx.Add_SubSong(DMinorObx, Delay * 3, DMinorObx.OctaveLoc, 1.0);
+
+      lbx.Add_Content(cbx);
+      lbx.Set_Delay(Delay * 4);
+      //lbx.Set_Duration(9.5);
+      lbx.Set_Duration(20.5);
+
+      song = lbx;
+      obox = song.Spawn_OffsetBox();
+      obox.TimeOrg += NoteMaker.OffsetTime;
+      obox.OctaveLoc_s(4);
+      break;
+    case 7:
+      obox = JunkyardTests.Compose_Warble_Chorus();
+      obox.TimeOrg += NoteMaker.OffsetTime;
+      obox.OctaveLoc_s(4);
+    case 8:
+      obox = JunkyardTests.Compose_Ribbon_Chorus();
+      obox.TimeOrg += NoteMaker.OffsetTime;
+      obox.OctaveLoc_s(4);
+      break;
+    }
+  }
+  /* ********************************************************************************* */
   public static Voice Create_Voice_Ribbon(double TimeOffset, double OctaveOffset, double LoudnessOffset) {
     Voice voice = new Voice();// for fuzz testing
     double TDiff;
@@ -18,7 +107,7 @@ public class JunkyardTests {
     double TimeCnt = 0;
     for (int cnt = 0; cnt < 20; cnt++) {
       TDiff = TimeScale;
-      voice.Add_Note(TimeCnt, OctaveOffset, LoudnessOffset);
+      voice.Add_Note(NoteMaker.OffsetTime + TimeCnt, OctaveOffset, LoudnessOffset);
       TimeCnt += TDiff;
     }
     return voice;
@@ -147,13 +236,13 @@ public class JunkyardTests {
     OffsetBox obox = cbx.Spawn_OffsetBox();
 
     Voice vc0 = Create_Voice_Ribbon(0, 0, 1);
-    cbx.Add_SubSong(vc0, 0, 0, 0.2);
+    cbx.Add_SubSong(vc0, NoteMaker.OffsetTime, 0, 0.2);
 
     Voice vc1 = Create_Voice_Ribbon(0, 0, 1);
-    cbx.Add_SubSong(vc1, 0, 1, 1);
+    cbx.Add_SubSong(vc1, NoteMaker.OffsetTime, 1, 1);
 
     Voice vc2 = Create_Voice_Ribbon(0, 0, 1);
-    cbx.Add_SubSong(vc2, 0, 2, 1);
+    cbx.Add_SubSong(vc2, NoteMaker.OffsetTime, 2, 1);
     return obox;
   }
 }

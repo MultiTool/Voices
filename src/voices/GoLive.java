@@ -19,7 +19,8 @@ public class GoLive implements Runnable, IDeletable {
   //public double StartTime = 0;
   Audio audio;
   ISonglet.Singer RootPlayer;
-  double TimeIncrement = (20.0 / 1000.0);// milliseconds
+//  double TimeIncrement = (20.0 / 1000.0);// milliseconds
+  double TimeIncrement = (250.0 / 1000.0);// milliseconds
   double CurrentTime = 0, FinalTime;
   Wave wave_render = new Wave();
   boolean KeepGoing;
@@ -93,35 +94,6 @@ public class GoLive implements Runnable, IDeletable {
     thread = null;// is there no way to reset a thread without destroying it? 
     audio.Stop();
     this.RootPlayer.Delete_Me();
-  }
-  /* ********************************************************************************* */
-  public void Audio_Test() {// using this for scrap
-    RootPlayer = this.MyProject.AudioRoot.Spawn_Singer();
-    RootPlayer.Compound(this.MyProject.AudioRoot);
-
-    FinalTime = this.MyProject.AudioRoot.GetContent().Get_Duration();
-
-    Wave wave_render = new Wave();
-    wave_render.Init(0, FinalTime, this.MyProject.SampleRate);
-    Wave wave_scratch = new Wave();
-
-    long StartTime, EndTime;
-    RootPlayer.Start();
-    StartTime = System.currentTimeMillis();
-
-    audio.Start();
-    int NumSlices = 200;
-    for (int cnt = 0; cnt < NumSlices; cnt++) {
-      System.out.print("cnt:" + cnt + " ");
-      double FractAlong = (((double) (cnt + 1)) / (double) NumSlices);
-      RootPlayer.Render_To(FinalTime * FractAlong, wave_scratch);
-      wave_scratch.Amplify(0.2);
-      audio.Feed(wave_scratch);
-      System.out.println(" done.");
-    }
-    audio.Stop();
-    EndTime = System.currentTimeMillis();
-    System.out.println("Audio_Test time:" + (EndTime - StartTime));// Render_To time: 150 milliseconds per 16 seconds. 
   }
   /* ********************************************************************************* */
   @Override public boolean Create_Me() {// IDeletable
