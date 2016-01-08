@@ -9,7 +9,7 @@ package voices;
  *
  * @author MultiTool
  */
-public class JunkyardTests {
+public class TestJunkyard {
   /* ********************************************************************************* */
   public void Compose_Test() {
     ISonglet song = null;
@@ -22,24 +22,24 @@ public class JunkyardTests {
     LoopBox lbx;
     switch (6) {
     case 0:
-      song = JunkyardTests.Create_Random_Chorus(0, 0, 1.0);
+      song = TestJunkyard.Create_Random_Chorus(0, 0, 1.0);
       obox = song.Spawn_OffsetBox();
       obox.OctaveLoc_s(4);
       break;
     case 1:
-      song = JunkyardTests.Create_Nested_Chorus(0, 0, 1.0, 6);
+      song = TestJunkyard.Create_Nested_Chorus(0, 0, 1.0, 6);
       obox = song.Spawn_OffsetBox();
       break;
     case 2:
-      song = JunkyardTests.Create_Chord(0, 2, 1.0, 3);
+      song = TestJunkyard.Create_Chord(0, 2, 1.0, 3);
       obox = song.Spawn_OffsetBox();
       break;
     case 3:
-      song = JunkyardTests.Create_Simple_Note(0, 1, 5, 1);
+      song = TestJunkyard.Create_Simple_Note(0, 1, 5, 1);
       obox = song.Spawn_OffsetBox();
       break;
     case 4:
-      song = JunkyardTests.Compose_Loop();
+      song = TestJunkyard.Compose_Loop();
       obox = song.Spawn_OffsetBox();
       break;
     case 5:
@@ -89,11 +89,11 @@ public class JunkyardTests {
       obox.OctaveLoc_s(4);
       break;
     case 7:
-      obox = JunkyardTests.Compose_Warble_Chorus();
+      obox = TestJunkyard.Compose_Warble_Chorus();
       obox.TimeOrg += NoteMaker.OffsetTime;
       obox.OctaveLoc_s(4);
     case 8:
-      obox = JunkyardTests.Compose_Ribbon_Chorus();
+      obox = TestJunkyard.Compose_Ribbon_Chorus().Spawn_OffsetBox();
       obox.TimeOrg += NoteMaker.OffsetTime;
       obox.OctaveLoc_s(4);
       break;
@@ -231,18 +231,73 @@ public class JunkyardTests {
     return obox;
   }
   /* ********************************************************************************* */
-  public static OffsetBox Compose_Ribbon_Chorus() {
-    GroupBox cbx = new GroupBox();
-    OffsetBox obox = cbx.Spawn_OffsetBox();
+  public static GroupBox Compose_Ribbon_Chorus() {
+    GroupBox gbx = new GroupBox();
+    // OffsetBox obox = gbx.Spawn_OffsetBox();
 
     Voice vc0 = Create_Voice_Ribbon(0, 0, 1);
-    cbx.Add_SubSong(vc0, NoteMaker.OffsetTime, 0, 0.2);
+    gbx.Add_SubSong(vc0, NoteMaker.OffsetTime, 0, 0.2);
 
     Voice vc1 = Create_Voice_Ribbon(0, 0, 1);
-    cbx.Add_SubSong(vc1, NoteMaker.OffsetTime, 1, 1);
+    gbx.Add_SubSong(vc1, NoteMaker.OffsetTime, 1, 1);
 
     Voice vc2 = Create_Voice_Ribbon(0, 0, 1);
-    cbx.Add_SubSong(vc2, NoteMaker.OffsetTime, 2, 1);
-    return obox;
+    gbx.Add_SubSong(vc2, NoteMaker.OffsetTime, 2, 1);
+    return gbx;
+  }
+  /* ********************************************************************************* */
+  public static class GetterSetterTest {// Playing with syntax to find a better getter setter. 
+    public abstract class GetSet<T> {
+      public abstract T Get();
+      public abstract void Set(T mt);
+    }
+    public GetSet<Double> MyVar0 = new GetSet<Double>() {
+      @Override public Double Get() {
+        return innerval;
+      }
+      @Override public void Set(Double mt) {
+        innerval = mt;
+      }
+    };
+    public abstract class GetSetDouble {
+      public abstract double Get();
+      public abstract void Set(double mt);
+    }
+    double innerval;
+    public GetSetDouble MyVar1 = new GetSetDouble() {
+      @Override public double Get() {
+        return innerval;
+      }
+      @Override public void Set(double mt) {
+        innerval = mt;
+      }
+    };
+    public void test() {
+      this.MyVar1.Get();
+    }
+    public interface ISoup {
+      GetSet<Double> MyValPtr();
+    }
+    public class Onions implements ISoup {
+      double OnionInnerVal;
+      GetSet<Double> gs = new GetSet<Double>() {
+        @Override public Double Get() {
+          return OnionInnerVal;
+        }
+        @Override public void Set(Double mt) {
+          OnionInnerVal = mt;
+        }
+      };
+      @Override public GetSet<Double> MyValPtr() {// too much code for one property!
+        return this.gs;
+      }
+      public void Runner() {
+// ideally we want 'variables' that are like: variable.get() and variable.set(val), 
+// so we get the compactness of a C# property while not hiding the fact that it is calling functions.
+        this.MyValPtr().Set(12345.6);
+        double fred = this.MyValPtr().Get();
+        System.out.println(fred);
+      }
+    }
   }
 }

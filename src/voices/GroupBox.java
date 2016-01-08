@@ -177,11 +177,16 @@ public class GroupBox implements ISonglet, IDrawable {
     ParentDC.gr.setColor(Color.darkGray);
 
     // thinner lines for more distal sub-branches
-    BasicStroke bs = new BasicStroke((1.0f / ParentDC.RecurseDepth) * 40.0f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND);
+    //BasicStroke bs = new BasicStroke((1.0f / ParentDC.RecurseDepth) * 40.0f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND);
+    BasicStroke bs = new BasicStroke((1.0f / ParentDC.RecurseDepth) * 10.0f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND);
     ParentDC.gr.setStroke(bs);
     int pcnt = StartDex;
-    ChildOffsetBox = this.SubSongs.get(pcnt++);
-    pntprev = ParentDC.To_Screen(ChildOffsetBox.TimeOrg, ChildOffsetBox.OctaveLoc);
+    if (false) {// #cleanme
+      ChildOffsetBox = this.SubSongs.get(pcnt++);
+      pntprev = ParentDC.To_Screen(ChildOffsetBox.TimeOrg, ChildOffsetBox.OctaveLoc);
+    } else {
+      pntprev = ParentDC.To_Screen(0, 0);
+    }
     while (pcnt < EndDex) {//for (int pcnt = StartDex; pcnt < EndDex; pcnt++) {
       ChildOffsetBox = this.SubSongs.get(pcnt);
       pnt = ParentDC.To_Screen(ChildOffsetBox.TimeOrg, ChildOffsetBox.OctaveLoc);

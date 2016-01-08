@@ -283,7 +283,6 @@ public class OffsetBox implements IDrawable.IMoveable, IDeletable {// location b
     ISonglet Content = this.GetContent();
     Content.UpdateBoundingBoxLocal();// either this
     Content.GetBoundingBox().UnMap(this, MyBounds);// project child limits into parent (my) space
-    this.MyBounds.Sort_Me();// almost never needed
     // include my bubble in bounds
     this.MyBounds.IncludePoint(this.TimeOrg - OctavesPerRadius, this.OctaveLoc - OctavesPerRadius);
     this.MyBounds.IncludePoint(this.TimeOrg + OctavesPerRadius, this.OctaveLoc + OctavesPerRadius);

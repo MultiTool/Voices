@@ -44,7 +44,7 @@ public class Project implements IDeletable {
   /* ********************************************************************************* */
   public void Create_For_Graphics() {// a test
     //song = Create_Simple_Note(0, 1, 5, 1);
-    ISonglet song = JunkyardTests.Create_Warble_Voice(0, 4, 1.0);
+    ISonglet song = TestJunkyard.Create_Warble_Voice(0, 4, 1.0);
     song.Set_Project(this);
     OffsetBox obox = song.Spawn_OffsetBox();
     this.Wrap_For_Graphics(obox);
@@ -59,54 +59,36 @@ public class Project implements IDeletable {
     GroupBox cbx;
     NoteMaker nm;
     LoopBox lbx;
-    switch (6) {
+    switch (9) {
     case 0:
-      song = JunkyardTests.Create_Random_Chorus(0, 0, 1.0);
+      song = TestJunkyard.Create_Random_Chorus(0, 0, 1.0);
       obox = song.Spawn_OffsetBox();
       obox.OctaveLoc_s(4);
       break;
     case 1:
-      song = JunkyardTests.Create_Nested_Chorus(0, 0, 1.0, 6);
+      song = TestJunkyard.Create_Nested_Chorus(0, 0, 1.0, 6);
       obox = song.Spawn_OffsetBox();
       break;
     case 2:
-      song = JunkyardTests.Create_Chord(0, 2, 1.0, 3);
+      song = TestJunkyard.Create_Chord(0, 2, 1.0, 3);
       obox = song.Spawn_OffsetBox();
       obox.TimeOrg += NoteMaker.OffsetTime;
       break;
     case 3:
       //song = Create_Simple_Note(0, 2.3, 1);
-      song = JunkyardTests.Create_Simple_Note(0, 1, 5, 1);
+      song = TestJunkyard.Create_Simple_Note(0, 1, 5, 1);
       //song = NoteMaker.Create_Simple_Note(0, 1, 5, 1);
       song.Set_Project(this);
       obox = song.Spawn_OffsetBox();
       obox.TimeOrg += NoteMaker.OffsetTime;
       break;
     case 4:
-      song = JunkyardTests.Compose_Loop();
+      song = TestJunkyard.Compose_Loop();
       obox = song.Spawn_OffsetBox();
       obox.TimeOrg += NoteMaker.OffsetTime;
       break;
     case 5:
-      Delay = 1.5;
-      //Delay = 3;
-      cbx = new GroupBox();
-      nm = new NoteMaker();
-      lbx = new LoopBox();
-      CMajor = nm.MakeMajor(0);// C major
-      cbx.Add_SubSong(CMajor, 0, 0, 1.0);
-      CMinor = nm.MakeMinor(0);// C minor
-      cbx.Add_SubSong(CMinor, Delay * 1, 0, 1.0);
-      DMajor = nm.MakeMajor(2);// D major
-      cbx.Add_SubSong(DMajor, Delay * 2, 0, 1.0);
-      DMinor = nm.MakeMinor(2);// D minor
-      cbx.Add_SubSong(DMinor, Delay * 3, 0, 1.0);
-
-      lbx.Add_Content(cbx);
-      lbx.Set_Delay(Delay * 4);
-      lbx.Set_Duration(30);
-
-      song = lbx;
+      song = NoteMaker.Create_Unbound_Triad_Rythm();
       song.Set_Project(this);
       obox = song.Spawn_OffsetBox();
       obox.TimeOrg += NoteMaker.OffsetTime;
@@ -138,13 +120,31 @@ public class Project implements IDeletable {
       obox.OctaveLoc_s(4);
       break;
     case 7:
-      obox = JunkyardTests.Compose_Warble_Chorus();
+      obox = TestJunkyard.Compose_Warble_Chorus();
       obox.TimeOrg += NoteMaker.OffsetTime;
       obox.OctaveLoc_s(4);
     case 8:
-      obox = JunkyardTests.Compose_Ribbon_Chorus();
+      obox = TestJunkyard.Compose_Ribbon_Chorus().Spawn_OffsetBox();
       obox.TimeOrg += NoteMaker.OffsetTime;
       obox.OctaveLoc_s(4);
+      break;
+    case 9:
+      GroupBox gbx = new GroupBox();
+      gbx.Set_Project(this);
+
+      song = NoteMaker.Create_Unbound_Triad_Rythm();
+      obox = song.Spawn_OffsetBox();
+      obox.OctaveLoc_s(4);// move later
+      obox.TimeOrg += NoteMaker.OffsetTime;
+      gbx.Add_SubSong(obox);
+      
+      song = TestJunkyard.Compose_Ribbon_Chorus();
+      obox = song.Spawn_OffsetBox();
+      obox.OctaveLoc_s(1);// move later
+      obox.TimeOrg += NoteMaker.OffsetTime;
+      gbx.Add_SubSong(obox);
+      
+      obox = gbx.Spawn_OffsetBox();
       break;
     }
     Wrap_For_Graphics(obox);

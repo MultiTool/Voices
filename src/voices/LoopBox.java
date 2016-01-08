@@ -68,7 +68,7 @@ public class LoopBox implements ISonglet, IDrawable {
   }
   /* ********************************************************************************* */
   @Override public double Get_Max_Amplitude() {
-    throw new UnsupportedOperationException("Get_Max_Amplitude not supported yet.");
+    return this.Content.Get_Max_Amplitude();// does not really work when content overlaps itself
   }
   /* ********************************************************************************* */
   public void Set_Delay(double delay) {
@@ -142,23 +142,6 @@ public class LoopBox implements ISonglet, IDrawable {
     ParentDC.gr.setClip(null);
   }
   /* ********************************************************************************* */
-  // @Override 
-  public void Draw_Me_old(Drawing_Context ParentDC) {// IDrawable
-    double LeftBound = ParentDC.ClipBounds.Min.x - this.ContentOBox.GetBoundingBox().GetWidth();
-    LeftBound = Math.max(0, LeftBound);
-    int IterationStart = (int) Math.ceil(LeftBound / this.Delay);
-    double RightBound = Math.min(ParentDC.ClipBounds.Max.x, this.MyDuration);
-    OffsetBox obox = this.ContentOBox.Clone_Me();// problematic. may have to create a dedicated render time-only offset box
-    int loopcnt = IterationStart;
-    double Time;
-    while ((Time = (loopcnt * this.Delay)) <= RightBound) {// keep drawing until child song's start is beyond our max X. 
-      obox.TimeOrg = Time;
-      obox.MyBounds.Rebase_Time(Time - obox.MyBounds.Min.x);
-      obox.Draw_Me(ParentDC);
-      loopcnt++;
-    }
-    obox.Delete_Me();
-  }
   @Override public CajaDelimitadora GetBoundingBox() {// IDrawable
     return this.MyBounds;
   }
@@ -171,47 +154,31 @@ public class LoopBox implements ISonglet, IDrawable {
     // CajaDelimitadora ChildBBoxUnMapped = this.ContentOBox.GetBoundingBox();// project child limits into parent (my) space
     CajaDelimitadora ChildBBoxUnMapped = this.ghost.GetBoundingBox();// project child limits into parent (my) space
     this.MyBounds.Include(ChildBBoxUnMapped);// Inefficient. We collect all the X information and then just throw it away. 
-    this.MyBounds.Min.x = 0;
     this.MyBounds.Max.x = this.MyDuration;// #kludgey
     this.MyBounds.Sort_Me();
-    //this.MyBounds.Assign(0, miny, this.MyDuration, maxy);
+    //this.MyBounds.Assign(minx, miny, this.MyDuration, maxy);
   }
   /* ********************************************************************************* */
   @Override public void GoFishing(HookAndLure Scoop) {// IDrawable
     CajaDelimitadora SearchBounds = Scoop.CurrentContext.SearchBounds;
     if (SearchBounds.Intersects(MyBounds)) {
-
-      if (true) {
-        double LeftBound = SearchBounds.Min.x - this.ghost.GetBoundingBox().GetWidth();
-        LeftBound = Math.max(0, LeftBound);
-        int IterationStart = (int) Math.ceil(LeftBound / this.Delay);
-        double RightBound = Math.min(SearchBounds.Max.x, this.MyDuration);
-        Ghost_OffsetBox LGhost;
-        int loopcnt = IterationStart;
-        double Time, MovingLeftBound;
-        double RelativeMinBound = this.ghost.MyBounds.Min.x;// ghost graphic left bound is a little bit negative due to its grab circle.
-        while ((MovingLeftBound = (Time = (loopcnt * this.Delay)) + RelativeMinBound) <= RightBound) {// keep looking until child song's start is beyond our max X. 
-          LGhost = new Ghost_OffsetBox();// #kludgey, this would be a memory leak in C++. 
-          LGhost.Copy_From(this.ghost);
-          LGhost.Assign_Parent_Songlet(this);
-          LGhost.TimeOrg = Time;
-          LGhost.MyBounds.Rebase_Time(MovingLeftBound);
-          LGhost.MyIteration = loopcnt;
-          LGhost.GoFishing(Scoop);
-          loopcnt++;
-        }
-      } else {
-        int IterationStart = 0, IterationEnd = 0;
-        int IterationNum = (int) Math.floor(Scoop.CurrentContext.Loc.x / this.Delay);
-        for (IterationNum = IterationStart; IterationNum < IterationEnd; IterationNum++) {
-          ghost.Copy_From(this.ContentOBox);
-          ghost.MyBounds.Min.x = 0;
-          ghost.MyBounds.Max.x = this.MyDuration;// #kludgey
-          ghost.Assign_Parent_Songlet(this);
-          ghost.MyIteration = IterationNum;
-          ghost.TimeOrg = IterationNum * this.Delay;
-          ghost.GoFishing(Scoop);
-        }
+      double LeftBound = SearchBounds.Min.x - this.ghost.GetBoundingBox().GetWidth();
+      LeftBound = Math.max(0, LeftBound);
+      int IterationStart = (int) Math.ceil(LeftBound / this.Delay);
+      double RightBound = Math.min(SearchBounds.Max.x, this.MyDuration);
+      Ghost_OffsetBox LGhost;
+      int loopcnt = IterationStart;
+      double Time, MovingLeftBound;
+      double RelativeMinBound = this.ghost.MyBounds.Min.x;// ghost graphic left bound is a little bit negative due to its grab circle.
+      while ((MovingLeftBound = (Time = (loopcnt * this.Delay)) + RelativeMinBound) <= RightBound) {// keep looking until child song's start is beyond our max X. 
+        LGhost = new Ghost_OffsetBox();// #kludgey, this would be a memory leak in C++. 
+        LGhost.Copy_From(this.ghost);
+        LGhost.Assign_Parent_Songlet(this);
+        LGhost.TimeOrg = Time;
+        LGhost.MyBounds.Rebase_Time(MovingLeftBound);
+        LGhost.MyIteration = loopcnt;
+        LGhost.GoFishing(Scoop);
+        loopcnt++;
       }
     }
   }
@@ -460,7 +427,7 @@ public class LoopBox implements ISonglet, IDrawable {
     @Override public void Draw_Me(Drawing_Context ParentDC) {// IDrawable
       if (ParentDC.ClipBounds.Intersects(MyBounds)) {// MyBounds keep moving
         super.Draw_Dot(ParentDC, Color.magenta);
-        this.Draw_My_Bounds(ParentDC);
+        // this.Draw_My_Bounds(ParentDC);
         Drawing_Context ChildDC = new Drawing_Context(ParentDC, this);// In C++ ChildDC will be a local variable from the stack, not heap. 
         // Map the real-time movements to our parent's Delay value 
         ISonglet songlet = this.GetContent();// skip around the child's personal offset
@@ -477,14 +444,13 @@ public class LoopBox implements ISonglet, IDrawable {
       ISonglet Content = this.GetContent();
       Content.UpdateBoundingBoxLocal();// either this
       Content.GetBoundingBox().UnMap(this, MyBounds);// project child limits into parent (my) space
-      this.MyBounds.Sort_Me();// almost never needed
 
-      {
+      if (false) {
         this.MyBounds.Min.x = 0;
         this.MyBounds.Max.x = this.Parent.MyDuration;// #kludgey
-        this.MyIteration = 0;
-        this.TimeOrg = 0;
       }
+      this.MyIteration = 0;
+      this.TimeOrg = 0;
 
       // include my bubble in bounds
       this.MyBounds.IncludePoint(this.TimeOrg - OctavesPerRadius, this.OctaveLoc - OctavesPerRadius);

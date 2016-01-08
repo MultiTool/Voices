@@ -240,7 +240,9 @@ public class Voice implements ISonglet, IDrawable {
     //ParentDC.gr.drawPolygon(OutlineX, OutlineY, NumDrawPoints);// voice outline
     // pgon.closePath(); ParentDC.gr.fill(pgon);
 
-    ParentDC.gr.setColor(Globals.ToAlpha(Color.black, 200));
+    Color Emerald = new Color(0, 0.5f, 0);// rgb
+    ParentDC.gr.setColor(Globals.ToAlpha(Emerald, 200));
+//    ParentDC.gr.setColor(Globals.ToAlpha(Color.green, 200));
     ParentDC.gr.drawPolyline(SpineX, SpineY, Range);
 
     for (int pcnt = 0; pcnt < len; pcnt++) {
@@ -309,7 +311,7 @@ public class Voice implements ISonglet, IDrawable {
 
     // graphics support, will move to separate object
     double OctavesPerRadius = 0.02;
-    double OctavesPerLoudness = 0.25;// to do: loudness will have to be mapped to screen. not a pixel value right?
+    double OctavesPerLoudness = 0.125;// to do: loudness will have to be mapped to screen. not a pixel value right?
     CajaDelimitadora MyBounds = new CajaDelimitadora();
     /* ********************************************************************************* */
     public Point() {

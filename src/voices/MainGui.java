@@ -138,17 +138,14 @@ public class MainGui {
       super.paintComponent(g);
       Graphics2D g2d = (Graphics2D) g;
 
-      Polygon p = new Polygon();
-      for (int i = 0; i < 5; i++) {
-        p.addPoint((int) (100 + 50 * Math.cos(i * 2 * Math.PI / 5)), (int) (100 + 50 * Math.sin(i * 2 * Math.PI / 5)));
+      if (false) {
+        Polygon p = new Polygon();
+        for (int i = 0; i < 5; i++) {
+          p.addPoint((int) (100 + 50 * Math.cos(i * 2 * Math.PI / 5)), (int) (100 + 50 * Math.sin(i * 2 * Math.PI / 5)));
+        }
+        g2d.drawPolygon(p);
       }
-      g2d.drawPolygon(p);
-
-//      Drawing_Context dc = new Drawing_Context();
-//      dc.gr = g2d;
-      // dc.ClipBounds.Assign(0, 0, 10000, 10000);// arbitrarily large
-//      dc.Offset = new OffsetBox(); dc.GlobalOffset = new OffsetBox();
-      //MyProject.Draw_Me(g2d);
+      
       Draw_Me(g2d);
     }
     /* ********************************************************************************* */
@@ -194,7 +191,7 @@ public class MainGui {
         this.MyProject.GraphicRoot.UpdateBoundingBox();
         //this.Query.UpdateBoundingBoxes();
         {
-          double TimeRadius = 0.25;
+          double TimeRadius = 0.15;
           double Time = this.MyProject.GraphicRoot.MapTime(me.getX());
           BigApp.MyThread.Skip_To(Time - TimeRadius);
           BigApp.MyThread.Assign_Stop_Time(Time + TimeRadius);

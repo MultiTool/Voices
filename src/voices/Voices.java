@@ -17,7 +17,6 @@ import java.io.PrintWriter;
  * 
  */
 public class Voices {
-
   /**
    * @param args the command line arguments
    */

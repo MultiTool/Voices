@@ -141,18 +141,15 @@ public class CajaDelimitadora implements IDeletable {// DIY BoundingBox
     results.Max.x = MapBox.MapTime(this.Max.x);
     results.Min.y = MapBox.MapPitch(this.Min.y);
     results.Max.y = MapBox.MapPitch(this.Max.y);
-    results.ZeroCheck();
+    results.Sort_Me();
   }
   /* ********************************************************************************* */
   public void UnMap(OffsetBox MapBox, CajaDelimitadora results) {
-    if (results == null || MapBox == null) {
-      boolean nop = true;
-    }
     results.Min.x = MapBox.UnMapTime(this.Min.x);
     results.Max.x = MapBox.UnMapTime(this.Max.x);
     results.Min.y = MapBox.UnMapPitch(this.Min.y);
     results.Max.y = MapBox.UnMapPitch(this.Max.y);
-    results.ZeroCheck();
+    results.Sort_Me();
   }
   /* ********************************************************************************* */
   @Override public boolean Create_Me() {// IDeletable
