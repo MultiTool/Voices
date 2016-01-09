@@ -29,7 +29,7 @@ public class OffsetBox implements IDrawable.IMoveable, IDeletable {// location b
   public ISonglet MyParentSong;// can do this but not used yet
 
   // graphics support, will move to separate object
-  double OctavesPerRadius = 0.025;
+  double OctavesPerRadius = 0.03;
   /* ********************************************************************************* */
   public OffsetBox() {
     //this.Clear();

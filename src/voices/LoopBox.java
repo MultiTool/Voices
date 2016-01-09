@@ -135,7 +135,11 @@ public class LoopBox implements ISonglet, IDrawable {
       LGhost.TimeOrg = Time;
       LGhost.MyIteration = loopcnt;
       LGhost.MyBounds.Rebase_Time(Time + this.ghost.MyBounds.Min.x);
-      LGhost.Draw_Me(ParentDC);
+      if (loopcnt==0){// #kludgey
+        LGhost.Draw_Me_Zero(ParentDC);
+      }else{
+        LGhost.Draw_Me(ParentDC);
+      }
       loopcnt++;
     }
     LGhost.Delete_Me();
@@ -177,7 +181,11 @@ public class LoopBox implements ISonglet, IDrawable {
         LGhost.TimeOrg = Time;
         LGhost.MyBounds.Rebase_Time(MovingLeftBound);
         LGhost.MyIteration = loopcnt;
-        LGhost.GoFishing(Scoop);
+        if (loopcnt==0){// #kludgey
+          LGhost.GoFishing_Zero(Scoop);
+        }else{
+          LGhost.GoFishing(Scoop);
+        }
         loopcnt++;
       }
     }
@@ -435,6 +443,23 @@ public class LoopBox implements ISonglet, IDrawable {
         ChildDC.Delete_Me();
       }
     }
+    /* ********************************************************************************* */
+    public void Draw_Me_Zero(Drawing_Context ParentDC) {// IDrawable
+      if (ParentDC.ClipBounds.Intersects(MyBounds)) {// MyBounds keep moving
+        Drawing_Context ChildDC = new Drawing_Context(ParentDC, this);// In C++ ChildDC will be a local variable from the stack, not heap. 
+        // Map the real-time movements to our parent's Delay value 
+        ISonglet songlet = this.GetContent();// skip around the child's personal offset
+        songlet.Draw_Me(ChildDC);
+        ChildDC.Delete_Me();
+      }
+    }
+    public void GoFishing_Zero(HookAndLure Scoop) {// IDrawable
+     if (Scoop.CurrentContext.SearchBounds.Intersects(MyBounds)) {
+       Scoop.AddBoxToStack(this);
+       this.GetContent().GoFishing(Scoop);
+       Scoop.DecrementStack();
+     }
+   }
     @Override public void UpdateBoundingBox() {// IDrawable
       ISonglet Content = this.GetContent();
       Content.UpdateBoundingBox();
