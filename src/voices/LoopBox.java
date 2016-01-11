@@ -1,5 +1,5 @@
 /*
- * To change this license header, choose License Headers in Project Properties.
+ *
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
@@ -22,7 +22,7 @@ public class LoopBox implements ISonglet, IDrawable {
   private double MyDuration = 1.0;// manually assigned duration, as loops are infinite otherwise
   private double Delay = 1.0;// time delay between loops
   private double Sustain = 1.0;// Opposite of Diminish. How much the loudness changes with each repeat. 
-  private Project MyProject = null;
+  private AudProject MyProject = null;
   private ISonglet Content = null;
   private OffsetBox ContentOBox = null;
   private CajaDelimitadora MyBounds = new CajaDelimitadora();
@@ -90,11 +90,11 @@ public class LoopBox implements ISonglet, IDrawable {
     this.Content.Sort_Me();// not really the plan, but LoopBox doesn't have anything else to sort so why not
   }
   /* ********************************************************************************* */
-  @Override public Project Get_Project() {
+  @Override public AudProject Get_Project() {
     return this.MyProject;
   }
   /* ********************************************************************************* */
-  @Override public void Set_Project(Project project) {
+  @Override public void Set_Project(AudProject project) {
     this.MyProject = project;
   }
   /* ********************************************************************************* */
@@ -131,8 +131,14 @@ public class LoopBox implements ISonglet, IDrawable {
     LGhost.Assign_Parent_Songlet(this);
     int loopcnt = IterationStart;
     double Time;
+    if (loopcnt == 0) {// first iteration does not show ghost's grab circle
+      LGhost.Rebase_Time(0);
+      LGhost.MyIteration = loopcnt;
+      LGhost.Draw_Me_Zero(ParentDC);
+      loopcnt++;
+    }
     while ((Time = (loopcnt * this.Delay)) <= RightBound) {// keep drawing until child song's start is beyond our max X. 
-      LGhost.TimeOrg = Time;
+      LGhost.TimeX = Time;
       LGhost.MyIteration = loopcnt;
       LGhost.MyBounds.Rebase_Time(Time + this.ghost.MyBounds.Min.x);
       if (loopcnt==0){// #kludgey
@@ -173,12 +179,21 @@ public class LoopBox implements ISonglet, IDrawable {
       Ghost_OffsetBox LGhost;
       int loopcnt = IterationStart;
       double Time, MovingLeftBound;
+      if (loopcnt == 0) {// first iteration does not show ghost's grab circle
+        LGhost = new Ghost_OffsetBox();// #kludgey, this would be a memory leak in C++. 
+        LGhost.Copy_From(this.ghost);
+        LGhost.Assign_Parent_Songlet(this);
+        LGhost.Rebase_Time(0);
+        LGhost.MyIteration = loopcnt;
+        LGhost.GoFishing_Zero(Scoop);
+        loopcnt++;
+      }
       double RelativeMinBound = this.ghost.MyBounds.Min.x;// ghost graphic left bound is a little bit negative due to its grab circle.
       while ((MovingLeftBound = (Time = (loopcnt * this.Delay)) + RelativeMinBound) <= RightBound) {// keep looking until child song's start is beyond our max X. 
         LGhost = new Ghost_OffsetBox();// #kludgey, this would be a memory leak in C++. 
         LGhost.Copy_From(this.ghost);
         LGhost.Assign_Parent_Songlet(this);
-        LGhost.TimeOrg = Time;
+        LGhost.TimeX = Time;
         LGhost.MyBounds.Rebase_Time(MovingLeftBound);
         LGhost.MyIteration = loopcnt;
         if (loopcnt==0){// #kludgey
@@ -295,7 +310,7 @@ public class LoopBox implements ISonglet, IDrawable {
         ghost = new Ghost_OffsetBox();
         ghost.Assign_Parent_Songlet(this.MySonglet);
         ghost.MyIteration = this.LoopCount;
-        ghost.TimeOrg = Time;
+        ghost.TimeX = Time;
         Singer singer = ghost.Spawn_Singer();
         singer.Inherit(this);
         this.NowPlaying.add(singer);
@@ -432,6 +447,23 @@ public class LoopBox implements ISonglet, IDrawable {
       this.ContentLayer = this.Parent.ContentOBox;
     }
     /* ********************************************************************************* */
+    public void Draw_Me_Zero(Drawing_Context ParentDC) {// iteration 0 of child song does not use ghost box handle
+      if (ParentDC.ClipBounds.Intersects(MyBounds)) {// MyBounds keep moving
+        Drawing_Context ChildDC = new Drawing_Context(ParentDC, this);// In C++ ChildDC will be a local variable from the stack, not heap. 
+        // Map the real-time movements to our parent's Delay value 
+        ISonglet songlet = this.GetContent();// skip around the child's personal offset
+        songlet.Draw_Me(ChildDC);
+        ChildDC.Delete_Me();
+      }
+    }
+    public void GoFishing_Zero(HookAndLure Scoop) {// iteration 0 of child song does not use ghost box handle
+      if (Scoop.CurrentContext.SearchBounds.Intersects(MyBounds)) {
+        Scoop.AddBoxToStack(this);
+        this.GetContent().GoFishing(Scoop);
+        Scoop.DecrementStack();
+      }
+    }
+    /* ********************************************************************************* */
     @Override public void Draw_Me(Drawing_Context ParentDC) {// IDrawable
       if (ParentDC.ClipBounds.Intersects(MyBounds)) {// MyBounds keep moving
         super.Draw_Dot(ParentDC, Color.magenta);
@@ -444,6 +476,8 @@ public class LoopBox implements ISonglet, IDrawable {
       }
     }
     /* ********************************************************************************* */
+<<<<<<< HEAD
+=======
     public void Draw_Me_Zero(Drawing_Context ParentDC) {// IDrawable
       if (ParentDC.ClipBounds.Intersects(MyBounds)) {// MyBounds keep moving
         Drawing_Context ChildDC = new Drawing_Context(ParentDC, this);// In C++ ChildDC will be a local variable from the stack, not heap. 
@@ -460,6 +494,7 @@ public class LoopBox implements ISonglet, IDrawable {
        Scoop.DecrementStack();
      }
    }
+>>>>>>> fa923080fa89104ca6c4b276611e44f8dec161ac
     @Override public void UpdateBoundingBox() {// IDrawable
       ISonglet Content = this.GetContent();
       Content.UpdateBoundingBox();
@@ -475,11 +510,11 @@ public class LoopBox implements ISonglet, IDrawable {
         this.MyBounds.Max.x = this.Parent.MyDuration;// #kludgey
       }
       this.MyIteration = 0;
-      this.TimeOrg = 0;
+      this.TimeX = 0;
 
       // include my bubble in bounds
-      this.MyBounds.IncludePoint(this.TimeOrg - OctavesPerRadius, this.OctaveLoc - OctavesPerRadius);
-      this.MyBounds.IncludePoint(this.TimeOrg + OctavesPerRadius, this.OctaveLoc + OctavesPerRadius);
+      this.MyBounds.IncludePoint(this.TimeX - OctavesPerRadius, this.OctaveY - OctavesPerRadius);
+      this.MyBounds.IncludePoint(this.TimeX + OctavesPerRadius, this.OctaveY + OctavesPerRadius);
     }
     /* ********************************************************************************* */
     @Override public ISonglet GetContent() {
@@ -499,8 +534,8 @@ public class LoopBox implements ISonglet, IDrawable {
     }
     @Override public void MoveTo(double XLoc, double YLoc) {// IDrawable.IMoveable
       if (XLoc >= 0) {// don't go backward in time
-        this.TimeOrg = XLoc;// do we use and keep these coordinates or are we just a wrapper around ContentLayer?
-        this.OctaveLoc = YLoc;// no we have the coordinates but our child has different ones
+        this.TimeX = XLoc;// do we use and keep these coordinates or are we just a wrapper around ContentLayer?
+        this.OctaveY = YLoc;// no we have the coordinates but our child has different ones
         // to do: map the real-time movements to our parent's Delay value, then reset the child obox's values 
         double TempDelay = XLoc / this.MyIteration;
         this.Parent.Delay = TempDelay;

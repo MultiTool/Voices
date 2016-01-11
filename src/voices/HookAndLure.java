@@ -1,5 +1,5 @@
 /*
- * To change this license header, choose License Headers in Project Properties.
+ *
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
@@ -16,7 +16,7 @@ import java.util.ArrayList;
  * HookAndLure is basically a spatial query which also carries back all the results data.
  *
  */
-public class HookAndLure {// to do: rename this class to Grabber
+public class HookAndLure { // to do: rename this class to Grabber
   public double XHit, YHit;// exact mouse click point
   //public CajaDelimitadora SearchBounds = new CajaDelimitadora();
   public StackItem CurrentContext = null;

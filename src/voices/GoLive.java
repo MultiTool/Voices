@@ -1,5 +1,5 @@
 /*
- * To change this license header, choose License Headers in Project Properties.
+ *
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
@@ -15,7 +15,7 @@ import java.util.logging.Logger;
 public class GoLive implements Runnable, IDeletable {
   private Thread thread;
   private final String ThreadName;
-  public Project MyProject;
+  public AudProject MyProject;
   //public double StartTime = 0;
   Audio audio;
   ISonglet.Singer RootPlayer;
@@ -24,6 +24,11 @@ public class GoLive implements Runnable, IDeletable {
   double CurrentTime = 0, FinalTime;
   Wave wave_render = new Wave();
   boolean KeepGoing;
+  /* ********************************************************************************* */
+  public boolean IsRunning = false;
+//  {
+//    return !this.KeepGoing;// do not use this it is broken
+//  }
   /* ********************************************************************************* */
   public GoLive() {
     this.ThreadName = "GoLive";
@@ -44,13 +49,19 @@ public class GoLive implements Runnable, IDeletable {
     RootPlayer.Start();
     RootPlayer.Skip_To(this.CurrentTime);
 
+    this.PleaseStop();
+
     this.KeepGoing = true;
 
     this.audio.Start();
     if (thread == null) {
-      thread = new Thread(this, ThreadName);
+      thread = new Thread(this, ThreadName + Globals.RandomGenerator.nextDouble());
     }
-    thread.start();
+    try {
+      thread.start();
+    } catch (Exception ex) {
+      boolean nop = true;
+    }
   }
   /* ********************************************************************************* */
   public void Play_All() {
@@ -69,6 +80,9 @@ public class GoLive implements Runnable, IDeletable {
   }
   /* ********************************************************************************* */
   @Override public void run() {
+    while (this.IsRunning) {// block until existing thread has finished
+    }
+    this.IsRunning = true;
     while (this.CurrentTime < this.FinalTime && this.KeepGoing) {
       this.wave_render.Rebase_Time(this.CurrentTime);
       this.RootPlayer.Render_To(CurrentTime, this.wave_render);
@@ -80,10 +94,7 @@ public class GoLive implements Runnable, IDeletable {
       }
     }
     this.stop();
-  }
-  /* ********************************************************************************* */
-  public boolean IsRunning() {
-    return !this.KeepGoing;// do not use this it is broken
+    this.IsRunning = false;
   }
   /* ********************************************************************************* */
   public void PleaseStop() {// polite stopping without interrupt

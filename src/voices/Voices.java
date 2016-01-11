@@ -1,5 +1,5 @@
 /*
- * To change this license header, choose License Headers in Project Properties.
+ *
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
@@ -29,9 +29,9 @@ public class Voices {
     }
   }
   /* ********************************************************************************* */
-  public static Project Test_Synthesis() {
+  public static AudProject Test_Synthesis() {
     //Globals.BaseFreqC0 = 1.0;
-    Project prj = new Project();
+    AudProject prj = new AudProject();
     // prj.Compose_Warble_Chorus();
     prj.Compose_Test();
 

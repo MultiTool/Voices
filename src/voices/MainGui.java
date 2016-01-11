@@ -11,7 +11,7 @@ import voices.IDrawable.Drawing_Context;
 public class MainGui {
   public JFrame frame;
   public DrawingPanel drawpanel;
-  Project MyProject = null;
+  AudProject MyProject = null;
   GoLive MyThread;
   /* ********************************************************************************* */
   public MainGui() {
@@ -30,7 +30,7 @@ public class MainGui {
     Container contentPane = this.frame.getContentPane();
     this.drawpanel = new DrawingPanel();
     contentPane.add(this.drawpanel);
-    MyProject = new Project();
+    MyProject = new AudProject();
     this.MyThread.MyProject = this.MyProject;
     //MyProject.Create_For_Graphics();
     MyProject.Compose_Test();
@@ -88,7 +88,7 @@ public class MainGui {
   }
   /* ********************************************************************************* */
   public static class DrawingPanel extends JPanel implements MouseMotionListener, MouseListener, MouseWheelListener, ComponentListener, KeyListener {
-    Project MyProject = null;
+    AudProject MyProject = null;
     MainGui BigApp;
     HookAndLure Query;
     /* ********************************************************************************* */

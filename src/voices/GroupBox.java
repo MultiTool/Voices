@@ -1,5 +1,5 @@
 /*
- * To change this license header, choose License Headers in Project Properties.
+ *
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
@@ -20,7 +20,7 @@ import java.util.Comparator;
 public class GroupBox implements ISonglet, IDrawable {
   public ArrayList<OffsetBox> SubSongs = new ArrayList<>();
   public double Duration = 0.0;
-  private Project MyProject;
+  private AudProject MyProject;
   public String MyName;// for debugging
   private double MaxAmplitude = 0.0;
   public CajaDelimitadora MyBounds;
@@ -32,18 +32,18 @@ public class GroupBox implements ISonglet, IDrawable {
   public OffsetBox Add_SubSong(ISonglet songlet, double TimeOffset, double OctaveOffset, double LoudnessFactor) {
     songlet.Set_Project(this.MyProject);// child inherits project from me
     OffsetBox obox = songlet.Spawn_OffsetBox();
-    obox.TimeLoc_s(TimeOffset);
-    obox.OctaveLoc_s(OctaveOffset);
-    obox.LoudnessFactor_s(LoudnessFactor);
+    obox.TimeX = (TimeOffset);
+    obox.OctaveY =(OctaveOffset);
+    obox.LoudnessFactor = (LoudnessFactor);
     SubSongs.add(obox);
     return obox;
   }
   /* ********************************************************************************* */
   public void Add_SubSong(OffsetBox obox, double TimeOffset, double OctaveOffset, double LoudnessFactor) {// Add a songlet with its offsetbox already created.
     obox.GetContent().Set_Project(this.MyProject);// child inherits project from me
-    obox.TimeLoc_s(TimeOffset);
-    obox.OctaveLoc_s(OctaveOffset);
-    obox.LoudnessFactor_s(LoudnessFactor);
+    obox.TimeX = (TimeOffset);
+    obox.OctaveY =(OctaveOffset);
+    obox.LoudnessFactor = (LoudnessFactor);
     SubSongs.add(obox);
   }
   /* ********************************************************************************* */
@@ -80,7 +80,7 @@ public class GroupBox implements ISonglet, IDrawable {
       OffsetBox ob = this.SubSongs.get(cnt);
       ISonglet vb = ob.GetContent();
       //if (MaxDuration < (DurBuf = (ob.UnMapTime(vb.Update_Durations())))) {
-      if (MaxDuration < (DurBuf = (ob.TimeOrg + vb.Update_Durations()))) {
+      if (MaxDuration < (DurBuf = (ob.TimeX + vb.Update_Durations()))) {
         MaxDuration = DurBuf;
       }
     }
@@ -101,7 +101,7 @@ public class GroupBox implements ISonglet, IDrawable {
       ISonglet songlet = obx.GetContent();
       metrics.MaxDuration = 0.0;
       songlet.Update_Guts(metrics);
-      if (MyMaxDuration < (DurBuf = (obx.TimeOrg + metrics.MaxDuration))) {
+      if (MyMaxDuration < (DurBuf = (obx.TimeX + metrics.MaxDuration))) {
         MyMaxDuration = DurBuf;
       }
     }
@@ -112,7 +112,7 @@ public class GroupBox implements ISonglet, IDrawable {
   @Override public void Sort_Me() {// sorting by RealTime
     Collections.sort(this.SubSongs, new Comparator<OffsetBox>() {
       @Override public int compare(OffsetBox voice0, OffsetBox voice1) {
-        return Double.compare(voice0.TimeOrg, voice1.TimeOrg);
+        return Double.compare(voice0.TimeX, voice1.TimeX);
       }
     });
   }
@@ -143,7 +143,7 @@ public class GroupBox implements ISonglet, IDrawable {
     int medloc;
     while (minloc < maxloc) {
       medloc = (minloc + maxloc) >> 1; // >>1 is same as div 2, only faster.
-      if (Time <= this.SubSongs.get(medloc).TimeOrg) {
+      if (Time <= this.SubSongs.get(medloc).TimeX) {
         maxloc = medloc;
       }/* has to go through here to be found. */ else {
         minloc = medloc + 1;
@@ -156,11 +156,11 @@ public class GroupBox implements ISonglet, IDrawable {
     return SampleRate * (int) this.Get_Duration();
   }
   /* ********************************************************************************* */
-  @Override public Project Get_Project() {
+  @Override public AudProject Get_Project() {
     return this.MyProject;
   }
   /* ********************************************************************************* */
-  @Override public void Set_Project(Project project) {
+  @Override public void Set_Project(AudProject project) {
     this.MyProject = project;
   }
   /* ********************************************************************************* */
@@ -183,16 +183,16 @@ public class GroupBox implements ISonglet, IDrawable {
     int pcnt = StartDex;
     if (false) {// #cleanme
       ChildOffsetBox = this.SubSongs.get(pcnt++);
-      pntprev = ParentDC.To_Screen(ChildOffsetBox.TimeOrg, ChildOffsetBox.OctaveLoc);
+      pntprev = ParentDC.To_Screen(ChildOffsetBox.TimeX, ChildOffsetBox.OctaveY);
     } else {
       pntprev = ParentDC.To_Screen(0, 0);
     }
     while (pcnt < EndDex) {//for (int pcnt = StartDex; pcnt < EndDex; pcnt++) {
       ChildOffsetBox = this.SubSongs.get(pcnt);
-      pnt = ParentDC.To_Screen(ChildOffsetBox.TimeOrg, ChildOffsetBox.OctaveLoc);
+      pnt = ParentDC.To_Screen(ChildOffsetBox.TimeX, ChildOffsetBox.OctaveY);
       ParentDC.gr.drawLine((int) pntprev.x, (int) pntprev.y, (int) pnt.x, (int) pnt.y);
       pntprev = pnt;
-      if (ParentDC.ClipBounds.Max.x < ChildOffsetBox.TimeOrg) {// break from loop if subsong starts after MaxX. 
+      if (ParentDC.ClipBounds.Max.x < ChildOffsetBox.TimeX) {// break from loop if subsong starts after MaxX. 
         EndDex = pcnt;
         break;
       }
@@ -351,7 +351,7 @@ public class GroupBox implements ISonglet, IDrawable {
         EndTime = 0;// clip time
       }
       int NumSonglets = MySonglet.SubSongs.size();
-      double Final_Start = this.MySonglet.SubSongs.get(NumSonglets - 1).TimeOrg;
+      double Final_Start = this.MySonglet.SubSongs.get(NumSonglets - 1).TimeX;
       Final_Start = Math.min(Final_Start, EndTime);
       double Final_Time = this.MySonglet.Get_Duration();
       if (EndTime > Final_Time) {
@@ -361,7 +361,7 @@ public class GroupBox implements ISonglet, IDrawable {
       OffsetBox obox;
       while (this.Current_Dex < NumSonglets) {// first find new songlets in this time range and add them to pool
         obox = MySonglet.SubSongs.get(this.Current_Dex);
-        if (Final_Start < obox.TimeOrg) {// repeat until cb start time overtakes EndTime
+        if (Final_Start < obox.TimeX) {// repeat until cb start time overtakes EndTime
           break;
         }
         Singer singer = obox.Spawn_Singer();

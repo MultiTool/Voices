@@ -128,19 +128,19 @@ ripped from public static class Singer implements IOffsetBox {// Cantante
 @Override public double TimeLoc_g() {
   return Inherited_Time;
 }
-@Override public void TimeLoc_s(double value) {
+@Override public void TimeX = (double value) {
   Inherited_Time = value;
 }
 @Override public double OctaveLoc_g() {
   return Inherited_Octave;
 }
-@Override public void OctaveLoc_s(double value) {
+@Override public void OctaveY = (double value) {
   Inherited_Octave = value;
 }
 @Override public double LoudnessLoc_g() {
   return Inherited_Loudness;
 }
-@Override public void LoudnessFactor_s(double value) {
+@Override public void LoudnessFactor = (double value) {
   Inherited_Loudness = value;
 }
 @Override public ISonglet GetContent() {
@@ -441,6 +441,14 @@ okButton.addActionListener(new ActionListener() {
 }
 }
 
+to do:
+stop thread when starting
+add loudness handles to point
+
+/* ********************************************************************************* */
+  public static class Point implements IDrawable.IMoveable, IDeletable {
+    public double TimeX = 0.0, OctaveY = 0.0, SubTime = 0.0;// SubTime is cumulative subjective time.
+    public double LoudnessFactor = 1.0;
 
 Audio, Thread_Sounder,
 CajaDelimitadora,
@@ -448,17 +456,32 @@ Globals,
 GoLive,
 GraphicBox, Graphic_OffsetBox,
 GroupBox, Group_Singer, Group_OffsetBox,
-HookAndLure, to, StackItem,
+HookAndLure, StackItem,
 IDeletable,
 IDrawable, IMoveable, Drawing_Context,
 ISonglet, Singer, MetricsPacket,
-JunkyardTests,
 LoopBox, Loop_Singer, Loop_OffsetBox, Ghost_OffsetBox,
 MainGui, Act, DrawingPanel,
+MonkeyBox,
 NoteMaker, Note, Indexes,
 OffsetBox,
 Project,
+TestJunkyard, GetterSetterTest, GetSet<T>, GetSetDouble, ISoup, Onions,
 Voice, Point, VoiceOffsetBox, Voice_Singer,
 Voices,
 Wave,
+
+
+Amputated from OffsetBox:
+  /* ********************************************************************************* */
+  private void CombineTransform1D(double FirstScale, double FirstOffset, double SecondScale, double SecondOffset) {// note to self
+    SecondOffset += (SecondScale * FirstOffset);
+    SecondScale *= FirstScale;
+  }
+  /* ********************************************************************************* */
+  private double ShrinkTransform1D(double FirstOffset, double SecondScale, double SecondOffset) {// note to self
+    SecondOffset += (SecondScale * FirstOffset);
+    return SecondOffset;
+  }
+
 

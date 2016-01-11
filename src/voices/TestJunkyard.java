@@ -1,5 +1,5 @@
 /*
- * To change this license header, choose License Headers in Project Properties.
+ *
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
@@ -24,7 +24,7 @@ public class TestJunkyard {
     case 0:
       song = TestJunkyard.Create_Random_Chorus(0, 0, 1.0);
       obox = song.Spawn_OffsetBox();
-      obox.OctaveLoc_s(4);
+      obox.OctaveY = (4);
       break;
     case 1:
       song = TestJunkyard.Create_Nested_Chorus(0, 0, 1.0, 6);
@@ -62,7 +62,7 @@ public class TestJunkyard {
 
       song = lbx;
       obox = song.Spawn_OffsetBox();
-      obox.OctaveLoc_s(4);
+      obox.OctaveY = (4);
       break;
     case 6:
       Delay = 1.5;
@@ -70,13 +70,13 @@ public class TestJunkyard {
       nm = new NoteMaker();
       lbx = new LoopBox();
       CMajorObx = nm.MakeMajor_OBox(0);// C major
-      cbx.Add_SubSong(CMajorObx, Delay * 0, CMajorObx.OctaveLoc, 1.0);
+      cbx.Add_SubSong(CMajorObx, Delay * 0, CMajorObx.OctaveY, 1.0);
       CMinorObx = nm.MakeMinor_OBox(0);// C minor
-      cbx.Add_SubSong(CMinorObx, Delay * 1, CMinorObx.OctaveLoc, 1.0);// yuck, redundant
+      cbx.Add_SubSong(CMinorObx, Delay * 1, CMinorObx.OctaveY, 1.0);// yuck, redundant
       DMajorObx = nm.MakeMajor_OBox(2);// D major
-      cbx.Add_SubSong(DMajorObx, Delay * 2, DMajorObx.OctaveLoc, 1.0);
+      cbx.Add_SubSong(DMajorObx, Delay * 2, DMajorObx.OctaveY, 1.0);
       DMinorObx = nm.MakeMinor_OBox(2);// D minor
-      cbx.Add_SubSong(DMinorObx, Delay * 3, DMinorObx.OctaveLoc, 1.0);
+      cbx.Add_SubSong(DMinorObx, Delay * 3, DMinorObx.OctaveY, 1.0);
 
       lbx.Add_Content(cbx);
       lbx.Set_Delay(Delay * 4);
@@ -85,17 +85,17 @@ public class TestJunkyard {
 
       song = lbx;
       obox = song.Spawn_OffsetBox();
-      obox.TimeOrg += NoteMaker.OffsetTime;
-      obox.OctaveLoc_s(4);
+      obox.TimeX += NoteMaker.OffsetTime;
+      obox.OctaveY = (4);
       break;
     case 7:
       obox = TestJunkyard.Compose_Warble_Chorus();
-      obox.TimeOrg += NoteMaker.OffsetTime;
-      obox.OctaveLoc_s(4);
+      obox.TimeX += NoteMaker.OffsetTime;
+      obox.OctaveY = (4);
     case 8:
       obox = TestJunkyard.Compose_Ribbon_Chorus().Spawn_OffsetBox();
-      obox.TimeOrg += NoteMaker.OffsetTime;
-      obox.OctaveLoc_s(4);
+      obox.TimeX += NoteMaker.OffsetTime;
+      obox.OctaveY = (4);
       break;
     }
   }

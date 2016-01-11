@@ -1,5 +1,5 @@
 /*
- * To change this license header, choose License Headers in Project Properties.
+ *
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
@@ -17,13 +17,13 @@ import static voices.Voices.SaveWave;
  *
  * @author MultiTool
  */
-public class Project implements IDeletable {
+public class AudProject implements IDeletable {
   OffsetBox AudioRoot;
   public Graphic_OffsetBox GraphicRoot;
   GraphicBox GBox;
   public int SampleRate = Globals.SampleRate;
   /* ********************************************************************************* */
-  public Project() {
+  public AudProject() {
     this.GBox = new GraphicBox();
     this.GraphicRoot = this.GBox.Spawn_My_OffsetBox();
   }
@@ -63,7 +63,7 @@ public class Project implements IDeletable {
     case 0:
       song = TestJunkyard.Create_Random_Chorus(0, 0, 1.0);
       obox = song.Spawn_OffsetBox();
-      obox.OctaveLoc_s(4);
+      obox.OctaveY = (4);
       break;
     case 1:
       song = TestJunkyard.Create_Nested_Chorus(0, 0, 1.0, 6);
@@ -72,7 +72,7 @@ public class Project implements IDeletable {
     case 2:
       song = TestJunkyard.Create_Chord(0, 2, 1.0, 3);
       obox = song.Spawn_OffsetBox();
-      obox.TimeOrg += NoteMaker.OffsetTime;
+      obox.TimeX += NoteMaker.OffsetTime;
       break;
     case 3:
       //song = Create_Simple_Note(0, 2.3, 1);
@@ -80,19 +80,19 @@ public class Project implements IDeletable {
       //song = NoteMaker.Create_Simple_Note(0, 1, 5, 1);
       song.Set_Project(this);
       obox = song.Spawn_OffsetBox();
-      obox.TimeOrg += NoteMaker.OffsetTime;
+      obox.TimeX += NoteMaker.OffsetTime;
       break;
     case 4:
       song = TestJunkyard.Compose_Loop();
       obox = song.Spawn_OffsetBox();
-      obox.TimeOrg += NoteMaker.OffsetTime;
+      obox.TimeX += NoteMaker.OffsetTime;
       break;
     case 5:
       song = NoteMaker.Create_Unbound_Triad_Rythm();
       song.Set_Project(this);
       obox = song.Spawn_OffsetBox();
-      obox.TimeOrg += NoteMaker.OffsetTime;
-      obox.OctaveLoc_s(4);
+      obox.TimeX += NoteMaker.OffsetTime;
+      obox.OctaveY =(4);
       break;
     case 6:
       Delay = 1.5;
@@ -100,13 +100,13 @@ public class Project implements IDeletable {
       nm = new NoteMaker();
       lbx = new LoopBox();
       CMajorObx = nm.MakeMajor_OBox(0);// C major
-      cbx.Add_SubSong(CMajorObx, NoteMaker.OffsetTime + Delay * 0, CMajorObx.OctaveLoc, 1.0);
+      cbx.Add_SubSong(CMajorObx, NoteMaker.OffsetTime + Delay * 0, CMajorObx.OctaveY, 1.0);
       CMinorObx = nm.MakeMinor_OBox(0);// C minor
-      cbx.Add_SubSong(CMinorObx, NoteMaker.OffsetTime + Delay * 1, CMinorObx.OctaveLoc, 1.0);// yuck, redundant
+      cbx.Add_SubSong(CMinorObx, NoteMaker.OffsetTime + Delay * 1, CMinorObx.OctaveY, 1.0);// yuck, redundant
       DMajorObx = nm.MakeMajor_OBox(2);// D major
-      cbx.Add_SubSong(DMajorObx, NoteMaker.OffsetTime + Delay * 2, DMajorObx.OctaveLoc, 1.0);
+      cbx.Add_SubSong(DMajorObx, NoteMaker.OffsetTime + Delay * 2, DMajorObx.OctaveY, 1.0);
       DMinorObx = nm.MakeMinor_OBox(2);// D minor
-      cbx.Add_SubSong(DMinorObx, NoteMaker.OffsetTime + Delay * 3, DMinorObx.OctaveLoc, 1.0);
+      cbx.Add_SubSong(DMinorObx, NoteMaker.OffsetTime + Delay * 3, DMinorObx.OctaveY, 1.0);
 
       lbx.Add_Content(cbx);
       lbx.Set_Delay(Delay * 4);
@@ -116,17 +116,17 @@ public class Project implements IDeletable {
       song = lbx;
       song.Set_Project(this);
       obox = song.Spawn_OffsetBox();
-      obox.TimeOrg += NoteMaker.OffsetTime;
-      obox.OctaveLoc_s(4);
+      obox.TimeX += NoteMaker.OffsetTime;
+      obox.OctaveY =(4);
       break;
     case 7:
       obox = TestJunkyard.Compose_Warble_Chorus();
-      obox.TimeOrg += NoteMaker.OffsetTime;
-      obox.OctaveLoc_s(4);
+      obox.TimeX += NoteMaker.OffsetTime;
+      obox.OctaveY =(4);
     case 8:
       obox = TestJunkyard.Compose_Ribbon_Chorus().Spawn_OffsetBox();
-      obox.TimeOrg += NoteMaker.OffsetTime;
-      obox.OctaveLoc_s(4);
+      obox.TimeX += NoteMaker.OffsetTime;
+      obox.OctaveY =(4);
       break;
     case 9:
       GroupBox gbx = new GroupBox();
@@ -134,16 +134,16 @@ public class Project implements IDeletable {
 
       song = NoteMaker.Create_Unbound_Triad_Rythm();
       obox = song.Spawn_OffsetBox();
-      obox.OctaveLoc_s(4);// move later
-      obox.TimeOrg += NoteMaker.OffsetTime;
+      obox.OctaveY =(4);// move later
+      obox.TimeX += NoteMaker.OffsetTime;
       gbx.Add_SubSong(obox);
-      
+
       song = TestJunkyard.Compose_Ribbon_Chorus();
       obox = song.Spawn_OffsetBox();
-      obox.OctaveLoc_s(1);// move later
-      obox.TimeOrg += NoteMaker.OffsetTime;
+      obox.OctaveY =(1);// move later
+      obox.TimeX += NoteMaker.OffsetTime;
       gbx.Add_SubSong(obox);
-      
+
       obox = gbx.Spawn_OffsetBox();
       break;
     }

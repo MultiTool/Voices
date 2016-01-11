@@ -1,5 +1,5 @@
 /*
- * To change this license header, choose License Headers in Project Properties.
+ *
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
@@ -13,7 +13,7 @@ public interface ISonglet extends IDrawable, IDeletable {// Cancionita
   /* ********************************************************************************* */
   public abstract static class Singer implements IDeletable {// Cantante
     // public static class Singer extends OffsetBox { // Cantante
-    public Project MyProject;
+    public AudProject MyProject;
     double Inherited_Time = 0.0, Inherited_Octave = 0.0, Inherited_Loudness = 1.0;// time, octave, and loudness context
     double Inherited_OctaveRate = 0.0;// bend context, change dyanimcally while rendering
     public boolean IsFinished = false;
@@ -48,8 +48,8 @@ public interface ISonglet extends IDrawable, IDeletable {// Cancionita
     }
     /* ********************************************************************************* */
     public void Compound(OffsetBox donor) {// accumulate my own transformation
-			Inherited_Time += donor.TimeOrg;
-			Inherited_Octave += donor.OctaveLoc;
+			Inherited_Time += donor.TimeX;
+			Inherited_Octave += donor.OctaveY;
 			Inherited_Loudness *= donor.LoudnessFactor;
     }
     /* ********************************************************************************* */
@@ -78,12 +78,12 @@ public interface ISonglet extends IDrawable, IDeletable {// Cancionita
   /* ********************************************************************************* */
   public void Sort_Me();
   /* ********************************************************************************* */
-  public Project Get_Project();
+  public AudProject Get_Project();
   /* ********************************************************************************* */
-  public void Set_Project(Project project);
+  public void Set_Project(AudProject project);
   /* ********************************************************************************* */
   public static class MetricsPacket {
     public double MaxDuration = 0.0;
-    public Project MyProject = null;
+    public AudProject MyProject = null;
   }
 }

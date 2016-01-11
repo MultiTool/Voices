@@ -1,5 +1,5 @@
 /*
- * To change this license header, choose License Headers in Project Properties.
+ *
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
@@ -154,10 +154,10 @@ public class GraphicBox implements IDrawable, ISonglet, IDeletable {//
   @Override public void Sort_Me() {
     throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
   }
-  @Override public Project Get_Project() {
+  @Override public AudProject Get_Project() {
     throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
   }
-  @Override public void Set_Project(Project project) {
+  @Override public void Set_Project(AudProject project) {
     throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
   }
   /* ********************************************************************************* */
@@ -167,8 +167,8 @@ public class GraphicBox implements IDrawable, ISonglet, IDeletable {//
     public Graphic_OffsetBox() {
       ScaleX = 40;// pixels per second
       ScaleY = -40;// pixels per octave
-      this.OctaveLoc = 400;
-      this.TimeOrg = 20;
+      this.OctaveY = 400;
+      this.TimeX = 20;
       MyBounds = new CajaDelimitadora();
     }
     /* ********************************************************************************* */
@@ -208,8 +208,8 @@ public class GraphicBox implements IDrawable, ISonglet, IDeletable {//
     /* ********************************************************************************* */
     @Override public void MoveTo(double XLoc, double YLoc) {// IDrawable.IMoveable
       // if (XLoc >= 0) {// don't go backward in time
-      this.TimeOrg = XLoc;
-      this.OctaveLoc = YLoc;
+      this.TimeX = XLoc;
+      this.OctaveY = YLoc;
     }
     /* ********************************************************************************* */
     @Override public OffsetBox Clone_Me() {// always override this thusly

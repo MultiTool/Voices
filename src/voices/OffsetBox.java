@@ -1,5 +1,5 @@
 /*
- * To change this license header, choose License Headers in Project Properties.
+ *
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
@@ -21,15 +21,19 @@ import voices.ISonglet.Singer;
  * We do scale for graphics though. 
  * 
  */
-public class OffsetBox implements IDrawable.IMoveable, IDeletable {// location box to transpose in pitch, move in time, etc.  //IOffsetBox, 
-  public double TimeOrg = 0, OctaveLoc = 0, LoudnessFactor = 1.0;// all of these are in parent coordinates
-  double ScaleX = 1.0, ScaleY = 1.0;// to be used for pixels per second, pixels per octave
+public class OffsetBox extends MonkeyBox { //implements IDrawable.IMoveable, IDeletable {// location box to transpose in pitch, move in time, etc.  //IOffsetBox, 
+//  public double TimeX = 0, OctaveY = 0, LoudnessFactor = 1.0;// all of these are in parent coordinates
+//  double ScaleX = 1.0, ScaleY = 1.0;// to be used for pixels per second, pixels per octave
   double ChildXorg = 0, ChildYorg = 0;// These are only non-zero for graphics. Audio origins are always 0,0. 
-  public CajaDelimitadora MyBounds;
-  public ISonglet MyParentSong;// can do this but not used yet
+//  public CajaDelimitadora MyBounds;
+//  public ISonglet MyParentSong;// can do this but not used yet
 
   // graphics support, will move to separate object
+<<<<<<< HEAD
+//  double OctavesPerRadius = 0.03;
+=======
   double OctavesPerRadius = 0.03;
+>>>>>>> fa923080fa89104ca6c4b276611e44f8dec161ac
   /* ********************************************************************************* */
   public OffsetBox() {
     //this.Clear();
@@ -38,15 +42,15 @@ public class OffsetBox implements IDrawable.IMoveable, IDeletable {// location b
     this.MyBounds.Reset();
   }
   /* ********************************************************************************* */
-  public OffsetBox Clone_Me() {
+  @Override public OffsetBox Clone_Me() {
     OffsetBox child = new OffsetBox();
     child.Copy_From(this);
     return child;
   }
   /* ********************************************************************************* */
   public void Copy_From(OffsetBox donor) {
-    this.TimeOrg = donor.TimeOrg;
-    this.OctaveLoc = donor.OctaveLoc;
+    this.TimeX = donor.TimeX;
+    this.OctaveY = donor.OctaveY;
     this.LoudnessFactor = donor.LoudnessFactor;
     this.ScaleX = donor.ScaleX;
     this.ScaleY = donor.ScaleY;
@@ -57,151 +61,110 @@ public class OffsetBox implements IDrawable.IMoveable, IDeletable {// location b
     this.MyBounds.Copy_From(donor.MyBounds);
   }
   /* ********************************************************************************* */
-  public void Clear() {// set all coordinates to identity, no transformation for content
-    TimeOrg = OctaveLoc = 0.0;
+  @Override public void Clear() {// set all coordinates to identity, no transformation for content
+    TimeX = OctaveY = 0.0;
     LoudnessFactor = 1.0;
   }
   /* ********************************************************************************* */
-  public double Get_Max_Amplitude() {
+  @Override public double Get_Max_Amplitude() {
     return this.GetContent().Get_Max_Amplitude() * this.LoudnessFactor;
   }
   /* ********************************************************************************* */
-  public void Zoom(double XCtr, double YCtr, double Scale) {
+  public void Zoom(double XCtr, double YCtr, double Scale) {// Maybe move this to GraphicBox
     double XMov = XCtr - (Scale * XCtr);
     double YMov = YCtr - (Scale * YCtr);
 
-    this.TimeOrg = XMov + (Scale * this.TimeOrg);
-    this.OctaveLoc = YMov + (Scale * this.OctaveLoc);
+    this.TimeX = XMov + (Scale * this.TimeX);
+    this.OctaveY = YMov + (Scale * this.OctaveY);
 
     this.ScaleX *= Scale;
     this.ScaleY *= Scale;
   }
   /* ********************************************************************************* */
   public void Compound(OffsetBox donor) {
-    //double DonorOffset = donor.TimeLoc_g(); double DonorScale = donor.ScaleX_g();
-    this.TimeLoc_s(TimeOrg + (this.ScaleX * donor.TimeLoc_g()));// to do: combine matrices here. 
-    this.OctaveLoc_s(OctaveLoc + (this.ScaleY * donor.OctaveLoc_g()));
-    this.LoudnessFactor_s(LoudnessFactor + donor.LoudnessLoc_g());
-    this.ScaleX *= donor.ScaleX_g();
-    this.ScaleY *= donor.ScaleY_g();
-    //this.TimeLoc += donor.TimeLoc; this.OctaveLoc += donor.OctaveLoc; this.LoudnessFactor *= donor.LoudnessFactor;
+    this.TimeX += (this.ScaleX * donor.TimeX);// to do: combine matrices here. 
+    this.OctaveY += (this.ScaleY * donor.OctaveY);
+    this.LoudnessFactor *= donor.LoudnessFactor;
+    this.ScaleX *= donor.ScaleX;
+    this.ScaleY *= donor.ScaleY;
   }
   /* ********************************************************************************* */
-  public void Rebase_Time(double Time) {
-    this.TimeOrg = Time;
+  @Override public void Rebase_Time(double Time) {
+    this.TimeX = Time;
     double RelativeMinBound = this.MyBounds.Min.x;// preserve the relative relationship of my bounds and my origin.
     this.MyBounds.Rebase_Time(Time + RelativeMinBound);
-  }
-  /* ********************************************************************************* */
-  private void CombineTransform1D(double FirstScale, double FirstOffset, double SecondScale, double SecondOffset) {// note to self
-    SecondOffset += (SecondScale * FirstOffset);
-    SecondScale *= FirstScale;
-  }
-  /* ********************************************************************************* */
-  private double ShrinkTransform1D(double FirstOffset, double SecondScale, double SecondOffset) {// note to self
-    SecondOffset += (SecondScale * FirstOffset);
-    return SecondOffset;
   }
   /* ********************************************************************************* */
   public Singer Spawn_Singer() {// always always always override this
     throw new UnsupportedOperationException("Not supported yet.");
   }
+  // <editor-fold defaultstate="collapsed" desc="Mappings and Unmappings">
   /* ********************************************************************************* */
-  public double MapTime(double ParentTime) {// convert time coordinate from my parent's frame to my child's frame
-    return ((ParentTime - this.TimeOrg) / ScaleX) + ChildXorg; // in the long run we'll probably use a matrix
+  @Override public double MapTime(double ParentTime) {// convert time coordinate from my parent's frame to my child's frame
+    return ((ParentTime - this.TimeX) / ScaleX) + ChildXorg; // in the long run we'll probably use a matrix
   }
   /* ********************************************************************************* */
-  public double UnMapTime(double ChildTime) {// convert time coordinate from my child's frame to my parent's frame
-    return this.TimeOrg + ((ChildTime - ChildXorg) * ScaleX);
+  @Override public double UnMapTime(double ChildTime) {// convert time coordinate from my child's frame to my parent's frame
+    return this.TimeX + ((ChildTime - ChildXorg) * ScaleX);
   }
   /* ********************************************************************************* */
-  public double MapPitch(double ParentPitch) {// convert octave coordinate from my parent's frame to my child's frame
-    return ((ParentPitch - this.OctaveLoc) / ScaleY) + ChildYorg;
+  @Override public double MapPitch(double ParentPitch) {// convert octave coordinate from my parent's frame to my child's frame
+    return ((ParentPitch - this.OctaveY) / ScaleY) + ChildYorg;
   }
   /* ********************************************************************************* */
-  public double UnMapPitch(double ChildPitch) {// convert octave coordinate from my child's frame to my parent's frame
-    return this.OctaveLoc + ((ChildPitch - ChildYorg) * ScaleY);
+  @Override public double UnMapPitch(double ChildPitch) {// convert octave coordinate from my child's frame to my parent's frame
+    return this.OctaveY + ((ChildPitch - ChildYorg) * ScaleY);
   }
   /* ********************************************************************************* */
-  public Point2D.Double MapTo(double XLoc, double YLoc) {
+  @Override public Point2D.Double MapTo(double XLoc, double YLoc) {
     Point2D.Double pnt = new Point2D.Double(this.UnMapTime(XLoc), this.UnMapPitch(YLoc));
     return pnt;
   }
   /* ********************************************************************************* */
-  public Point2D.Double UnMap(double XLoc, double YLoc) {
+  @Override public Point2D.Double UnMap(double XLoc, double YLoc) {
     Point2D.Double pnt = new Point2D.Double(this.MapTime(XLoc), this.MapPitch(YLoc));
     return pnt;
   }
   /* ********************************************************************************* */
-  public void MapTo(Point2D.Double pnt, Point2D.Double results) {
+  @Override public void MapTo(Point2D.Double pnt, Point2D.Double results) {
     results.x = this.MapTime(pnt.x);
     results.y = this.MapPitch(pnt.y);
   }
   /* ********************************************************************************* */
-  public void UnMap(Point2D.Double pnt, Point2D.Double results) {
+  @Override public void UnMap(Point2D.Double pnt, Point2D.Double results) {
     results.x = this.UnMapTime(pnt.x);
     results.y = this.UnMapPitch(pnt.y);
   }
   /* ********************************************************************************* */
-  public void MapTo(CajaDelimitadora source, CajaDelimitadora results) {
+  @Override public void MapTo(CajaDelimitadora source, CajaDelimitadora results) {
     this.MapTo(source.Min, results.Min);
     this.MapTo(source.Max, results.Max);
     results.Sort_Me();
   }
   /* ********************************************************************************* */
-  public void UnMap(CajaDelimitadora source, CajaDelimitadora results) {
+  @Override public void UnMap(CajaDelimitadora source, CajaDelimitadora results) {
     this.UnMap(source.Min, results.Min);
     this.UnMap(source.Max, results.Max);
     results.Sort_Me();
   }
+  // </editor-fold>
   /* ********************************************************************************* */
   public ISonglet GetContent() {// always always override this
     throw new UnsupportedOperationException("Not supported yet.");//  public abstract ISonglet GetContent(); ? 
-  }
-  /* ********************************************************************************* */
-  public double TimeLoc_g() {
-    return TimeOrg;
-  }
-  public void TimeLoc_s(double value) {
-    TimeOrg = value;
-  }
-  public double OctaveLoc_g() {
-    return OctaveLoc;
-  }
-  public void OctaveLoc_s(double value) {
-    OctaveLoc = value;
-  }
-  public double LoudnessLoc_g() {
-    return LoudnessFactor;
-  }
-  public void LoudnessFactor_s(double value) {
-    LoudnessFactor = value;
-  }
-  public double ScaleX_g() {
-    return ScaleX;
-  }
-  public void ScaleX_s(double value) {
-    ScaleX = value;
-  }
-  public double ScaleY_g() {
-    return ScaleY;
-  }
-  public void ScaleY_s(double value) {
-    ScaleX = value;
   }
   /* ********************************************************************************* */
   @Override public void Draw_Me(Drawing_Context ParentDC) {// IDrawable
     //Draw_My_Bounds(ParentDC);
     if (ParentDC.ClipBounds.Intersects(MyBounds)) {// If we make ISonglet also drawable then we can stop repeating this code and put it all in OffsetBox.
 
-      Point2D.Double pnt = ParentDC.To_Screen(this.TimeOrg, this.OctaveLoc);
+      Point2D.Double pnt = ParentDC.To_Screen(this.TimeX, this.OctaveY);
       double extra = (1.0 / (double) ParentDC.RecurseDepth);
       //extra *= 0.02;
       double RadiusPixels = Math.abs(ParentDC.GlobalOffset.ScaleY) * (OctavesPerRadius + extra * 0.02);
       RadiusPixels = Math.ceil(RadiusPixels);
-      double DiameterPixels = RadiusPixels * 2.0;
       Color col = Globals.ToRainbow(extra);
       if (false) {
+        double DiameterPixels = RadiusPixels * 2.0;
         ParentDC.gr.setColor(Globals.ToAlpha(col, 200));// control point just looks like a dot
         ParentDC.gr.fillOval((int) (pnt.x - RadiusPixels), (int) (pnt.y - RadiusPixels), (int) DiameterPixels, (int) DiameterPixels);
         ParentDC.gr.setColor(Globals.ToAlpha(Color.darkGray, 200));
@@ -217,8 +180,8 @@ public class OffsetBox implements IDrawable.IMoveable, IDeletable {// location b
     }
   }
   /* ********************************************************************************* */
-  public void Draw_Dot(Drawing_Context ParentDC, Color col) {
-    Point2D.Double pnt = ParentDC.To_Screen(this.TimeOrg, this.OctaveLoc);
+  @Override public void Draw_Dot(Drawing_Context ParentDC, Color col) {
+    Point2D.Double pnt = ParentDC.To_Screen(this.TimeX, this.OctaveY);
     double extra = (1.0 / (double) ParentDC.RecurseDepth);
 //    double RadiusPixels = Math.abs(ParentDC.GlobalOffset.ScaleY) * (OctavesPerRadius + extra * 0.02);
     double RadiusPixels = Math.abs(ParentDC.GlobalOffset.ScaleY) * (OctavesPerRadius);
@@ -284,8 +247,8 @@ public class OffsetBox implements IDrawable.IMoveable, IDeletable {// location b
     Content.UpdateBoundingBoxLocal();// either this
     Content.GetBoundingBox().UnMap(this, MyBounds);// project child limits into parent (my) space
     // include my bubble in bounds
-    this.MyBounds.IncludePoint(this.TimeOrg - OctavesPerRadius, this.OctaveLoc - OctavesPerRadius);
-    this.MyBounds.IncludePoint(this.TimeOrg + OctavesPerRadius, this.OctaveLoc + OctavesPerRadius);
+    this.MyBounds.IncludePoint(this.TimeX - OctavesPerRadius, this.OctaveY - OctavesPerRadius);
+    this.MyBounds.IncludePoint(this.TimeX + OctavesPerRadius, this.OctaveY + OctavesPerRadius);
   }
   @Override public void GoFishing(HookAndLure Scoop) {// IDrawable
     if (Scoop.CurrentContext.SearchBounds.Intersects(MyBounds)) {
@@ -299,14 +262,14 @@ public class OffsetBox implements IDrawable.IMoveable, IDeletable {// location b
   }
   @Override public void MoveTo(double XLoc, double YLoc) {// IDrawable.IMoveable
     if (XLoc >= 0) {// don't go backward in time
-      this.TimeOrg = XLoc;
-      this.OctaveLoc = YLoc;
+      this.TimeX = XLoc;
+      this.OctaveY = YLoc;
     }
   }
   @Override public boolean HitsMe(double XLoc, double YLoc) {// IDrawable.IMoveable
     System.out.print("HitsMe:");
     if (this.MyBounds.Contains(XLoc, YLoc)) {// redundant test
-      double dist = Math.hypot(XLoc - this.TimeOrg, YLoc - this.OctaveLoc);
+      double dist = Math.hypot(XLoc - this.TimeX, YLoc - this.OctaveY);
       if (dist <= this.OctavesPerRadius) {
         System.out.println("true");
         return true;

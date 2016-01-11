@@ -1,5 +1,5 @@
 /*
- * To change this license header, choose License Headers in Project Properties.
+ *
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
@@ -53,8 +53,8 @@ public class NoteMaker {
     song.Set_Duration(30);
 
 //    obox = song.Spawn_OffsetBox();
-//    obox.TimeOrg += NoteMaker.OffsetTime;
-//    obox.OctaveLoc_s(4);
+//    obox.TimeX += NoteMaker.OffsetTime;
+//    obox.OctaveY = (4);
     return song;
   }
   /* ********************************************************************************* */
@@ -115,7 +115,7 @@ public class NoteMaker {
     grpbx.Add_SubSong(obox, 0, SemitoneFraction * KeyOffset1, Loudness);
 
     obox = grpbx.Spawn_OffsetBox();
-    //obox.OctaveLoc = SemitoneFraction * Key;
+    //obox.OctaveY = SemitoneFraction * Key;
     return obox;
   }
   /* ********************************************************************************* */
@@ -139,7 +139,7 @@ public class NoteMaker {
   /* ********************************************************************************* */
   public OffsetBox MakeMajor_OBox(int Key) {
     OffsetBox obx = Create_Triad_OBox(4, 7);
-    obx.OctaveLoc = SemitoneFraction * Key;
+    obx.OctaveY = SemitoneFraction * Key;
     return obx;
   }
   /* ********************************************************************************* */
@@ -153,7 +153,7 @@ public class NoteMaker {
   /* ********************************************************************************* */
   public OffsetBox MakeMinor_OBox(int Key) {
     OffsetBox obx = Create_Triad_OBox(3, 7);
-    obx.OctaveLoc = SemitoneFraction * Key;
+    obx.OctaveY = SemitoneFraction * Key;
     return obx;
   }
   /* ********************************************************************************* */
