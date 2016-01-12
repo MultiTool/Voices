@@ -90,7 +90,7 @@ public class MainGui {
   public static class DrawingPanel extends JPanel implements MouseMotionListener, MouseListener, MouseWheelListener, ComponentListener, KeyListener {
     AudProject MyProject = null;
     MainGui BigApp;
-    HookAndLure Query;
+    Grabber Query;
     /* ********************************************************************************* */
     public DrawingPanel() {
       this.Init();
@@ -104,7 +104,7 @@ public class MainGui {
         this.setFocusable(true);
       }
       this.addKeyListener(this);
-      this.Query = new HookAndLure();
+      this.Query = new Grabber();
     }
     /* ********************************************************************************* */
     public void Draw_Me(Graphics2D g2d) {

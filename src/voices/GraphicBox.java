@@ -16,6 +16,7 @@ import java.awt.RenderingHints;
 public class GraphicBox implements IDrawable, ISonglet, IDeletable {// 
   public OffsetBox ContentOBox = null;
   private CajaDelimitadora MyBounds = new CajaDelimitadora();
+  private int FreshnessTimeStamp;
   /* ********************************************************************************* */
   public void Attach_Content(OffsetBox content) {
     this.ContentOBox = content;
@@ -49,7 +50,7 @@ public class GraphicBox implements IDrawable, ISonglet, IDeletable {//
     this.MyBounds.Include(ChildBBoxUnMapped);// Inefficient. Could be just assigned or copied.
   }
   /* ********************************************************************************* */
-  @Override public void GoFishing(HookAndLure Scoop) {// IDrawable
+  @Override public void GoFishing(Grabber Scoop) {// IDrawable
     if (Scoop.CurrentContext.SearchBounds.Intersects(MyBounds)) {//wrong
       this.ContentOBox.GoFishing(Scoop);
     }
@@ -75,7 +76,7 @@ public class GraphicBox implements IDrawable, ISonglet, IDeletable {//
 
     width = MaxX - MinX;// (int) ParentDC.GlobalOffset.UnMapTime(100);
     height = MaxY - MinY;//(int) ParentDC.GlobalOffset.UnMapPitch(100);
-    
+
     // draw horizontal lines
     ParentDC.gr.setColor(Globals.ToAlpha(Color.lightGray, 100));
     for (double ysemi = MinY; ysemi < MaxY; ysemi += 1.0 / 12.0) {
@@ -161,6 +162,13 @@ public class GraphicBox implements IDrawable, ISonglet, IDeletable {//
     throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
   }
   /* ********************************************************************************* */
+  @Override public int FreshnessTimeStamp_g() {// ISonglet
+    return this.FreshnessTimeStamp;
+  }
+  @Override public void FreshnessTimeStamp_s(int TimeStampNew) {// ISonglet
+    this.FreshnessTimeStamp = TimeStampNew;
+  }
+  /* ********************************************************************************* */
   public class Graphic_OffsetBox extends OffsetBox {
     GraphicBox Content;
     /* ********************************************************************************* */
@@ -194,7 +202,7 @@ public class GraphicBox implements IDrawable, ISonglet, IDeletable {//
       this.Content.GetBoundingBox().UnMap(this, MyBounds);// project child limits into parent (my) space
       this.MyBounds.Sort_Me();
     }
-    @Override public void GoFishing(HookAndLure Scoop) {// IDrawable
+    @Override public void GoFishing(Grabber Scoop) {// IDrawable
       Scoop.AddFirstBox(this, Scoop.CurrentContext.Loc.x, Scoop.CurrentContext.Loc.y);
       if (Scoop.CurrentContext.SearchBounds.Intersects(MyBounds)) {
         if (this.HitsMe(Scoop.CurrentContext.Loc.x, Scoop.CurrentContext.Loc.y)) {

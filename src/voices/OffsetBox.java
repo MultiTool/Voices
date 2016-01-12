@@ -24,16 +24,12 @@ import voices.ISonglet.Singer;
 public class OffsetBox extends MonkeyBox { //implements IDrawable.IMoveable, IDeletable {// location box to transpose in pitch, move in time, etc.  //IOffsetBox, 
 //  public double TimeX = 0, OctaveY = 0, LoudnessFactor = 1.0;// all of these are in parent coordinates
 //  double ScaleX = 1.0, ScaleY = 1.0;// to be used for pixels per second, pixels per octave
-  double ChildXorg = 0, ChildYorg = 0;// These are only non-zero for graphics. Audio origins are always 0,0. 
+//  double ChildXorg = 0, ChildYorg = 0;// These are only non-zero for graphics. Audio origins are always 0,0. 
 //  public CajaDelimitadora MyBounds;
 //  public ISonglet MyParentSong;// can do this but not used yet
 
   // graphics support, will move to separate object
-<<<<<<< HEAD
 //  double OctavesPerRadius = 0.03;
-=======
-  double OctavesPerRadius = 0.03;
->>>>>>> fa923080fa89104ca6c4b276611e44f8dec161ac
   /* ********************************************************************************* */
   public OffsetBox() {
     //this.Clear();
@@ -49,21 +45,7 @@ public class OffsetBox extends MonkeyBox { //implements IDrawable.IMoveable, IDe
   }
   /* ********************************************************************************* */
   public void Copy_From(OffsetBox donor) {
-    this.TimeX = donor.TimeX;
-    this.OctaveY = donor.OctaveY;
-    this.LoudnessFactor = donor.LoudnessFactor;
-    this.ScaleX = donor.ScaleX;
-    this.ScaleY = donor.ScaleY;
-    this.ChildXorg = donor.ChildXorg;
-    this.ChildYorg = donor.ChildYorg;
-    this.MyParentSong = donor.MyParentSong;
-    this.OctavesPerRadius = donor.OctavesPerRadius;
-    this.MyBounds.Copy_From(donor.MyBounds);
-  }
-  /* ********************************************************************************* */
-  @Override public void Clear() {// set all coordinates to identity, no transformation for content
-    TimeX = OctaveY = 0.0;
-    LoudnessFactor = 1.0;
+    super.Copy_From(donor);
   }
   /* ********************************************************************************* */
   @Override public double Get_Max_Amplitude() {
@@ -81,14 +63,6 @@ public class OffsetBox extends MonkeyBox { //implements IDrawable.IMoveable, IDe
     this.ScaleY *= Scale;
   }
   /* ********************************************************************************* */
-  public void Compound(OffsetBox donor) {
-    this.TimeX += (this.ScaleX * donor.TimeX);// to do: combine matrices here. 
-    this.OctaveY += (this.ScaleY * donor.OctaveY);
-    this.LoudnessFactor *= donor.LoudnessFactor;
-    this.ScaleX *= donor.ScaleX;
-    this.ScaleY *= donor.ScaleY;
-  }
-  /* ********************************************************************************* */
   @Override public void Rebase_Time(double Time) {
     this.TimeX = Time;
     double RelativeMinBound = this.MyBounds.Min.x;// preserve the relative relationship of my bounds and my origin.
@@ -98,60 +72,11 @@ public class OffsetBox extends MonkeyBox { //implements IDrawable.IMoveable, IDe
   public Singer Spawn_Singer() {// always always always override this
     throw new UnsupportedOperationException("Not supported yet.");
   }
-  // <editor-fold defaultstate="collapsed" desc="Mappings and Unmappings">
-  /* ********************************************************************************* */
-  @Override public double MapTime(double ParentTime) {// convert time coordinate from my parent's frame to my child's frame
-    return ((ParentTime - this.TimeX) / ScaleX) + ChildXorg; // in the long run we'll probably use a matrix
-  }
-  /* ********************************************************************************* */
-  @Override public double UnMapTime(double ChildTime) {// convert time coordinate from my child's frame to my parent's frame
-    return this.TimeX + ((ChildTime - ChildXorg) * ScaleX);
-  }
-  /* ********************************************************************************* */
-  @Override public double MapPitch(double ParentPitch) {// convert octave coordinate from my parent's frame to my child's frame
-    return ((ParentPitch - this.OctaveY) / ScaleY) + ChildYorg;
-  }
-  /* ********************************************************************************* */
-  @Override public double UnMapPitch(double ChildPitch) {// convert octave coordinate from my child's frame to my parent's frame
-    return this.OctaveY + ((ChildPitch - ChildYorg) * ScaleY);
-  }
-  /* ********************************************************************************* */
-  @Override public Point2D.Double MapTo(double XLoc, double YLoc) {
-    Point2D.Double pnt = new Point2D.Double(this.UnMapTime(XLoc), this.UnMapPitch(YLoc));
-    return pnt;
-  }
-  /* ********************************************************************************* */
-  @Override public Point2D.Double UnMap(double XLoc, double YLoc) {
-    Point2D.Double pnt = new Point2D.Double(this.MapTime(XLoc), this.MapPitch(YLoc));
-    return pnt;
-  }
-  /* ********************************************************************************* */
-  @Override public void MapTo(Point2D.Double pnt, Point2D.Double results) {
-    results.x = this.MapTime(pnt.x);
-    results.y = this.MapPitch(pnt.y);
-  }
-  /* ********************************************************************************* */
-  @Override public void UnMap(Point2D.Double pnt, Point2D.Double results) {
-    results.x = this.UnMapTime(pnt.x);
-    results.y = this.UnMapPitch(pnt.y);
-  }
-  /* ********************************************************************************* */
-  @Override public void MapTo(CajaDelimitadora source, CajaDelimitadora results) {
-    this.MapTo(source.Min, results.Min);
-    this.MapTo(source.Max, results.Max);
-    results.Sort_Me();
-  }
-  /* ********************************************************************************* */
-  @Override public void UnMap(CajaDelimitadora source, CajaDelimitadora results) {
-    this.UnMap(source.Min, results.Min);
-    this.UnMap(source.Max, results.Max);
-    results.Sort_Me();
-  }
-  // </editor-fold>
   /* ********************************************************************************* */
   public ISonglet GetContent() {// always always override this
     throw new UnsupportedOperationException("Not supported yet.");//  public abstract ISonglet GetContent(); ? 
   }
+  // <editor-fold defaultstate="collapsed" desc="IDrawable and IMoveable">
   /* ********************************************************************************* */
   @Override public void Draw_Me(Drawing_Context ParentDC) {// IDrawable
     //Draw_My_Bounds(ParentDC);
@@ -250,7 +175,7 @@ public class OffsetBox extends MonkeyBox { //implements IDrawable.IMoveable, IDe
     this.MyBounds.IncludePoint(this.TimeX - OctavesPerRadius, this.OctaveY - OctavesPerRadius);
     this.MyBounds.IncludePoint(this.TimeX + OctavesPerRadius, this.OctaveY + OctavesPerRadius);
   }
-  @Override public void GoFishing(HookAndLure Scoop) {// IDrawable
+  @Override public void GoFishing(Grabber Scoop) {// IDrawable
     if (Scoop.CurrentContext.SearchBounds.Intersects(MyBounds)) {
       if (this.HitsMe(Scoop.CurrentContext.Loc.x, Scoop.CurrentContext.Loc.y)) {
         Scoop.ConsiderLeaf(this);
@@ -278,6 +203,7 @@ public class OffsetBox extends MonkeyBox { //implements IDrawable.IMoveable, IDe
     System.out.println("false");
     return false;
   }
+  // </editor-fold>
   /* ********************************************************************************* */
   @Override public boolean Create_Me() {// IDeletable
     return true;

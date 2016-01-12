@@ -22,6 +22,7 @@ public class AudProject implements IDeletable {
   public Graphic_OffsetBox GraphicRoot;
   GraphicBox GBox;
   public int SampleRate = Globals.SampleRate;
+  public int UpdateCounter = 0;
   /* ********************************************************************************* */
   public AudProject() {
     this.GBox = new GraphicBox();
@@ -39,6 +40,7 @@ public class AudProject implements IDeletable {
   public void Update_Guts() {
     MetricsPacket metrics = new MetricsPacket();
     metrics.MyProject = this;
+    metrics.FreshnessTimeStamp = this.UpdateCounter++;
     AudioRoot.GetContent().Update_Guts(metrics);
   }
   /* ********************************************************************************* */
@@ -92,7 +94,7 @@ public class AudProject implements IDeletable {
       song.Set_Project(this);
       obox = song.Spawn_OffsetBox();
       obox.TimeX += NoteMaker.OffsetTime;
-      obox.OctaveY =(4);
+      obox.OctaveY = (4);
       break;
     case 6:
       Delay = 1.5;
@@ -117,16 +119,16 @@ public class AudProject implements IDeletable {
       song.Set_Project(this);
       obox = song.Spawn_OffsetBox();
       obox.TimeX += NoteMaker.OffsetTime;
-      obox.OctaveY =(4);
+      obox.OctaveY = (4);
       break;
     case 7:
       obox = TestJunkyard.Compose_Warble_Chorus();
       obox.TimeX += NoteMaker.OffsetTime;
-      obox.OctaveY =(4);
+      obox.OctaveY = (4);
     case 8:
       obox = TestJunkyard.Compose_Ribbon_Chorus().Spawn_OffsetBox();
       obox.TimeX += NoteMaker.OffsetTime;
-      obox.OctaveY =(4);
+      obox.OctaveY = (4);
       break;
     case 9:
       GroupBox gbx = new GroupBox();
@@ -134,13 +136,13 @@ public class AudProject implements IDeletable {
 
       song = NoteMaker.Create_Unbound_Triad_Rythm();
       obox = song.Spawn_OffsetBox();
-      obox.OctaveY =(4);// move later
+      obox.OctaveY = (4);// move later
       obox.TimeX += NoteMaker.OffsetTime;
       gbx.Add_SubSong(obox);
 
       song = TestJunkyard.Compose_Ribbon_Chorus();
       obox = song.Spawn_OffsetBox();
-      obox.OctaveY =(1);// move later
+      obox.OctaveY = (1);// move later
       obox.TimeX += NoteMaker.OffsetTime;
       gbx.Add_SubSong(obox);
 

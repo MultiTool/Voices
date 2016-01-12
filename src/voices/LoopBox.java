@@ -27,6 +27,7 @@ public class LoopBox implements ISonglet, IDrawable {
   private OffsetBox ContentOBox = null;
   private CajaDelimitadora MyBounds = new CajaDelimitadora();
   Ghost_OffsetBox ghost = new Ghost_OffsetBox();// oy, this has to be refcounted because it may be used after recursion is done. 
+  private int FreshnessTimeStamp;
   /* ********************************************************************************* */
   public LoopBox() {
     MyBounds = new CajaDelimitadora();
@@ -80,10 +81,14 @@ public class LoopBox implements ISonglet, IDrawable {
   }
   /* ********************************************************************************* */
   @Override public void Update_Guts(MetricsPacket metrics) {
+    if (this.FreshnessTimeStamp >= metrics.FreshnessTimeStamp) {// don't hit the same songlet twice on one update
+      return;
+    }
     this.Set_Project(metrics.MyProject);
     metrics.MaxDuration = 0;
     this.Content.Update_Guts(metrics);
     metrics.MaxDuration = this.MyDuration;
+    this.FreshnessTimeStamp = metrics.FreshnessTimeStamp;
   }
   /* ********************************************************************************* */
   @Override public void Sort_Me() {
@@ -96,6 +101,13 @@ public class LoopBox implements ISonglet, IDrawable {
   /* ********************************************************************************* */
   @Override public void Set_Project(AudProject project) {
     this.MyProject = project;
+  }
+  /* ********************************************************************************* */
+  @Override public int FreshnessTimeStamp_g() {// ISonglet
+    return this.FreshnessTimeStamp;
+  }
+  @Override public void FreshnessTimeStamp_s(int TimeStampNew) {// ISonglet
+    this.FreshnessTimeStamp = TimeStampNew;
   }
   /* ********************************************************************************* */
   public OffsetBox Add_Content(ISonglet songlet) {
@@ -141,11 +153,7 @@ public class LoopBox implements ISonglet, IDrawable {
       LGhost.TimeX = Time;
       LGhost.MyIteration = loopcnt;
       LGhost.MyBounds.Rebase_Time(Time + this.ghost.MyBounds.Min.x);
-      if (loopcnt==0){// #kludgey
-        LGhost.Draw_Me_Zero(ParentDC);
-      }else{
-        LGhost.Draw_Me(ParentDC);
-      }
+      LGhost.Draw_Me(ParentDC);
       loopcnt++;
     }
     LGhost.Delete_Me();
@@ -169,7 +177,7 @@ public class LoopBox implements ISonglet, IDrawable {
     //this.MyBounds.Assign(minx, miny, this.MyDuration, maxy);
   }
   /* ********************************************************************************* */
-  @Override public void GoFishing(HookAndLure Scoop) {// IDrawable
+  @Override public void GoFishing(Grabber Scoop) {// IDrawable
     CajaDelimitadora SearchBounds = Scoop.CurrentContext.SearchBounds;
     if (SearchBounds.Intersects(MyBounds)) {
       double LeftBound = SearchBounds.Min.x - this.ghost.GetBoundingBox().GetWidth();
@@ -196,11 +204,7 @@ public class LoopBox implements ISonglet, IDrawable {
         LGhost.TimeX = Time;
         LGhost.MyBounds.Rebase_Time(MovingLeftBound);
         LGhost.MyIteration = loopcnt;
-        if (loopcnt==0){// #kludgey
-          LGhost.GoFishing_Zero(Scoop);
-        }else{
-          LGhost.GoFishing(Scoop);
-        }
+        LGhost.GoFishing(Scoop);
         loopcnt++;
       }
     }
@@ -456,7 +460,7 @@ public class LoopBox implements ISonglet, IDrawable {
         ChildDC.Delete_Me();
       }
     }
-    public void GoFishing_Zero(HookAndLure Scoop) {// iteration 0 of child song does not use ghost box handle
+    public void GoFishing_Zero(Grabber Scoop) {// iteration 0 of child song does not use ghost box handle
       if (Scoop.CurrentContext.SearchBounds.Intersects(MyBounds)) {
         Scoop.AddBoxToStack(this);
         this.GetContent().GoFishing(Scoop);
@@ -476,25 +480,6 @@ public class LoopBox implements ISonglet, IDrawable {
       }
     }
     /* ********************************************************************************* */
-<<<<<<< HEAD
-=======
-    public void Draw_Me_Zero(Drawing_Context ParentDC) {// IDrawable
-      if (ParentDC.ClipBounds.Intersects(MyBounds)) {// MyBounds keep moving
-        Drawing_Context ChildDC = new Drawing_Context(ParentDC, this);// In C++ ChildDC will be a local variable from the stack, not heap. 
-        // Map the real-time movements to our parent's Delay value 
-        ISonglet songlet = this.GetContent();// skip around the child's personal offset
-        songlet.Draw_Me(ChildDC);
-        ChildDC.Delete_Me();
-      }
-    }
-    public void GoFishing_Zero(HookAndLure Scoop) {// IDrawable
-     if (Scoop.CurrentContext.SearchBounds.Intersects(MyBounds)) {
-       Scoop.AddBoxToStack(this);
-       this.GetContent().GoFishing(Scoop);
-       Scoop.DecrementStack();
-     }
-   }
->>>>>>> fa923080fa89104ca6c4b276611e44f8dec161ac
     @Override public void UpdateBoundingBox() {// IDrawable
       ISonglet Content = this.GetContent();
       Content.UpdateBoundingBox();

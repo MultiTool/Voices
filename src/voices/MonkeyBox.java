@@ -15,9 +15,9 @@ import java.awt.geom.Point2D;
  *
  * @author MultiTool
  * 
-// * MonkeyBox will be a base class for both OffsetBox and Voice Point. 
-// * It is any movable point that can contain other movable points. 
-// * The name is a place holder until something better comes to mind.
+ // * MonkeyBox will be a base class for both OffsetBox and Voice Point. 
+ // * It is any movable point that can contain other movable points. 
+ // * The name is a place holder until something better comes to mind.
  * 
  */
 public class MonkeyBox implements IDrawable.IMoveable, IDeletable {// location box to transpose in pitch, move in time, etc.  //IMonkeyBox, 
@@ -153,7 +153,7 @@ public class MonkeyBox implements IDrawable.IMoveable, IDeletable {// location b
   }
   @Override public void UpdateBoundingBoxLocal() {// IDrawable
   }
-  @Override public void GoFishing(HookAndLure Scoop) {// IDrawable
+  @Override public void GoFishing(Grabber Scoop) {// IDrawable
   }
   @Override public void MoveTo(double XLoc, double YLoc) {// IDrawable.IMoveable
     if (XLoc >= 0) {// don't go backward in time

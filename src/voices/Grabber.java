@@ -12,11 +12,11 @@ import java.util.ArrayList;
 /**
  *
  * @author MultiTool
- *
- * HookAndLure is basically a spatial query which also carries back all the results data.
+
+ Grabber is basically a spatial query which also carries back all the results data.
  *
  */
-public class HookAndLure { // to do: rename this class to Grabber
+public class Grabber { // to do: rename this class to Grabber
   public double XHit, YHit;// exact mouse click point
   //public CajaDelimitadora SearchBounds = new CajaDelimitadora();
   public StackItem CurrentContext = null;
@@ -159,7 +159,6 @@ public class HookAndLure { // to do: rename this class to Grabber
     StackItem si;
     for (int cnt = lastitem; cnt >= 0; cnt--) {
       si = this.Best_Stack.get(cnt);
-      si.OBox.GetContent().UpdateBoundingBoxLocal();// either this
       si.OBox.UpdateBoundingBoxLocal();
     }
   }

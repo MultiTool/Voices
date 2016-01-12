@@ -20,7 +20,7 @@ public interface IDrawable {
   CajaDelimitadora GetBoundingBox();
   void UpdateBoundingBox();
   void UpdateBoundingBoxLocal();
-  void GoFishing(HookAndLure Scoop);
+  void GoFishing(Grabber Scoop);
   public interface IMoveable extends IDrawable {// IMoveable is for things that can be selected, dragged, copied, pasted, deleted etc. through the UI.
     void MoveTo(double XLoc, double YLoc);
     boolean HitsMe(double XLoc, double YLoc);// click detection

@@ -26,6 +26,7 @@ public class Voice implements ISonglet, IDrawable {
   public ArrayList<VoicePoint> CPoints = new ArrayList<>();
   private AudProject MyProject;
   private double MaxAmplitude;
+  private int FreshnessTimeStamp;
   // graphics support
   CajaDelimitadora MyBounds = new CajaDelimitadora();
   /* ********************************************************************************* */
@@ -123,11 +124,15 @@ public class Voice implements ISonglet, IDrawable {
   }
   /* ********************************************************************************* */
   @Override public void Update_Guts(MetricsPacket metrics) {
+    if (this.FreshnessTimeStamp >= metrics.FreshnessTimeStamp) {// don't hit the same songlet twice on one update
+      return;
+    }
     this.Set_Project(metrics.MyProject);
     this.Sort_Me();
     this.Recalc_Line_SubTime();
     this.Update_Max_Amplitude();
     metrics.MaxDuration = this.Get_Duration();
+    this.FreshnessTimeStamp = metrics.FreshnessTimeStamp;
   }
   /* ********************************************************************************* */
   @Override public void Sort_Me() {// sorting by TimeX
@@ -144,6 +149,13 @@ public class Voice implements ISonglet, IDrawable {
   /* ********************************************************************************* */
   @Override public void Set_Project(AudProject project) {
     this.MyProject = project;
+  }
+  /* ********************************************************************************* */
+  @Override public int FreshnessTimeStamp_g() {// ISonglet
+    return this.FreshnessTimeStamp;
+  }
+  @Override public void FreshnessTimeStamp_s(int TimeStampNew) {// ISonglet
+    this.FreshnessTimeStamp = TimeStampNew;
   }
   /* ********************************************************************************* */
   public void Recalc_Line_SubTime() {// ready for test
@@ -225,6 +237,7 @@ public class Voice implements ISonglet, IDrawable {
       YlocHigh = ParentDC.GlobalOffset.UnMapPitch(pnt.OctaveY + LoudnessHgt);
       OutlineX[CntUp] = (int) Xloc;
       OutlineY[CntUp] = (int) YlocLow;
+      //OutlineY[CntUp] = (int) Yloc;// should the loudness envelope just be flat on the bottom, with one control point? 
       OutlineX[CntDown] = (int) Xloc;
       OutlineY[CntDown] = (int) YlocHigh;
       //pgon.lineTo(Xloc, Yloc);
@@ -278,7 +291,7 @@ public class Voice implements ISonglet, IDrawable {
     }
   }
   /* ********************************************************************************* */
-  @Override public void GoFishing(HookAndLure Scoop) {// IDrawable
+  @Override public void GoFishing(Grabber Scoop) {// IDrawable
     System.out.print(" Voice GoFishing: ");
     if (Scoop.CurrentContext.SearchBounds.Intersects(MyBounds)) {
       int len = this.CPoints.size();
@@ -302,106 +315,6 @@ public class Voice implements ISonglet, IDrawable {
       this.CPoints.get(cnt).Delete_Me();
     }
     this.CPoints.clear();
-  }
-  /* ********************************************************************************* */
-  //public static class VoicePoint implements IDrawable.IMoveable, IDeletable {
-  public static class VoicePoint extends MonkeyBox {
-//    public double TimeX = 0.0, OctaveY = 0.0, LoudnessFactor = 1.0;
-    public double SubTime = 0.0;// SubTime is cumulative subjective time.
-
-    // graphics support, will move to separate object
-//    double OctavesPerRadius = 0.02;
-    double OctavesPerLoudness = 0.125;// to do: loudness will have to be mapped to screen. not a pixel value right?
-//    CajaDelimitadora MyBounds = new CajaDelimitadora();
-    
-    /* ********************************************************************************* */
-    public VoicePoint() {
-      this.Create_Me();
-    }
-    /* ********************************************************************************* */
-    public void CopyFrom(VoicePoint source) {
-      super.Copy_From(source);
-//      this.TimeX = source.TimeX;
-//      this.OctaveY = source.OctaveY;
-//      this.LoudnessFactor = source.LoudnessFactor;
-      this.SubTime = source.SubTime;
-    }
-    /* ********************************************************************************* */
-    public double GetFrequencyFactor() {
-      return Math.pow(2.0, this.OctaveY);
-    }
-    /* ********************************************************************************* */
-    @Override public void Draw_Me(Drawing_Context ParentDC) {// IDrawable
-      // Control points have the same space as their parent, so no need to create a local map.
-      Point2D.Double pnt = ParentDC.To_Screen(this.TimeX, this.OctaveY);
-      double RadiusPixels = Math.abs(ParentDC.GlobalOffset.ScaleY) * OctavesPerRadius;
-      RadiusPixels = Math.ceil(RadiusPixels);
-      double DiameterPixels = RadiusPixels * 2.0;
-      // ParentDC.gr.setColor(ToAlpha(Color.green, 200));
-      ParentDC.gr.setColor(Globals.ToAlpha(Color.yellow, 200));// control point just looks like a dot
-      ParentDC.gr.fillOval((int) (pnt.x - RadiusPixels), (int) (pnt.y - RadiusPixels), (int) DiameterPixels, (int) DiameterPixels);
-      ParentDC.gr.setColor(Globals.ToAlpha(Color.darkGray, 200));
-      ParentDC.gr.drawOval((int) (pnt.x - RadiusPixels), (int) (pnt.y - RadiusPixels), (int) DiameterPixels, (int) DiameterPixels);
-    }
-    /* ********************************************************************************* */
-    @Override public CajaDelimitadora GetBoundingBox() {
-      return this.MyBounds;
-    }
-    /* ********************************************************************************* */
-    @Override public void UpdateBoundingBox() {// IDrawable
-      this.UpdateBoundingBoxLocal();// Points have no children, nothing else to do.
-    }
-    @Override public void UpdateBoundingBoxLocal() {// IDrawable
-      double LoudnessHeight = LoudnessFactor * OctavesPerLoudness;// Map loudness to screen pixels.
-      double MinX = TimeX - OctavesPerRadius;
-      double MaxX = TimeX + OctavesPerRadius;
-      double HeightRad = Math.max(OctavesPerRadius, LoudnessHeight);
-      double MinY = OctaveY - HeightRad;
-      double MaxY = OctaveY + HeightRad;
-      this.MyBounds.Assign(MinX, MinY, MaxX, MaxY);
-    }
-    /* ********************************************************************************* */
-    @Override public void GoFishing(HookAndLure Scoop) {// IDrawable
-      System.out.print(" Point GoFishing: ");
-      if (Scoop.CurrentContext.SearchBounds.Intersects(MyBounds)) {
-        System.out.print(" InBounds, ");
-        if (this.HitsMe(Scoop.CurrentContext.Loc.x, Scoop.CurrentContext.Loc.y)) {
-          System.out.print(" Was Hit, ");
-          Scoop.ConsiderLeaf(this);
-        }
-      }
-      System.out.println();
-    }
-    @Override public boolean HitsMe(double XLoc, double YLoc) {// IDrawable.IMoveable
-      System.out.print("** Point HitsMe:");
-      boolean Hit = false;
-      if (this.MyBounds.Contains(XLoc, YLoc)) {
-        System.out.print(" InBounds ");
-        double dist = Math.hypot(XLoc - this.TimeX, YLoc - this.OctaveY);
-        if (dist <= this.OctavesPerRadius) {
-          System.out.print(" Hit!");
-          Hit = true;
-        } else {
-          System.out.print(" Missed!");
-        }
-      } else {
-        System.out.print(" OutBounds ");
-      }
-      return Hit;
-    }
-    @Override public void MoveTo(double XLoc, double YLoc) {// IDrawable.IMoveable
-      if (XLoc >= 0) {// don't go backward in time
-        this.TimeX = XLoc;
-        this.OctaveY = YLoc;
-      }
-    }
-    /* ********************************************************************************* */
-    @Override public boolean Create_Me() {// IDeletable
-      return true;
-    }
-    @Override public void Delete_Me() {// IDeletable
-      this.MyBounds.Delete_Me();
-    }
   }
   /* ********************************************************************************* */
   public static class VoiceOffsetBox extends OffsetBox {// location box to transpose in pitch, move in time, etc. 

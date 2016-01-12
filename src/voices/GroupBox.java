@@ -24,6 +24,7 @@ public class GroupBox implements ISonglet, IDrawable {
   public String MyName;// for debugging
   private double MaxAmplitude = 0.0;
   public CajaDelimitadora MyBounds;
+  private int FreshnessTimeStamp;
   /* ********************************************************************************* */
   public GroupBox() {
     MyBounds = new CajaDelimitadora();
@@ -33,7 +34,7 @@ public class GroupBox implements ISonglet, IDrawable {
     songlet.Set_Project(this.MyProject);// child inherits project from me
     OffsetBox obox = songlet.Spawn_OffsetBox();
     obox.TimeX = (TimeOffset);
-    obox.OctaveY =(OctaveOffset);
+    obox.OctaveY = (OctaveOffset);
     obox.LoudnessFactor = (LoudnessFactor);
     SubSongs.add(obox);
     return obox;
@@ -42,7 +43,7 @@ public class GroupBox implements ISonglet, IDrawable {
   public void Add_SubSong(OffsetBox obox, double TimeOffset, double OctaveOffset, double LoudnessFactor) {// Add a songlet with its offsetbox already created.
     obox.GetContent().Set_Project(this.MyProject);// child inherits project from me
     obox.TimeX = (TimeOffset);
-    obox.OctaveY =(OctaveOffset);
+    obox.OctaveY = (OctaveOffset);
     obox.LoudnessFactor = (LoudnessFactor);
     SubSongs.add(obox);
   }
@@ -89,6 +90,9 @@ public class GroupBox implements ISonglet, IDrawable {
   }
   /* ********************************************************************************* */
   @Override public void Update_Guts(MetricsPacket metrics) {
+    if (this.FreshnessTimeStamp >= metrics.FreshnessTimeStamp) {// don't hit the same songlet twice on one update
+      return;
+    }
     this.Set_Project(metrics.MyProject);
     this.Sort_Me(); // to do: also recursively update all children guts without running update_durations more than once for each
     this.Update_Max_Amplitude();
@@ -107,6 +111,7 @@ public class GroupBox implements ISonglet, IDrawable {
     }
     this.Duration = MyMaxDuration;
     metrics.MaxDuration = MyMaxDuration;
+    this.FreshnessTimeStamp = metrics.FreshnessTimeStamp;
   }
   /* ********************************************************************************* */
   @Override public void Sort_Me() {// sorting by RealTime
@@ -162,6 +167,13 @@ public class GroupBox implements ISonglet, IDrawable {
   /* ********************************************************************************* */
   @Override public void Set_Project(AudProject project) {
     this.MyProject = project;
+  }
+  /* ********************************************************************************* */
+  @Override public int FreshnessTimeStamp_g() {// ISonglet
+    return this.FreshnessTimeStamp;
+  }
+  @Override public void FreshnessTimeStamp_s(int TimeStampNew) {// ISonglet
+    this.FreshnessTimeStamp = TimeStampNew;
   }
   /* ********************************************************************************* */
   @Override public void Draw_Me(Drawing_Context ParentDC) {// IDrawable
@@ -234,7 +246,7 @@ public class GroupBox implements ISonglet, IDrawable {
     }
   }
   /* ********************************************************************************* */
-  @Override public void GoFishing(HookAndLure Scoop) {// IDrawable
+  @Override public void GoFishing(Grabber Scoop) {// IDrawable
     if (Scoop.CurrentContext.SearchBounds.Intersects(MyBounds)) {// current search bounds are in parent coords
       int len = this.SubSongs.size();
       OffsetBox child;
