@@ -226,5 +226,16 @@ public class GraphicBox implements IDrawable, ISonglet, IDeletable {//
       child.Content = this.Content;
       return child;
     }
+    /* ********************************************************************************* */
+    public void Zoom(double XCtr, double YCtr, double Scale) {
+      double XMov = XCtr - (Scale * XCtr);
+      double YMov = YCtr - (Scale * YCtr);
+
+      this.TimeX = XMov + (Scale * this.TimeX);
+      this.OctaveY = YMov + (Scale * this.OctaveY);
+
+      this.ScaleX *= Scale;
+      this.ScaleY *= Scale;
+    }
   }
 }

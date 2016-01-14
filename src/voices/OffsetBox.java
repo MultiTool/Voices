@@ -52,17 +52,6 @@ public class OffsetBox extends MonkeyBox { //implements IDrawable.IMoveable, IDe
     return this.GetContent().Get_Max_Amplitude() * this.LoudnessFactor;
   }
   /* ********************************************************************************* */
-  public void Zoom(double XCtr, double YCtr, double Scale) {// Maybe move this to GraphicBox
-    double XMov = XCtr - (Scale * XCtr);
-    double YMov = YCtr - (Scale * YCtr);
-
-    this.TimeX = XMov + (Scale * this.TimeX);
-    this.OctaveY = YMov + (Scale * this.OctaveY);
-
-    this.ScaleX *= Scale;
-    this.ScaleY *= Scale;
-  }
-  /* ********************************************************************************* */
   @Override public void Rebase_Time(double Time) {
     this.TimeX = Time;
     double RelativeMinBound = this.MyBounds.Min.x;// preserve the relative relationship of my bounds and my origin.

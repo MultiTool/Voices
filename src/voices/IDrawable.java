@@ -25,19 +25,7 @@ public interface IDrawable {
     void MoveTo(double XLoc, double YLoc);
     boolean HitsMe(double XLoc, double YLoc);// click detection
   }
-  /*
-   boolean IsHittable();  ?
-   boolean IsHittable();
-   types of selection:
-   one where you select a drop destination - these are always containers and/or containers' line segments I think.
-   one where you simply select a songlet to copy/delete/move (connectivity changes)
-   . can also delete and insert voice cpoints
-   one where you select a point to drag - can be anyone's offsetbox, or a voice control point (no connectivity changes)
-  
-   lowest-hanging fruit is NoReTopo, select points to drag them. Just burrow in to tree with a point and bounds box and dig up the winner hit. 
-  
-   */
-  // Every IDrawable will have a bounding box, and every Drawing_Context will also have a bounding box for clipping. 
+  // Every IDrawable has a bounding box, and every Drawing_Context also has a bounding box for clipping. 
   // Drawing will always be called from the top, and the bounding box will define what to draw. 
   /* ********************************************************************************* */
   public final class Drawing_Context implements IDeletable {// Let's be final until we can't anymore

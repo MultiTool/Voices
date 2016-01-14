@@ -450,38 +450,74 @@ add loudness handles to point
     public double TimeX = 0.0, OctaveY = 0.0, SubTime = 0.0;// SubTime is cumulative subjective time.
     public double LoudnessFactor = 1.0;
 
-Audio, Thread_Sounder,
-CajaDelimitadora,
-Globals,
-GoLive,
-GraphicBox, Graphic_OffsetBox,
-GroupBox, Group_Singer, Group_OffsetBox,
-HookAndLure, StackItem,
-IDeletable,
-IDrawable, IMoveable, Drawing_Context,
-ISonglet, Singer, MetricsPacket,
-LoopBox, Loop_Singer, Loop_OffsetBox, Ghost_OffsetBox,
-MainGui, Act, DrawingPanel,
-MonkeyBox,
-NoteMaker, Note, Indexes,
-OffsetBox,
-Project,
-TestJunkyard, GetterSetterTest, GetSet<T>, GetSetDouble, ISoup, Onions,
-Voice, Point, VoiceOffsetBox, Voice_Singer,
-Voices,
-Wave,
-
-
 Amputated from OffsetBox:
-  /* ********************************************************************************* */
-  private void CombineTransform1D(double FirstScale, double FirstOffset, double SecondScale, double SecondOffset) {// note to self
-    SecondOffset += (SecondScale * FirstOffset);
-    SecondScale *= FirstScale;
-  }
-  /* ********************************************************************************* */
-  private double ShrinkTransform1D(double FirstOffset, double SecondScale, double SecondOffset) {// note to self
-    SecondOffset += (SecondScale * FirstOffset);
-    return SecondOffset;
-  }
+/* ********************************************************************************* */
+private void CombineTransform1D(double FirstScale, double FirstOffset, double SecondScale, double SecondOffset) {// note to self
+SecondOffset += (SecondScale * FirstOffset);
+SecondScale *= FirstScale;
+}
+/* ********************************************************************************* */
+private double ShrinkTransform1D(double FirstOffset, double SecondScale, double SecondOffset) {// note to self
+SecondOffset += (SecondScale * FirstOffset);
+return SecondOffset;
+}
 
+types of selection:
+one where you select a drop destination - these are always containers and/or containers' line segments I think.
+one where you simply select a songlet to copy/delete/move (connectivity changes)
+. can also delete and insert voice cpoints
+one where you select a point to drag - can be anyone's offsetbox, or a voice control point (no connectivity changes)
+
+lowest-hanging fruit is NoReTopo, select points to drag them. Just burrow in to tree with a point and bounds box and dig up the winner hit. 
+
+Dependency order, more or less:
+********************************
+* Globals, 
+   * 
+* IDeletable, 
+   * 
+* Wave, 
+   * IDeletable, 
+* CajaDelimitadora, 
+   * IDeletable, OffsetBox, 
+* IDrawable, IMoveable, Drawing_Context, 
+   * CajaDelimitadora, Grabber, IDeletable, OffsetBox, 
+
+* ISonglet, Singer, MetricsPacket, 
+   * AudProject, IDeletable, IDrawable, OffsetBox, Wave, 
+* Audio, Thread_Sounder, 
+   * IDeletable, ISonglet, Singer, OffsetBox, Wave, 
+
+* GoLive, 
+   * Audio, AudProject, Globals, IDeletable, ISonglet, Singer, Wave, 
+* Grabber, StackItem,                        ****************************** problem ****************************** 
+   * CajaDelimitadora, IDeletable, IDrawable, IMoveable, OffsetBox, Voice, VoicePoint, 
+   
+* MonkeyBox, 
+   * CajaDelimitadora, Globals, Grabber, IDeletable, IDrawable, IMoveable, Drawing_Context, ISonglet, OffsetBox, Voice, 
+* OffsetBox,                         ****************************** problem ****************************** 
+   * Audio, CajaDelimitadora, Globals, Grabber, IDeletable, IDrawable, IMoveable, Drawing_Context, ISonglet, Singer, MonkeyBox, 
+* VoicePoint, LoudnessHandle, 
+   * CajaDelimitadora, Globals, Grabber, IDeletable, IDrawable, IMoveable, Drawing_Context, MonkeyBox, Voice, 
+
+* GroupBox, Group_Singer, Group_OffsetBox, 
+   * AudProject, CajaDelimitadora, Grabber, IDeletable, IDrawable, Drawing_Context, ISonglet, Singer, MetricsPacket, OffsetBox, Wave, 
+* GraphicBox, Graphic_OffsetBox, 
+   * AudProject, CajaDelimitadora, Globals, Grabber, IDeletable, IDrawable, IMoveable, Drawing_Context, ISonglet, Singer, MetricsPacket, OffsetBox, 
+
+* LoopBox, Loop_Singer, Loop_OffsetBox, Ghost_OffsetBox, 
+   * AudProject, CajaDelimitadora, Globals, Grabber, IDeletable, IDrawable, IMoveable, Drawing_Context, ISonglet, Singer, MetricsPacket, OffsetBox, Wave, 
+* Voice, VoiceOffsetBox, Voice_Singer, 
+   * AudProject, CajaDelimitadora, Globals, Grabber, IDeletable, IDrawable, Drawing_Context, ISonglet, Singer, MetricsPacket, Note, OffsetBox, VoicePoint, Wave, 
+   
+* NoteMaker, Note, Indexes, 
+   * GroupBox, ISonglet, LoopBox, OffsetBox, Voice, 
+* TestJunkyard, GetterSetterTest, GetSet<T>, GetSetDouble, ISoup, Onions, 
+   * Globals, GroupBox, ISonglet, LoopBox, NoteMaker, Note, OffsetBox, Voice, 
+* MainGui, Act, DrawingPanel, 
+   * Audio, AudProject, GoLive, Grabber, GraphicBox, Graphic_OffsetBox, IDrawable, Drawing_Context, OffsetBox, 
+* Voices, 
+   * AudProject, Globals, MainGui, Voice, Wave, 
+* AudProject, 
+   * Audio, Globals, GraphicBox, Graphic_OffsetBox, GroupBox, IDeletable, IDrawable, Drawing_Context, ISonglet, Singer, MetricsPacket, LoopBox, NoteMaker, Note, OffsetBox, TestJunkyard, Voice, Voices, Wave, 
 
