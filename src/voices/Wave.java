@@ -195,6 +195,49 @@ public class Wave implements IDeletable {
       boolean nop = true;// range check
     }
   }
+  /* ******************************************************************* */
+  public double GetResample(double TimeSeconds) { // linear interpolation between points. FlexDex is fractional index is in seconds, not samples
+    TimeSeconds *= this.SampleRate;
+    int Dex0 = (int) Math.floor(TimeSeconds);
+    int Dex1 = Dex0 + 1;
+    double amp0 = this.wave[Dex0];
+    double amp1 = this.wave[Dex1];
+    double FullAmpDelta = amp1 - amp0;
+    double Fraction = (TimeSeconds - Dex0);// always in the range of 0<=Fraction<1 
+    return amp0 + (Fraction * FullAmpDelta);
+  }
+  /* ******************************************************************* */
+  public double GetResampleLooped(double TimeSeconds) { // linear interpolation between points. FlexDex is fractional index is in seconds, not samples
+    double SampleDex = TimeSeconds * this.SampleRate;
+    if (SampleDex > this.NumSamples) {
+      boolean nop = true;
+    }
+    double SampleDexFlat = Math.floor(SampleDex);
+    int Dex0 = ((int) SampleDexFlat) % this.NumSamples;
+    int Dex1 = (Dex0 + 1) % this.NumSamples;
+    double amp0 = this.wave[Dex0];
+    double amp1 = this.wave[Dex1];
+    double FullAmpDelta = amp1 - amp0;
+    double Fraction = (SampleDex - SampleDexFlat);// always in the range of 0<=Fraction<1 
+    return amp0 + (Fraction * FullAmpDelta);
+  }
+  /* ******************************************************************* */
+  public double GetResample(Wave wave, double FlexDex) {// throw this away
+    // linear interpolation between points. FlexDex fractional index is in SAMPLES, not seconds
+    int Dex0 = (int) Math.floor(FlexDex);
+    int Dex1 = Dex0 + 1;
+    double amp0 = wave.Get(Dex0);
+    double amp1 = wave.Get(Dex1);
+    double FullAmpDelta = amp1 - amp0;
+
+    double Fraction0 = Dex1 - FlexDex;
+    double Fraction1 = FlexDex - Dex0;
+
+    double InterpAmp;
+    InterpAmp = amp0 + (Fraction1 * FullAmpDelta);
+    InterpAmp = (Fraction0 * amp0) + (Fraction1 * amp1);
+    return InterpAmp;
+  }
   /* ********************************************************************************* */
   public double[] GetWave() {// just for testing. remove later
     return this.wave;

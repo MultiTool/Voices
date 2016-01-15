@@ -7,12 +7,14 @@ package voices;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.net.URL;
 import javax.sound.sampled.AudioFileFormat;
 import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.DataLine;
 import javax.sound.sampled.SourceDataLine;
+import javax.sound.sampled.*;
 //import sun.audio.ContinuousAudioDataStream;
 
 /**
@@ -191,6 +193,97 @@ public class Audio implements IDeletable {
     wave_render.Normalize();
     wave_render.Amplify(0.99);
     this.Save(filename, wave_render.GetWave());
+  }
+  /* ********************************************************************************* */
+  /**
+   * Read audio samples from a file (in .wav or .au format) and return them as a double array
+   * with values between -1.0 and +1.0.
+   */
+  public static void Read(String filename, Wave wave) {
+    //byte[] data = ReadBytes(filename);
+    byte[] data = null;
+    float FrameRate = -1;
+    AudioInputStream ais = null;
+    try {
+      //URL url = Audio.class.getResource(filename);
+      File file = new File(filename);
+      ais = AudioSystem.getAudioInputStream(file);
+
+      AudioFormat fmt = ais.getFormat();
+      FrameRate = fmt.getFrameRate();
+
+      data = new byte[ais.available()];
+      ais.read(data);
+    } catch (Exception e) {
+      System.out.println(e.getMessage());
+      throw new RuntimeException("Could not read " + filename);
+    }
+    int NumBytes = data.length;
+    int NumSamples = NumBytes / 2;
+    wave.Init(NumSamples);
+    wave.SampleRate = (int) FrameRate;
+
+    double val;
+    for (int scnt = 0; scnt < NumSamples; scnt++) {
+      val = ((short) (((data[2 * scnt + 1] & 0xFF) << 8) + (data[2 * scnt] & 0xFF))) / ((double) Short.MAX_VALUE);
+      wave.Set(val);
+    }
+  }
+  /* ********************************************************************************* */
+  private static byte[] ReadBytes(String filename) {// return data as a byte array
+    byte[] data = null;
+    AudioInputStream ais = null;
+    try {
+      URL url = Audio.class.getResource(filename);
+      ais = AudioSystem.getAudioInputStream(url);
+
+      AudioFormat fmt = ais.getFormat();
+      float FrameRate = fmt.getFrameRate();
+
+      data = new byte[ais.available()];
+      ais.read(data);
+    } catch (Exception e) {
+      System.out.println(e.getMessage());
+      throw new RuntimeException("Could not read " + filename);
+    }
+    return data;
+  }
+  /* ********************************************************************************* */
+  public static void Load(String filename, Wave wave) {
+    // wave.GetWave() = Audio.Read(filename);
+    int totalFramesRead = 0;// http://stackoverflow.com/questions/3297749/java-reading-manipulating-and-writing-wav-files
+    File fileIn = new File(filename);// filename is a pre-existing string whose value was based on a user selection.
+    try {
+      AudioInputStream audioInputStream = AudioSystem.getAudioInputStream(fileIn);
+      AudioFormat fmt = audioInputStream.getFormat();
+      int bytesPerFrame = fmt.getFrameSize();
+      if (bytesPerFrame == AudioSystem.NOT_SPECIFIED) {
+        // some audio formats may have unspecified frame size
+        // in that case we may Read any amount of bytes
+        bytesPerFrame = 1;
+      }
+      // Set an arbitrary buffer size of 1024 frames.
+      int numBytes = 1024 * bytesPerFrame;
+      byte[] audioBytes = new byte[numBytes];
+      try {
+        int numBytesRead = 0;
+        int numFramesRead = 0;
+        // Try to Read numBytes bytes from the file.
+        while ((numBytesRead = audioInputStream.read(audioBytes)) != -1) {
+          // Calculate the number of frames actually Read.
+          numFramesRead = numBytesRead / bytesPerFrame;
+          totalFramesRead += numFramesRead;
+          // Here, do something useful with the audio data that's 
+          // now in the audioBytes array...
+        }
+      } catch (Exception ex) {
+        // Handle the error...
+        System.out.println("nop");
+      }
+    } catch (Exception e) {
+      // Handle the error...
+      System.out.println("nop");
+    }
   }
   /* ********************************************************************************* */
   /**

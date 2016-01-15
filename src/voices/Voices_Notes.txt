@@ -521,3 +521,40 @@ Dependency order, more or less:
 * AudProject, 
    * Audio, Globals, GraphicBox, Graphic_OffsetBox, GroupBox, IDeletable, IDrawable, Drawing_Context, ISonglet, Singer, MetricsPacket, LoopBox, NoteMaker, Note, OffsetBox, TestJunkyard, Voice, Voices, Wave, 
 
+next:
+swipe & play region
+read in samples
+
+  /* ******************************************************************* */
+  double GetResample(fftw_complex ComplexWave[], double FlexDex) {
+    // linear interpolation between points. FlexDex fractional index is in SAMPLES, not seconds
+    int Dex0 = (int)floor(FlexDex);
+    int Dex1 = Dex0 + 1;
+    double amp0 = ComplexWave[Dex0][0];
+    double amp1 = ComplexWave[Dex1][0];
+    double FullAmpDelta = amp1 - amp0;
+
+    double Fraction0 = Dex1 - FlexDex;
+    double Fraction1 = FlexDex - Dex0;
+
+    double InterpAmp = (Fraction0 * amp0) + (Fraction1 * amp1);
+    return InterpAmp;
+  }
+  /* ******************************************************************* */
+  double GetResample(double *Wave, double FlexDex) {
+    // linear interpolation between points. FlexDex fractional index is in SAMPLES, not seconds
+    int Dex0 = (int)floor(FlexDex);
+    int Dex1 = Dex0 + 1;
+    double amp0 = Wave[Dex0];
+    double amp1 = Wave[Dex1];
+    double FullAmpDelta = amp1 - amp0;
+
+    double Fraction0 = Dex1 - FlexDex;
+    double Fraction1 = FlexDex - Dex0;
+
+    double InterpAmp = (Fraction0 * amp0) + (Fraction1 * amp1);
+    return InterpAmp;
+  }
+
+x
+

@@ -88,6 +88,6 @@ public interface ISonglet extends IDrawable, IDeletable {// Cancionita
   public static class MetricsPacket {
     public double MaxDuration = 0.0;
     public AudProject MyProject = null;
-    public int FreshnessTimeStamp = 0;
+    public int FreshnessTimeStamp = 1;
   }
 }

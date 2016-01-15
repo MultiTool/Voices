@@ -100,6 +100,24 @@ public class TestJunkyard {
     }
   }
   /* ********************************************************************************* */
+  public static Voice Create_SampleVoice_Ribbon(double TimeOffset, double OctaveOffset, double LoudnessOffset) {
+    SampleVoice voice = new SampleVoice();// for fuzz testing
+    Wave wav = new Wave();
+    String fname = "ahh_looped.wav";// put any droney looped wav file here
+    Audio.Read(fname, wav);
+    double BaseFrequency = 2;
+    voice.AttachWaveSample(wav, BaseFrequency);
+    double TDiff;
+    double TimeScale = 0.125;
+    double TimeCnt = 0;
+    for (int cnt = 0; cnt < 20; cnt++) {
+      TDiff = TimeScale;
+      voice.Add_Note(NoteMaker.OffsetTime + TimeCnt, OctaveOffset, LoudnessOffset);
+      TimeCnt += TDiff;
+    }
+    return voice;
+  }
+  /* ********************************************************************************* */
   public static Voice Create_Voice_Ribbon(double TimeOffset, double OctaveOffset, double LoudnessOffset) {
     Voice voice = new Voice();// for fuzz testing
     double TDiff;
@@ -235,7 +253,7 @@ public class TestJunkyard {
     GroupBox gbx = new GroupBox();
     // OffsetBox obox = gbx.Spawn_OffsetBox();
 
-    Voice vc0 = Create_Voice_Ribbon(0, 0, 1);
+    Voice vc0 = Create_SampleVoice_Ribbon(0, 0, 1);
     gbx.Add_SubSong(vc0, NoteMaker.OffsetTime, 0, 0.2);
 
     Voice vc1 = Create_Voice_Ribbon(0, 0, 1);

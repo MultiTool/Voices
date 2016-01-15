@@ -1,21 +1,10 @@
-/*
- *
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package voices;
 
-import java.awt.BasicStroke;
 import java.awt.Color;
-import java.awt.Graphics2D;
-import java.awt.Stroke;
 import java.awt.geom.Path2D;
-import java.awt.geom.Point2D;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-//import javafx.geometry.BoundingBox;
-//import voices.VoiceBase.Point;
 
 /**
  *
@@ -27,6 +16,7 @@ public class Voice implements ISonglet, IDrawable {
   private AudProject MyProject;
   private double MaxAmplitude;
   private int FreshnessTimeStamp;
+  protected double BaseFreq = Globals.BaseFreqC0;
   // graphics support
   CajaDelimitadora MyBounds = new CajaDelimitadora();
   /* ********************************************************************************* */
@@ -198,6 +188,10 @@ public class Voice implements ISonglet, IDrawable {
     return SubTimeCalc;
   }
   /* ********************************************************************************* */
+  public double GetWaveForm(double SubTimeAbsolute) {
+    return Math.sin(SubTimeAbsolute * this.BaseFreq * Globals.TwoPi);
+  }
+  /* ********************************************************************************* */
   @Override public void Draw_Me(Drawing_Context ParentDC) {// IDrawable
     CajaDelimitadora ChildrenBounds = ParentDC.ClipBounds;// parent is already transformed by my offsetbox
     VoicePoint pnt;
@@ -356,9 +350,9 @@ public class Voice implements ISonglet, IDrawable {
     int Prev_Point_Dex, Next_Point_Dex;
     int Render_Sample_Count;
     VoicePoint Cursor_Point = new VoicePoint();
-    private int Bone_Sample_Mark = 0;
+    protected int Bone_Sample_Mark = 0;
     /* ********************************************************************************* */
-    private Voice_Singer() {
+    protected Voice_Singer() {
       this.Create_Me();
       this.ParentSinger = null;
     }
@@ -532,7 +526,7 @@ public class Voice implements ISonglet, IDrawable {
     }
     /* ********************************************************************************* */
     public void Render_Segment_Iterative(VoicePoint pnt0, VoicePoint pnt1, Wave wave) {// stateful iterative approach
-      double BaseFreq = Globals.BaseFreqC0;
+      double BaseFreq = this.MyPhrase.BaseFreq;
       double SRate = this.MyProject.SampleRate;
       double TimeRange = pnt1.TimeX - pnt0.TimeX;
       double SampleDuration = 1.0 / SRate;
@@ -570,7 +564,7 @@ public class Voice implements ISonglet, IDrawable {
     }
     /* ********************************************************************************* */
     public void Render_Segment_Integral(VoicePoint pnt0, VoicePoint pnt1, Wave wave) {// stateless calculus integral approach
-      double BaseFreq = Globals.BaseFreqC0;
+      //double BaseFreq = Globals.BaseFreqC0;
       double SRate = this.MyProject.SampleRate;
       double TimeRange = pnt1.TimeX - pnt0.TimeX;
       double FrequencyFactorStart = pnt0.GetFrequencyFactor();
@@ -596,7 +590,7 @@ public class Voice implements ISonglet, IDrawable {
         CurrentLoudness = pnt0.LoudnessFactor + (TimeAlong * LoudnessRate);
         SubTimeLocal = Integral(OctaveRate, TimeAlong);
         SubTimeAbsolute = (pnt0.SubTime + (FrequencyFactorStart * SubTimeLocal)) * FrequencyFactorInherited;
-        Amplitude = Math.sin(SubTimeAbsolute * BaseFreq * Globals.TwoPi);
+        Amplitude = this.MyPhrase.GetWaveForm(SubTimeAbsolute);
         wave.Set(this.Render_Sample_Count, Amplitude * CurrentLoudness);
         this.Render_Sample_Count++;
       }

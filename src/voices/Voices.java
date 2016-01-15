@@ -22,6 +22,10 @@ public class Voices {
    */
   /* ********************************************************************************* */
   public static void main(String[] args) {
+    if (false) {
+      String fname = "ahh_looped.wav";
+      Audio.Load(fname, null);
+    }
     MainGui mg = new MainGui();
     mg.Init();
     if (false) {

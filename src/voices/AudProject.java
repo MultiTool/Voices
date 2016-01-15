@@ -22,7 +22,7 @@ public class AudProject implements IDeletable {
   public Graphic_OffsetBox GraphicRoot;
   GraphicBox GBox;
   public int SampleRate = Globals.SampleRate;
-  public int UpdateCounter = 0;
+  public int UpdateCounter = 1;
   /* ********************************************************************************* */
   public AudProject() {
     this.GBox = new GraphicBox();
