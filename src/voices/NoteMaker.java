@@ -58,7 +58,7 @@ public class NoteMaker {
     return song;
   }
   /* ********************************************************************************* */
-  public static Voice Create_Simple_Note(double TimeOffset, double Duration, double OctaveOffset, double LoudnessOffset) {
+  public static Voice Create_Bent_Note(double TimeOffset, double Duration, double OctaveOffset, double LoudnessOffset) {
     Voice voice = new Voice();
     double midfrac0 = 0.03, midfrac1 = 0.5;
     voice.Add_Note(TimeOffset + 0, OctaveOffset + 0, LoudnessOffset * 0);
@@ -67,6 +67,34 @@ public class NoteMaker {
     voice.Add_Note(TimeOffset + Duration, OctaveOffset + 0.0, LoudnessOffset * 0.0);
     //voice.Add_Note(TimeOffset + Duration, OctaveOffset + 0.1, LoudnessOffset * 0);
     return voice;
+  }
+  /* ********************************************************************************* */
+  public static Voice Create_Tapered_Note(double TimeOffset, double Duration, double OctaveOffset, double LoudnessOffset, int numsteps) {
+    double AttackTime = 0.01;
+    Duration -= AttackTime;
+    Voice voice = new Voice();
+    double midfrac;
+    voice.Add_Note(TimeOffset, OctaveOffset, 0);
+    for (int cnt = 0; cnt <= numsteps; cnt++) {
+      midfrac = ((double) cnt) / (double) numsteps;
+      voice.Add_Note(TimeOffset + AttackTime + (Duration * midfrac), OctaveOffset, LoudnessOffset * (1.0 - midfrac));
+    }
+    return voice;
+  }
+  /* ********************************************************************************* */
+  public static GroupBox Create_Note_Chain(int TotalNotes, double TimeStep) {
+    double Loudness = 1.0;
+    //double TimeStep = 1.0;
+    double Duration = TimeStep;
+    double Octave = 0, OctaveOffset = 0;
+    int NoteBreaks = 3;
+    ISonglet note;
+    GroupBox gbx = new GroupBox();
+    for (int cnt = 0; cnt < TotalNotes; cnt++) {
+      note = Create_Tapered_Note(NoteMaker.OffsetTime, Duration, Octave, Loudness, NoteBreaks);
+      gbx.Add_SubSong(note, (TimeStep * (double) cnt) + NoteMaker.OffsetTime, OctaveOffset, Loudness);
+    }
+    return gbx;
   }
   /* ********************************************************************************* */
   public GroupBox Create_Triad(ISonglet s0, ISonglet s1, ISonglet s2) {
@@ -85,12 +113,12 @@ public class NoteMaker {
     double Duration = 2.0;
     ISonglet note;
     GroupBox gbx = new GroupBox();
-    note = Create_Simple_Note(0 + NoteMaker.OffsetTime, Duration, 0, Loudness);
+    note = Create_Bent_Note(0 + NoteMaker.OffsetTime, Duration, 0, Loudness);
     gbx.Add_SubSong(note, 0 + NoteMaker.OffsetTime, SemitoneFraction * NoteDex0, Loudness);
     if (true) {
-      note = Create_Simple_Note(0 + NoteMaker.OffsetTime, Duration, 0, Loudness);
+      note = Create_Bent_Note(0 + NoteMaker.OffsetTime, Duration, 0, Loudness);
       gbx.Add_SubSong(note, 0 + NoteMaker.OffsetTime, SemitoneFraction * NoteDex1, Loudness);
-      note = Create_Simple_Note(0 + NoteMaker.OffsetTime, Duration, 0, Loudness);
+      note = Create_Bent_Note(0 + NoteMaker.OffsetTime, Duration, 0, Loudness);
       gbx.Add_SubSong(note, 0 + NoteMaker.OffsetTime, SemitoneFraction * NoteDex2, Loudness);
     }
     return gbx;
@@ -103,7 +131,7 @@ public class NoteMaker {
     OffsetBox obox;
     GroupBox grpbx = new GroupBox();
 
-    note = Create_Simple_Note(0, Duration, 0, Loudness);
+    note = Create_Bent_Note(0, Duration, 0, Loudness);
 
     obox = note.Spawn_OffsetBox();
     grpbx.Add_SubSong(obox, 0, 0, Loudness);// key note, needs no offset
@@ -124,7 +152,7 @@ public class NoteMaker {
     double Duration = 2.0;
     ISonglet note;
     GroupBox cbx = Create_Triad(NoteDex0, NoteDex1, NoteDex2);
-    note = Create_Simple_Note(0, Duration, 0, Loudness);
+    note = Create_Bent_Note(0, Duration, 0, Loudness);
     cbx.Add_SubSong(note, 0, SemitoneFraction * NoteDex3, Loudness);
     return cbx;
   }

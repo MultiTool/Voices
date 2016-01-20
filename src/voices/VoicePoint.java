@@ -106,6 +106,8 @@ public class VoicePoint extends MonkeyBox {
       this.OctaveY = YLoc;
     }
   }
+  @Override public void SetSelected(boolean Selected) {// IDrawable.IMoveable
+  }
   /* ********************************************************************************* */
   @Override public boolean Create_Me() {// IDeletable
     return true;
@@ -131,7 +133,7 @@ public class VoicePoint extends MonkeyBox {
       double LoudnessHeight = this.Parent.LoudnessFactor * this.Parent.OctavesPerLoudness;// Map loudness to screen pixels.
       return this.Parent.OctaveY + LoudnessHeight;
     }
-    @Override public void MoveTo(double XLoc, double YLoc) {
+    @Override public void MoveTo(double XLoc, double YLoc) {// IDrawable.IMoveable
       if (XLoc >= 0) {// don't go backward in time
         this.Parent.TimeX = XLoc;
         double RelativeY = YLoc - this.Parent.OctaveY;
@@ -159,6 +161,8 @@ public class VoicePoint extends MonkeyBox {
         System.out.print(" OutBounds ");
       }
       return Hit;
+    }
+    @Override public void SetSelected(boolean Selected) {// IDrawable.IMoveable
     }
     @Override public void Draw_Me(Drawing_Context ParentDC) {
       // Control points have the same space as their parent, so no need to create a local map.

@@ -13,7 +13,7 @@ import java.util.Comparator;
 public class Voice implements ISonglet, IDrawable {
   // collection of control points, each one having a pitch and a volume. rendering morphs from one cp to another. 
   public ArrayList<VoicePoint> CPoints = new ArrayList<>();
-  private AudProject MyProject;
+  protected AudProject MyProject;
   private double MaxAmplitude;
   private int FreshnessTimeStamp;
   protected double BaseFreq = Globals.BaseFreqC0;
@@ -39,11 +39,12 @@ public class Voice implements ISonglet, IDrawable {
   }
   /* ********************************************************************************* */
   public Voice_Singer Spawn_My_Singer() {// for render time
-    // Deliver one of my players while exposing specific object class. 
-    // Handy if my parent's players know what class I am and want special access to my particular type of player.
+    // Deliver one of my singers while exposing specific object class. 
+    // Handy if my parent's singers know what class I am and want special access to my particular type of singer.
     Voice_Singer ph = new Voice_Singer();
-    ph.MyPhrase = this;
+    ph.MyVoice = this;
     ph.MyProject = this.MyProject;// inherit project
+    ph.BaseFreq = this.BaseFreq;
     return ph;
   }
   /* ********************************************************************************* */
@@ -188,9 +189,9 @@ public class Voice implements ISonglet, IDrawable {
     return SubTimeCalc;
   }
   /* ********************************************************************************* */
-  public double GetWaveForm(double SubTimeAbsolute) {
-    return Math.sin(SubTimeAbsolute * this.BaseFreq * Globals.TwoPi);
-  }
+//  public double GetWaveForm(double SubTimeAbsolute) {
+//    return Math.sin(SubTimeAbsolute * this.BaseFreq * Globals.TwoPi);
+//  }
   /* ********************************************************************************* */
   @Override public void Draw_Me(Drawing_Context ParentDC) {// IDrawable
     CajaDelimitadora ChildrenBounds = ParentDC.ClipBounds;// parent is already transformed by my offsetbox
@@ -343,7 +344,7 @@ public class Voice implements ISonglet, IDrawable {
   }
   /* ********************************************************************************* */
   public static class Voice_Singer extends Singer {
-    protected Voice MyPhrase;
+    protected Voice MyVoice;
     double Phase, Cycles;// Cycles is the number of cycles we've rotated since the start of this voice. The fractional part is the phase information. 
     double SubTime;// Subjective time.
     double Current_Octave, Current_Frequency;
@@ -351,6 +352,7 @@ public class Voice implements ISonglet, IDrawable {
     int Render_Sample_Count;
     VoicePoint Cursor_Point = new VoicePoint();
     protected int Bone_Sample_Mark = 0;
+    double BaseFreq;
     /* ********************************************************************************* */
     protected Voice_Singer() {
       this.Create_Me();
@@ -366,12 +368,12 @@ public class Voice implements ISonglet, IDrawable {
       this.Render_Sample_Count = 0;
       this.Bone_Sample_Mark = 0;
       this.IsFinished = false;
-      if (this.MyPhrase.CPoints.size() > 0) {
-        VoicePoint pnt = this.MyPhrase.CPoints.get(0);
+      if (this.MyVoice.CPoints.size() > 0) {
+        VoicePoint pnt = this.MyVoice.CPoints.get(0);
         this.Bone_Sample_Mark = (int) (pnt.TimeX * this.MyProject.SampleRate);
       }
       //if (this.Parent != null) {
-      VoicePoint ppnt = this.MyPhrase.CPoints.get(this.Prev_Point_Dex);
+      VoicePoint ppnt = this.MyVoice.CPoints.get(this.Prev_Point_Dex);
       this.Cursor_Point.CopyFrom(ppnt);
       //}
     }
@@ -381,7 +383,7 @@ public class Voice implements ISonglet, IDrawable {
       VoicePoint Next_Point;
       EndTime = this.MyOffsetBox.MapTime(EndTime);// EndTime is now time internal to voice's own coordinate system
       this.Render_Sample_Count = 0;
-      int NumPoints = this.MyPhrase.CPoints.size();
+      int NumPoints = this.MyVoice.CPoints.size();
       if (NumPoints < 2) {// this should really just throw an error
         this.IsFinished = true;
         return;
@@ -389,11 +391,11 @@ public class Voice implements ISonglet, IDrawable {
       EndTime = this.ClipTime(EndTime);
       Prev_Point = this.Cursor_Point;
       int pdex = this.Next_Point_Dex;
-      Next_Point = this.MyPhrase.CPoints.get(pdex);
+      Next_Point = this.MyVoice.CPoints.get(pdex);
       while (Next_Point.TimeX < EndTime) {
         pdex++;
         Prev_Point = Next_Point;
-        Next_Point = this.MyPhrase.CPoints.get(pdex);
+        Next_Point = this.MyVoice.CPoints.get(pdex);
       }
       this.Next_Point_Dex = pdex;
       this.Prev_Point_Dex = this.Next_Point_Dex - 1;
@@ -417,7 +419,7 @@ public class Voice implements ISonglet, IDrawable {
 
       double UnMapped_Prev_Time = this.MyOffsetBox.UnMapTime(this.Cursor_Point.TimeX);// get start time in parent coordinates
       this.Render_Sample_Count = 0;
-      int NumPoints = this.MyPhrase.CPoints.size();
+      int NumPoints = this.MyVoice.CPoints.size();
       if (NumPoints < 2) {// this should really just throw an error
         this.IsFinished = true;
         wave.Init(UnMapped_Prev_Time, UnMapped_Prev_Time, this.MyProject.SampleRate);
@@ -430,22 +432,22 @@ public class Voice implements ISonglet, IDrawable {
       int pdex = this.Next_Point_Dex;
 
       if (true) {
-        Next_Point = this.MyPhrase.CPoints.get(pdex);
+        Next_Point = this.MyVoice.CPoints.get(pdex);
         while (Next_Point.TimeX < EndTime) {
           Render_Segment_Integral(Prev_Point, Next_Point, wave);
           pdex++;
           Prev_Point = Next_Point;
-          Next_Point = this.MyPhrase.CPoints.get(pdex);
+          Next_Point = this.MyVoice.CPoints.get(pdex);
         }
         this.Next_Point_Dex = pdex;
       } else {
         while (this.Next_Point_Dex < NumPoints) {
-          Next_Point = this.MyPhrase.CPoints.get(this.Next_Point_Dex);
+          Next_Point = this.MyVoice.CPoints.get(this.Next_Point_Dex);
           if (EndTime < Next_Point.TimeX) {// repeat until control point time overtakes EndTime
             break;
           }
           this.Prev_Point_Dex = this.Next_Point_Dex - 1;
-          Prev_Point = this.MyPhrase.CPoints.get(this.Prev_Point_Dex);
+          Prev_Point = this.MyVoice.CPoints.get(this.Prev_Point_Dex);
           Render_Segment_Integral(Prev_Point, Next_Point, wave);
           this.Next_Point_Dex++;
         }
@@ -470,6 +472,10 @@ public class Voice implements ISonglet, IDrawable {
       wave.NumSamples = this.Render_Sample_Count;
     }
     /* ********************************************************************************* */
+    public double GetWaveForm(double SubTimeAbsolute) {// not used currently
+      return Math.sin(SubTimeAbsolute * this.MyVoice.BaseFreq * Globals.TwoPi);
+    }
+    /* ********************************************************************************* */
     public void Distortion_Effect(Wave wave, double gain) {
       double power = 2.0;// sigmoid clipping 
       int len = wave.NumSamples;
@@ -484,8 +490,8 @@ public class Voice implements ISonglet, IDrawable {
       if (EndTime < Cursor_Point.TimeX) {
         EndTime = Cursor_Point.TimeX;// clip time
       }
-      int FinalIndex = this.MyPhrase.CPoints.size() - 1;
-      VoicePoint Final_Point = this.MyPhrase.CPoints.get(FinalIndex);
+      int FinalIndex = this.MyVoice.CPoints.size() - 1;
+      VoicePoint Final_Point = this.MyVoice.CPoints.get(FinalIndex);
       if (EndTime > Final_Point.TimeX) {
         this.IsFinished = true;
         EndTime = Final_Point.TimeX;// clip time
@@ -502,8 +508,8 @@ public class Voice implements ISonglet, IDrawable {
       VoicePoint pnt1;
       this.Render_Sample_Count = 0;
       for (int pcnt = dex0; pcnt < dex1; pcnt++) {
-        pnt0 = this.MyPhrase.CPoints.get(pcnt);
-        pnt1 = this.MyPhrase.CPoints.get(pcnt + 1);
+        pnt0 = this.MyVoice.CPoints.get(pcnt);
+        pnt1 = this.MyVoice.CPoints.get(pcnt + 1);
         Render_Segment_Integral(pnt0, pnt1, wave);
       }
     }
@@ -526,7 +532,7 @@ public class Voice implements ISonglet, IDrawable {
     }
     /* ********************************************************************************* */
     public void Render_Segment_Iterative(VoicePoint pnt0, VoicePoint pnt1, Wave wave) {// stateful iterative approach
-      double BaseFreq = this.MyPhrase.BaseFreq;
+      double BaseFreq = this.MyVoice.BaseFreq;
       double SRate = this.MyProject.SampleRate;
       double TimeRange = pnt1.TimeX - pnt0.TimeX;
       double SampleDuration = 1.0 / SRate;
@@ -590,7 +596,8 @@ public class Voice implements ISonglet, IDrawable {
         CurrentLoudness = pnt0.LoudnessFactor + (TimeAlong * LoudnessRate);
         SubTimeLocal = Integral(OctaveRate, TimeAlong);
         SubTimeAbsolute = (pnt0.SubTime + (FrequencyFactorStart * SubTimeLocal)) * FrequencyFactorInherited;
-        Amplitude = this.MyPhrase.GetWaveForm(SubTimeAbsolute);
+        //Amplitude = this.MyVoice.GetWaveForm(SubTimeAbsolute);
+        Amplitude = this.GetWaveForm(SubTimeAbsolute);
         wave.Set(this.Render_Sample_Count, Amplitude * CurrentLoudness);
         this.Render_Sample_Count++;
       }

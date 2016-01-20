@@ -24,6 +24,7 @@ public interface IDrawable {
   public interface IMoveable extends IDrawable {// IMoveable is for things that can be selected, dragged, copied, pasted, deleted etc. through the UI.
     void MoveTo(double XLoc, double YLoc);
     boolean HitsMe(double XLoc, double YLoc);// click detection
+    void SetSelected(boolean Selected);
   }
   // Every IDrawable has a bounding box, and every Drawing_Context also has a bounding box for clipping. 
   // Drawing will always be called from the top, and the bounding box will define what to draw. 

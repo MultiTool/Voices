@@ -173,6 +173,8 @@ public class MonkeyBox implements IDrawable.IMoveable, IDeletable {// location b
     System.out.println("false");
     return false;
   }
+  @Override public void SetSelected(boolean Selected) {// IDrawable.IMoveable
+  }
   /* ********************************************************************************* */
   @Override public boolean Create_Me() {// IDeletable
     return true;

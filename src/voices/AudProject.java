@@ -45,7 +45,7 @@ public class AudProject implements IDeletable {
   }
   /* ********************************************************************************* */
   public void Create_For_Graphics() {// a test
-    //song = Create_Simple_Note(0, 1, 5, 1);
+    //song = Create_Bent_Note(0, 1, 5, 1);
     ISonglet song = TestJunkyard.Create_Warble_Voice(0, 4, 1.0);
     song.Set_Project(this);
     OffsetBox obox = song.Spawn_OffsetBox();
@@ -61,7 +61,7 @@ public class AudProject implements IDeletable {
     GroupBox cbx;
     NoteMaker nm;
     LoopBox lbx;
-    switch (9) {
+    switch (10) {
     case 0:
       song = TestJunkyard.Create_Random_Chorus(0, 0, 1.0);
       obox = song.Spawn_OffsetBox();
@@ -77,9 +77,9 @@ public class AudProject implements IDeletable {
       obox.TimeX += NoteMaker.OffsetTime;
       break;
     case 3:
-      //song = Create_Simple_Note(0, 2.3, 1);
+      //song = Create_Bent_Note(0, 2.3, 1);
       song = TestJunkyard.Create_Simple_Note(0, 1, 5, 1);
-      //song = NoteMaker.Create_Simple_Note(0, 1, 5, 1);
+      //song = NoteMaker.Create_Bent_Note(0, 1, 5, 1);
       song.Set_Project(this);
       obox = song.Spawn_OffsetBox();
       obox.TimeX += NoteMaker.OffsetTime;
@@ -147,6 +147,21 @@ public class AudProject implements IDeletable {
       gbx.Add_SubSong(obox);
 
       obox = gbx.Spawn_OffsetBox();
+      break;
+    case 10:
+      double TimeStep = 1.0;
+      int NumBeats = 4;
+      gbx = NoteMaker.Create_Note_Chain(NumBeats, TimeStep);
+      obox = gbx.Spawn_OffsetBox();
+
+      lbx = new LoopBox();
+      lbx.Add_Content(gbx);
+      lbx.Set_Delay(NumBeats * TimeStep);
+      lbx.Set_Duration(30);
+      obox = lbx.Spawn_OffsetBox();
+      
+      obox.TimeX += NoteMaker.OffsetTime;
+      obox.OctaveY = (4);
       break;
     }
     Wrap_For_Graphics(obox);
