@@ -300,6 +300,32 @@ public class Voice implements ISonglet, IDrawable {
     System.out.println();
   }
   /* ********************************************************************************* */
+  @Override public Voice Clone_Me() {// ICloneable
+    Voice child = new Voice();
+    child.Copy_From(this);
+    return child;
+  }
+  /* ********************************************************************************* */
+  @Override public Voice Deep_Clone_Me() {// ICloneable
+    Voice child = new Voice();
+    child.Copy_From(this);
+    VoicePoint subsong;
+    int len = this.CPoints.size();
+    for (int cnt = 0; cnt < len; cnt++) {
+      subsong = this.CPoints.get(cnt);
+      child.Add_Note(subsong.Deep_Clone_Me());
+    }
+    return child;
+  }
+  /* ********************************************************************************* */
+  public void Copy_From(Voice donor) {
+    this.BaseFreq = donor.BaseFreq;
+    this.MyProject = donor.MyProject;
+    this.MaxAmplitude = donor.MaxAmplitude;
+    this.FreshnessTimeStamp = 0;
+    this.MyBounds.Copy_From(donor.MyBounds); //this.CPoints = new ArrayList<>();
+  }
+  /* ********************************************************************************* */
   @Override public boolean Create_Me() {// IDeletable
     return true;
   }
@@ -335,10 +361,17 @@ public class Voice implements ISonglet, IDrawable {
       return ph;
     }
     /* ********************************************************************************* */
-    @Override public OffsetBox Clone_Me() {// always override this thusly
+    @Override public VoiceOffsetBox Clone_Me() {// always override this thusly
       VoiceOffsetBox child = new VoiceOffsetBox();
       child.Copy_From(this);
       child.Content = this.Content;
+      return child;
+    }
+    /* ********************************************************************************* */
+    @Override public VoiceOffsetBox Deep_Clone_Me() {// ICloneable
+      VoiceOffsetBox child = this.Clone_Me();
+      Voice grandkid = this.Content.Deep_Clone_Me();
+      child.Content = grandkid;
       return child;
     }
   }

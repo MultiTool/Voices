@@ -37,9 +37,14 @@ public class MonkeyBox implements IDrawable.IMoveable, IDeletable {// location b
     this.MyBounds.Reset();
   }
   /* ********************************************************************************* */
-  public MonkeyBox Clone_Me() {
+  @Override public MonkeyBox Clone_Me() {// ICloneable
     MonkeyBox child = new MonkeyBox();
     child.Copy_From(this);
+    return child;
+  }
+  /* ********************************************************************************* */
+  @Override public MonkeyBox Deep_Clone_Me() {// ICloneable
+    MonkeyBox child = this.Clone_Me();
     return child;
   }
   /* ********************************************************************************* */

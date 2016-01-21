@@ -38,9 +38,15 @@ public class OffsetBox extends MonkeyBox { //implements IDrawable.IMoveable, IDe
     this.MyBounds.Reset();
   }
   /* ********************************************************************************* */
-  @Override public OffsetBox Clone_Me() {
+  @Override public OffsetBox Clone_Me() {// ICloneable
     OffsetBox child = new OffsetBox();
     child.Copy_From(this);
+    return child;
+  }
+  /* ********************************************************************************* */
+  @Override public OffsetBox Deep_Clone_Me() {// ICloneable
+    OffsetBox child = this.Clone_Me();
+    //child.GetBoundingBox().Clone_Me();
     return child;
   }
   /* ********************************************************************************* */

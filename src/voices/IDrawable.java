@@ -15,7 +15,7 @@ import java.awt.geom.Point2D;
  * 
  * This IDrawable approach is dubious. We will have to think it through a lot more. 
  */
-public interface IDrawable {
+public interface IDrawable extends ICloneable {
   void Draw_Me(Drawing_Context ParentDC);
   CajaDelimitadora GetBoundingBox();
   void UpdateBoundingBox();

@@ -109,6 +109,26 @@ public class VoicePoint extends MonkeyBox {
   @Override public void SetSelected(boolean Selected) {// IDrawable.IMoveable
   }
   /* ********************************************************************************* */
+  @Override public VoicePoint Clone_Me() {// ICloneable
+    VoicePoint child = new VoicePoint();
+    child.Copy_From(this);
+    return child;
+  }
+  /* ********************************************************************************* */
+  @Override public VoicePoint Deep_Clone_Me() {// ICloneable
+    VoicePoint child = this.Clone_Me();
+    child.Copy_From(this);
+    (child.UpHandle = this.UpHandle.Deep_Clone_Me()).Parent = this; //child.UpHandle.Parent = child;
+    (child.DownHandle = this.DownHandle.Deep_Clone_Me()).Parent = this; //child.DownHandle.Parent = child;
+    return child;
+  }
+  /* ********************************************************************************* */
+  public void Copy_From(VoicePoint donor) {
+    this.SubTime = donor.SubTime;
+    this.OctavesPerLoudness = donor.OctavesPerLoudness;
+    // this.UpHandle = donor.UpHandle; this.DownHandle = donor.DownHandle;
+  }
+  /* ********************************************************************************* */
   @Override public boolean Create_Me() {// IDeletable
     return true;
   }
@@ -206,6 +226,20 @@ public class VoicePoint extends MonkeyBox {
       }
       System.out.println();
     }
+    /* ********************************************************************************* */
+    @Override public LoudnessHandle Clone_Me() {// ICloneable
+      LoudnessHandle child = new LoudnessHandle();
+      return child;
+    }
+    /* ********************************************************************************* */
+    @Override public LoudnessHandle Deep_Clone_Me() {// ICloneable
+      LoudnessHandle child = new LoudnessHandle();
+      child.OctavesPerRadius = this.OctavesPerRadius;
+      child.Parent = this.Parent;
+      child.MyBounds.Copy_From(this.MyBounds);
+      return child;
+    }
+    /* ********************************************************************************* */
     @Override public boolean Create_Me() {
       return true;
     }

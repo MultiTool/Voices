@@ -210,6 +210,34 @@ public class LoopBox implements ISonglet, IDrawable {
     }
   }
   /* ********************************************************************************* */
+  @Override public LoopBox Clone_Me() {// ICloneable
+    LoopBox child = new LoopBox();
+    return child;
+  }
+  /* ********************************************************************************* */
+  @Override public LoopBox Deep_Clone_Me() {// ICloneable
+    LoopBox child = this.Clone_Me();
+    child.Copy_From(this);
+    //child.Add_Content(this.Content.Deep_Clone_Me());
+    child.ContentOBox = this.ContentOBox.Deep_Clone_Me();
+    // child.Content = this.Content.Deep_Clone_Me();
+    return child;
+  }
+  public void Copy_From(LoopBox donor) {
+    /*
+     public ArrayList<Ghost_OffsetBox> SubSongs = new ArrayList<>();
+     this. MyDuration = this. MyDuration;// manually assigned duration, as loops are infinite otherwise
+     this. Delay = this. Delay ;// time delay between loops
+     this. Sustain =this. Sustain ;// Opposite of Diminish. How much the loudness changes with each repeat. 
+     this. MyProject =this. MyProject;
+     //this. Content = null;
+     //this. ContentOBox = null;
+     this. MyBounds = new CajaDelimitadora();
+     this. ghost = new Ghost_OffsetBox();// oy, this has to be refcounted because it may be used after recursion is done. 
+     this. FreshnessTimeStamp=0;
+     */
+  }
+  /* ********************************************************************************* */
   @Override public boolean Create_Me() {// IDeletable
     return true;
   }
@@ -367,10 +395,15 @@ public class LoopBox implements ISonglet, IDrawable {
       return ph;
     }
     /* ********************************************************************************* */
-    @Override public OffsetBox Clone_Me() {// always override this thusly
+    @Override public Loop_OffsetBox Clone_Me() {// ICloneable always override this thusly
       Loop_OffsetBox child = new Loop_OffsetBox();
       child.Copy_From(this);
       child.Content = this.Content;
+      return child;
+    }
+    /* ********************************************************************************* */
+    @Override public Loop_OffsetBox Deep_Clone_Me() {// ICloneable
+      Loop_OffsetBox child = this.Clone_Me();
       return child;
     }
     /* ********************************************************************************* */
@@ -530,10 +563,15 @@ public class LoopBox implements ISonglet, IDrawable {
       }
     }
     /* ********************************************************************************* */
-    @Override public OffsetBox Clone_Me() {// always override this thusly
+    @Override public Ghost_OffsetBox Clone_Me() {// ICloneable always override this thusly
       Ghost_OffsetBox child = new Ghost_OffsetBox();
       child.Copy_From(this);
       child.ContentLayer = this.ContentLayer;
+      return child;
+    }
+    /* ********************************************************************************* */
+    @Override public Ghost_OffsetBox Deep_Clone_Me() {// ICloneable
+      Ghost_OffsetBox child = this.Clone_Me();
       return child;
     }
   }

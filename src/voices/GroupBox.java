@@ -50,6 +50,7 @@ public class GroupBox implements ISonglet, IDrawable {
   /* ********************************************************************************* */
   public void Add_SubSong(OffsetBox obox) {// Add a songlet with its offsetbox already created and filled out.
     obox.GetContent().Set_Project(this.MyProject);// child inherits project from me
+    obox.MyParentSong = this;
     SubSongs.add(obox);
   }
   /* ********************************************************************************* */
@@ -179,7 +180,7 @@ public class GroupBox implements ISonglet, IDrawable {
   @Override public void Draw_Me(Drawing_Context ParentDC) {// IDrawable
     OffsetBox ChildOffsetBox;
     int len = this.SubSongs.size();
-
+    
     int StartDex = 0;// not sure how to get the first within clip box without just iterating from 0. 
     int EndDex = len;
 
@@ -255,6 +256,35 @@ public class GroupBox implements ISonglet, IDrawable {
         child.GoFishing(Scoop);
       }
     }
+  }
+  /* ********************************************************************************* */
+  @Override public GroupBox Clone_Me() {// ICloneable
+    GroupBox child = new GroupBox();
+    child.Copy_From(this);
+    return child;
+  }
+  /* ********************************************************************************* */
+  @Override public GroupBox Deep_Clone_Me() {// ICloneable
+    GroupBox child = new GroupBox();
+    child.Copy_From(this);
+    OffsetBox subsong;
+    int len = this.SubSongs.size();
+    for (int cnt = 0; cnt < len; cnt++) {
+      subsong = this.SubSongs.get(cnt);
+      child.Add_SubSong(subsong.Deep_Clone_Me());
+    }
+    return child;
+  }
+  /* ********************************************************************************* */
+  public void Copy_From(GroupBox donor) {
+    //this.SubSongs = donor.SubSongs;// danger!  don't really do this!
+    this.Duration = donor.Duration;
+    this.Set_Project(donor.MyProject);
+    this.MyName = donor.MyName;// for debugging
+    this.MaxAmplitude = donor.MaxAmplitude;
+    this.MyBounds = donor.MyBounds;
+    this.FreshnessTimeStamp = 0;// donor.FreshnessTimeStamp;
+    this.MyBounds.Copy_From(donor.MyBounds);
   }
   /* ********************************************************************************* */
   @Override public boolean Create_Me() {// IDeletable
@@ -426,10 +456,17 @@ public class GroupBox implements ISonglet, IDrawable {
       return ph;
     }
     /* ********************************************************************************* */
-    @Override public OffsetBox Clone_Me() {// always override this thusly
+    @Override public Group_OffsetBox Clone_Me() {// always override this thusly
       Group_OffsetBox child = new Group_OffsetBox();
       child.Copy_From(this);
       child.Content = this.Content;
+      return child;
+    }
+    /* ********************************************************************************* */
+    @Override public Group_OffsetBox Deep_Clone_Me() {// ICloneable
+      Group_OffsetBox child = new Group_OffsetBox();
+      child.Copy_From(this);
+      child.Content = this.Content.Deep_Clone_Me();
       return child;
     }
   }

@@ -56,6 +56,16 @@ public class GraphicBox implements IDrawable, ISonglet, IDeletable {//
     }
   }
   /* ********************************************************************************* */
+  @Override public GraphicBox Clone_Me() {// ICloneable
+    GraphicBox child = new GraphicBox();
+    return child;
+  }
+  /* ********************************************************************************* */
+  @Override public GraphicBox Deep_Clone_Me() {// ICloneable
+    GraphicBox child = new GraphicBox();
+    return child;
+  }
+  /* ********************************************************************************* */
   public void Draw_Grid(Drawing_Context ParentDC) {
     double xloc, yloc;
     int MinX, MinY, MaxX, MaxY;
@@ -220,10 +230,15 @@ public class GraphicBox implements IDrawable, ISonglet, IDeletable {//
       this.OctaveY = YLoc;
     }
     /* ********************************************************************************* */
-    @Override public OffsetBox Clone_Me() {// always override this thusly
+    @Override public Graphic_OffsetBox Clone_Me() {// ICloneable always override this thusly
       Graphic_OffsetBox child = new Graphic_OffsetBox();
       child.Copy_From(this);
       child.Content = this.Content;
+      return child;
+    }
+    /* ********************************************************************************* */
+    @Override public Graphic_OffsetBox Deep_Clone_Me() {// ICloneable
+      Graphic_OffsetBox child = this.Clone_Me();
       return child;
     }
     /* ********************************************************************************* */
