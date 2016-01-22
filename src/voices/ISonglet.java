@@ -85,6 +85,8 @@ public interface ISonglet extends IDrawable, IDeletable {// Cancionita
   public int FreshnessTimeStamp_g();
   public void FreshnessTimeStamp_s(int TimeStampNew);
   /* ********************************************************************************* */
+  @Override ISonglet Deep_Clone_Me();
+  /* ********************************************************************************* */
   public static class MetricsPacket {
     public double MaxDuration = 0.0;
     public AudProject MyProject = null;

@@ -218,24 +218,24 @@ public class LoopBox implements ISonglet, IDrawable {
   @Override public LoopBox Deep_Clone_Me() {// ICloneable
     LoopBox child = this.Clone_Me();
     child.Copy_From(this);
-    //child.Add_Content(this.Content.Deep_Clone_Me());
-    child.ContentOBox = this.ContentOBox.Deep_Clone_Me();
-    // child.Content = this.Content.Deep_Clone_Me();
+    child.Add_Content(this.Content.Deep_Clone_Me());
+    //child.Add_Content(this.ContentOBox.GetContent().Deep_Clone_Me());
+    //child.ContentOBox = this.ContentOBox.Deep_Clone_Me();
+    //child.Content = this.Content.Deep_Clone_Me();
     return child;
   }
+  /* ********************************************************************************* */
   public void Copy_From(LoopBox donor) {
-    /*
-     public ArrayList<Ghost_OffsetBox> SubSongs = new ArrayList<>();
-     this. MyDuration = this. MyDuration;// manually assigned duration, as loops are infinite otherwise
-     this. Delay = this. Delay ;// time delay between loops
-     this. Sustain =this. Sustain ;// Opposite of Diminish. How much the loudness changes with each repeat. 
-     this. MyProject =this. MyProject;
-     //this. Content = null;
-     //this. ContentOBox = null;
-     this. MyBounds = new CajaDelimitadora();
-     this. ghost = new Ghost_OffsetBox();// oy, this has to be refcounted because it may be used after recursion is done. 
-     this. FreshnessTimeStamp=0;
-     */
+    this.MyDuration = donor.MyDuration;// manually assigned duration, as loops are infinite otherwise
+    this.Delay = donor.Delay;// time delay between loops
+    this.Sustain = donor.Sustain;// Opposite of Diminish. How much the loudness changes with each repeat. 
+    this.MyProject = donor.MyProject;
+    this.MyBounds = new CajaDelimitadora();
+    this.FreshnessTimeStamp = 0;
+    //this.SubSongs;
+    //this. Content = null;
+    //this. ContentOBox = null;
+    //this.ghost = new Ghost_OffsetBox();// oy, this has to be refcounted because it may be used after recursion is done. 
   }
   /* ********************************************************************************* */
   @Override public boolean Create_Me() {// IDeletable
@@ -404,6 +404,7 @@ public class LoopBox implements ISonglet, IDrawable {
     /* ********************************************************************************* */
     @Override public Loop_OffsetBox Deep_Clone_Me() {// ICloneable
       Loop_OffsetBox child = this.Clone_Me();
+      child.Content = this.Content.Deep_Clone_Me();
       return child;
     }
     /* ********************************************************************************* */
@@ -572,6 +573,8 @@ public class LoopBox implements ISonglet, IDrawable {
     /* ********************************************************************************* */
     @Override public Ghost_OffsetBox Deep_Clone_Me() {// ICloneable
       Ghost_OffsetBox child = this.Clone_Me();
+      child.ContentLayer = child.ContentLayer.Deep_Clone_Me();// ??? 
+      //throw new UnsupportedOperationException("Never clone a ghost!");
       return child;
     }
   }

@@ -63,7 +63,15 @@ public class GraphicBox implements IDrawable, ISonglet, IDeletable {//
   /* ********************************************************************************* */
   @Override public GraphicBox Deep_Clone_Me() {// ICloneable
     GraphicBox child = new GraphicBox();
+    child.Copy_From(this);
+    child.ContentOBox = this.ContentOBox.Deep_Clone_Me();
     return child;
+  }
+  /* ********************************************************************************* */
+  public void Copy_From(GraphicBox donor) {
+    // this.ContentOBox = null;
+    this.FreshnessTimeStamp = 0;
+    this.MyBounds.Copy_From(donor.MyBounds);
   }
   /* ********************************************************************************* */
   public void Draw_Grid(Drawing_Context ParentDC) {
@@ -233,12 +241,13 @@ public class GraphicBox implements IDrawable, ISonglet, IDeletable {//
     @Override public Graphic_OffsetBox Clone_Me() {// ICloneable always override this thusly
       Graphic_OffsetBox child = new Graphic_OffsetBox();
       child.Copy_From(this);
-      child.Content = this.Content;
+      child.Content = this.Content;// we can actually use this to spawn multiple graphic views of one thing
       return child;
     }
     /* ********************************************************************************* */
     @Override public Graphic_OffsetBox Deep_Clone_Me() {// ICloneable
       Graphic_OffsetBox child = this.Clone_Me();
+      child.Content = this.Content.Deep_Clone_Me();
       return child;
     }
     /* ********************************************************************************* */

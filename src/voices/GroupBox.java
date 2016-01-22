@@ -267,11 +267,11 @@ public class GroupBox implements ISonglet, IDrawable {
   @Override public GroupBox Deep_Clone_Me() {// ICloneable
     GroupBox child = new GroupBox();
     child.Copy_From(this);
-    OffsetBox subsong;
+    OffsetBox SubSongHandle;
     int len = this.SubSongs.size();
     for (int cnt = 0; cnt < len; cnt++) {
-      subsong = this.SubSongs.get(cnt);
-      child.Add_SubSong(subsong.Deep_Clone_Me());
+      SubSongHandle = this.SubSongs.get(cnt);
+      child.Add_SubSong(SubSongHandle.Deep_Clone_Me());
     }
     return child;
   }

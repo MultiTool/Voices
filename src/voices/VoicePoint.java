@@ -23,9 +23,9 @@ public class VoicePoint extends MonkeyBox {
   public VoicePoint() {
     this.Create_Me();
     this.UpHandle = new LoudnessHandle();
-    this.UpHandle.Parent = this;
+    this.UpHandle.ParentPoint = this;
     this.DownHandle = new LoudnessHandle();
-    this.DownHandle.Parent = this;
+    this.DownHandle.ParentPoint = this;
   }
   /* ********************************************************************************* */
   public void CopyFrom(VoicePoint source) {
@@ -116,10 +116,10 @@ public class VoicePoint extends MonkeyBox {
   }
   /* ********************************************************************************* */
   @Override public VoicePoint Deep_Clone_Me() {// ICloneable
-    VoicePoint child = this.Clone_Me();
+    VoicePoint child = new VoicePoint();
     child.Copy_From(this);
-    (child.UpHandle = this.UpHandle.Deep_Clone_Me()).Parent = this; //child.UpHandle.Parent = child;
-    (child.DownHandle = this.DownHandle.Deep_Clone_Me()).Parent = this; //child.DownHandle.Parent = child;
+    (child.UpHandle = this.UpHandle.Deep_Clone_Me()).ParentPoint = this; //child.UpHandle.ParentPoint = child;
+    (child.DownHandle = this.DownHandle.Deep_Clone_Me()).ParentPoint = this; //child.DownHandle.ParentPoint = child;
     return child;
   }
   /* ********************************************************************************* */
@@ -143,24 +143,24 @@ public class VoicePoint extends MonkeyBox {
   /* ********************************************************************************* */
   public static class LoudnessHandle implements IDrawable.IMoveable, IDeletable {
     public CajaDelimitadora MyBounds = new CajaDelimitadora();
-    public VoicePoint Parent;
+    public VoicePoint ParentPoint;
     public double OctavesPerRadius = 0.02;
     /* ********************************************************************************* */
     public double GetX() {
-      return this.Parent.TimeX;
+      return this.ParentPoint.TimeX;
     }
     public double GetY() {
-      double LoudnessHeight = this.Parent.LoudnessFactor * this.Parent.OctavesPerLoudness;// Map loudness to screen pixels.
-      return this.Parent.OctaveY + LoudnessHeight;
+      double LoudnessHeight = this.ParentPoint.LoudnessFactor * this.ParentPoint.OctavesPerLoudness;// Map loudness to screen pixels.
+      return this.ParentPoint.OctaveY + LoudnessHeight;
     }
     @Override public void MoveTo(double XLoc, double YLoc) {// IDrawable.IMoveable
       if (XLoc >= 0) {// don't go backward in time
-        this.Parent.TimeX = XLoc;
-        double RelativeY = YLoc - this.Parent.OctaveY;
+        this.ParentPoint.TimeX = XLoc;
+        double RelativeY = YLoc - this.ParentPoint.OctaveY;
         if (RelativeY >= 0) {// non negative loudness
-          RelativeY /= this.Parent.OctavesPerLoudness;
+          RelativeY /= this.ParentPoint.OctavesPerLoudness;
           if (RelativeY <= 1.0) {// shouldn't amplify loudness above 1.0, so that we can keep wave clipping under control
-            this.Parent.LoudnessFactor = RelativeY;
+            this.ParentPoint.LoudnessFactor = RelativeY;
           }
         }
       }
@@ -186,10 +186,10 @@ public class VoicePoint extends MonkeyBox {
     }
     @Override public void Draw_Me(Drawing_Context ParentDC) {
       // Control points have the same space as their parent, so no need to create a local map.
-      Point2D.Double pnt = ParentDC.To_Screen(this.Parent.TimeX, this.Parent.OctaveY);
+      Point2D.Double pnt = ParentDC.To_Screen(this.ParentPoint.TimeX, this.ParentPoint.OctaveY);
       double RadiusPixels = Math.abs(ParentDC.GlobalOffset.ScaleY) * OctavesPerRadius;
-      double LoudnessHgt = this.Parent.LoudnessFactor * this.Parent.OctavesPerLoudness;
-      double YlocHigh = ParentDC.GlobalOffset.UnMapPitch(this.Parent.OctaveY + LoudnessHgt) - RadiusPixels;// My handle rests *upon* the line I control, so I don't occlude my VoicePoint. 
+      double LoudnessHgt = this.ParentPoint.LoudnessFactor * this.ParentPoint.OctavesPerLoudness;
+      double YlocHigh = ParentDC.GlobalOffset.UnMapPitch(this.ParentPoint.OctaveY + LoudnessHgt) - RadiusPixels;// My handle rests *upon* the line I control, so I don't occlude my VoicePoint. 
 
       RadiusPixels = Math.ceil(RadiusPixels);
       double DiameterPixels = RadiusPixels * 2.0;
@@ -235,7 +235,7 @@ public class VoicePoint extends MonkeyBox {
     @Override public LoudnessHandle Deep_Clone_Me() {// ICloneable
       LoudnessHandle child = new LoudnessHandle();
       child.OctavesPerRadius = this.OctavesPerRadius;
-      child.Parent = this.Parent;
+      child.ParentPoint = this.ParentPoint;
       child.MyBounds.Copy_From(this.MyBounds);
       return child;
     }
@@ -244,7 +244,7 @@ public class VoicePoint extends MonkeyBox {
       return true;
     }
     @Override public void Delete_Me() {
-      this.Parent = null;
+      this.ParentPoint = null;
       this.MyBounds.Delete_Me();
       this.MyBounds = null;
     }
