@@ -554,13 +554,13 @@ public class LoopBox implements ISonglet, IDrawable {
     @Override public void MoveTo(double XLoc, double YLoc) {// IDrawable.IMoveable
       if (XLoc >= 0) {// don't go backward in time
         this.TimeX = XLoc;// do we use and keep these coordinates or are we just a wrapper around ContentLayer?
-        this.OctaveY = YLoc;// no we have the coordinates but our child has different ones
-        // to do: map the real-time movements to our parent's Delay value, then reset the child obox's values 
-        double TempDelay = XLoc / this.MyIteration;
-        this.Parent.Delay = TempDelay;
-        if (false) {// maybe we don't really need to save Delay as part of our child's obox. 
-          this.ContentLayer.MoveTo(TempDelay, YLoc);
-        }
+      }
+      this.OctaveY = YLoc;// no we have the coordinates but our child has different ones
+      // to do: map the real-time movements to our parent's Delay value, then reset the child obox's values 
+      double TempDelay = XLoc / this.MyIteration;
+      this.Parent.Delay = TempDelay;
+      if (false) {// maybe we don't really need to save Delay as part of our child's obox. 
+        this.ContentLayer.MoveTo(TempDelay, YLoc);
       }
     }
     /* ********************************************************************************* */

@@ -103,8 +103,8 @@ public class VoicePoint extends MonkeyBox {
   @Override public void MoveTo(double XLoc, double YLoc) {// IDrawable.IMoveable
     if (XLoc >= 0) {// don't go backward in time
       this.TimeX = XLoc;
-      this.OctaveY = YLoc;
     }
+    this.OctaveY = YLoc;
   }
   @Override public void SetSelected(boolean Selected) {// IDrawable.IMoveable
   }
@@ -156,12 +156,12 @@ public class VoicePoint extends MonkeyBox {
     @Override public void MoveTo(double XLoc, double YLoc) {// IDrawable.IMoveable
       if (XLoc >= 0) {// don't go backward in time
         this.ParentPoint.TimeX = XLoc;
-        double RelativeY = YLoc - this.ParentPoint.OctaveY;
-        if (RelativeY >= 0) {// non negative loudness
-          RelativeY /= this.ParentPoint.OctavesPerLoudness;
-          if (RelativeY <= 1.0) {// shouldn't amplify loudness above 1.0, so that we can keep wave clipping under control
-            this.ParentPoint.LoudnessFactor = RelativeY;
-          }
+      }
+      double RelativeY = YLoc - this.ParentPoint.OctaveY;
+      if (RelativeY >= 0) {// non negative loudness
+        RelativeY /= this.ParentPoint.OctavesPerLoudness;
+        if (RelativeY <= 1.0) {// shouldn't amplify loudness above 1.0, so that we can keep wave clipping under control
+          this.ParentPoint.LoudnessFactor = RelativeY;
         }
       }
     }

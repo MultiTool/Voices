@@ -163,8 +163,8 @@ public class MonkeyBox implements IDrawable.IMoveable, IDeletable {// location b
   @Override public void MoveTo(double XLoc, double YLoc) {// IDrawable.IMoveable
     if (XLoc >= 0) {// don't go backward in time
       this.TimeX = XLoc;
-      this.OctaveY = YLoc;
     }
+    this.OctaveY = YLoc;
   }
   @Override public boolean HitsMe(double XLoc, double YLoc) {// IDrawable.IMoveable
     System.out.print("HitsMe:");
