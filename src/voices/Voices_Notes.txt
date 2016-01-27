@@ -540,6 +540,9 @@ Separate out the drawing/graphics layer. - done
 Import TunePad colors and alpha tricks. - done enough.
 SubRange: Update and test all Skip_To.  - done? so far so good.
 SubRange: Let user draw box on screen to trigger play within range. - IMPORTANT 
+CopyPaste: Copy and paste - IMPORTANT
+CopyPaste: Make Deep_Clone_Me use a hashtable and refcounts to preserve directed graph nodes. 
+CopyPaste: Highlight selected, add selected flag to all IMoveables (maybe ISonglets too?)
 MemLeaks: All IDeleteable have a global creation counter and a global deletion counter. 
 MemLeaks: Add refcounting for eventual serialization, IDeleteable, and C++ port. 
 LoopBox graphics - mayabe an arc, Ellipse2D.Double?  Or a very rounded rectangle behind each unit cell? Put handles on the rectangle and change Delay. 
@@ -552,8 +555,6 @@ Widgets! SFGUI?
 (Someday) create a sample_voice type. http://soundbible.com/37-Chain-Saw.html 
 Add ISerializable for saving and loading! 
 Undo/Redo?  probably need IClonable and or ICopyable, like ISerializable.  Clone invokes Copy, and copy just copies all guts. 
-Copy and paste - IMPORTANT
-Highlight selected, create selected flag 
 Optimize voice polygon graphic clipping. 
 Control points of a songlet should only show up when the songlet is selected. 
 Line widths should scale with zooming. 

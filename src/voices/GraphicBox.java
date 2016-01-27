@@ -217,7 +217,7 @@ public class GraphicBox implements IDrawable, ISonglet, IDeletable {//
       this.UpdateBoundingBoxLocal();
     }
     @Override public void UpdateBoundingBoxLocal() {// IDrawable
-      this.Content.GetBoundingBox().UnMap(this, MyBounds);// project child limits into parent (my) space
+      this.UnMap(this.Content.GetBoundingBox(), MyBounds);// project child limits into parent (my) space
       this.MyBounds.Sort_Me();
     }
     @Override public void GoFishing(Grabber Scoop) {// IDrawable

@@ -522,7 +522,7 @@ public class LoopBox implements ISonglet, IDrawable {
     @Override public void UpdateBoundingBoxLocal() {// IDrawable
       ISonglet Content = this.GetContent();
       Content.UpdateBoundingBoxLocal();// either this
-      Content.GetBoundingBox().UnMap(this, MyBounds);// project child limits into parent (my) space
+      this.UnMap(Content.GetBoundingBox(), MyBounds);// project child limits into parent (my) space
 
       if (false) {
         this.MyBounds.Min.x = 0;

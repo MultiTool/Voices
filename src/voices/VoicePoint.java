@@ -75,11 +75,12 @@ public class VoicePoint extends MonkeyBox {
     System.out.print(" Point GoFishing: ");
     if (Scoop.CurrentContext.SearchBounds.Intersects(MyBounds)) {
       System.out.print(" InBounds, ");
-      this.UpHandle.GoFishing(Scoop);
+      //this.UpHandle.GoFishing(Scoop);
       if (this.HitsMe(Scoop.CurrentContext.Loc.x, Scoop.CurrentContext.Loc.y)) {
         System.out.print(" Was Hit, ");
         Scoop.ConsiderLeaf(this);
       }
+      this.UpHandle.GoFishing(Scoop);
     }
     System.out.println();
   }
@@ -144,7 +145,8 @@ public class VoicePoint extends MonkeyBox {
   public static class LoudnessHandle implements IDrawable.IMoveable, IDeletable {
     public CajaDelimitadora MyBounds = new CajaDelimitadora();
     public VoicePoint ParentPoint;
-    public double OctavesPerRadius = 0.02;
+    //public double OctavesPerRadius = 0.02;
+    public double OctavesPerRadius = 0.007;
     /* ********************************************************************************* */
     public double GetX() {
       return this.ParentPoint.TimeX;

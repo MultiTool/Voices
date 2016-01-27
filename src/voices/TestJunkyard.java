@@ -13,113 +13,30 @@ import java.io.File;
  */
 public class TestJunkyard {
   /* ********************************************************************************* */
-  public void Compose_Test() {
-    ISonglet song = null;
-    OffsetBox obox = null;
-    GroupBox CMinor, CMajor, DMajor, DMinor;
-    OffsetBox CMinorObx, CMajorObx, DMajorObx, DMinorObx;
-    double Delay;
-    GroupBox cbx;
-    NoteMaker nm;
-    LoopBox lbx;
-    switch (6) {
-      case 0:
-        song = TestJunkyard.Create_Random_Chorus(0, 0, 1.0);
-        obox = song.Spawn_OffsetBox();
-        obox.OctaveY = (4);
-        break;
-      case 1:
-        song = TestJunkyard.Create_Nested_Chorus(0, 0, 1.0, 6);
-        obox = song.Spawn_OffsetBox();
-        break;
-      case 2:
-        song = TestJunkyard.Create_Chord(0, 2, 1.0, 3);
-        obox = song.Spawn_OffsetBox();
-        break;
-      case 3:
-        song = TestJunkyard.Create_Simple_Note(0, 1, 5, 1);
-        obox = song.Spawn_OffsetBox();
-        break;
-      case 4:
-        song = TestJunkyard.Compose_Loop();
-        obox = song.Spawn_OffsetBox();
-        break;
-      case 5:
-        Delay = 1.5;
-        cbx = new GroupBox();
-        nm = new NoteMaker();
-        lbx = new LoopBox();
-        CMajor = nm.MakeMajor(0);// C major
-        cbx.Add_SubSong(CMajor, 0, 0, 1.0);
-        CMinor = nm.MakeMinor(0);// C minor
-        cbx.Add_SubSong(CMinor, Delay * 1, 0, 1.0);
-        DMajor = nm.MakeMajor(2);// D major
-        cbx.Add_SubSong(DMajor, Delay * 2, 0, 1.0);
-        DMinor = nm.MakeMinor(2);// D minor
-        cbx.Add_SubSong(DMinor, Delay * 3, 0, 1.0);
-
-        lbx.Add_Content(cbx);
-        lbx.Set_Delay(Delay * 4);
-        lbx.Set_Duration(30);
-
-        song = lbx;
-        obox = song.Spawn_OffsetBox();
-        obox.OctaveY = (4);
-        break;
-      case 6:
-        Delay = 1.5;
-        cbx = new GroupBox();
-        nm = new NoteMaker();
-        lbx = new LoopBox();
-        CMajorObx = nm.MakeMajor_OBox(0);// C major
-        cbx.Add_SubSong(CMajorObx, Delay * 0, CMajorObx.OctaveY, 1.0);
-        CMinorObx = nm.MakeMinor_OBox(0);// C minor
-        cbx.Add_SubSong(CMinorObx, Delay * 1, CMinorObx.OctaveY, 1.0);// yuck, redundant
-        DMajorObx = nm.MakeMajor_OBox(2);// D major
-        cbx.Add_SubSong(DMajorObx, Delay * 2, DMajorObx.OctaveY, 1.0);
-        DMinorObx = nm.MakeMinor_OBox(2);// D minor
-        cbx.Add_SubSong(DMinorObx, Delay * 3, DMinorObx.OctaveY, 1.0);
-
-        lbx.Add_Content(cbx);
-        lbx.Set_Delay(Delay * 4);
-        //lbx.Set_Duration(9.5);
-        lbx.Set_Duration(20.5);
-
-        song = lbx;
-        obox = song.Spawn_OffsetBox();
-        obox.TimeX += NoteMaker.OffsetTime;
-        obox.OctaveY = (4);
-        break;
-      case 7:
-        obox = TestJunkyard.Compose_Warble_Chorus();
-        obox.TimeX += NoteMaker.OffsetTime;
-        obox.OctaveY = (4);
-      case 8:
-        obox = TestJunkyard.Compose_Ribbon_Chorus().Spawn_OffsetBox();
-        obox.TimeX += NoteMaker.OffsetTime;
-        obox.OctaveY = (4);
-        break;
-    }
-  }
-  /* ********************************************************************************* */
-  public static Voice Create_SampleVoice_Ribbon(double TimeOffset, double OctaveOffset, double LoudnessOffset) {
-    SampleVoice voice = new SampleVoice();// for fuzz testing
+  public static SampleVoice Create_SampleVoice_Stub(int SampleNum) {
+    SampleVoice voice = new SampleVoice();
     Wave wav = new Wave();
     String flpath = new File("").getAbsolutePath();
     String fname = null;
     double BaseFrequency = 0;
-    switch (0) {// put any droney looped wav file here
-      case 0:
-        fname = flpath + "\\..\\samples\\Plane_Tile_2756pnt250.wav";
-        BaseFrequency = Globals.BaseFreqC0 / 150.0;
-        break;
-      case 1:
-        fname = flpath + "\\..\\samples\\Violin_G_Loop.wav";
-        BaseFrequency = Globals.BaseFreqC0 / 192.576;
-        break;
+    switch (SampleNum) {// put any droney looped wav file here
+    case 0:
+      fname = flpath + "\\..\\samples\\Plane_Tile_2756pnt250.wav";
+      BaseFrequency = Globals.BaseFreqC0 / 150.0;
+      break;
+    case 1:
+      fname = flpath + "\\..\\samples\\Violin_G_Loop.wav";
+      BaseFrequency = Globals.BaseFreqC0 / 192.576;
+      break;
     }
     Audio.Read(fname, wav);
     voice.AttachWaveSample(wav, BaseFrequency);
+    return voice;
+  }
+  /* ********************************************************************************* */
+  public static SampleVoice Create_SampleVoice_Ribbon(double TimeOffset, double OctaveOffset, double LoudnessOffset) {
+    SampleVoice voice;
+    voice = Create_SampleVoice_Stub(1);
     double TDiff;
     double TimeScale = 0.125;
     double TimeCnt = 0;
@@ -132,7 +49,7 @@ public class TestJunkyard {
   }
   /* ********************************************************************************* */
   public static Voice Create_Voice_Ribbon(double TimeOffset, double OctaveOffset, double LoudnessOffset) {
-    Voice voice = new Voice();// for fuzz testing
+    Voice voice = new Voice();
     double TDiff;
     double TimeScale = 0.125;
     double TimeCnt = 0;

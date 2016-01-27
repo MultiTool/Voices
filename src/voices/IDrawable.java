@@ -51,7 +51,7 @@ public interface IDrawable extends ICloneable {
       this.GlobalOffset.Compound(this.Offset);// inherit and further transform parent space
       this.ClipBounds = new CajaDelimitadora();
       // inherit and transform bounding box.
-      Fresh_Parent.ClipBounds.Map(this.Offset, this.ClipBounds);// map to child (my) internal coordinates
+      this.Offset.MapTo(Fresh_Parent.ClipBounds , this.ClipBounds);// map to child (my) internal coordinates
       this.ClipBounds.Sort_Me();
       this.gr = Fresh_Parent.gr;
       this.RecurseDepth = Fresh_Parent.RecurseDepth + 1;

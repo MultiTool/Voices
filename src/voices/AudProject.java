@@ -5,10 +5,7 @@
  */
 package voices;
 
-import java.awt.Graphics2D;
-import java.awt.geom.Rectangle2D;
 import voices.GraphicBox.Graphic_OffsetBox;
-import voices.IDrawable.Drawing_Context;
 import voices.ISonglet.MetricsPacket;
 import voices.ISonglet.Singer;
 import static voices.Voices.SaveWave;

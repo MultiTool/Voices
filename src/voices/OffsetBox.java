@@ -165,7 +165,7 @@ public class OffsetBox extends MonkeyBox { //implements IDrawable.IMoveable, IDe
   @Override public void UpdateBoundingBoxLocal() {// IDrawable
     ISonglet Content = this.GetContent();
     Content.UpdateBoundingBoxLocal();// either this
-    Content.GetBoundingBox().UnMap(this, MyBounds);// project child limits into parent (my) space
+    this.UnMap(Content.GetBoundingBox(), MyBounds);// project child limits into parent (my) space
     // include my bubble in bounds
     this.MyBounds.IncludePoint(this.TimeX - OctavesPerRadius, this.OctaveY - OctavesPerRadius);
     this.MyBounds.IncludePoint(this.TimeX + OctavesPerRadius, this.OctaveY + OctavesPerRadius);

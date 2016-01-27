@@ -28,9 +28,9 @@ public class Voice implements ISonglet, IDrawable {
     return this.Spawn_My_OffsetBox();
   }
   /* ********************************************************************************* */
-  public VoiceOffsetBox Spawn_My_OffsetBox() {// for compose time
-    VoiceOffsetBox lbox = new VoiceOffsetBox();// Deliver a OffsetBox specific to this type of phrase.
-    lbox.Content = this;
+  public Voice_OffsetBox Spawn_My_OffsetBox() {// for compose time
+    Voice_OffsetBox lbox = new Voice_OffsetBox();// Deliver a OffsetBox specific to this type of phrase.
+    lbox.VoiceContent = this;
     return lbox;
   }
   /* ********************************************************************************* */
@@ -41,11 +41,11 @@ public class Voice implements ISonglet, IDrawable {
   public Voice_Singer Spawn_My_Singer() {// for render time
     // Deliver one of my singers while exposing specific object class. 
     // Handy if my parent's singers know what class I am and want special access to my particular type of singer.
-    Voice_Singer ph = new Voice_Singer();
-    ph.MyVoice = this;
-    ph.MyProject = this.MyProject;// inherit project
-    ph.BaseFreq = this.BaseFreq;
-    return ph;
+    Voice_Singer singer = new Voice_Singer();
+    singer.MyVoice = this;
+    singer.MyProject = this.MyProject;// inherit project
+    singer.BaseFreq = this.BaseFreq;
+    return singer;
   }
   /* ********************************************************************************* */
   public void Add_Note(VoicePoint pnt) {
@@ -252,7 +252,7 @@ public class Voice implements ISonglet, IDrawable {
     ParentDC.gr.setColor(Globals.ToAlpha(Emerald, 200));
 //    ParentDC.gr.setColor(Globals.ToAlpha(Color.green, 200));
     ParentDC.gr.drawPolyline(SpineX, SpineY, Range);
-
+    
     for (int pcnt = 0; pcnt < len; pcnt++) {
       pnt = this.CPoints.get(pcnt);
       if (ChildrenBounds.Intersects(pnt.GetBoundingBox())) {
@@ -309,13 +309,17 @@ public class Voice implements ISonglet, IDrawable {
   @Override public Voice Deep_Clone_Me() {// ICloneable
     Voice child = new Voice();
     child.Copy_From(this);
+    child.Copy_Children(this);
+    return child;
+  }
+  /* ********************************************************************************* */
+  public void Copy_Children(Voice donor) {
     VoicePoint vpnt;
     int len = this.CPoints.size();
     for (int cnt = 0; cnt < len; cnt++) {
       vpnt = this.CPoints.get(cnt);
-      child.Add_Note(vpnt.Deep_Clone_Me());
+      this.Add_Note(vpnt.Deep_Clone_Me());
     }
-    return child;
   }
   /* ********************************************************************************* */
   public void Copy_From(Voice donor) {
@@ -338,39 +342,39 @@ public class Voice implements ISonglet, IDrawable {
     this.CPoints.clear();
   }
   /* ********************************************************************************* */
-  public static class VoiceOffsetBox extends OffsetBox {// location box to transpose in pitch, move in time, etc. 
-    public Voice Content;
+  public static class Voice_OffsetBox extends OffsetBox {// location box to transpose in pitch, move in time, etc. 
+    public Voice VoiceContent;
     /* ********************************************************************************* */
-    public VoiceOffsetBox() {
+    public Voice_OffsetBox() {
       super();
       MyBounds = new CajaDelimitadora();
       this.Clear();
     }
     /* ********************************************************************************* */
     @Override public ISonglet GetContent() {
-      return Content;
+      return VoiceContent;
     }
     /* ********************************************************************************* */
-    @Override public Singer Spawn_Singer() {// always always always override this
+    @Override public Voice_Singer Spawn_Singer() {// for render time.  always always always override this
       return this.Spawn_My_Singer();
     }
     /* ********************************************************************************* */
     public Voice_Singer Spawn_My_Singer() {// for render time
-      Voice_Singer ph = this.Content.Spawn_My_Singer();
+      Voice_Singer ph = this.VoiceContent.Spawn_My_Singer();
       ph.MyOffsetBox = this;
       return ph;
     }
     /* ********************************************************************************* */
-    @Override public VoiceOffsetBox Clone_Me() {// always override this thusly
-      VoiceOffsetBox child = new VoiceOffsetBox();
+    @Override public Voice_OffsetBox Clone_Me() {// always override this thusly
+      Voice_OffsetBox child = new Voice_OffsetBox();
       child.Copy_From(this);
-      child.Content = this.Content;
+      child.VoiceContent = this.VoiceContent;
       return child;
     }
     /* ********************************************************************************* */
-    @Override public VoiceOffsetBox Deep_Clone_Me() {// ICloneable
-      VoiceOffsetBox child = this.Clone_Me();
-      child.Content = this.Content.Deep_Clone_Me();
+    @Override public Voice_OffsetBox Deep_Clone_Me() {// ICloneable
+      Voice_OffsetBox child = this.Clone_Me();
+      child.VoiceContent = this.VoiceContent.Deep_Clone_Me();
       return child;
     }
   }
@@ -462,7 +466,7 @@ public class Voice implements ISonglet, IDrawable {
       wave.Init(UnMapped_Prev_Time, UnMapped_EndTime, this.MyProject.SampleRate);// wave times are in parent coordinates because the parent will be reading the wave data.
       Prev_Point = this.Cursor_Point;
       int pdex = this.Next_Point_Dex;
-
+      
       if (true) {
         Next_Point = this.MyVoice.CPoints.get(pdex);
         while (Next_Point.TimeX < EndTime) {
@@ -484,7 +488,7 @@ public class Voice implements ISonglet, IDrawable {
           this.Next_Point_Dex++;
         }
       }
-
+      
       this.Prev_Point_Dex = this.Next_Point_Dex - 1;
 
       // render loose end. 
@@ -579,14 +583,14 @@ public class Voice implements ISonglet, IDrawable {
       double OctaveRate = OctaveRange / TimeRange;// octaves per second
       double LoudnessRate = LoudnessRange / TimeRange;
       int NumSamples = (int) Math.ceil(TimeRange * SRate);
-
+      
       double TimeAlong;
       double CurrentOctaveLocal, CurrentFrequency, CurrentFrequencyFactorAbsolute, CurrentFrequencyFactorLocal;
       double CurrentLoudness;
       double Amplitude;
-
+      
       double SubTimeIterate = (pnt0.SubTime * BaseFreq * Globals.TwoPi);
-
+      
       for (int scnt = 0; scnt < NumSamples; scnt++) {
         TimeAlong = scnt * SampleDuration;
         CurrentOctaveLocal = TimeAlong * OctaveRate;

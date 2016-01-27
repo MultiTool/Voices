@@ -72,7 +72,16 @@ public class NoteMaker {
   public static Voice Create_Tapered_Note(double TimeOffset, double Duration, double OctaveOffset, double LoudnessOffset, int numsteps) {
     double AttackTime = 0.01;
     Duration -= AttackTime;
-    Voice voice = new Voice();
+    Voice voice, voice_clone;
+    if (false) {
+      voice = new Voice();
+    } else {
+      voice = TestJunkyard.Create_SampleVoice_Stub(1);
+      if (false) {
+        voice_clone = voice.Deep_Clone_Me();// deep clone test
+        voice = voice_clone;
+      }
+    }
     double midfrac;
     voice.Add_Note(TimeOffset, OctaveOffset, 0);
     for (int cnt = 0; cnt <= numsteps; cnt++) {
