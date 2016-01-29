@@ -101,14 +101,6 @@ public class VoicePoint extends MonkeyBox {
     }
     return Hit;
   }
-  @Override public void MoveTo(double XLoc, double YLoc) {// IDrawable.IMoveable
-    if (XLoc >= 0) {// don't go backward in time
-      this.TimeX = XLoc;
-    }
-    this.OctaveY = YLoc;
-  }
-  @Override public void SetSelected(boolean Selected) {// IDrawable.IMoveable
-  }
   /* ********************************************************************************* */
   @Override public VoicePoint Clone_Me() {// ICloneable
     VoicePoint child = new VoicePoint();
@@ -119,12 +111,13 @@ public class VoicePoint extends MonkeyBox {
   @Override public VoicePoint Deep_Clone_Me() {// ICloneable
     VoicePoint child = new VoicePoint();
     child.Copy_From(this);
-    (child.UpHandle = this.UpHandle.Deep_Clone_Me()).ParentPoint = this; //child.UpHandle.ParentPoint = child;
-    (child.DownHandle = this.DownHandle.Deep_Clone_Me()).ParentPoint = this; //child.DownHandle.ParentPoint = child;
+    (child.UpHandle = this.UpHandle.Deep_Clone_Me()).ParentPoint = child; //child.UpHandle.ParentPoint = child;
+    (child.DownHandle = this.DownHandle.Deep_Clone_Me()).ParentPoint = child; //child.DownHandle.ParentPoint = child;
     return child;
   }
   /* ********************************************************************************* */
   public void Copy_From(VoicePoint donor) {
+    super.Copy_From(donor);
     this.SubTime = donor.SubTime;
     this.OctavesPerLoudness = donor.OctavesPerLoudness;
     // this.UpHandle = donor.UpHandle; this.DownHandle = donor.DownHandle;
@@ -147,6 +140,7 @@ public class VoicePoint extends MonkeyBox {
     public VoicePoint ParentPoint;
     //public double OctavesPerRadius = 0.02;
     public double OctavesPerRadius = 0.007;
+    private boolean IsSelected = false;
     /* ********************************************************************************* */
     public double GetX() {
       return this.ParentPoint.TimeX;
@@ -185,6 +179,7 @@ public class VoicePoint extends MonkeyBox {
       return Hit;
     }
     @Override public void SetSelected(boolean Selected) {// IDrawable.IMoveable
+      this.IsSelected = Selected;
     }
     @Override public void Draw_Me(Drawing_Context ParentDC) {
       // Control points have the same space as their parent, so no need to create a local map.

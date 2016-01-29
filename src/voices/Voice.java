@@ -315,9 +315,9 @@ public class Voice implements ISonglet, IDrawable {
   /* ********************************************************************************* */
   public void Copy_Children(Voice donor) {
     VoicePoint vpnt;
-    int len = this.CPoints.size();
+    int len = donor.CPoints.size();
     for (int cnt = 0; cnt < len; cnt++) {
-      vpnt = this.CPoints.get(cnt);
+      vpnt = donor.CPoints.get(cnt);
       this.Add_Note(vpnt.Deep_Clone_Me());
     }
   }
@@ -368,7 +368,7 @@ public class Voice implements ISonglet, IDrawable {
     @Override public Voice_OffsetBox Clone_Me() {// always override this thusly
       Voice_OffsetBox child = new Voice_OffsetBox();
       child.Copy_From(this);
-      child.VoiceContent = this.VoiceContent;
+      child.VoiceContent = this.VoiceContent;// iffy 
       return child;
     }
     /* ********************************************************************************* */

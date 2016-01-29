@@ -51,7 +51,7 @@ public class AudProject implements IDeletable {
   /* ********************************************************************************* */
   public void Compose_Test() {
     ISonglet song = null;
-    OffsetBox obox = null;
+    OffsetBox obox = null, obox_clone = null;
     GroupBox CMinor, CMajor, DMajor, DMinor;
     OffsetBox CMinorObx, CMajorObx, DMajorObx, DMinorObx;
     double Delay;
@@ -156,10 +156,15 @@ public class AudProject implements IDeletable {
       lbx.Set_Delay(NumBeats * TimeStep);
       lbx.Set_Duration(30);
       obox = lbx.Spawn_OffsetBox();
-      
+
       obox.TimeX += NoteMaker.OffsetTime;
       obox.OctaveY = (4);
       break;
+    }
+    if (true) {
+      obox_clone = obox.Deep_Clone_Me();// deep clone test
+      obox.Delete_Me();
+      obox = obox_clone;
     }
     Wrap_For_Graphics(obox);
     if (false) {

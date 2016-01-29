@@ -424,7 +424,7 @@ public class LoopBox implements ISonglet, IDrawable {
       ParentDC.gr.setClip(null);
     }
     /* ********************************************************************************* */
-    public void Draw_My_Bounds(Drawing_Context ParentDC) {// for debugging. break glass in case of emergency
+    @Override public void Draw_My_Bounds(Drawing_Context ParentDC) {// for debugging. break glass in case of emergency
       OffsetBox GlobalOffset = ParentDC.GlobalOffset;
       Graphics2D gr = ParentDC.gr;
       this.MyBounds.Sort_Me();
@@ -432,42 +432,10 @@ public class LoopBox implements ISonglet, IDrawable {
       int rx1 = (int) GlobalOffset.UnMapTime(this.MyBounds.Max.x);
       int ry0 = (int) GlobalOffset.UnMapPitch(this.MyBounds.Min.y);
       int ry1 = (int) GlobalOffset.UnMapPitch(this.MyBounds.Max.y);
-      if (ry1 < ry0) {// swap
-        int temp = ry1;
-        ry1 = ry0;
-        ry0 = temp;
-      }
 
-      // thinner lines for more distal sub-branches
-      double extra = (2.0 / (double) ParentDC.RecurseDepth);
+      gr.drawLine(rx0, ry0, rx0, ry1);// Just draw the beginning and ending cutoff lines for the loop set.
+      gr.drawLine(rx1, ry0, rx1, ry1);
 
-      int buf = 0;// (int) Math.ceil(extra * 2);
-      rx0 -= buf;
-      rx1 += buf;
-      ry0 -= buf;
-      ry1 += buf;
-      int wdt = rx1 - rx0;
-      int hgt = ry1 - ry0;
-      int cint = Globals.RandomGenerator.nextInt() % 256;
-      Color col = new Color(cint);
-
-      if (false) {
-        Rectangle2D rect = new Rectangle2D.Float();
-        rect.setRect(rx0, ry0, rx1 - rx0, ry1 - ry0);
-        ParentDC.gr.clip(rect);
-      }
-
-      Stroke oldStroke = gr.getStroke();
-      if (false) {
-        gr.setColor(Globals.ToAlpha(Color.red, 100));// draw box around loopbox 
-      }
-      BasicStroke bs = new BasicStroke((float) (10.0), BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND);
-      //gr.setStroke(bs);
-
-      //ParentDC.gr.setColor(col);//Color.magenta
-      gr.drawRect(rx0, ry0, wdt, hgt);
-
-      gr.setStroke(oldStroke);
       ParentDC.gr.setClip(null);
     }
   }

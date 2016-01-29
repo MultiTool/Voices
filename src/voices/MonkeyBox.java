@@ -29,6 +29,7 @@ public class MonkeyBox implements IDrawable.IMoveable, IDeletable {// location b
   // graphics support, will move to separate object
   //double OctavesPerRadius = 0.03;
   double OctavesPerRadius = 0.01;
+  boolean IsSelected = false;
 
   /* ********************************************************************************* */
   public MonkeyBox() {
@@ -180,6 +181,7 @@ public class MonkeyBox implements IDrawable.IMoveable, IDeletable {// location b
     return false;
   }
   @Override public void SetSelected(boolean Selected) {// IDrawable.IMoveable
+    this.IsSelected = Selected;
   }
   /* ********************************************************************************* */
   @Override public boolean Create_Me() {// IDeletable

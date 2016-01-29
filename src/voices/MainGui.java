@@ -145,7 +145,7 @@ public class MainGui {
         }
         g2d.drawPolygon(p);
       }
-      
+
       Draw_Me(g2d);
     }
     /* ********************************************************************************* */
@@ -182,11 +182,15 @@ public class MainGui {
       // this is really ugly.  #kludgey
       this.MyProject.GraphicRoot.Content.ContentOBox.GoFishing(Query);// call this on graphic songlet's child obox. 
       this.Query.DecrementStack();
-      System.out.println();
+      if (this.Query.Leaf != null) {
+        this.Query.Leaf.SetSelected(true);
+        this.repaint();
+      }
     }
     @Override public void mouseReleased(MouseEvent me) {
       double XCtr, YCtr, Scale;
       if (this.Query.Leaf != null) {
+        this.Query.Leaf.SetSelected(false);
         this.MyProject.Update_Guts();
         this.MyProject.GraphicRoot.UpdateBoundingBox();
         //this.Query.UpdateBoundingBoxes();

@@ -8,6 +8,8 @@ package voices;
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Graphics2D;
+import java.awt.Paint;
+import java.awt.RadialGradientPaint;
 import java.awt.Stroke;
 import java.awt.geom.Point2D;
 import voices.ISonglet.Singer;
@@ -46,7 +48,6 @@ public class OffsetBox extends MonkeyBox { //implements IDrawable.IMoveable, IDe
   /* ********************************************************************************* */
   @Override public OffsetBox Deep_Clone_Me() {// ICloneable
     OffsetBox child = this.Clone_Me();
-    //child.GetBoundingBox().Clone_Me();
     return child;
   }
   /* ********************************************************************************* */
@@ -74,9 +75,7 @@ public class OffsetBox extends MonkeyBox { //implements IDrawable.IMoveable, IDe
   // <editor-fold defaultstate="collapsed" desc="IDrawable and IMoveable">
   /* ********************************************************************************* */
   @Override public void Draw_Me(Drawing_Context ParentDC) {// IDrawable
-    //Draw_My_Bounds(ParentDC);
-    if (ParentDC.ClipBounds.Intersects(MyBounds)) {// If we make ISonglet also drawable then we can stop repeating this code and put it all in OffsetBox.
-
+    if (ParentDC.ClipBounds.Intersects(MyBounds)) {
       Point2D.Double pnt = ParentDC.To_Screen(this.TimeX, this.OctaveY);
       double extra = (1.0 / (double) ParentDC.RecurseDepth);
       //extra *= 0.02;
@@ -100,19 +99,33 @@ public class OffsetBox extends MonkeyBox { //implements IDrawable.IMoveable, IDe
     }
   }
   /* ********************************************************************************* */
-  @Override public void Draw_Dot(Drawing_Context ParentDC, Color col) {
-    Point2D.Double pnt = ParentDC.To_Screen(this.TimeX, this.OctaveY);
-    double extra = (1.0 / (double) ParentDC.RecurseDepth);
+  @Override public void Draw_Dot(Drawing_Context DC, Color col) {
+    Paint oldpaint = DC.gr.getPaint();
+    Point2D.Double pnt = DC.To_Screen(this.TimeX, this.OctaveY);
+    double extra = (1.0 / (double) DC.RecurseDepth);
 //    double RadiusPixels = Math.abs(ParentDC.GlobalOffset.ScaleY) * (OctavesPerRadius + extra * 0.02);
-    double RadiusPixels = Math.abs(ParentDC.GlobalOffset.ScaleY) * (OctavesPerRadius);
+    double RadiusPixels = Math.abs(DC.GlobalOffset.ScaleY) * (OctavesPerRadius);
     RadiusPixels = Math.ceil(RadiusPixels);
     double DiameterPixels = RadiusPixels * 2.0;
 //    Color col = Globals.ToRainbow(extra);
 //    col = Color.MAGENTA;
-    ParentDC.gr.setColor(Globals.ToAlpha(col, 200));// control point just looks like a dot
-    ParentDC.gr.fillOval((int) (pnt.x - RadiusPixels), (int) (pnt.y - RadiusPixels), (int) DiameterPixels, (int) DiameterPixels);
-    ParentDC.gr.setColor(Globals.ToAlpha(Color.darkGray, 200));
-    ParentDC.gr.drawOval((int) (pnt.x - RadiusPixels), (int) (pnt.y - RadiusPixels), (int) DiameterPixels, (int) DiameterPixels);
+    if (true && this.IsSelected) {// to do: add glow for selected objects
+      Point2D center = new Point2D.Float(50, 50);
+      float radius = 25;
+      float[] dist = {0.0f, 0.5f, 1.0f};
+      Color[] colors = {Color.RED, Color.red, Globals.ToAlpha(Color.red, 1)};
+      double GradRadius = RadiusPixels * 2;
+      double GradDiameter = GradRadius * 2;
+      RadialGradientPaint paint = new RadialGradientPaint(pnt, (int) GradRadius, dist, colors);
+      DC.gr.setPaint(paint);
+      DC.gr.fillOval((int) (pnt.x - GradRadius), (int) (pnt.y - GradRadius), (int) GradDiameter, (int) GradDiameter);
+      DC.gr.setPaint(oldpaint);
+    }
+    DC.gr.setColor(Globals.ToAlpha(col, 200));// control point just looks like a dot
+    DC.gr.fillOval((int) (pnt.x - RadiusPixels), (int) (pnt.y - RadiusPixels), (int) DiameterPixels, (int) DiameterPixels);
+    DC.gr.setColor(Globals.ToAlpha(Color.darkGray, 200));
+    DC.gr.drawOval((int) (pnt.x - RadiusPixels), (int) (pnt.y - RadiusPixels), (int) DiameterPixels, (int) DiameterPixels);
+
   }
   /* ********************************************************************************* */
   public void Draw_My_Bounds(Drawing_Context ParentDC) {// for debugging. break glass in case of emergency
