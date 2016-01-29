@@ -252,7 +252,7 @@ public class Voice implements ISonglet, IDrawable {
     ParentDC.gr.setColor(Globals.ToAlpha(Emerald, 200));
 //    ParentDC.gr.setColor(Globals.ToAlpha(Color.green, 200));
     ParentDC.gr.drawPolyline(SpineX, SpineY, Range);
-    
+
     for (int pcnt = 0; pcnt < len; pcnt++) {
       pnt = this.CPoints.get(pcnt);
       if (ChildrenBounds.Intersects(pnt.GetBoundingBox())) {
@@ -466,7 +466,7 @@ public class Voice implements ISonglet, IDrawable {
       wave.Init(UnMapped_Prev_Time, UnMapped_EndTime, this.MyProject.SampleRate);// wave times are in parent coordinates because the parent will be reading the wave data.
       Prev_Point = this.Cursor_Point;
       int pdex = this.Next_Point_Dex;
-      
+
       if (true) {
         Next_Point = this.MyVoice.CPoints.get(pdex);
         while (Next_Point.TimeX < EndTime) {
@@ -488,7 +488,7 @@ public class Voice implements ISonglet, IDrawable {
           this.Next_Point_Dex++;
         }
       }
-      
+
       this.Prev_Point_Dex = this.Next_Point_Dex - 1;
 
       // render loose end. 
@@ -502,14 +502,23 @@ public class Voice implements ISonglet, IDrawable {
         }
       }
       wave.Amplify(this.MyOffsetBox.LoudnessFactor);
-      if (false) {
-        this.Distortion_Effect(wave, 4.0);
+      if (true) {
+        this.Distortion_Effect2(wave, 4.0);
       }
       wave.NumSamples = this.Render_Sample_Count;
     }
     /* ********************************************************************************* */
     public double GetWaveForm(double SubTimeAbsolute) {// not used currently
       return Math.sin(SubTimeAbsolute * this.MyVoice.BaseFreq * Globals.TwoPi);
+    }
+    /* ********************************************************************************* */
+    public void Distortion_Effect2(Wave wave, double gain) {
+      int len = wave.NumSamples;
+      for (int cnt = 0; cnt < len; cnt++) {
+        double val = wave.Get(cnt);
+        val = Globals.RandomGenerator.nextDouble() * gain * val * 0.5 + val * 0.5;
+        wave.Set(val);
+      }
     }
     /* ********************************************************************************* */
     public void Distortion_Effect(Wave wave, double gain) {
@@ -583,14 +592,14 @@ public class Voice implements ISonglet, IDrawable {
       double OctaveRate = OctaveRange / TimeRange;// octaves per second
       double LoudnessRate = LoudnessRange / TimeRange;
       int NumSamples = (int) Math.ceil(TimeRange * SRate);
-      
+
       double TimeAlong;
       double CurrentOctaveLocal, CurrentFrequency, CurrentFrequencyFactorAbsolute, CurrentFrequencyFactorLocal;
       double CurrentLoudness;
       double Amplitude;
-      
+
       double SubTimeIterate = (pnt0.SubTime * BaseFreq * Globals.TwoPi);
-      
+
       for (int scnt = 0; scnt < NumSamples; scnt++) {
         TimeAlong = scnt * SampleDuration;
         CurrentOctaveLocal = TimeAlong * OctaveRate;

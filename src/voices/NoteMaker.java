@@ -73,7 +73,7 @@ public class NoteMaker {
     double AttackTime = 0.01;
     Duration -= AttackTime;
     Voice voice;
-    if (false) {
+    if (true) {
       voice = new Voice();
     } else {
       voice = TestJunkyard.Create_SampleVoice_Stub(1);
