@@ -16,6 +16,7 @@ import java.awt.RenderingHints;
 public class GraphicBox implements IDrawable, ISonglet, IDeletable {// 
   public OffsetBox ContentOBox = null;
   private CajaDelimitadora MyBounds = new CajaDelimitadora();
+  int RefCount = 0;
   private int FreshnessTimeStamp;
   /* ********************************************************************************* */
   public void Attach_Content(OffsetBox content) {
@@ -29,6 +30,7 @@ public class GraphicBox implements IDrawable, ISonglet, IDeletable {//
   public Graphic_OffsetBox Spawn_My_OffsetBox() {// for compose time
     Graphic_OffsetBox lbox = new Graphic_OffsetBox();// Deliver a OffsetBox specific to this type of phrase.
     lbox.Content = this;
+    lbox.Content.Ref_Songlet();
     return lbox;
   }
   /* ********************************************************************************* */
@@ -151,6 +153,16 @@ public class GraphicBox implements IDrawable, ISonglet, IDeletable {//
     this.ContentOBox.Delete_Me();
   }
   /* ********************************************************************************* */
+  @Override public int Ref_Songlet() {// ISonglet Reference Counting: increment ref counter and return new value just for kicks
+    return ++this.RefCount;
+  }
+  @Override public int UnRef_Songlet() {// ISonglet Reference Counting: decrement ref counter and return new value just for kicks
+    return --this.RefCount;
+  }
+  @Override public int GetRefCount() {// ISonglet Reference Counting: get number of references for serialization
+    return this.RefCount;
+  }
+  /* ********************************************************************************* */
   // this is all junk that is never used
   @Override public Singer Spawn_Singer() {
     throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
@@ -248,7 +260,21 @@ public class GraphicBox implements IDrawable, ISonglet, IDeletable {//
     @Override public Graphic_OffsetBox Deep_Clone_Me() {// ICloneable
       Graphic_OffsetBox child = this.Clone_Me();
       child.Content = this.Content.Deep_Clone_Me();
+      child.Content.Ref_Songlet();
       return child;
+    }
+    /* ********************************************************************************* */
+    @Override public boolean Create_Me() {// IDeletable
+      return true;
+    }
+    @Override public void Delete_Me() {// IDeletable
+      super.Delete_Me();
+      if (this.Content != null) {
+        if (this.Content.UnRef_Songlet() <= 0) {
+          this.Content.Delete_Me();
+          this.Content = null;
+        }
+      }
     }
     /* ********************************************************************************* */
     public void Zoom(double XCtr, double YCtr, double Scale) {

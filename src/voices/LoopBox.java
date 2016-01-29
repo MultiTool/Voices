@@ -28,13 +28,15 @@ public class LoopBox implements ISonglet, IDrawable {
   private CajaDelimitadora MyBounds = new CajaDelimitadora();
   Ghost_OffsetBox ghost = new Ghost_OffsetBox();// oy, this has to be refcounted because it may be used after recursion is done. 
   private int FreshnessTimeStamp;
+  private int RefCount = 0;
   /* ********************************************************************************* */
   public LoopBox() {
     MyBounds = new CajaDelimitadora();
     ghost.Assign_Parent_Songlet(this);
+    RefCount = 0;
   }
   /* ********************************************************************************* */
-  @Override public OffsetBox Spawn_OffsetBox() {
+  @Override public Loop_OffsetBox Spawn_OffsetBox() {
     return this.Spawn_My_OffsetBox();
   }
   /* ********************************************************************************* */
@@ -42,6 +44,7 @@ public class LoopBox implements ISonglet, IDrawable {
     Loop_OffsetBox lbox = new Loop_OffsetBox();// Deliver an OffsetBox specific to this type of songlet.
     lbox.Clear();
     lbox.Content = this;
+    lbox.Content.Ref_Songlet();
     return lbox;
   }
   /* ********************************************************************************* */
@@ -230,7 +233,7 @@ public class LoopBox implements ISonglet, IDrawable {
     this.Delay = donor.Delay;// time delay between loops
     this.Sustain = donor.Sustain;// Opposite of Diminish. How much the loudness changes with each repeat. 
     this.MyProject = donor.MyProject;
-    this.MyBounds = new CajaDelimitadora();
+    this.MyBounds.Copy_From(donor.MyBounds);
     this.FreshnessTimeStamp = 0;
     //this.SubSongs;
     //this. Content = null;
@@ -243,8 +246,23 @@ public class LoopBox implements ISonglet, IDrawable {
   }
   @Override public void Delete_Me() {// IDeletable
     this.MyBounds.Delete_Me();
+    this.MyBounds = null;
     this.ghost.Delete_Me();
-    this.ContentOBox.Delete_Me();
+    this.ghost = null;
+    if (this.ContentOBox != null) {
+      this.ContentOBox.Delete_Me();
+      this.ContentOBox = null;
+    }
+  }
+  /* ********************************************************************************* */
+  @Override public int Ref_Songlet() {// ISonglet Reference Counting: increment ref counter and return new value just for kicks
+    return ++this.RefCount;
+  }
+  @Override public int UnRef_Songlet() {// ISonglet Reference Counting: decrement ref counter and return new value just for kicks
+    return --this.RefCount;
+  }
+  @Override public int GetRefCount() {// ISonglet Reference Counting: get number of references for serialization
+    return this.RefCount;
   }
   /* ********************************************************************************* */
   public static class Loop_Singer extends Singer {
@@ -433,10 +451,23 @@ public class LoopBox implements ISonglet, IDrawable {
       int ry0 = (int) GlobalOffset.UnMapPitch(this.MyBounds.Min.y);
       int ry1 = (int) GlobalOffset.UnMapPitch(this.MyBounds.Max.y);
 
-      gr.drawLine(rx0, ry0, rx0, ry1);// Just draw the beginning and ending cutoff lines for the loop set.
-      gr.drawLine(rx1, ry0, rx1, ry1);
+      //gr.drawLine(rx0, ry0, rx0, ry1);
+      gr.drawLine(rx1, ry0, rx1, ry1);// Just draw the ending cutoff line for the loop set.
 
       ParentDC.gr.setClip(null);
+    }
+    /* ********************************************************************************* */
+    @Override public boolean Create_Me() {// IDeletable
+      return true;
+    }
+    @Override public void Delete_Me() {// IDeletable
+      super.Delete_Me();
+      if (this.Content != null) {
+        if (this.Content.UnRef_Songlet() <= 0) {
+          this.Content.Delete_Me();
+          this.Content = null;
+        }
+      }
     }
   }
   /* ********************************************************************************* */
@@ -541,7 +572,7 @@ public class LoopBox implements ISonglet, IDrawable {
     /* ********************************************************************************* */
     @Override public Ghost_OffsetBox Deep_Clone_Me() {// ICloneable
       Ghost_OffsetBox child = this.Clone_Me();
-      child.ContentLayer = child.ContentLayer.Deep_Clone_Me();// ??? 
+      child.ContentLayer = this.ContentLayer.Deep_Clone_Me();// ??? 
       //throw new UnsupportedOperationException("Never clone a ghost!");
       return child;
     }

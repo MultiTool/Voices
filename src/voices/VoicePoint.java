@@ -44,11 +44,13 @@ public class VoicePoint extends MonkeyBox {
     RadiusPixels = Math.ceil(RadiusPixels);
     double DiameterPixels = RadiusPixels * 2.0;
     this.UpHandle.Draw_Me(ParentDC);
-    // ParentDC.gr.setColor(ToAlpha(Color.green, 200));
-    ParentDC.gr.setColor(Globals.ToAlpha(Color.yellow, 200));// control point just looks like a dot
-    ParentDC.gr.fillOval((int) (pnt.x - RadiusPixels), (int) (pnt.y - RadiusPixels), (int) DiameterPixels, (int) DiameterPixels);
-    ParentDC.gr.setColor(Globals.ToAlpha(Color.darkGray, 200));
-    ParentDC.gr.drawOval((int) (pnt.x - RadiusPixels), (int) (pnt.y - RadiusPixels), (int) DiameterPixels, (int) DiameterPixels);
+    MonkeyBox.Draw_Dot2(ParentDC, pnt.x, pnt.y, OctavesPerRadius, this.IsSelected, Globals.ToAlpha(Color.yellow, 200));
+    if (false) {
+      ParentDC.gr.setColor(Globals.ToAlpha(Color.yellow, 200));// control point just looks like a dot
+      ParentDC.gr.fillOval((int) (pnt.x - RadiusPixels), (int) (pnt.y - RadiusPixels), (int) DiameterPixels, (int) DiameterPixels);
+      ParentDC.gr.setColor(Globals.ToAlpha(Color.darkGray, 200));
+      ParentDC.gr.drawOval((int) (pnt.x - RadiusPixels), (int) (pnt.y - RadiusPixels), (int) DiameterPixels, (int) DiameterPixels);
+    }
   }
   /* ********************************************************************************* */
   @Override public CajaDelimitadora GetBoundingBox() {
@@ -190,11 +192,15 @@ public class VoicePoint extends MonkeyBox {
 
       RadiusPixels = Math.ceil(RadiusPixels);
       double DiameterPixels = RadiusPixels * 2.0;
-      // ParentDC.gr.setColor(ToAlpha(Color.green, 200));
-      ParentDC.gr.setColor(Globals.ToAlpha(Color.lightGray, 100));// control point just looks like a dot
-      ParentDC.gr.fillOval((int) (pnt.x - RadiusPixels), (int) (YlocHigh - RadiusPixels), (int) DiameterPixels, (int) DiameterPixels);
-      ParentDC.gr.setColor(Globals.ToAlpha(Color.darkGray, 200));
-      ParentDC.gr.drawOval((int) (pnt.x - RadiusPixels), (int) (YlocHigh - RadiusPixels), (int) DiameterPixels, (int) DiameterPixels);
+
+      MonkeyBox.Draw_Dot2(ParentDC, pnt.x, YlocHigh, OctavesPerRadius, this.IsSelected, Globals.ToAlpha(Color.lightGray, 100));
+
+      if (false) {
+        ParentDC.gr.setColor(Globals.ToAlpha(Color.lightGray, 100));// control point just looks like a dot
+        ParentDC.gr.fillOval((int) (pnt.x - RadiusPixels), (int) (YlocHigh - RadiusPixels), (int) DiameterPixels, (int) DiameterPixels);
+        ParentDC.gr.setColor(Globals.ToAlpha(Color.darkGray, 200));
+        ParentDC.gr.drawOval((int) (pnt.x - RadiusPixels), (int) (YlocHigh - RadiusPixels), (int) DiameterPixels, (int) DiameterPixels);
+      }
     }
     @Override public CajaDelimitadora GetBoundingBox() {
       return this.MyBounds;

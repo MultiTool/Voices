@@ -110,7 +110,11 @@ public class CajaDelimitadora implements IDeletable {// DIY BoundingBox
   }
   /* ********************************************************************************* */
   public void Reset() {// reset for min, max comparisons
-    this.Min.setLocation(Double.POSITIVE_INFINITY, Double.POSITIVE_INFINITY);
+    try {
+      this.Min.setLocation(Double.POSITIVE_INFINITY, Double.POSITIVE_INFINITY);
+    } catch (Exception ex) {
+      boolean nop = true;
+    }
     this.Max.setLocation(Double.NEGATIVE_INFINITY, Double.NEGATIVE_INFINITY);
     this.ZeroCheck();
   }

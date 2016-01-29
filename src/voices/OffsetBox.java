@@ -89,7 +89,10 @@ public class OffsetBox extends MonkeyBox { //implements IDrawable.IMoveable, IDe
         ParentDC.gr.setColor(Globals.ToAlpha(Color.darkGray, 200));
         ParentDC.gr.drawOval((int) (pnt.x - RadiusPixels), (int) (pnt.y - RadiusPixels), (int) DiameterPixels, (int) DiameterPixels);
       }
-      this.Draw_Dot(ParentDC, col);
+      MonkeyBox.Draw_Dot2(ParentDC, pnt.x, pnt.y, OctavesPerRadius, this.IsSelected, Globals.ToAlpha(col, 200));
+      if (false) {
+        this.Draw_Dot(ParentDC, col);
+      }
       // maybe reduce ChildDC's clipbounds to intersect with my own bounds? after all none of my children should go outside my bounds
       // eh, that would conflict with dragging my child outside of my bounds - it would stop being drawn during the drag. 
       Drawing_Context ChildDC = new Drawing_Context(ParentDC, this);// In C++ ChildDC will be a local variable from the stack, not heap. 
@@ -125,7 +128,6 @@ public class OffsetBox extends MonkeyBox { //implements IDrawable.IMoveable, IDe
     DC.gr.fillOval((int) (pnt.x - RadiusPixels), (int) (pnt.y - RadiusPixels), (int) DiameterPixels, (int) DiameterPixels);
     DC.gr.setColor(Globals.ToAlpha(Color.darkGray, 200));
     DC.gr.drawOval((int) (pnt.x - RadiusPixels), (int) (pnt.y - RadiusPixels), (int) DiameterPixels, (int) DiameterPixels);
-
   }
   /* ********************************************************************************* */
   public void Draw_My_Bounds(Drawing_Context ParentDC) {// for debugging. break glass in case of emergency
@@ -218,5 +220,15 @@ public class OffsetBox extends MonkeyBox { //implements IDrawable.IMoveable, IDe
   }
   @Override public void Delete_Me() {// IDeletable
     this.MyBounds.Delete_Me();
+    this.MyBounds = null;
+    if (false) {// we can probably enable this and remove it from everywhere else
+      ISonglet Content = this.GetContent();
+      if (Content != null) {
+        if (Content.UnRef_Songlet() <= 0) {
+          Content.Delete_Me();
+          Content = null;// well maybe this makes a problem with the above plan. need a NullContent() ? 
+        }
+      }
+    }
   }
 }

@@ -19,9 +19,11 @@ public class Voice implements ISonglet, IDrawable {
   protected double BaseFreq = Globals.BaseFreqC0;
   // graphics support
   CajaDelimitadora MyBounds = new CajaDelimitadora();
+  private int RefCount = 0;
   /* ********************************************************************************* */
   public Voice() {
     this.MaxAmplitude = 1.0;
+    RefCount = 0;
   }
   /* ********************************************************************************* */
   @Override public OffsetBox Spawn_OffsetBox() {// for compose time
@@ -31,6 +33,7 @@ public class Voice implements ISonglet, IDrawable {
   public Voice_OffsetBox Spawn_My_OffsetBox() {// for compose time
     Voice_OffsetBox lbox = new Voice_OffsetBox();// Deliver a OffsetBox specific to this type of phrase.
     lbox.VoiceContent = this;
+    lbox.VoiceContent.Ref_Songlet();
     return lbox;
   }
   /* ********************************************************************************* */
@@ -251,7 +254,8 @@ public class Voice implements ISonglet, IDrawable {
     Color Emerald = new Color(0, 0.5f, 0);// rgb
     ParentDC.gr.setColor(Globals.ToAlpha(Emerald, 200));
 //    ParentDC.gr.setColor(Globals.ToAlpha(Color.green, 200));
-    ParentDC.gr.drawPolyline(SpineX, SpineY, Range);
+
+    ParentDC.gr.drawPolyline(SpineX, SpineY, Range);// draw spine
 
     for (int pcnt = 0; pcnt < len; pcnt++) {
       pnt = this.CPoints.get(pcnt);
@@ -342,6 +346,16 @@ public class Voice implements ISonglet, IDrawable {
     this.CPoints.clear();
   }
   /* ********************************************************************************* */
+  @Override public int Ref_Songlet() {// ISonglet Reference Counting: increment ref counter and return new value just for kicks
+    return ++this.RefCount;
+  }
+  @Override public int UnRef_Songlet() {// ISonglet Reference Counting: decrement ref counter and return new value just for kicks
+    return --this.RefCount;
+  }
+  @Override public int GetRefCount() {// ISonglet Reference Counting: get number of references for serialization
+    return this.RefCount;
+  }
+  /* ********************************************************************************* */
   public static class Voice_OffsetBox extends OffsetBox {// location box to transpose in pitch, move in time, etc. 
     public Voice VoiceContent;
     /* ********************************************************************************* */
@@ -376,6 +390,19 @@ public class Voice implements ISonglet, IDrawable {
       Voice_OffsetBox child = this.Clone_Me();
       child.VoiceContent = this.VoiceContent.Deep_Clone_Me();
       return child;
+    }
+    /* ********************************************************************************* */
+    @Override public boolean Create_Me() {// IDeletable
+      return true;
+    }
+    @Override public void Delete_Me() {// IDeletable
+      super.Delete_Me();
+      if (this.VoiceContent != null) {
+        if (this.VoiceContent.UnRef_Songlet() <= 0) {
+          this.VoiceContent.Delete_Me();
+          this.VoiceContent = null;
+        }
+      }
     }
   }
   /* ********************************************************************************* */
@@ -503,7 +530,8 @@ public class Voice implements ISonglet, IDrawable {
       }
       wave.Amplify(this.MyOffsetBox.LoudnessFactor);
       if (true) {
-        this.Distortion_Effect2(wave, 4.0);
+        //this.Distortion_Effect(wave, 10.0);
+        this.Noise_Effect(wave);
       }
       wave.NumSamples = this.Render_Sample_Count;
     }
@@ -511,13 +539,17 @@ public class Voice implements ISonglet, IDrawable {
     public double GetWaveForm(double SubTimeAbsolute) {// not used currently
       return Math.sin(SubTimeAbsolute * this.MyVoice.BaseFreq * Globals.TwoPi);
     }
+    double flywheel = 0.0;
+    double drag = 0.9, antidrag = 1.0 - drag;
     /* ********************************************************************************* */
-    public void Distortion_Effect2(Wave wave, double gain) {
+    public void Noise_Effect(Wave wave) {
       int len = wave.NumSamples;
       for (int cnt = 0; cnt < len; cnt++) {
         double val = wave.Get(cnt);
-        val = Globals.RandomGenerator.nextDouble() * gain * val * 0.5 + val * 0.5;
-        wave.Set(val);
+        double rand = (Globals.RandomGenerator.nextDouble()) * antidrag + flywheel;
+        flywheel = rand * drag;
+        val = rand * val * 0.5 + val * 0.5;
+        wave.Set(cnt, val);
       }
     }
     /* ********************************************************************************* */
@@ -527,7 +559,7 @@ public class Voice implements ISonglet, IDrawable {
       for (int cnt = 0; cnt < len; cnt++) {
         double val = wave.Get(cnt) * gain;
         val = val / Math.pow(1 + Math.abs(Math.pow(val, power)), 1.0 / power);
-        wave.Set(val);
+        wave.Set(cnt, val);
       }
     }
     /* ********************************************************************************* */

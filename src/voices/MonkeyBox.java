@@ -8,6 +8,8 @@ package voices;
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Graphics2D;
+import java.awt.Paint;
+import java.awt.RadialGradientPaint;
 import java.awt.Stroke;
 import java.awt.geom.Point2D;
 
@@ -145,12 +147,37 @@ public class MonkeyBox implements IDrawable.IMoveable, IDeletable {// location b
     double RadiusPixels = Math.abs(ParentDC.GlobalOffset.ScaleY) * (OctavesPerRadius);
     RadiusPixels = Math.ceil(RadiusPixels);
     double DiameterPixels = RadiusPixels * 2.0;
-//    Color col = Globals.ToRainbow(extra);
-//    col = Color.MAGENTA;
     ParentDC.gr.setColor(Globals.ToAlpha(col, 200));// control point just looks like a dot
     ParentDC.gr.fillOval((int) (pnt.x - RadiusPixels), (int) (pnt.y - RadiusPixels), (int) DiameterPixels, (int) DiameterPixels);
     ParentDC.gr.setColor(Globals.ToAlpha(Color.darkGray, 200));
     ParentDC.gr.drawOval((int) (pnt.x - RadiusPixels), (int) (pnt.y - RadiusPixels), (int) DiameterPixels, (int) DiameterPixels);
+  }
+  /* ********************************************************************************* */
+  public static void Draw_Dot2(Drawing_Context DC, double XCtr, double YCtr, double OctavesPerRadius, boolean Selected, Color col) {
+    // #kludgey, hacky.  Need to create the gradient only once I guess, rather than every time a point is moved. 
+    Paint oldpaint = DC.gr.getPaint();
+    Point2D.Double pnt = DC.To_Screen(XCtr, YCtr);
+    double RadiusPixels = Math.abs(DC.GlobalOffset.ScaleY) * (OctavesPerRadius);
+    RadiusPixels = Math.ceil(RadiusPixels);
+    double DiameterPixels = RadiusPixels * 2.0;
+    if (Selected) {// add glow for selected objects
+      float[] dist = {0.0f, 0.49f, 0.5f, 1.0f};
+      Color[] colors = {Globals.ToAlpha(Color.red, 0), Globals.ToAlpha(Color.red, 0), Color.red, Globals.ToAlpha(Color.red, 1)};
+      double GradRadius = RadiusPixels * 2;
+      double GradDiameter = GradRadius * 2;
+      pnt.setLocation(XCtr, YCtr);
+      RadialGradientPaint paint = new RadialGradientPaint(pnt, (int) GradRadius, dist, colors);
+      DC.gr.setPaint(paint);
+      DC.gr.fillOval((int) (XCtr - GradRadius), (int) (YCtr - GradRadius), (int) GradDiameter, (int) GradDiameter);
+      DC.gr.setPaint(oldpaint);
+    }
+    DC.gr.setColor(Globals.ToAlpha(col, 200));// control point just looks like a dot
+    DC.gr.fillOval((int) (XCtr - RadiusPixels), (int) (YCtr - RadiusPixels), (int) DiameterPixels, (int) DiameterPixels);
+    DC.gr.setColor(Globals.ToAlpha(Color.darkGray, 200));
+    DC.gr.drawOval((int) (XCtr - RadiusPixels), (int) (YCtr - RadiusPixels), (int) DiameterPixels, (int) DiameterPixels);
+//    DC.gr.fillOval((int) (pnt.x - RadiusPixels), (int) (pnt.y - RadiusPixels), (int) DiameterPixels, (int) DiameterPixels);
+//    DC.gr.setColor(Globals.ToAlpha(Color.darkGray, 200));
+//    DC.gr.drawOval((int) (pnt.x - RadiusPixels), (int) (pnt.y - RadiusPixels), (int) DiameterPixels, (int) DiameterPixels);
   }
   /* ********************************************************************************* */
   @Override public CajaDelimitadora GetBoundingBox() {// IDrawable

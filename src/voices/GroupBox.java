@@ -25,9 +25,12 @@ public class GroupBox implements ISonglet, IDrawable {
   private double MaxAmplitude = 0.0;
   public CajaDelimitadora MyBounds;
   private int FreshnessTimeStamp;
+  public String TraceText = "";// for debugging
+  private int RefCount = 0;
   /* ********************************************************************************* */
   public GroupBox() {
     MyBounds = new CajaDelimitadora();
+    RefCount = 0;
   }
   /* ********************************************************************************* */
   public OffsetBox Add_SubSong(ISonglet songlet, double TimeOffset, double OctaveOffset, double LoudnessFactor) {
@@ -131,6 +134,7 @@ public class GroupBox implements ISonglet, IDrawable {
     Group_OffsetBox lbox = new Group_OffsetBox();// Deliver an OffsetBox specific to this type of songlet.
     lbox.Clear();
     lbox.Content = this;
+    lbox.Content.Ref_Songlet();
     return lbox;
   }
   /* ********************************************************************************* */
@@ -180,7 +184,7 @@ public class GroupBox implements ISonglet, IDrawable {
   @Override public void Draw_Me(Drawing_Context ParentDC) {// IDrawable
     OffsetBox ChildOffsetBox;
     int len = this.SubSongs.size();
-    
+
     int StartDex = 0;// not sure how to get the first within clip box without just iterating from 0. 
     int EndDex = len;
 
@@ -266,6 +270,7 @@ public class GroupBox implements ISonglet, IDrawable {
   /* ********************************************************************************* */
   @Override public GroupBox Deep_Clone_Me() {// ICloneable
     GroupBox child = new GroupBox();
+    child.TraceText = "I am a clone";
     child.Copy_From(this);
     OffsetBox SubSongHandle;
     int len = this.SubSongs.size();
@@ -277,12 +282,10 @@ public class GroupBox implements ISonglet, IDrawable {
   }
   /* ********************************************************************************* */
   public void Copy_From(GroupBox donor) {
-    //this.SubSongs = donor.SubSongs;// danger!  don't really do this!
     this.Duration = donor.Duration;
     this.Set_Project(donor.MyProject);
     this.MyName = donor.MyName;// for debugging
     this.MaxAmplitude = donor.MaxAmplitude;
-    this.MyBounds = donor.MyBounds;
     this.FreshnessTimeStamp = 0;// donor.FreshnessTimeStamp;
     this.MyBounds.Copy_From(donor.MyBounds);
   }
@@ -292,11 +295,23 @@ public class GroupBox implements ISonglet, IDrawable {
   }
   @Override public void Delete_Me() {// IDeletable
     this.MyBounds.Delete_Me();
+    this.MyBounds = null;
     int len = this.SubSongs.size();
     for (int cnt = 0; cnt < len; cnt++) {
       this.SubSongs.get(cnt).Delete_Me();
     }
     this.SubSongs.clear();
+    this.SubSongs = null;
+  }
+  /* ********************************************************************************* */
+  @Override public int Ref_Songlet() {// ISonglet Reference Counting: increment ref counter and return new value just for kicks
+    return ++this.RefCount;
+  }
+  @Override public int UnRef_Songlet() {// ISonglet Reference Counting: decrement ref counter and return new value just for kicks
+    return --this.RefCount;
+  }
+  @Override public int GetRefCount() {// ISonglet Reference Counting: get number of references for serialization
+    return this.RefCount;
   }
   /* ********************************************************************************* */
   public static class Group_Singer extends Singer {
@@ -468,6 +483,19 @@ public class GroupBox implements ISonglet, IDrawable {
       child.Copy_From(this);
       child.Content = this.Content.Deep_Clone_Me();
       return child;
+    }
+    /* ********************************************************************************* */
+    @Override public boolean Create_Me() {// IDeletable
+      return true;
+    }
+    @Override public void Delete_Me() {// IDeletable
+      super.Delete_Me();
+      if (this.Content != null) {
+        if (this.Content.UnRef_Songlet() <= 0) {
+          this.Content.Delete_Me();
+          this.Content = null;
+        }
+      }
     }
   }
 }

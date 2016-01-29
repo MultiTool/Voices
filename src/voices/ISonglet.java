@@ -87,6 +87,13 @@ public interface ISonglet extends IDrawable, IDeletable {// Cancionita
   /* ********************************************************************************* */
   @Override ISonglet Deep_Clone_Me();
   /* ********************************************************************************* */
+  int Ref_Songlet();// Reference Counting: increment ref counter and return new value just for kicks
+  int UnRef_Songlet();// Reference Counting: decrement ref counter and return new value just for kicks
+  int GetRefCount();// Reference Counting: get number of references for serialization
+  //  Possible RefCount pattern:
+  //  (MyPointer = DeletableObject).Ref_Songlet();// ref pattern 
+  //  MyPointer = MyPointer.UnRef_Songlet();// unref pattern, unref returns null?
+  /* ********************************************************************************* */
   public static class MetricsPacket {
     public double MaxDuration = 0.0;
     public AudProject MyProject = null;
