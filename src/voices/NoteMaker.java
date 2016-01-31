@@ -27,6 +27,27 @@ public class NoteMaker {
     this.Init();
   }
   /* ********************************************************************************* */
+  public static void Synth_Vibe_Spectrum(Wave wave, int NumSamples, int SampleRate) {
+    int MegaSamples = NumSamples * 300;
+    wave.Init(MegaSamples, SampleRate);
+    int NumFreqs = 50;
+    double FractAlong = 0;
+    double val, sum, FreqDecayRate = 0.999999, DecayDecay = 0.999999, FreqDecay = 1.0;
+    for (int SampCnt = 0; SampCnt < MegaSamples; SampCnt++) {
+      FractAlong = ((double) (SampCnt % NumSamples)) / (double) NumSamples;
+      sum = 0;
+      FreqDecay = 1.0;
+      for (int FreqCnt = 1; FreqCnt <= NumFreqs; FreqCnt++) {
+        val = Math.sin(FractAlong * Globals.TwoPi * (double) FreqCnt);
+        val *= FreqDecay;
+        sum += val;
+        FreqDecay *= FreqDecayRate;
+      }
+      FreqDecayRate *= DecayDecay;
+      wave.Set(SampCnt, sum);
+    }
+  }
+  /* ********************************************************************************* */
   public static ISonglet Create_Unbound_Triad_Rythm() {
     OffsetBox obox = null;
     GroupBox CMinor, CMajor, DMajor, DMinor;
@@ -73,10 +94,14 @@ public class NoteMaker {
     double AttackTime = 0.01;
     Duration -= AttackTime;
     Voice voice;
-    if (true) {
+    if (false) {
+      Wave wave = new Wave();
+      NoteMaker.Synth_Vibe_Spectrum(wave, 2699, Globals.SampleRate);//  44100 / 16.3516 = 2696.9837814036546882262286259449
+      voice = TestJunkyard.Create_SampleVoice_Stub(wave, 1);// 16.3516);
+    } else if (false) {
       voice = new Voice();
     } else {
-      voice = TestJunkyard.Create_SampleVoice_Stub(1);
+      voice = TestJunkyard.Create_SampleVoice_Stub(2);
     }
     double midfrac;
     voice.Add_Note(TimeOffset, OctaveOffset, 0);

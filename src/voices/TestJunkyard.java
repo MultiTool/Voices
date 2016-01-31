@@ -20,16 +20,26 @@ public class TestJunkyard {
     String fname = null;
     double BaseFrequency = 0;
     switch (SampleNum) {// put any droney looped wav file here
-    case 0:
-      fname = flpath + "\\..\\samples\\Plane_Tile_2756pnt250.wav";
-      BaseFrequency = Globals.BaseFreqC0 / 150.0;
-      break;
-    case 1:
-      fname = flpath + "\\..\\samples\\Violin_G_Loop.wav";
-      BaseFrequency = Globals.BaseFreqC0 / 192.576;
-      break;
+      case 0:
+        fname = flpath + "\\..\\samples\\Plane_Tile_2756pnt250.wav";
+        BaseFrequency = Globals.BaseFreqC0 / 150.0;
+        break;
+      case 1:
+        fname = flpath + "\\..\\samples\\Violin_G_Loop.wav";
+        BaseFrequency = Globals.BaseFreqC0 / 192.576;
+        break;
+      case 2:
+        fname = flpath + "\\..\\samples\\PluckC4.wav";
+        BaseFrequency = Globals.BaseFreqC0 / 261.6;// middle C
+        break;
     }
     Audio.Read(fname, wav);
+    voice.AttachWaveSample(wav, BaseFrequency);
+    return voice;
+  }
+  /* ********************************************************************************* */
+  public static SampleVoice Create_SampleVoice_Stub(Wave wav, double BaseFrequency) {
+    SampleVoice voice = new SampleVoice();
     voice.AttachWaveSample(wav, BaseFrequency);
     return voice;
   }

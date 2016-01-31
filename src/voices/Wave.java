@@ -46,8 +46,9 @@ public class Wave implements IDeletable {
     this.StartDex = (int) (this.StartTime * this.SampleRate);// StartDex is the number of empty samples from Time=0 to wave[0]
   }
   /* ********************************************************************************* */
-  public void Init(int SizeInit) {
+  public void Init(int SizeInit, int SampleRate0) {
     this.NumSamples = SizeInit;
+    this.SampleRate = SampleRate0;
     wave = new double[SizeInit];
     this.StartTime = 0.0;
     this.StartDex = 0;
@@ -126,7 +127,7 @@ public class Wave implements IDeletable {
   }
   /* ********************************************************************************* */
   public void Diff(Wave other, Wave result) {
-    result.Init(this.NumSamples);
+    result.Init(this.NumSamples, this.SampleRate);
     for (int cnt = 0; cnt < this.NumSamples; cnt++) {
       result.wave[cnt] = this.wave[cnt] - other.wave[cnt];
     }

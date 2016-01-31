@@ -161,7 +161,7 @@ public class AudProject implements IDeletable {
       obox.OctaveY = (4);
       break;
     }
-    if (true) {
+    if (false) {
       obox_clone = obox.Deep_Clone_Me();// deep clone test
       obox.Delete_Me();
       obox = obox_clone;

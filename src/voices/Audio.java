@@ -220,8 +220,8 @@ public class Audio implements IDeletable {
     }
     int NumBytes = data.length;
     int NumSamples = NumBytes / 2;
-    wave.Init(NumSamples);
-    wave.SampleRate = (int) FrameRate;
+    wave.Init(NumSamples, (int) FrameRate);
+    // wave.SampleRate = (int) FrameRate;
 
     double val;
     for (int scnt = 0; scnt < NumSamples; scnt++) {

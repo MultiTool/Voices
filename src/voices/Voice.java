@@ -529,9 +529,9 @@ public class Voice implements ISonglet, IDrawable {
         }
       }
       wave.Amplify(this.MyOffsetBox.LoudnessFactor);
-      if (true) {
-        //this.Distortion_Effect(wave, 10.0);
-        this.Noise_Effect(wave);
+      if (false) {
+        this.Distortion_Effect(wave, 10.0);
+//        this.Noise_Effect(wave);
       }
       wave.NumSamples = this.Render_Sample_Count;
     }
