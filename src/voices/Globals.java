@@ -24,6 +24,7 @@ public class Globals {
   public static int SampleRateTest = 100;
   public static double BaseFreqC0 = 16.3516;// hz
   public static double BaseFreqA0 = 27.5000;// hz
+  public static double MiddleC4Freq = 261.626;// hz
   public static double TwoPi = Math.PI * 2.0;// hz
   public static double Fudge = 0.00000000001;
   public static Random RandomGenerator = new Random();

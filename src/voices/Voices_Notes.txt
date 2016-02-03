@@ -569,3 +569,32 @@ Control points of a songlet should only show up when the songlet is selected.
 Line widths should scale with zooming. 
 FX box, with sigmoid clipping, reverb etc. 
 
+samplerate / middleC = 167 sample cycle
+44100 / 261.6 = 168.57798165137614678899082568807
+
+karplus strong algorithm
+
+double Flywheel = 0.0, Flywheel2 = 1.0;
+double Locality = 0.8, LocalityPersist = 0.999;
+for (int SampCnt = 0; SampCnt < MegaSamples; SampCnt++) {
+  val = pattern.Get(SampCnt % SamplesPerCycle);
+  Flywheel2 = (Locality * Flywheel2) * ;
+  Flywheel = (Flywheel * (1.0 - Locality)) + (val * (Locality));
+  // Flywheel = (Flywheel * (1.0 - Locality)) + (val * (Locality));
+  wave.Set(SampCnt, Flywheel);
+  Locality *= LocalityPersist;
+}
+
+
+double Decay = 0.8;
+double sum = 0, valpow;
+double Denominator = 0;// Decay;
+for (int cnt = 0; cnt <= 10; cnt++)
+{
+	valpow = Math.Pow(Decay, cnt);
+	sum += valpow;
+	System.Console.WriteLine("sum:{0}, Denominator:{1}", sum, Denominator + 1);
+	Denominator = (Denominator * Decay) + Decay;
+}
+
+

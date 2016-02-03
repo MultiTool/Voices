@@ -147,6 +147,7 @@ public class AudProject implements IDeletable {
       break;
     case 10:
       double TimeStep = 0.125;
+      TimeStep = 1.0;
       int NumBeats = 8;
       gbx = NoteMaker.Create_Note_Chain(NumBeats, TimeStep);
       obox = gbx.Spawn_OffsetBox();

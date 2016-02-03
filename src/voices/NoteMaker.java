@@ -48,6 +48,87 @@ public class NoteMaker {
     }
   }
   /* ********************************************************************************* */
+  public static void Synth_Pluck(Wave wave, double BaseFreq, double Duration, int SampleRate) {
+    int SamplesPerCycle = (int) ((1.0 / BaseFreq) * SampleRate);
+    int MegaSamples = (int) (Duration * (double) SampleRate);
+    wave.Init(MegaSamples, SampleRate);
+    Wave pattern = new Wave();
+    pattern.Init(SamplesPerCycle, SampleRate);
+    for (int SampCnt = 0; SampCnt < SamplesPerCycle; SampCnt++) {
+      pattern.Set(SampCnt, Globals.RandomGenerator.nextDouble() * 2.0 - 1.0);
+    }
+    int DexPrev, DexNow, DexNext;
+    double val, val0, va1, subval;
+    for (int SampCnt = 0; SampCnt < MegaSamples; SampCnt++) {
+      val = pattern.Get(SampCnt % SamplesPerCycle);
+      wave.Set(SampCnt, val);
+      for (int Cnt = 0; Cnt < SamplesPerCycle; Cnt++) {// average down
+        DexPrev = (Cnt);
+        DexNow = (Cnt + 1) % SamplesPerCycle;
+        DexNext = (Cnt + 2) % SamplesPerCycle;
+        // to do: reduce the weight of the averaging for longer sustain 
+        subval = (pattern.Get(DexPrev) + pattern.Get(DexNow) + pattern.Get(DexNext)) / 3;
+        pattern.Set(DexNow, subval);
+      }
+    }
+  }
+  /* ********************************************************************************* */
+  public static void Synth_Pluck_Flywheel(Wave wave, double BaseFreq, double Duration, int SampleRate) {
+    int SamplesPerCycle = (int) ((1.0 / BaseFreq) * SampleRate);
+    int MegaSamples = (int) (Duration * (double) SampleRate);
+    wave.Init(MegaSamples, SampleRate);
+    Wave pattern = new Wave();
+    pattern.Init(SamplesPerCycle, SampleRate);
+    double val;
+    double avg = 0.0;
+    double subtime = 0.0, timerate = 1, FractAlong = 0;
+    for (int SampCnt = 0; SampCnt < SamplesPerCycle; SampCnt++) {
+      FractAlong = ((double) SampCnt) / ((double) SamplesPerCycle);
+      subtime = FractAlong * timerate;
+      val = Math.sin(subtime * Globals.TwoPi);// chirp
+      val = Globals.RandomGenerator.nextDouble() * 2.0 - 1.0;// white noise
+      timerate += 0.1;
+      pattern.Set(SampCnt, val);
+      avg += val;
+    }
+    avg /= SamplesPerCycle;
+    for (int SampCnt = 0; SampCnt < SamplesPerCycle; SampCnt++) {// make average be 0
+      val = pattern.Get(SampCnt);
+      pattern.Set(SampCnt, val - avg);
+    }
+
+    double Flywheel = 0.0;
+    double Inertia = 0.94, InertiaPersist = 0.9999;
+    Inertia = 0.8;
+    Inertia = 0.1;// lower value is more local -> only limits higher frequencies. bigger value wipes more frequencies. 
+    Inertia = 0.0;
+    double Numerator = 0.0, Denominator = 0.0;
+    int WindowSize = 2;
+    double ValPrev = 0, ValNext = 0, WindowAvg;
+    double WindowSum = 0;
+    for (int SampCnt = 0; SampCnt < MegaSamples; SampCnt++) {
+      val = pattern.Get(SampCnt % SamplesPerCycle);
+      ValPrev = pattern.Get(SampCnt % SamplesPerCycle);
+      ValNext = pattern.Get((SampCnt + WindowSize) % SamplesPerCycle);
+      WindowSum -= ValPrev;
+      WindowSum += ValNext;
+      WindowAvg = WindowSum / (double) WindowSize;
+      // Denominator = (Denominator + 1.0) * Inertia;
+      Denominator = (Denominator * Inertia) + Inertia;
+      Numerator = (Numerator * Inertia) + (val * Inertia);
+      val = (Numerator) / (Denominator);
+      // val = WindowAvg;
+      wave.Set(SampCnt, val);
+      //Inertia *= InertiaPersist;
+//      Flywheel = (Flywheel * Inertia) + (val * (1.0 - Inertia));
+//      wave.Set(SampCnt, Flywheel);
+      Inertia = 1.0 - ((1.0 - Inertia) * InertiaPersist);
+      WindowSize = (int) Math.ceil((((double) SampCnt) / (double) MegaSamples) * (double) SamplesPerCycle);
+      //WindowSize++;
+      boolean nop = true;
+    }
+  }
+  /* ********************************************************************************* */
   public static ISonglet Create_Unbound_Triad_Rythm() {
     OffsetBox obox = null;
     GroupBox CMinor, CMajor, DMajor, DMinor;
@@ -94,10 +175,16 @@ public class NoteMaker {
     double AttackTime = 0.01;
     Duration -= AttackTime;
     Voice voice;
-    if (false) {
+    if (true) {
       Wave wave = new Wave();
-      NoteMaker.Synth_Vibe_Spectrum(wave, 2699, Globals.SampleRate);//  44100 / 16.3516 = 2696.9837814036546882262286259449
-      voice = TestJunkyard.Create_SampleVoice_Stub(wave, 1);// 16.3516);
+      if (false) {
+        NoteMaker.Synth_Vibe_Spectrum(wave, 2699, Globals.SampleRate);//  44100 / 16.3516 = 2696.9837814036546882262286259449
+        voice = TestJunkyard.Create_SampleVoice_Stub(wave, 1);// 16.3516);
+      } else {
+        //NoteMaker.Synth_Pluck(wave, Globals.MiddleC4Freq, 1.0, Globals.SampleRate);
+        NoteMaker.Synth_Pluck_Flywheel(wave, Globals.MiddleC4Freq, 1.0, Globals.SampleRate);
+        voice = TestJunkyard.Create_SampleVoice_Stub(wave, 1.0 / Globals.BaseFreqC0);// 16.3516);
+      }
     } else if (false) {
       voice = new Voice();
     } else {
