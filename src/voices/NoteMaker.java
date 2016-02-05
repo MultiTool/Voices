@@ -111,7 +111,7 @@ public class NoteMaker {
 
     double Flywheel = 0.0;
     double Inertia = 0.94, InertiaPersist = 0.9999;
-    Inertia = 0.8;
+    Inertia = 0.8;// http://www.dynamicnotions.net/2014/01/cleaning-noisy-time-series-data-low.html
     Inertia = 0.1;// lower value is more local -> only limits higher frequencies. bigger value wipes more frequencies. 
     Inertia = 0.0;
     double Numerator = 0.0, Denominator = 0.0;
