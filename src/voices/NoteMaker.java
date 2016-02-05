@@ -54,22 +54,34 @@ public class NoteMaker {
     wave.Init(MegaSamples, SampleRate);
     Wave pattern = new Wave();
     pattern.Init(SamplesPerCycle, SampleRate);
+
+    double val, avg = 0.0;
+    double subtime = 0.0, timerate = 1, FractAlong = 0;
     for (int SampCnt = 0; SampCnt < SamplesPerCycle; SampCnt++) {
-      pattern.Set(SampCnt, Globals.RandomGenerator.nextDouble() * 2.0 - 1.0);
+      FractAlong = ((double) SampCnt) / ((double) SamplesPerCycle);
+      subtime = FractAlong * timerate;
+      val = Math.sin(subtime * Globals.TwoPi);// chirp
+      //val = Globals.RandomGenerator.nextDouble() * 2.0 - 1.0;// white noise
+      timerate += 0.1;
+      pattern.Set(SampCnt, val);
+      avg += val;
     }
-    int DexPrev, DexNow, DexNext;
-    double val, val0, va1, subval;
+    avg /= SamplesPerCycle;
+    for (int SampCnt = 0; SampCnt < SamplesPerCycle; SampCnt++) {// make average be 0
+      val = pattern.Get(SampCnt);
+      pattern.Set(SampCnt, val - avg);
+    }
+
+    int DexNow;
+    double ValAvg;
+    double ValPrev = 0;
     for (int SampCnt = 0; SampCnt < MegaSamples; SampCnt++) {
-      val = pattern.Get(SampCnt % SamplesPerCycle);
+      DexNow = SampCnt % SamplesPerCycle;
+      val = pattern.Get(DexNow);
       wave.Set(SampCnt, val);
-      for (int Cnt = 0; Cnt < SamplesPerCycle; Cnt++) {// average down
-        DexPrev = (Cnt);
-        DexNow = (Cnt + 1) % SamplesPerCycle;
-        DexNext = (Cnt + 2) % SamplesPerCycle;
-        // to do: reduce the weight of the averaging for longer sustain 
-        subval = (pattern.Get(DexPrev) + pattern.Get(DexNow) + pattern.Get(DexNext)) / 3;
-        pattern.Set(DexNow, subval);
-      }
+      ValAvg = (ValPrev + val) / 2.0;
+      pattern.Set(DexNow, ValAvg);
+      ValPrev = val;
     }
   }
   /* ********************************************************************************* */
@@ -86,7 +98,7 @@ public class NoteMaker {
       FractAlong = ((double) SampCnt) / ((double) SamplesPerCycle);
       subtime = FractAlong * timerate;
       val = Math.sin(subtime * Globals.TwoPi);// chirp
-      val = Globals.RandomGenerator.nextDouble() * 2.0 - 1.0;// white noise
+      //val = Globals.RandomGenerator.nextDouble() * 2.0 - 1.0;// white noise
       timerate += 0.1;
       pattern.Set(SampCnt, val);
       avg += val;
