@@ -183,25 +183,24 @@ public class NoteMaker {
     return voice;
   }
   /* ********************************************************************************* */
-  public static Voice Create_Tapered_Note(double TimeOffset, double Duration, double OctaveOffset, double LoudnessOffset, int numsteps) {
+  public static Voice Create_Tapered_Note(Voice voice, double TimeOffset, double Duration, double OctaveOffset, double LoudnessOffset, int numsteps) {
     double AttackTime = 0.01;
     Duration -= AttackTime;
-    Voice voice;
-    if (true) {
-      Wave wave = new Wave();
-      if (false) {
-        NoteMaker.Synth_Vibe_Spectrum(wave, 2699, Globals.SampleRate);//  44100 / 16.3516 = 2696.9837814036546882262286259449
-        voice = TestJunkyard.Create_SampleVoice_Stub(wave, 1);// 16.3516);
-      } else {
-        //NoteMaker.Synth_Pluck(wave, Globals.MiddleC4Freq, 1.0, Globals.SampleRate);
-        NoteMaker.Synth_Pluck_Flywheel(wave, Globals.MiddleC4Freq, 1.0, Globals.SampleRate);
-        voice = TestJunkyard.Create_SampleVoice_Stub(wave, 1.0 / Globals.BaseFreqC0);// 16.3516);
-      }
-    } else if (false) {
-      voice = new Voice();
-    } else {
-      voice = TestJunkyard.Create_SampleVoice_Stub(2);
-    }
+//    if (true) {
+//      Wave wave = new Wave();
+//      if (false) {
+//        NoteMaker.Synth_Vibe_Spectrum(wave, 2699, Globals.SampleRate);//  44100 / 16.3516 = 2696.9837814036546882262286259449
+//        voice = TestJunkyard.Create_SampleVoice_Stub(wave, 1);// 16.3516);
+//      } else {
+//        //NoteMaker.Synth_Pluck(wave, Globals.MiddleC4Freq, 1.0, Globals.SampleRate);
+//        NoteMaker.Synth_Pluck_Flywheel(wave, Globals.MiddleC4Freq, 1.0, Globals.SampleRate);
+//        voice = TestJunkyard.Create_SampleVoice_Stub(wave, 1.0 / Globals.BaseFreqC0);// 16.3516);
+//      }
+//    } else if (false) {
+//      voice = new Voice();
+//    } else {
+//      voice = TestJunkyard.Create_SampleVoice_Stub(2);
+//    }
     double midfrac;
     voice.Add_Note(TimeOffset, OctaveOffset, 0);
     for (int cnt = 0; cnt <= numsteps; cnt++) {
@@ -220,10 +219,36 @@ public class NoteMaker {
     ISonglet note;
     GroupBox gbx = new GroupBox();
     for (int cnt = 0; cnt < TotalNotes; cnt++) {
-      note = Create_Tapered_Note(NoteMaker.OffsetTime, Duration, Octave, Loudness, NoteBreaks);
+      Voice voz = Generate_Voice(2);
+      note = Create_Tapered_Note(voz, NoteMaker.OffsetTime, Duration, Octave, Loudness, NoteBreaks);
       gbx.Add_SubSong(note, (TimeStep * (double) cnt) + NoteMaker.OffsetTime, OctaveOffset, Loudness);
     }
     return gbx;
+  }
+  /* ********************************************************************************* */
+  public static Voice Generate_Voice(int choice) {
+    //double AttackTime = 0.01;
+    Voice voice = null;
+    //Duration -= AttackTime;
+    Wave wave = new Wave();
+    switch (choice) {
+    case 0:
+      NoteMaker.Synth_Vibe_Spectrum(wave, 2699, Globals.SampleRate);//  44100 / 16.3516 = 2696.9837814036546882262286259449
+      voice = TestJunkyard.Create_SampleVoice_Stub(wave, 1);// 16.3516);
+      break;
+    case 1:
+      //NoteMaker.Synth_Pluck(wave, Globals.MiddleC4Freq, 1.0, Globals.SampleRate);
+      NoteMaker.Synth_Pluck_Flywheel(wave, Globals.MiddleC4Freq, 1.0, Globals.SampleRate);
+      voice = TestJunkyard.Create_SampleVoice_Stub(wave, 1.0 / Globals.BaseFreqC0);// 16.3516);
+      break;
+    case 2:
+      voice = new Voice();
+      break;
+    case 3:
+      voice = TestJunkyard.Create_SampleVoice_Stub(3);
+      break;
+    }
+    return voice;
   }
   /* ********************************************************************************* */
   public GroupBox Create_Triad(ISonglet s0, ISonglet s1, ISonglet s2) {

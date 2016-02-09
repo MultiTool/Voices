@@ -13,27 +13,41 @@ import java.io.File;
  */
 public class TestJunkyard {
   /* ********************************************************************************* */
-  public static SampleVoice Create_SampleVoice_Stub(int SampleNum) {
-    SampleVoice voice = new SampleVoice();
-    Wave wav = new Wave();
+  public static double Load_Sample_File(int SampleNum, Wave wav) {
     String flpath = new File("").getAbsolutePath();
     String fname = null;
     double BaseFrequency = 0;
     switch (SampleNum) {// put any droney looped wav file here
-      case 0:
-        fname = flpath + "\\..\\samples\\Plane_Tile_2756pnt250.wav";
-        BaseFrequency = Globals.BaseFreqC0 / 150.0;
-        break;
-      case 1:
-        fname = flpath + "\\..\\samples\\Violin_G_Loop.wav";
-        BaseFrequency = Globals.BaseFreqC0 / 192.576;
-        break;
-      case 2:
-        fname = flpath + "\\..\\samples\\PluckC4.wav";
-        BaseFrequency = Globals.BaseFreqC0 / 261.6;// middle C
-        break;
+    case 0:
+      fname = flpath + "\\..\\samples\\Plane_Tile_2756pnt250.wav";
+      BaseFrequency = Globals.BaseFreqC0 / 150.0;
+      break;
+    case 1:
+      fname = flpath + "\\..\\samples\\Violin_G_Loop.wav";
+      BaseFrequency = Globals.BaseFreqC0 / 192.576;
+      break;
+    case 2:
+      fname = flpath + "\\..\\samples\\PluckC4.wav";
+      BaseFrequency = Globals.BaseFreqC0 / 261.6;// middle C
+      break;
+    case 3:
+      fname = flpath + "\\..\\samples\\violin_Gs3_025_mezzo-piano_arco-normal_loop.wav";
+      BaseFrequency = Globals.BaseFreqC0 / 208.01886792452830188679245283019;// G3-ish
+      break;
+    case 4:
+      fname = flpath + "\\..\\samples\\trombone_C4_15_pianissimo_normal_loop.wav";
+      BaseFrequency = Globals.BaseFreqC0 / 263.54581673306772913616450532531;// middle C-ish
+      break;
     }
     Audio.Read(fname, wav);
+    return BaseFrequency;
+  }
+  /* ********************************************************************************* */
+  public static SampleVoice Create_SampleVoice_Stub(int SampleNum) {
+    SampleVoice voice = new SampleVoice();
+    Wave wav = new Wave();
+    double BaseFrequency = 0;
+    BaseFrequency = Load_Sample_File(SampleNum, wav);
     voice.AttachWaveSample(wav, BaseFrequency);
     return voice;
   }
