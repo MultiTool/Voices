@@ -180,6 +180,9 @@ public class MainGui {
       this.Query.AddFirstBox(this.MyProject.GraphicRoot, me.getX(), me.getY());
       //this.MyProject.GraphicRoot.GoFishing(this.Query);
       // this is really ugly.  #kludgey
+      if (this.Query.Leaf != null) {
+        this.Query.Leaf.SetSelected(false);
+      }
       this.MyProject.GraphicRoot.Content.ContentOBox.GoFishing(Query);// call this on graphic songlet's child obox. 
       this.Query.DecrementStack();
       if (this.Query.Leaf != null) {
@@ -190,7 +193,9 @@ public class MainGui {
     @Override public void mouseReleased(MouseEvent me) {
       double XCtr, YCtr, Scale;
       if (this.Query.Leaf != null) {
-        this.Query.Leaf.SetSelected(false);
+        if (true) {// disable to make selected persistent, for copy paste, del etc. 
+          this.Query.Leaf.SetSelected(false);
+        }
         this.MyProject.Update_Guts();
         this.MyProject.GraphicRoot.UpdateBoundingBox();
         //this.Query.UpdateBoundingBoxes();

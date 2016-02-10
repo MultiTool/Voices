@@ -10,6 +10,6 @@ package voices;
  * @author MultiTool
  */
 public interface ICloneable {
-  Object Clone_Me();
+  ICloneable Clone_Me();
   ICloneable Deep_Clone_Me();
 }

@@ -260,7 +260,8 @@ class JsonParse
     {// this is wrong. need to re-think it before using. 
       // chunks are a number if: all chunks are all numeric
       // but not if: numeric chunks end, but next chunk is non-whitespace, non-comma, non-semicolon, and what else? just non-delimiter? 
-      // 12.345blah is not a number. maybe let that pass anyway? 
+      // 12.345blah is not a number. maybe let that pass anyway? 123.4f is a number sometimes. 
+      // hmm. valid numberenders: ; , []() etc. any single char thing that's not a .  
       Phrase OnePhrase=null;
       Token tkn;
       int MarkNext = Marker;
@@ -398,6 +399,7 @@ class JsonParse
     public String MyName = "***Nothing***";
     public Phrase Parent = null;
     public int ChunkStart,ChunkEnd;
+    public String ItemPtr=null;
     public String Literal=null;
     public ArrayList<Phrase> ChildrenArray = null;
     public HashMap<String,Phrase> ChildrenHash = null;
