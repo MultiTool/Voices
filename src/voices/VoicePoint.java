@@ -1,12 +1,8 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package voices;
 
 import java.awt.Color;
 import java.awt.geom.Point2D;
+import java.util.HashMap;
 
 /**
  *
@@ -37,7 +33,7 @@ public class VoicePoint extends MonkeyBox {
     return Math.pow(2.0, this.OctaveY);
   }
   /* ********************************************************************************* */
-  @Override public void Draw_Me(IDrawable.Drawing_Context ParentDC) {// IDrawable
+  @Override public void Draw_Me(DrawingContext ParentDC) {// IDrawable
     // Control points have the same space as their parent, so no need to create a local map.
     Point2D.Double pnt = ParentDC.To_Screen(this.TimeX, this.OctaveY);
     double RadiusPixels = Math.abs(ParentDC.GlobalOffset.ScaleY) * OctavesPerRadius;
@@ -122,7 +118,6 @@ public class VoicePoint extends MonkeyBox {
     super.Copy_From(donor);
     this.SubTime = donor.SubTime;
     this.OctavesPerLoudness = donor.OctavesPerLoudness;
-    // this.UpHandle = donor.UpHandle; this.DownHandle = donor.DownHandle;
   }
   /* ********************************************************************************* */
   @Override public boolean Create_Me() {// IDeletable
@@ -137,10 +132,27 @@ public class VoicePoint extends MonkeyBox {
     this.DownHandle = null;
   }
   /* ********************************************************************************* */
-  public static class LoudnessHandle implements IDrawable.IMoveable, IDeletable {
+  @Override public void ShallowLoad(JsonParse.Phrase phrase) {// ITextable
+    HashMap<String, JsonParse.Phrase> Fields = phrase.ChildrenHash;
+    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+  }
+  @Override public void Textify(StringBuilder sb) {// ITextable
+    // or maybe we'd rather export to a Phrase tree first? might be easier, less redundant { and } code. 
+    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+  }
+  @Override public JsonParse.Phrase Export(CollisionTable CTable) {// ITextable
+    JsonParse.Phrase phrase = super.Export(CTable);
+    HashMap<String, JsonParse.Phrase> Fields = phrase.ChildrenHash;
+    Fields.put("SubTime", IFactory.PackField(this.SubTime));
+    Fields.put("OctavesPerLoudness", IFactory.PackField(this.OctavesPerLoudness));
+    Fields.put("UpHandle", this.UpHandle.Export(CTable));
+    Fields.put("DownHandle", this.DownHandle.Export(CTable));
+    return phrase;
+  }
+  /* ********************************************************************************* */
+  public static class LoudnessHandle implements IDrawable.IMoveable, IDeletable, ITextable {
     public CajaDelimitadora MyBounds = new CajaDelimitadora();
     public VoicePoint ParentPoint;
-    //public double OctavesPerRadius = 0.02;
     public double OctavesPerRadius = 0.007;
     private boolean IsSelected = false;
     /* ********************************************************************************* */
@@ -183,7 +195,7 @@ public class VoicePoint extends MonkeyBox {
     @Override public void SetSelected(boolean Selected) {// IDrawable.IMoveable
       this.IsSelected = Selected;
     }
-    @Override public void Draw_Me(Drawing_Context ParentDC) {
+    @Override public void Draw_Me(DrawingContext ParentDC) {
       // Control points have the same space as their parent, so no need to create a local map.
       Point2D.Double pnt = ParentDC.To_Screen(this.ParentPoint.TimeX, this.ParentPoint.OctaveY);
       double RadiusPixels = Math.abs(ParentDC.GlobalOffset.ScaleY) * OctavesPerRadius;
@@ -250,6 +262,23 @@ public class VoicePoint extends MonkeyBox {
       this.ParentPoint = null;
       this.MyBounds.Delete_Me();
       this.MyBounds = null;
+    }
+    /* ********************************************************************************* */
+    @Override public void ShallowLoad(JsonParse.Phrase phrase) {// ITextable
+      HashMap<String, JsonParse.Phrase> Fields = phrase.ChildrenHash;
+      throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+    @Override public void Textify(StringBuilder sb) {// ITextable
+      // or maybe we'd rather export to a Phrase tree first? might be easier, less redundant { and } code. 
+      throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+    @Override public JsonParse.Phrase Export(CollisionTable CTable) {// ITextable
+      JsonParse.Phrase phrase = new JsonParse.Phrase();
+      HashMap<String, JsonParse.Phrase> Fields = (phrase.ChildrenHash = new HashMap<String, JsonParse.Phrase>());
+      Fields.put("OctavesPerRadius", IFactory.PackField(this.OctavesPerRadius));
+      Fields.put("IsSelected", IFactory.PackField(this.IsSelected));
+      Fields.put("MyBounds", this.MyBounds.Export(CTable));
+      return phrase;
     }
   }
 }

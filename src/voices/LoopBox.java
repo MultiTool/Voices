@@ -1,8 +1,3 @@
-/*
- *
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package voices;
 
 import java.awt.BasicStroke;
@@ -124,7 +119,7 @@ public class LoopBox implements ISonglet, IDrawable {
     return obox;
   }
   /* ********************************************************************************* */
-  @Override public void Draw_Me(Drawing_Context ParentDC) {// IDrawable
+  @Override public void Draw_Me(DrawingContext ParentDC) {// IDrawable
 
     if (true) {
       // clip to loop duration
@@ -426,7 +421,7 @@ public class LoopBox implements ISonglet, IDrawable {
       return child;
     }
     /* ********************************************************************************* */
-    @Override public void Draw_Me(Drawing_Context ParentDC) {
+    @Override public void Draw_Me(DrawingContext ParentDC) {
       if (false) {
         // clip to loop duration
         CajaDelimitadora tempbounds = new CajaDelimitadora();
@@ -442,7 +437,7 @@ public class LoopBox implements ISonglet, IDrawable {
       ParentDC.gr.setClip(null);
     }
     /* ********************************************************************************* */
-    @Override public void Draw_My_Bounds(Drawing_Context ParentDC) {// for debugging. break glass in case of emergency
+    @Override public void Draw_My_Bounds(DrawingContext ParentDC) {// for debugging. break glass in case of emergency
       OffsetBox GlobalOffset = ParentDC.GlobalOffset;
       Graphics2D gr = ParentDC.gr;
       this.MyBounds.Sort_Me();
@@ -484,9 +479,9 @@ public class LoopBox implements ISonglet, IDrawable {
       this.ContentLayer = this.Parent.ContentOBox;
     }
     /* ********************************************************************************* */
-    public void Draw_Me_Zero(Drawing_Context ParentDC) {// iteration 0 of child song does not use ghost box handle
+    public void Draw_Me_Zero(DrawingContext ParentDC) {// iteration 0 of child song does not use ghost box handle
       if (ParentDC.ClipBounds.Intersects(MyBounds)) {// MyBounds keep moving
-        Drawing_Context ChildDC = new Drawing_Context(ParentDC, this);// In C++ ChildDC will be a local variable from the stack, not heap. 
+        DrawingContext ChildDC = new DrawingContext(ParentDC, this);// In C++ ChildDC will be a local variable from the stack, not heap. 
         // Map the real-time movements to our parent's Delay value 
         ISonglet songlet = this.GetContent();// skip around the child's personal offset
         songlet.Draw_Me(ChildDC);
@@ -501,11 +496,11 @@ public class LoopBox implements ISonglet, IDrawable {
       }
     }
     /* ********************************************************************************* */
-    @Override public void Draw_Me(Drawing_Context ParentDC) {// IDrawable
+    @Override public void Draw_Me(DrawingContext ParentDC) {// IDrawable
       if (ParentDC.ClipBounds.Intersects(MyBounds)) {// MyBounds keep moving
         super.Draw_Dot(ParentDC, Color.magenta);
         // this.Draw_My_Bounds(ParentDC);
-        Drawing_Context ChildDC = new Drawing_Context(ParentDC, this);// In C++ ChildDC will be a local variable from the stack, not heap. 
+        DrawingContext ChildDC = new DrawingContext(ParentDC, this);// In C++ ChildDC will be a local variable from the stack, not heap. 
         // Map the real-time movements to our parent's Delay value 
         ISonglet songlet = this.GetContent();// skip around the child's personal offset
         songlet.Draw_Me(ChildDC);

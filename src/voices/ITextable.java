@@ -1,5 +1,6 @@
 package voices;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 
 /**
@@ -20,11 +21,12 @@ public interface ITextable {// DIY Json ISerializable - more control
 //  
   public interface IFactory {// probably overkill. will try delegate pointers to static methods instead
     public ITextable Create(JsonParse.Phrase phrase);
-//    public static <T> T GetFieldGen(HashMap<String, JsonParse.Phrase> Fields, String FieldName, T DefaultValue) {
-//      T retval;
+//    public static <ThingType> ThingType GetFieldGen(HashMap<String, JsonParse.Phrase> Fields, String FieldName, ThingType DefaultValue) {
+//      ThingType retval;
 //      if (Fields.containsKey(FieldName)) {
 //        JsonParse.Phrase phrase = Fields.get(FieldName);
-//        retval = phrase.Literal;// oy need generic parser like std::cout
+//        // Double.parseDouble(phrase.Literal);
+//        retval = ThingType. phrase.Literal;// oy need generic parser like std::cout
 //      } else {
 //        retval = DefaultValue;
 //      }
@@ -39,6 +41,21 @@ public interface ITextable {// DIY Json ISerializable - more control
         retval = DefaultValue;
       }
       return retval;
+    }
+//    public static <ThingType> ArrayList<JsonParse.Phrase> MakeArrayGen(ArrayList<ThingType> Things) {
+//      ArrayList<JsonParse.Phrase> stuff = new ArrayList<JsonParse.Phrase>();
+//      int len = Things.size();
+//      for (int cnt = 0; cnt < len; cnt++) {
+//        stuff.add(Things.get(cnt);
+//      }
+//    }
+    public static <ThingType extends ITextable> ArrayList<JsonParse.Phrase> MakeArray(CollisionTable CTable, ArrayList<ThingType> Things) {
+      ArrayList<JsonParse.Phrase> stuff = new ArrayList<JsonParse.Phrase>();
+      int len = Things.size();
+      for (int cnt = 0; cnt < len; cnt++) {
+        stuff.add(Things.get(cnt).Export(CTable));
+      }
+      return stuff;
     }
     public static JsonParse.Phrase PackField(Object Value) {// probably not very C++ compatible
       JsonParse.Phrase phrase = new JsonParse.Phrase();

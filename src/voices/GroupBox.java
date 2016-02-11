@@ -1,8 +1,3 @@
-/*
- *
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package voices;
 
 import java.awt.BasicStroke;
@@ -181,7 +176,7 @@ public class GroupBox implements ISonglet, IDrawable {
     this.FreshnessTimeStamp = TimeStampNew;
   }
   /* ********************************************************************************* */
-  @Override public void Draw_Me(Drawing_Context ParentDC) {// IDrawable
+  @Override public void Draw_Me(DrawingContext ParentDC) {// IDrawable
     OffsetBox ChildOffsetBox;
     int len = this.SubSongs.size();
 

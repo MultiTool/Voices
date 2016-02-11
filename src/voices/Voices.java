@@ -1,10 +1,6 @@
-/*
- *
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package voices;
 
+import java.awt.geom.Point2D;
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 //import voices.VoiceBase.Point;
@@ -22,6 +18,8 @@ public class Voices {
    */
   /* ********************************************************************************* */
   public static void main(String[] args) {
+    Point2D.Double pnt = new Point2D.Double(12.3, 45.6);
+    String txt = pnt.toString();
     if (false) {
       String fname = "ahh_looped.wav";
       Audio.Load(fname, null);

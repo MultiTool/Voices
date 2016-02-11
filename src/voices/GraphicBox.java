@@ -1,8 +1,3 @@
-/*
- *
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package voices;
 
 import java.awt.Color;
@@ -34,7 +29,7 @@ public class GraphicBox implements IDrawable, ISonglet, IDeletable {//
     return lbox;
   }
   /* ********************************************************************************* */
-  @Override public void Draw_Me(Drawing_Context ParentDC) {// IDrawable
+  @Override public void Draw_Me(DrawingContext ParentDC) {// IDrawable
     AntiAlias(ParentDC.gr);
     Draw_Grid(ParentDC);
     this.ContentOBox.Draw_Me(ParentDC);
@@ -76,7 +71,7 @@ public class GraphicBox implements IDrawable, ISonglet, IDeletable {//
     this.MyBounds.Copy_From(donor.MyBounds);
   }
   /* ********************************************************************************* */
-  public void Draw_Grid(Drawing_Context ParentDC) {
+  public void Draw_Grid(DrawingContext ParentDC) {
     double xloc, yloc;
     int MinX, MinY, MaxX, MaxY;
     int X0, Y0;
@@ -218,9 +213,9 @@ public class GraphicBox implements IDrawable, ISonglet, IDeletable {//
       return this.Content;
     }
     /* ********************************************************************************* */
-    @Override public void Draw_Me(Drawing_Context ParentDC) {// IDrawable
+    @Override public void Draw_Me(DrawingContext ParentDC) {// IDrawable
       if (ParentDC.ClipBounds.Intersects(MyBounds)) {
-        Drawing_Context ChildDC = new Drawing_Context(ParentDC, this);// map to child (my) internal coordinates
+        DrawingContext ChildDC = new DrawingContext(ParentDC, this);// map to child (my) internal coordinates
         this.Content.Draw_Me(ChildDC);
       }
     }

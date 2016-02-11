@@ -5,12 +5,13 @@ import java.awt.geom.Path2D;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 
 /**
  *
  * @author MultiTool
  */
-public class Voice implements ISonglet, IDrawable {
+public class Voice implements ISonglet, IDrawable, ITextable {
   // collection of control points, each one having a pitch and a volume. rendering morphs from one cp to another. 
   public ArrayList<VoicePoint> CPoints = new ArrayList<>();
   protected AudProject MyProject;
@@ -196,7 +197,7 @@ public class Voice implements ISonglet, IDrawable {
 //    return Math.sin(SubTimeAbsolute * this.BaseFreq * Globals.TwoPi);
 //  }
   /* ********************************************************************************* */
-  @Override public void Draw_Me(Drawing_Context ParentDC) {// IDrawable
+  @Override public void Draw_Me(DrawingContext ParentDC) {// IDrawable
     CajaDelimitadora ChildrenBounds = ParentDC.ClipBounds;// parent is already transformed by my offsetbox
     VoicePoint pnt;
     int len = this.CPoints.size();
@@ -354,6 +355,27 @@ public class Voice implements ISonglet, IDrawable {
   }
   @Override public int GetRefCount() {// ISonglet Reference Counting: get number of references for serialization
     return this.RefCount;
+  }
+  /* ********************************************************************************* */
+  @Override public void ShallowLoad(JsonParse.Phrase phrase) {// ITextable
+    HashMap<String, JsonParse.Phrase> Fields = phrase.ChildrenHash;
+    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+  }
+  @Override public void Textify(StringBuilder sb) {// ITextable
+    // or maybe we'd rather export to a Phrase tree first? might be easier, less redundant { and } code. 
+    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+  }
+  @Override public JsonParse.Phrase Export(CollisionTable CTable) {// ITextable
+    JsonParse.Phrase phrase = new JsonParse.Phrase();
+    HashMap<String, JsonParse.Phrase> Fields = (phrase.ChildrenHash = new HashMap<String, JsonParse.Phrase>());
+    Fields.put("BaseFreq", IFactory.PackField(this.BaseFreq));
+    Fields.put("MaxAmplitude", IFactory.PackField(this.MaxAmplitude));
+    Fields.put("MyBounds", MyBounds.Export(CTable));
+    // Save my array of control points.
+    JsonParse.Phrase CPointsPhrase = new JsonParse.Phrase();
+    CPointsPhrase.ChildrenArray = IFactory.MakeArray(CTable, this.CPoints);
+    Fields.put("CPoints", CPointsPhrase);
+    return phrase;
   }
   /* ********************************************************************************* */
   public static class Voice_OffsetBox extends OffsetBox {// location box to transpose in pitch, move in time, etc. 

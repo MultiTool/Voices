@@ -3,6 +3,8 @@ package voices;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Hashtable;
+import java.util.Map;
+import java.util.Set;
 /* ********************************************************************************************************* */
 class JsonParse
 {
@@ -393,7 +395,7 @@ class JsonParse
   }
   /* ********************************************************************************************************* */
   public static class Phrase
-  {// a value that is a hashtable, an array, or a literal
+  {// a value that is a hashtable, an array, a literal, or a pointer to a multiply-used item
     public enum Types { None, Class, Interface, Method, Whatever }// Interface is not used yet.
     public Types MyType = Types.None;
     public String MyName = "***Nothing***";
@@ -403,5 +405,68 @@ class JsonParse
     public String Literal=null;
     public ArrayList<Phrase> ChildrenArray = null;
     public HashMap<String,Phrase> ChildrenHash = null;
+    public String ToJson(){
+      StringBuilder sb = new StringBuilder();
+      if (this.ChildrenHash!=null){
+        sb.append(ToHash());
+      }else if (this.ChildrenArray!=null){
+        sb.append(ToArray());
+      }else if (this.Literal!=null){
+        sb.append(this.Literal);// maybe put quotes around this
+      }else if (this.ItemPtr!=null){
+        sb.append(this.ItemPtr);// maybe put quotes around this
+      }
+      return sb.toString();
+    }
+    public String ToHash(){
+      Phrase child;
+      StringBuilder sb = new StringBuilder();
+      sb.append("{");
+      int len = this.ChildrenHash.size();
+      int ultimo = len-1;
+      String key;
+      this.ChildrenHash.keySet().toArray();
+      if (0<len){
+        Set<Map.Entry<String, Phrase>> Entries = this.ChildrenHash.entrySet();
+        Map.Entry<String, Phrase>[] EntRay = (Map.Entry<String, Phrase>[]) Entries.toArray();
+        int cnt=0;
+        while (cnt<ultimo){
+          key = EntRay[cnt].getKey();
+          child = EntRay[cnt].getValue();
+          sb.append(key);
+          sb.append(" : ");
+          sb.append(child.ToJson());
+          sb.append(", ");
+          cnt++;
+        }
+        key = EntRay[cnt].getKey();
+        child = this.ChildrenArray.get(ultimo);
+        sb.append(key);
+        sb.append(" : ");
+        sb.append(child.ToJson());
+      }
+      sb.append("}");
+      return sb.toString();
+    }
+    public String ToArray(){
+      Phrase child;
+      StringBuilder sb = new StringBuilder();
+      sb.append("[");
+      int len = this.ChildrenArray.size();
+      int ultimo = len-1;
+      if (0<len){
+        int cnt=0;
+        while (cnt<ultimo){
+          child = this.ChildrenArray.get(cnt);
+          sb.append(child.ToJson());
+          sb.append(", ");
+          cnt++;
+        }
+        child = this.ChildrenArray.get(ultimo);
+        sb.append(child.ToJson());
+      }
+      sb.append("]");
+      return sb.toString();
+    }
   }
 }

@@ -1,8 +1,3 @@
-/*
- *
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package voices;
 
 import java.awt.BasicStroke;
@@ -74,7 +69,7 @@ public class OffsetBox extends MonkeyBox { //implements IDrawable.IMoveable, IDe
   }
   // <editor-fold defaultstate="collapsed" desc="IDrawable and IMoveable">
   /* ********************************************************************************* */
-  @Override public void Draw_Me(Drawing_Context ParentDC) {// IDrawable
+  @Override public void Draw_Me(DrawingContext ParentDC) {// IDrawable
     if (ParentDC.ClipBounds.Intersects(MyBounds)) {
       Point2D.Double pnt = ParentDC.To_Screen(this.TimeX, this.OctaveY);
       double extra = (1.0 / (double) ParentDC.RecurseDepth);
@@ -95,14 +90,14 @@ public class OffsetBox extends MonkeyBox { //implements IDrawable.IMoveable, IDe
       }
       // maybe reduce ChildDC's clipbounds to intersect with my own bounds? after all none of my children should go outside my bounds
       // eh, that would conflict with dragging my child outside of my bounds - it would stop being drawn during the drag. 
-      Drawing_Context ChildDC = new Drawing_Context(ParentDC, this);// In C++ ChildDC will be a local variable from the stack, not heap. 
+      DrawingContext ChildDC = new DrawingContext(ParentDC, this);// In C++ ChildDC will be a local variable from the stack, not heap. 
       ISonglet Content = this.GetContent();
       Content.Draw_Me(ChildDC);
       ChildDC.Delete_Me();
     }
   }
   /* ********************************************************************************* */
-  @Override public void Draw_Dot(Drawing_Context DC, Color col) {
+  @Override public void Draw_Dot(DrawingContext DC, Color col) {
     Paint oldpaint = DC.gr.getPaint();
     Point2D.Double pnt = DC.To_Screen(this.TimeX, this.OctaveY);
     double extra = (1.0 / (double) DC.RecurseDepth);
@@ -130,7 +125,7 @@ public class OffsetBox extends MonkeyBox { //implements IDrawable.IMoveable, IDe
     DC.gr.drawOval((int) (pnt.x - RadiusPixels), (int) (pnt.y - RadiusPixels), (int) DiameterPixels, (int) DiameterPixels);
   }
   /* ********************************************************************************* */
-  public void Draw_My_Bounds(Drawing_Context ParentDC) {// for debugging. break glass in case of emergency
+  public void Draw_My_Bounds(DrawingContext ParentDC) {// for debugging. break glass in case of emergency
     OffsetBox GlobalOffset = ParentDC.GlobalOffset;
     Graphics2D gr = ParentDC.gr;
     this.MyBounds.Sort_Me();

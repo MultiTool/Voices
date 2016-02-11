@@ -5,9 +5,8 @@ import java.awt.event.*;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import javax.swing.*;
-import voices.IDrawable.Drawing_Context;
+import voices.DrawingContext;
 // From http://www.tutorialspoint.com/javaexamples/gui_polygon.htm
-
 public class MainGui {
   public JFrame frame;
   public DrawingPanel drawpanel;
@@ -109,7 +108,7 @@ public class MainGui {
     /* ********************************************************************************* */
     public void Draw_Me(Graphics2D g2d) {
       // to do: move this to MainGui, and base clipping, zoom etc. on canvas size. 
-      Drawing_Context dc = new Drawing_Context();
+      DrawingContext dc = new DrawingContext();
       dc.gr = g2d;
       int wdt, hgt;
 //      wdt = this.getWidth() * 7 / 8; hgt = this.getHeight() * 7 / 8;
@@ -137,15 +136,6 @@ public class MainGui {
     @Override public void paintComponent(Graphics g) {
       super.paintComponent(g);
       Graphics2D g2d = (Graphics2D) g;
-
-      if (false) {
-        Polygon p = new Polygon();
-        for (int i = 0; i < 5; i++) {
-          p.addPoint((int) (100 + 50 * Math.cos(i * 2 * Math.PI / 5)), (int) (100 + 50 * Math.sin(i * 2 * Math.PI / 5)));
-        }
-        g2d.drawPolygon(p);
-      }
-
       Draw_Me(g2d);
     }
     /* ********************************************************************************* */
@@ -153,7 +143,6 @@ public class MainGui {
       if (this.Query.Leaf != null) {
         {
           BigApp.MyThread.PleaseStop();
-          Toggle = true;
         }
         Point2D.Double results = new Point2D.Double();
         this.Query.MapThroughStack(me.getX(), me.getY(), results);
@@ -163,26 +152,16 @@ public class MainGui {
     }
     @Override public void mouseMoved(MouseEvent me) {
     }
-    boolean Toggle = true;// temporary until we have better ui
     /* ********************************************************************************* */
     @Override public void mouseClicked(MouseEvent me) {
-      if (false) {
-        if (Toggle) {
-          BigApp.MyThread.Play_All();
-          Toggle = false;
-        } else {
-          BigApp.MyThread.PleaseStop();
-          Toggle = true;
-        }
-      }
     }
     @Override public void mousePressed(MouseEvent me) {
-      this.Query.AddFirstBox(this.MyProject.GraphicRoot, me.getX(), me.getY());
-      //this.MyProject.GraphicRoot.GoFishing(this.Query);
-      // this is really ugly.  #kludgey
       if (this.Query.Leaf != null) {
         this.Query.Leaf.SetSelected(false);
       }
+      this.Query.AddFirstBox(this.MyProject.GraphicRoot, me.getX(), me.getY());
+      //this.MyProject.GraphicRoot.GoFishing(this.Query);
+      // this is really ugly.  #kludgey
       this.MyProject.GraphicRoot.Content.ContentOBox.GoFishing(Query);// call this on graphic songlet's child obox. 
       this.Query.DecrementStack();
       if (this.Query.Leaf != null) {
@@ -191,9 +170,8 @@ public class MainGui {
       }
     }
     @Override public void mouseReleased(MouseEvent me) {
-      double XCtr, YCtr, Scale;
       if (this.Query.Leaf != null) {
-        if (true) {// disable to make selected persistent, for copy paste, del etc. 
+        if (false) {// disable to make selected persistent, for copy paste, del etc. 
           this.Query.Leaf.SetSelected(false);
         }
         this.MyProject.Update_Guts();
@@ -205,21 +183,7 @@ public class MainGui {
           BigApp.MyThread.Skip_To(Time - TimeRadius);
           BigApp.MyThread.Assign_Stop_Time(Time + TimeRadius);
           BigApp.MyThread.start();
-          Toggle = false;
         }
-        this.repaint();
-      }
-      if (false) {// for testing without mouse wheel
-        Scale = 1.1;
-        if (me.getButton() == MouseEvent.BUTTON1) {
-          Scale = 1.1;
-        } else {
-          Scale = 0.9;
-        }
-        XCtr = me.getX();
-        YCtr = me.getY();
-        GraphicBox.Graphic_OffsetBox gb = this.MyProject.GraphicRoot;
-        gb.Zoom(XCtr, YCtr, Scale);
         this.repaint();
       }
     }

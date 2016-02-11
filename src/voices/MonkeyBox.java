@@ -1,8 +1,3 @@
-/*
- *
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package voices;
 
 import java.awt.BasicStroke;
@@ -138,10 +133,10 @@ public class MonkeyBox implements IDrawable.IMoveable, IDeletable, ITextable {//
   }
   // </editor-fold>
   /* ********************************************************************************* */
-  @Override public void Draw_Me(IDrawable.Drawing_Context ParentDC) {// IDrawable
+  @Override public void Draw_Me(DrawingContext ParentDC) {// IDrawable
   }
   /* ********************************************************************************* */
-  public void Draw_Dot(IDrawable.Drawing_Context ParentDC, Color col) {
+  public void Draw_Dot(DrawingContext ParentDC, Color col) {
     Point2D.Double pnt = ParentDC.To_Screen(this.TimeX, this.OctaveY);
     double extra = (1.0 / (double) ParentDC.RecurseDepth);
 //    double RadiusPixels = Math.abs(ParentDC.GlobalOffset.ScaleY) * (OctavesPerRadius + extra * 0.02);
@@ -154,7 +149,7 @@ public class MonkeyBox implements IDrawable.IMoveable, IDeletable, ITextable {//
     ParentDC.gr.drawOval((int) (pnt.x - RadiusPixels), (int) (pnt.y - RadiusPixels), (int) DiameterPixels, (int) DiameterPixels);
   }
   /* ********************************************************************************* */
-  public static void Draw_Dot2(Drawing_Context DC, double XCtr, double YCtr, double OctavesPerRadius, boolean Selected, Color col) {
+  public static void Draw_Dot2(DrawingContext DC, double XCtr, double YCtr, double OctavesPerRadius, boolean Selected, Color col) {
     // #kludgey, hacky.  Need to create the gradient only once I guess, rather than every time a point is moved. 
     Paint oldpaint = DC.gr.getPaint();
     Point2D.Double pnt = DC.To_Screen(XCtr, YCtr);
