@@ -32,16 +32,6 @@ public interface ITextable {// DIY Json ISerializable - more control
 //      }
 //      return retval;
 //    }
-    public static String GetField(HashMap<String, JsonParse.Phrase> Fields, String FieldName, String DefaultValue) {
-      String retval;
-      if (Fields.containsKey(FieldName)) {
-        JsonParse.Phrase phrase = Fields.get(FieldName);
-        retval = phrase.Literal;
-      } else {
-        retval = DefaultValue;
-      }
-      return retval;
-    }
 //    public static <ThingType> ArrayList<JsonParse.Phrase> MakeArrayGen(ArrayList<ThingType> Things) {
 //      ArrayList<JsonParse.Phrase> stuff = new ArrayList<JsonParse.Phrase>();
 //      int len = Things.size();
@@ -49,18 +39,30 @@ public interface ITextable {// DIY Json ISerializable - more control
 //        stuff.add(Things.get(cnt);
 //      }
 //    }
-    public static <ThingType extends ITextable> ArrayList<JsonParse.Phrase> MakeArray(CollisionTable CTable, ArrayList<ThingType> Things) {
-      ArrayList<JsonParse.Phrase> stuff = new ArrayList<JsonParse.Phrase>();
-      int len = Things.size();
-      for (int cnt = 0; cnt < len; cnt++) {
-        stuff.add(Things.get(cnt).Export(CTable));
+    public class Utils {
+      public static String GetField(HashMap<String, JsonParse.Phrase> Fields, String FieldName, String DefaultValue) {
+        String retval;
+        if (Fields.containsKey(FieldName)) {
+          JsonParse.Phrase phrase = Fields.get(FieldName);
+          retval = phrase.Literal;
+        } else {
+          retval = DefaultValue;
+        }
+        return retval;
       }
-      return stuff;
-    }
-    public static JsonParse.Phrase PackField(Object Value) {// probably not very C++ compatible
-      JsonParse.Phrase phrase = new JsonParse.Phrase();
-      phrase.Literal = String.valueOf(Value);
-      return phrase;
+      public static <ThingType extends ITextable> ArrayList<JsonParse.Phrase> MakeArray(CollisionTable CTable, ArrayList<ThingType> Things) {
+        ArrayList<JsonParse.Phrase> stuff = new ArrayList<JsonParse.Phrase>();
+        int len = Things.size();
+        for (int cnt = 0; cnt < len; cnt++) {
+          stuff.add(Things.get(cnt).Export(CTable));
+        }
+        return stuff;
+      }
+      public static JsonParse.Phrase PackField(Object Value) {// probably not very C++ compatible
+        JsonParse.Phrase phrase = new JsonParse.Phrase();
+        phrase.Literal = String.valueOf(Value);
+        return phrase;
+      }
     }
   }
   public class CollisionItem {// do we really need this? 

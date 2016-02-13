@@ -20,5 +20,6 @@ public interface IDrawable extends ICloneable {
     void MoveTo(double XLoc, double YLoc);
     boolean HitsMe(double XLoc, double YLoc);// click detection
     void SetSelected(boolean Selected);
+    @Override IMoveable Deep_Clone_Me();
   }
 }

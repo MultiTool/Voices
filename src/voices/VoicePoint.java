@@ -143,8 +143,8 @@ public class VoicePoint extends MonkeyBox {
   @Override public JsonParse.Phrase Export(CollisionTable CTable) {// ITextable
     JsonParse.Phrase phrase = super.Export(CTable);
     HashMap<String, JsonParse.Phrase> Fields = phrase.ChildrenHash;
-    Fields.put("SubTime", IFactory.PackField(this.SubTime));
-    Fields.put("OctavesPerLoudness", IFactory.PackField(this.OctavesPerLoudness));
+    Fields.put("SubTime", IFactory.Utils.PackField(this.SubTime));
+    Fields.put("OctavesPerLoudness", IFactory.Utils.PackField(this.OctavesPerLoudness));
     Fields.put("UpHandle", this.UpHandle.Export(CTable));
     Fields.put("DownHandle", this.DownHandle.Export(CTable));
     return phrase;
@@ -275,8 +275,8 @@ public class VoicePoint extends MonkeyBox {
     @Override public JsonParse.Phrase Export(CollisionTable CTable) {// ITextable
       JsonParse.Phrase phrase = new JsonParse.Phrase();
       HashMap<String, JsonParse.Phrase> Fields = (phrase.ChildrenHash = new HashMap<String, JsonParse.Phrase>());
-      Fields.put("OctavesPerRadius", IFactory.PackField(this.OctavesPerRadius));
-      Fields.put("IsSelected", IFactory.PackField(this.IsSelected));
+      Fields.put("OctavesPerRadius", IFactory.Utils.PackField(this.OctavesPerRadius));
+      Fields.put("IsSelected", IFactory.Utils.PackField(this.IsSelected));
       Fields.put("MyBounds", this.MyBounds.Export(CTable));
       return phrase;
     }

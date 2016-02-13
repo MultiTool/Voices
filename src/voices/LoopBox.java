@@ -13,7 +13,7 @@ import java.util.ArrayList;
  * @author MultiTool
  */
 public class LoopBox implements ISonglet, IDrawable {
-  public ArrayList<Ghost_OffsetBox> SubSongs = new ArrayList<>();
+  public ArrayList<Ghost_OffsetBox> SubSongs = new ArrayList<Ghost_OffsetBox>();
   private double MyDuration = 1.0;// manually assigned duration, as loops are infinite otherwise
   private double Delay = 1.0;// time delay between loops
   private double Sustain = 1.0;// Opposite of Diminish. How much the loudness changes with each repeat. 
@@ -263,7 +263,7 @@ public class LoopBox implements ISonglet, IDrawable {
   public static class Loop_Singer extends Singer {
     protected LoopBox MySonglet;
     //private Loop_OffsetBox MyOffsetBox;
-    public ArrayList<Singer> NowPlaying = new ArrayList<>();// pool of currently playing voices
+    public ArrayList<Singer> NowPlaying = new ArrayList<Singer>();// pool of currently playing voices
     double Prev_Time = 0;
     public int LoopCount;
     /* ********************************************************************************* */

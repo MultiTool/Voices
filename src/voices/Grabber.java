@@ -148,6 +148,16 @@ public class Grabber { // to do: rename this class to Grabber
     results.setLocation(pntto);
   }
   /* ********************************************************************************* */
+  public void CompoundStack(MonkeyBox results) {
+    results.Clear();// crush all transformations to one obox
+    int len = this.Best_Stack.size();
+    StackItem si;
+    for (int cnt = 0; cnt < len; cnt++) {
+      si = this.Best_Stack.get(cnt);
+      results.Compound(si.OBox);// this becomes a transformation from screen down to object.
+    }
+  }
+  /* ********************************************************************************* */
   public void UpdateBoundingBoxes() {
     this.Leaf.UpdateBoundingBoxLocal();
     int lastitem = this.Best_Stack.size() - 1;

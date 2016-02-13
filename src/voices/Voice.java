@@ -13,7 +13,7 @@ import java.util.HashMap;
  */
 public class Voice implements ISonglet, IDrawable, ITextable {
   // collection of control points, each one having a pitch and a volume. rendering morphs from one cp to another. 
-  public ArrayList<VoicePoint> CPoints = new ArrayList<>();
+  public ArrayList<VoicePoint> CPoints = new ArrayList<VoicePoint>();
   protected AudProject MyProject;
   private double MaxAmplitude;
   private int FreshnessTimeStamp;
@@ -368,12 +368,12 @@ public class Voice implements ISonglet, IDrawable, ITextable {
   @Override public JsonParse.Phrase Export(CollisionTable CTable) {// ITextable
     JsonParse.Phrase phrase = new JsonParse.Phrase();
     HashMap<String, JsonParse.Phrase> Fields = (phrase.ChildrenHash = new HashMap<String, JsonParse.Phrase>());
-    Fields.put("BaseFreq", IFactory.PackField(this.BaseFreq));
-    Fields.put("MaxAmplitude", IFactory.PackField(this.MaxAmplitude));
+    Fields.put("BaseFreq", IFactory.Utils.PackField(this.BaseFreq));
+    Fields.put("MaxAmplitude", IFactory.Utils.PackField(this.MaxAmplitude));
     Fields.put("MyBounds", MyBounds.Export(CTable));
     // Save my array of control points.
     JsonParse.Phrase CPointsPhrase = new JsonParse.Phrase();
-    CPointsPhrase.ChildrenArray = IFactory.MakeArray(CTable, this.CPoints);
+    CPointsPhrase.ChildrenArray = IFactory.Utils.MakeArray(CTable, this.CPoints);
     Fields.put("CPoints", CPointsPhrase);
     return phrase;
   }

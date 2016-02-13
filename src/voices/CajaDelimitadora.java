@@ -193,8 +193,8 @@ public class CajaDelimitadora implements IDeletable, ITextable {// DIY BoundingB
     }
     phrase.ChildrenHash = new HashMap<String, JsonParse.Phrase>();
     HashMap<String, JsonParse.Phrase> Fields = phrase.ChildrenHash;
-    Fields.put("Min", IFactory.PackField(this.Min.toString()));
-    Fields.put("Max", IFactory.PackField(this.Max.toString()));
+    Fields.put("Min", IFactory.Utils.PackField(this.Min.toString()));
+    Fields.put("Max", IFactory.Utils.PackField(this.Max.toString()));
     return phrase;
   }
 }

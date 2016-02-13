@@ -10,6 +10,7 @@ import java.awt.RenderingHints;
  */
 public class GraphicBox implements IDrawable, ISonglet, IDeletable {// 
   public OffsetBox ContentOBox = null;
+  public IDrawable.IMoveable Floater = null;
   private CajaDelimitadora MyBounds = new CajaDelimitadora();
   int RefCount = 0;
   private int FreshnessTimeStamp;
@@ -33,6 +34,9 @@ public class GraphicBox implements IDrawable, ISonglet, IDeletable {//
     AntiAlias(ParentDC.gr);
     Draw_Grid(ParentDC);
     this.ContentOBox.Draw_Me(ParentDC);
+    if(this.Floater!=null){
+      this.Floater.Draw_Me(ParentDC);
+    }
   }
   @Override public CajaDelimitadora GetBoundingBox() {// IDrawable
     return this.ContentOBox.GetBoundingBox();

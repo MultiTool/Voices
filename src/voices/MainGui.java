@@ -7,6 +7,7 @@ import java.awt.geom.Rectangle2D;
 import javax.swing.*;
 import voices.DrawingContext;
 // From http://www.tutorialspoint.com/javaexamples/gui_polygon.htm
+
 public class MainGui {
   public JFrame frame;
   public DrawingPanel drawpanel;
@@ -36,6 +37,7 @@ public class MainGui {
     this.drawpanel.BigApp = this;
     this.drawpanel.MyProject = this.MyProject;
     MakeButtons();
+    KeyBindings(this.drawpanel);
     frame.setVisible(true);
   }
   /* ********************************************************************************* */
@@ -90,6 +92,9 @@ public class MainGui {
     AudProject MyProject = null;
     MainGui BigApp;
     Grabber Query;
+    int ScreenMouseX = 0, ScreenMouseY = 0;
+    //public IDrawable.IMoveable Floater = null;// copy we are dragging around (in hover mode, no mouse buttons) 
+    Point2D.Double results = new Point2D.Double();// used in multiple places as a return parameter for mapping
     /* ********************************************************************************* */
     public DrawingPanel() {
       this.Init();
@@ -133,6 +138,41 @@ public class MainGui {
       this.MyProject.GraphicRoot.Draw_Me(dc);
     }
     /* ********************************************************************************* */
+    public IDrawable.IMoveable GetFloater() {
+      return this.MyProject.GraphicRoot.Content.Floater;
+    }
+    public void SetFloater(IDrawable.IMoveable floater) {
+      this.MyProject.GraphicRoot.Content.Floater = floater;
+    }
+    /* ********************************************************************************* */
+    public void CopyBranch(double XDisp, double YDisp) {
+      //this.Query.MapThroughStack(this.ScreenMouseX, this.ScreenMouseY, results);
+      if (this.Query.Leaf != null) {
+        {
+          BigApp.MyThread.PleaseStop();
+        }
+        IDrawable.IMoveable Leaf = this.Query.Leaf;
+
+        if (Leaf instanceof OffsetBox) {
+          OffsetBox obx = (OffsetBox) Leaf;// only cast! 
+          OffsetBox clone = obx.Deep_Clone_Me();
+          // IDrawable.IMoveable clone = this.Query.Leaf.Deep_Clone_Me();
+          this.Query.CompoundStack(clone);
+          this.SetFloater(clone);// only deep clone handles to songlets. do not clone loudness handles. clone voicepoints? 
+          //this.Query.Leaf = clone;
+          if (false) {
+            ISonglet songlet = obx.GetContent();
+            OffsetBox ObxCopy = songlet.Spawn_OffsetBox();
+            // this.FloatBox = ObxCopy;
+          }
+          this.GetFloater().MoveTo(XDisp, YDisp);
+          this.repaint();
+        }
+//        if (Leaf.getClass().isMemberClass() == OffsetBox.class) {
+//        }
+      }
+    }
+    /* ********************************************************************************* */
     @Override public void paintComponent(Graphics g) {
       super.paintComponent(g);
       Graphics2D g2d = (Graphics2D) g;
@@ -144,13 +184,19 @@ public class MainGui {
         {
           BigApp.MyThread.PleaseStop();
         }
-        Point2D.Double results = new Point2D.Double();
         this.Query.MapThroughStack(me.getX(), me.getY(), results);
         this.Query.Leaf.MoveTo(results.x, results.y);
         this.repaint();
       }
     }
     @Override public void mouseMoved(MouseEvent me) {
+      this.ScreenMouseX = me.getX();
+      this.ScreenMouseY = me.getY();
+      // to do: transform coordinates
+      IDrawable.IMoveable floater = this.GetFloater();
+      if (false && floater != null) {
+        floater.MoveTo(this.ScreenMouseX, this.ScreenMouseY);
+      }
     }
     /* ********************************************************************************* */
     @Override public void mouseClicked(MouseEvent me) {
@@ -158,6 +204,9 @@ public class MainGui {
     @Override public void mousePressed(MouseEvent me) {
       if (this.Query.Leaf != null) {
         this.Query.Leaf.SetSelected(false);
+      }
+      if (this.GetFloater() != null) {// need to delete these
+        this.SetFloater(null);
       }
       this.Query.AddFirstBox(this.MyProject.GraphicRoot, me.getX(), me.getY());
       //this.MyProject.GraphicRoot.GoFishing(this.Query);
@@ -220,11 +269,40 @@ public class MainGui {
     }
     /* ********************************************************************************* */
     @Override public void keyTyped(KeyEvent ke) {
-      System.exit(0);
     }
     @Override public void keyPressed(KeyEvent ke) {
+      System.out.println("keyPressed:" + ke.getKeyCode() + ":" + ke.getExtendedKeyCode() + ":" + ke.getModifiers() + ":" + ke.getKeyChar() + ":" + ke.getModifiersEx());
+      char ch = Character.toLowerCase(ke.getKeyChar());
+      int keycode = ke.getKeyCode();
+      int mod = ke.getModifiers();
+      boolean CtrlPress = ((mod & KeyEvent.CTRL_MASK) != 0);
+      if ((keycode == KeyEvent.VK_C) && CtrlPress) {
+        this.Query.MapThroughStack(this.ScreenMouseX, this.ScreenMouseY, results);
+        this.CopyBranch(results.x, results.y);
+      } else if (ch == 'c') {
+      } else if ((keycode == KeyEvent.VK_Q) && CtrlPress) {
+        System.exit(0);
+      } else if (keycode == KeyEvent.VK_ESCAPE) {
+        if (this.GetFloater() != null) {// to do: delete Floater if not used
+          this.SetFloater(null);
+          this.repaint();
+        }
+      }
     }
     @Override public void keyReleased(KeyEvent ke) {
+      //System.out.println("keyReleased:" + ke.getKeyCode());
+    }
+  }
+  /* ********************************************************************************* */
+  public void KeyBindings(JPanel panel) {
+    InputMap inputMap = panel.getInputMap();
+    inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_DOWN, 0, false), "Next");
+    ActionMap actionMap = panel.getActionMap();
+    actionMap.put("Next", new NextAction());
+  }
+  class NextAction extends AbstractAction {
+    public void actionPerformed(ActionEvent actionEvent) {
+      System.out.println("Next");
     }
   }
 }

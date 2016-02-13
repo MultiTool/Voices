@@ -13,7 +13,7 @@ import java.util.Comparator;
  * @author MultiTool
  */
 public class GroupBox implements ISonglet, IDrawable {
-  public ArrayList<OffsetBox> SubSongs = new ArrayList<>();
+  public ArrayList<OffsetBox> SubSongs = new ArrayList<OffsetBox>();
   public double Duration = 0.0;
   private AudProject MyProject;
   public String MyName;// for debugging
@@ -311,7 +311,7 @@ public class GroupBox implements ISonglet, IDrawable {
   /* ********************************************************************************* */
   public static class Group_Singer extends Singer {
     protected GroupBox MySonglet;
-    public ArrayList<Singer> NowPlaying = new ArrayList<>();// pool of currently playing voices
+    public ArrayList<Singer> NowPlaying = new ArrayList<Singer>();// pool of currently playing voices
     public int Current_Dex = 0;
     double Prev_Time = 0;
     //private Group_OffsetBox MyOffsetBox;
