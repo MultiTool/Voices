@@ -43,30 +43,64 @@ public class NoteMaker {
     }
   }
   /* ********************************************************************************* */
+  public static void Wave_Test() {
+    double BaseFreq = Globals.MiddleC4Freq / 1;
+    double Duration = 2.0;
+    Wave wave0 = new Wave();
+    Wave wave1 = new Wave();
+    Audio aud = new Audio();
+    NoteMaker.Synth_Pluck(wave0, BaseFreq, Duration, Globals.SampleRate);
+    wave0.Normalize();
+    aud.Start();
+    aud.Feed(wave0);
+    aud.Save("Synth_Pluck.wav", wave0.GetWave());
+    aud.Stop();
+
+    NoteMaker.Synth_Pluck_Flywheel(wave1, BaseFreq, Duration, Globals.SampleRate);
+    wave1.Normalize();
+    aud.Start();
+    aud.Feed(wave1);
+    aud.Save("Synth_Pluck_Flywheel.wav", wave1.GetWave());
+    aud.Stop();
+    
+    aud.Delete_Me();
+  }
+  /* ********************************************************************************* */
+  public static void Generate_WhiteNoise(Wave pattern, int SampleSize, int SampleRate) {
+    pattern.Init(SampleSize, SampleRate);
+    double val;
+    for (int SampCnt = 0; SampCnt < SampleSize; SampCnt++) {
+      val = Globals.RandomGenerator.nextDouble() * 2.0 - 1.0;// white noise
+      pattern.Set(SampCnt, val);
+    }
+    pattern.Center();
+  }
+  /* ********************************************************************************* */
+  public static void Generate_Chirp(Wave pattern, int SampleSize, int SampleRate) {
+    pattern.Init(SampleSize, SampleRate);
+    double val;
+    double subtime = 0.0, timerate = 1.0, FractAlong = 0;
+    for (int SampCnt = 0; SampCnt < SampleSize; SampCnt++) {
+      FractAlong = ((double) SampCnt) / ((double) SampleSize);
+      subtime = FractAlong * timerate;
+      val = Math.sin(subtime * Globals.TwoPi);// chirp
+      timerate += 0.125;
+      pattern.Set(SampCnt, val);
+    }
+    pattern.Center();
+  }
+  /* ********************************************************************************* */
   public static void Synth_Pluck(Wave wave, double BaseFreq, double Duration, int SampleRate) {
     int SamplesPerCycle = (int) ((1.0 / BaseFreq) * SampleRate);
     int MegaSamples = (int) (Duration * (double) SampleRate);
     wave.Init(MegaSamples, SampleRate);
     Wave pattern = new Wave();
-    pattern.Init(SamplesPerCycle, SampleRate);
-
     double val, avg = 0.0;
-    double subtime = 0.0, timerate = 1, FractAlong = 0;
-    for (int SampCnt = 0; SampCnt < SamplesPerCycle; SampCnt++) {
-      FractAlong = ((double) SampCnt) / ((double) SamplesPerCycle);
-      subtime = FractAlong * timerate;
-      val = Math.sin(subtime * Globals.TwoPi);// chirp
-      //val = Globals.RandomGenerator.nextDouble() * 2.0 - 1.0;// white noise
-      timerate += 0.1;
-      pattern.Set(SampCnt, val);
-      avg += val;
+    if (false) {
+      Generate_WhiteNoise(pattern, SamplesPerCycle, SampleRate);
+    } else {
+      Generate_Chirp(pattern, SamplesPerCycle, SampleRate);
     }
-    avg /= SamplesPerCycle;
-    for (int SampCnt = 0; SampCnt < SamplesPerCycle; SampCnt++) {// make average be 0
-      val = pattern.Get(SampCnt);
-      pattern.Set(SampCnt, val - avg);
-    }
-
     int DexNow;
     double ValAvg;
     double ValPrev = 0;
@@ -93,7 +127,7 @@ public class NoteMaker {
       FractAlong = ((double) SampCnt) / ((double) SamplesPerCycle);
       subtime = FractAlong * timerate;
       val = Math.sin(subtime * Globals.TwoPi);// chirp
-      //val = Globals.RandomGenerator.nextDouble() * 2.0 - 1.0;// white noise
+      val = Globals.RandomGenerator.nextDouble() * 2.0 - 1.0;// white noise
       timerate += 0.1;
       pattern.Set(SampCnt, val);
       avg += val;
@@ -103,7 +137,13 @@ public class NoteMaker {
       val = pattern.Get(SampCnt);
       pattern.Set(SampCnt, val - avg);
     }
-
+    if (true) {
+      if (false) {
+        Generate_WhiteNoise(pattern, SamplesPerCycle, SampleRate);
+      } else {
+        Generate_Chirp(pattern, SamplesPerCycle, SampleRate);
+      }
+    }
     double Flywheel = 0.0;
     double Inertia = 0.94, InertiaPersist = 0.9999;
     Inertia = 0.8;// http://www.dynamicnotions.net/2014/01/cleaning-noisy-time-series-data-low.html
@@ -227,21 +267,21 @@ public class NoteMaker {
     //Duration -= AttackTime;
     Wave wave = new Wave();
     switch (choice) {
-    case 0:
-      NoteMaker.Synth_Vibe_Spectrum(wave, 2699, Globals.SampleRate);//  44100 / 16.3516 = 2696.9837814036546882262286259449
-      voice = TestJunkyard.Create_SampleVoice_Stub(wave, 1);// 16.3516);
-      break;
-    case 1:
-      //NoteMaker.Synth_Pluck(wave, Globals.MiddleC4Freq, 1.0, Globals.SampleRate);
-      NoteMaker.Synth_Pluck_Flywheel(wave, Globals.MiddleC4Freq, 1.0, Globals.SampleRate);
-      voice = TestJunkyard.Create_SampleVoice_Stub(wave, 1.0 / Globals.BaseFreqC0);// 16.3516);
-      break;
-    case 2:
-      voice = new Voice();
-      break;
-    case 3:
-      voice = TestJunkyard.Create_SampleVoice_Stub(3);
-      break;
+      case 0:
+        NoteMaker.Synth_Vibe_Spectrum(wave, 2699, Globals.SampleRate);//  44100 / 16.3516 = 2696.9837814036546882262286259449
+        voice = TestJunkyard.Create_SampleVoice_Stub(wave, 1);// 16.3516);
+        break;
+      case 1:
+        //NoteMaker.Synth_Pluck(wave, Globals.MiddleC4Freq, 1.0, Globals.SampleRate);
+        NoteMaker.Synth_Pluck_Flywheel(wave, Globals.MiddleC4Freq, 1.0, Globals.SampleRate);
+        voice = TestJunkyard.Create_SampleVoice_Stub(wave, 1.0 / Globals.BaseFreqC0);// 16.3516);
+        break;
+      case 2:
+        voice = new Voice();
+        break;
+      case 3:
+        voice = TestJunkyard.Create_SampleVoice_Stub(3);
+        break;
     }
     return voice;
   }

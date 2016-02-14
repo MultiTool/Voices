@@ -152,6 +152,18 @@ public class Wave implements IDeletable {
     this.Amplify(1.0 / MaxAmp);
   }
   /* ********************************************************************************* */
+  public void Center() {// Center wave vertically on amplitude 0, so wave average is 0.
+    double Avg=0.0,Sum=0.0;
+    int len = this.wave.length;
+    for (int cnt = 0; cnt < len; cnt++) {
+      Sum += this.wave[cnt];
+    }
+    Avg = Sum/(double)len;
+    for (int cnt = 0; cnt < len; cnt++) {
+      this.wave[cnt] -= Avg;
+    }
+  }
+  /* ********************************************************************************* */
   public void Append(Wave other) {
     int StartPlace = other.StartDex;
     int nextsize = StartPlace + other.NumSamples;

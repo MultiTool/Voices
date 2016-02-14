@@ -18,6 +18,10 @@ public class Voices {
    */
   /* ********************************************************************************* */
   public static void main(String[] args) {
+    if (false){
+      NoteMaker.Wave_Test();
+      return;
+    }
     Point2D.Double pnt = new Point2D.Double(12.3, 45.6);
     String txt = pnt.toString();
     if (false) {
