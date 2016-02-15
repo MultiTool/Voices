@@ -53,7 +53,8 @@ public class NoteMaker {
     wave0.Normalize();
     aud.Start();
     aud.Feed(wave0);
-    aud.Save("Synth_Pluck.wav", wave0.GetWave());
+    //aud.Save("Synth_Pluck_WhiteNoise.wav", wave0.GetWave());
+    aud.Save("Synth_Pluck_Chirp_Middle.wav", wave0.GetWave());
     aud.Stop();
 
     NoteMaker.Synth_Pluck_Flywheel(wave1, BaseFreq, Duration, Globals.SampleRate);
@@ -62,7 +63,7 @@ public class NoteMaker {
     aud.Feed(wave1);
     aud.Save("Synth_Pluck_Flywheel.wav", wave1.GetWave());
     aud.Stop();
-    
+
     aud.Delete_Me();
   }
   /* ********************************************************************************* */
@@ -79,13 +80,21 @@ public class NoteMaker {
   public static void Generate_Chirp(Wave pattern, int SampleSize, int SampleRate) {
     pattern.Init(SampleSize, SampleRate);
     double val;
-    double subtime = 0.0, timerate = 1.0, FractAlong = 0;
-    for (int SampCnt = 0; SampCnt < SampleSize; SampCnt++) {
-      FractAlong = ((double) SampCnt) / ((double) SampleSize);
+    int wrapfactor = 1;
+    int SampleSizePlus = (SampleSize*wrapfactor)+1;
+    int SampWrapped;
+    double subtime = 0.0, timerate = 1.0, FractAlong = 0, FractRemaining = 0;
+    for (int SampCnt = 0; SampCnt < SampleSize*wrapfactor; SampCnt++) {
+      SampWrapped = SampCnt % SampleSize;
+      FractAlong = ((double) SampCnt) / ((double) SampleSizePlus);
+      FractRemaining = 1.0 - FractAlong;
+      //timerate = 1.0 / FractRemaining;
       subtime = FractAlong * timerate;
       val = Math.sin(subtime * Globals.TwoPi);// chirp
       timerate += 0.125;
-      pattern.Set(SampCnt, val);
+      double temp = pattern.Get(SampWrapped);
+      pattern.Set(SampWrapped, temp + val);
+      //pattern.Set(SampCnt, val);
     }
     pattern.Center();
   }
