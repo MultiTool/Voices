@@ -152,6 +152,18 @@ public class Wave implements IDeletable {
     this.Amplify(1.0 / MaxAmp);
   }
   /* ********************************************************************************* */
+  public void Center() {// Center wave vertically on amplitude 0, so wave average is 0.
+    double Avg = 0.0, Sum = 0.0;
+    int len = this.wave.length;
+    for (int cnt = 0; cnt < len; cnt++) {
+      Sum += this.wave[cnt];
+    }
+    Avg = Sum / (double) len;
+    for (int cnt = 0; cnt < len; cnt++) {
+      this.wave[cnt] -= Avg;
+    }
+  }
+  /* ********************************************************************************* */
   public void Append(Wave other) {
     int StartPlace = other.StartDex;
     int nextsize = StartPlace + other.NumSamples;
@@ -233,6 +245,17 @@ public class Wave implements IDeletable {
     InterpAmp = amp0 + (Fraction1 * FullAmpDelta);
     InterpAmp = (Fraction0 * amp0) + (Fraction1 * amp1);
     return InterpAmp;
+  }
+  /* ******************************************************************* */
+  public void MorphToWave(Wave other, double Factor, Wave results) {
+    double val0, val1;
+    double InvFactor = 1.0 - Factor;
+    int MinSamples = Math.min(this.NumSamples, Math.min(other.NumSamples, results.NumSamples));
+    for (int cnt = 0; cnt < MinSamples; cnt++) {
+      val0 = this.wave[cnt];
+      val1 = other.wave[cnt];
+      results.wave[cnt] = (val0 * InvFactor) + (val1 * Factor);
+    }
   }
   /* ********************************************************************************* */
   public double[] GetWave() {// just for testing. remove later

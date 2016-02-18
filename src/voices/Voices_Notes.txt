@@ -597,4 +597,26 @@ for (int cnt = 0; cnt <= 10; cnt++)
 	Denominator = (Denominator * Decay) + Decay;
 }
 
+foldalg:
+int MaxWidth = 100;
+void PrintItem(Item, RecurseDepth) {
+  int width=0;
+  if (Item is Parent) {
+    print openbrace; width += openbrace.width;
+    foreach (SubItem in Item.Children) {
+	  width += SubItem.Key.length + ":".length;
+      width += SubItem.width;// includes hash Key:{value}, or array {value},
+      if (width > MaxWidth) {
+        insert linebreak;
+        print indent*RecurseDepth? 
+        width = 0;
+      }
+      PrintItem(SubItem, RecurseDepth+1);
+	}
+	// insert linebreak;
+    print indent*RecurseDepth? 
+	print closebrace;
+  } else { // Item is leaf
+  }
+}
 

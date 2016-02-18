@@ -1,5 +1,7 @@
 package voices;
 
+import java.util.ArrayList;
+
 /**
  *
  * @author MultiTool
@@ -43,30 +45,176 @@ public class NoteMaker {
     }
   }
   /* ********************************************************************************* */
+  public static void Wave_Test() {
+    double BaseFreq = Globals.MiddleC4Freq / 4;
+    double Duration = 2.0;
+    Wave wave0 = new Wave();
+    Wave wave1 = new Wave();
+    Audio aud = new Audio();
+    NoteMaker.Synth_Pluck(wave0, BaseFreq, Duration, Globals.SampleRate);
+    //NoteMaker.Generate_StackedSines(wave0, 200, Globals.SampleRate);
+    wave0.Normalize();
+
+    int SamplesPerCycle = (int) ((1.0 / BaseFreq) * Globals.SampleRate);
+    ArrayList<Wave> results = new ArrayList<Wave>();
+    Extract_Periodic_Samples(wave0, 32, SamplesPerCycle, results);
+
+    aud.Start();
+    aud.Feed(wave0);
+    //aud.Save("Synth_Pluck_WhiteNoise.wav", wave0.GetWave());
+    //aud.Save("Synth_Pluck_Chirp_Middle.wav", wave0.GetWave());
+    //aud.Save("StackedSines.wav", wave0.GetWave());
+    aud.Save("Synth_Pluck_StackedSines.wav", wave0.GetWave());
+    aud.Stop();
+
+    NoteMaker.Synth_Pluck_Flywheel(wave1, BaseFreq, Duration, Globals.SampleRate);
+    wave1.Normalize();
+    aud.Start();
+    aud.Feed(wave1);
+    aud.Save("Synth_Pluck_Flywheel.wav", wave1.GetWave());
+    aud.Stop();
+
+    aud.Delete_Me();
+  }
+  /* ********************************************************************************* */
+  public static void Generate_WhiteNoise(Wave pattern, int SampleSize, int SampleRate) {
+    pattern.Init(SampleSize, SampleRate);
+    double val;
+    for (int SampCnt = 0; SampCnt < SampleSize; SampCnt++) {
+      val = Globals.RandomGenerator.nextDouble() * 2.0 - 1.0;// white noise
+      pattern.Set(SampCnt, val);
+    }
+    pattern.Center();
+  }
+  /* ********************************************************************************* */
+  public static void Generate_Chirp(Wave pattern, int SampleSize, int SampleRate) {
+    pattern.Init(SampleSize, SampleRate);
+    double val;
+    int wrapfactor = 1;
+    int SampleSizePlus = (SampleSize * wrapfactor) + 1;
+    int SampWrapped;
+    double subtime = 0.0, timerate = 1.0, FractAlong = 0, FractRemaining = 0;
+    for (int SampCnt = 0; SampCnt < SampleSize * wrapfactor; SampCnt++) {
+      SampWrapped = SampCnt % SampleSize;
+      FractAlong = ((double) SampCnt) / ((double) SampleSizePlus);
+      FractRemaining = 1.0 - FractAlong;
+      //timerate = 1.0 / FractRemaining;
+      subtime = FractAlong * timerate;
+      val = Math.sin(subtime * Globals.TwoPi);// chirp
+      timerate += 0.125;
+      double temp = pattern.Get(SampWrapped);
+      pattern.Set(SampWrapped, temp + val);
+      //pattern.Set(SampCnt, val);
+    }
+    pattern.Center();
+  }
+  /* ********************************************************************************* */
+  public static void Generate_HashChirp(Wave pattern, int SampleSize, int SampleRate) {// not finished yet
+    pattern.Init(SampleSize, SampleRate);
+    double prevamp, amp = Globals.Fudge;
+    double CrossX, BaseX = 0, RelativeTime;
+    double RealTime = 0, FractAlong;
+    double WaveLen, freq = 1.0, newfreq = 1.0;
+    double NumCycles;
+    /*
+     A big problem with this so far is that long wavelengths will win most of the territory.
+     we need a way to give short wavelengths more space. could bias the probability, but nah.
+     could only switch frequencies if NumCycles * WaveLen is greater than some value. 
+     should base at higher frequency than 1 for this, or freq 1 will own the entire span.
+     */
+    for (int SampCnt = 0; SampCnt < SampleSize; SampCnt++) {
+      RealTime = ((double) SampCnt) / (double) SampleSize;// do we want FractAlong or actual time? 
+      RelativeTime = RealTime - BaseX;
+      prevamp = amp;
+      amp = Math.sin(RelativeTime * freq);
+      //if (prevamp * amp <= 0) { // crosses 0
+      //if ((prevamp * amp <= 0) && (amp - prevamp > 0)) { // crosses 0 and rising
+      if ((prevamp <= 0) && (0 <= amp)) { // crosses 0 and rising
+        NumCycles = Math.round(RelativeTime * freq);
+        WaveLen = 1.0 / freq;
+        CrossX = WaveLen * NumCycles + BaseX;
+        BaseX = CrossX;
+        freq = newfreq;// random range 1.0 to maybe (timespan*samplerate)/8
+        amp = Math.sin(RelativeTime * freq);
+      }
+      pattern.Set(SampCnt, amp);
+    }
+    pattern.Center();
+  }
+  /* ********************************************************************************* */
+  public static void Generate_StackedSines(Wave pattern, int SampleSize, int SampleRate) {
+    pattern.Init(SampleSize, SampleRate);
+    double val;
+    double FractAlong, subtime, timerate;
+    for (int SampCnt = 0; SampCnt < SampleSize; SampCnt++) {
+      FractAlong = ((double) SampCnt) / ((double) SampleSize);
+      val = 0.0;
+      for (timerate = 4.0; timerate < 34; timerate++) {
+        subtime = FractAlong * timerate;
+        val += Math.sin(subtime * Globals.TwoPi);
+      }
+      pattern.Set(SampCnt, val);
+    }
+    pattern.Center();
+  }
+  /* ********************************************************************************* */
+  public static void Morph_Synth(ArrayList<Wave> WaveTable, Wave wave) {
+    Wave chunkprev, chunk, results;// none of this works yet, it is unfinished
+    chunk = WaveTable.get(0);
+    results = new Wave(); // results.Init(ChunkSize, SampleRate);
+    double Factor = 1.0;
+    for (int cnt = 1; cnt < WaveTable.size(); cnt++) {
+      chunkprev = chunk;
+      chunk = WaveTable.get(cnt);
+      for (int scnt = 0; scnt < 100; scnt++) {
+        Factor = ((double) scnt) / (double) 100;
+        chunk.MorphToWave(chunkprev, Factor, results);
+        wave.Overdub(results);
+      }
+    }
+  }
+  /* ********************************************************************************* */
+  public static void Extract_Periodic_Samples(Wave wave, int NumChunks, int ChunkSize, ArrayList<Wave> results) {
+    double[] wavin = wave.GetWave();// wrong!  needs to be more sparse
+    Wave waveout;
+    int ChunkSpacing = wave.NumSamples / NumChunks;
+    for (int cnt = 0; cnt < wave.NumSamples; cnt += ChunkSpacing) {
+      if (cnt + ChunkSize >= wave.NumSamples) {
+        break;
+      }
+      waveout = new Wave();
+      waveout.Init(ChunkSize, wave.SampleRate);
+      Extract_Sample(wave, cnt, cnt + ChunkSize, waveout);
+      results.add(waveout);
+    }
+  }
+  /* ********************************************************************************* */
+  public static void Extract_Sample(Wave wave, int StartPlace, int EndPlace, Wave results) {
+    double[] wavin = wave.GetWave();
+    double[] wavout = results.GetWave();
+    int cntout = 0;
+    for (int cnt = StartPlace; cnt < EndPlace; cnt++) {
+      try {
+        results.Set(cntout++, wavin[cnt]);// wavout[cntout++] = wavin[cnt];
+      } catch (Exception ex) {
+        boolean nop = true;
+      }
+    }
+  }
+  /* ********************************************************************************* */
   public static void Synth_Pluck(Wave wave, double BaseFreq, double Duration, int SampleRate) {
     int SamplesPerCycle = (int) ((1.0 / BaseFreq) * SampleRate);
     int MegaSamples = (int) (Duration * (double) SampleRate);
     wave.Init(MegaSamples, SampleRate);
     Wave pattern = new Wave();
-    pattern.Init(SamplesPerCycle, SampleRate);
-
     double val, avg = 0.0;
-    double subtime = 0.0, timerate = 1, FractAlong = 0;
-    for (int SampCnt = 0; SampCnt < SamplesPerCycle; SampCnt++) {
-      FractAlong = ((double) SampCnt) / ((double) SamplesPerCycle);
-      subtime = FractAlong * timerate;
-      val = Math.sin(subtime * Globals.TwoPi);// chirp
-      //val = Globals.RandomGenerator.nextDouble() * 2.0 - 1.0;// white noise
-      timerate += 0.1;
-      pattern.Set(SampCnt, val);
-      avg += val;
+    if (false) {
+      NoteMaker.Generate_StackedSines(pattern, SamplesPerCycle, SampleRate);
+    } else if (true) {
+      Generate_WhiteNoise(pattern, SamplesPerCycle, SampleRate);
+    } else {
+      Generate_Chirp(pattern, SamplesPerCycle, SampleRate);
     }
-    avg /= SamplesPerCycle;
-    for (int SampCnt = 0; SampCnt < SamplesPerCycle; SampCnt++) {// make average be 0
-      val = pattern.Get(SampCnt);
-      pattern.Set(SampCnt, val - avg);
-    }
-
     int DexNow;
     double ValAvg;
     double ValPrev = 0;
@@ -93,7 +241,7 @@ public class NoteMaker {
       FractAlong = ((double) SampCnt) / ((double) SamplesPerCycle);
       subtime = FractAlong * timerate;
       val = Math.sin(subtime * Globals.TwoPi);// chirp
-      //val = Globals.RandomGenerator.nextDouble() * 2.0 - 1.0;// white noise
+      val = Globals.RandomGenerator.nextDouble() * 2.0 - 1.0;// white noise
       timerate += 0.1;
       pattern.Set(SampCnt, val);
       avg += val;
@@ -103,7 +251,13 @@ public class NoteMaker {
       val = pattern.Get(SampCnt);
       pattern.Set(SampCnt, val - avg);
     }
-
+    if (true) {
+      if (false) {
+        Generate_WhiteNoise(pattern, SamplesPerCycle, SampleRate);
+      } else {
+        Generate_Chirp(pattern, SamplesPerCycle, SampleRate);
+      }
+    }
     double Flywheel = 0.0;
     double Inertia = 0.94, InertiaPersist = 0.9999;
     Inertia = 0.8;// http://www.dynamicnotions.net/2014/01/cleaning-noisy-time-series-data-low.html

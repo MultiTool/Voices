@@ -148,13 +148,22 @@ public class Grabber { // to do: rename this class to Grabber
     results.setLocation(pntto);
   }
   /* ********************************************************************************* */
-  public void CompoundStack(MonkeyBox results) {
+  public void CompoundStack(MonkeyBox startplace, MonkeyBox results) {
     results.Clear();// crush all transformations to one obox
     int len = this.Best_Stack.size();
     StackItem si;
-    for (int cnt = 0; cnt < len; cnt++) {
+    int cnt = 0;
+    while (cnt < len) {
+      si = this.Best_Stack.get(cnt);
+      if (si.OBox == startplace) {// start at startplace
+        break;
+      }
+      cnt++;
+    }
+    while (cnt < len) {
       si = this.Best_Stack.get(cnt);
       results.Compound(si.OBox);// this becomes a transformation from screen down to object.
+      cnt++;
     }
   }
   /* ********************************************************************************* */

@@ -157,7 +157,7 @@ public class MainGui {
           OffsetBox obx = (OffsetBox) Leaf;// only cast! 
           OffsetBox clone = obx.Deep_Clone_Me();
           // IDrawable.IMoveable clone = this.Query.Leaf.Deep_Clone_Me();
-          this.Query.CompoundStack(clone);
+          this.Query.CompoundStack(this.MyProject.AudioRoot, clone);
           this.SetFloater(clone);// only deep clone handles to songlets. do not clone loudness handles. clone voicepoints? 
           //this.Query.Leaf = clone;
           if (false) {
@@ -194,8 +194,10 @@ public class MainGui {
       this.ScreenMouseY = me.getY();
       // to do: transform coordinates
       IDrawable.IMoveable floater = this.GetFloater();
-      if (false && floater != null) {
-        floater.MoveTo(this.ScreenMouseX, this.ScreenMouseY);
+      if (true && floater != null) {
+        this.Query.MapThroughStack(this.ScreenMouseX, this.ScreenMouseY, results);// ack, get rid of this and rethink it totally
+        floater.MoveTo(results.x, results.y);
+        this.repaint();
       }
     }
     /* ********************************************************************************* */

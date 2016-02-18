@@ -166,6 +166,13 @@ class JsonParse
       return false;
     }
     /* ********************************************************************************************************* */
+    public static boolean IsNumericSuffixChar(char ch)
+    {
+      ch = Character.toLowerCase(ch);
+      if ('e' == ch || ch == 'f') { return true; }// currently we are sloppy and let gibberish like ".--99.00.-45..88" go through
+      return false;
+    }
+    /* ********************************************************************************************************* */
     public static boolean IsNumericString(String txt) {// for numbers
       if (txt.length()==0){return false;}// currently we are sloppy and let gibberish like ".--99.00.-45..88" go through
       int chcnt = 0;
@@ -273,12 +280,14 @@ class JsonParse
       // how about a number can end with whitespace or any non-numeric punctation. 
       Phrase OnePhrase=null;
       Token tkn = Chunks.get(Marker);
-      if (IsNumericPunctuationChar(tkn.Text.charAt(0)) || IsNumericString(tkn.Text)){
+      char ch = tkn.Text.charAt(0);
+      if (IsNumericPunctuationChar(ch) || IsNumericString(tkn.Text)){
         int MarkNext = ++Marker;
         String WholeString = "";
         while (MarkNext<Chunks.size()){// to do: fix this. as-is will return true if text is empty.
           tkn = Chunks.get(MarkNext);
-          if (!(IsNumericPunctuationChar(tkn.Text.charAt(0)) || IsNumericString(tkn.Text))){ break; }
+          ch = tkn.Text.charAt(0);
+          if (!(IsNumericPunctuationChar(ch) || IsNumericString(tkn.Text) || IsNumericSuffixChar(ch))){ break; }
           WholeString = WholeString.concat(tkn.Text);
           MarkNext++;
         }
@@ -299,7 +308,7 @@ class JsonParse
       if (tkn.Text.equals(Starter)){
         OnePhrase = new Phrase();
         OnePhrase.ChunkStart = Marker;
-        OnePhrase.ChildrenHash = new HashMap<String,Phrase>();
+        OnePhrase.ChildrenHash = new HashMap<>();
         MarkNext = ++Marker;
         while (Marker<Chunks.size()) {
           tkn = Chunks.get(Marker);
@@ -308,6 +317,8 @@ class JsonParse
             OnePhrase.ChildrenHash.put(Key, SubPhrase); Key=null; MarkNext = SubPhrase.ChunkEnd+1; 
           } else if ((SubPhrase = FindClauseArray(Chunks,  Marker, RecurDepth))!=null){
             OnePhrase.ChildrenHash.put(Key, SubPhrase); Key=null; MarkNext = SubPhrase.ChunkEnd+1; 
+          } else if ((SubPhrase = FindClauseNumber(Chunks, Marker, RecurDepth)) != null) {
+            OnePhrase.ChildrenHash.put(Key, SubPhrase); Key=null; MarkNext = SubPhrase.ChunkEnd+1;
           } else if ((tkn.BlockType == TokenType.TextString) || (tkn.BlockType == TokenType.Word)) {
             if (KeyOrValue == 0) {
               Key = tkn.Text;
@@ -341,28 +352,26 @@ class JsonParse
       if (tkn.Text.equals(Starter)){
       OnePhrase = new Phrase();
       OnePhrase.ChunkStart = Marker;
-      OnePhrase.ChildrenArray = new ArrayList<Phrase>();
+      OnePhrase.ChildrenArray = new ArrayList<>();
       Marker++;
       MarkNext=Marker;
       while (Marker<Chunks.size()) {
         tkn = Chunks.get(Marker);
         if (tkn.Text.equals(Ender)){break;}
         if ((SubPhrase = FindClauseHashMap(Chunks,  Marker, RecurDepth))!=null){
-        OnePhrase.ChildrenArray.add(SubPhrase); MarkNext = SubPhrase.ChunkEnd+1; 
-        }
-        else if ((SubPhrase = FindClauseArray(Chunks,  Marker, RecurDepth))!=null){
-        OnePhrase.ChildrenArray.add(SubPhrase); MarkNext = SubPhrase.ChunkEnd+1; 
-        }
-        else if ((tkn.BlockType == TokenType.TextString) || (tkn.BlockType == TokenType.Word)){
-        SubPhrase = MakeLiteral(tkn.Text, Marker, Marker);// inclusive
-        OnePhrase.ChildrenArray.add(SubPhrase);
-        MarkNext++;
-        }
-        else if (tkn.BlockType == TokenType.SingleChar){
-        if (tkn.Text.equals(",")){ }
-        MarkNext++;
-        }
-        else if (tkn.BlockType == TokenType.Whitespace){/* skip whitespace */ MarkNext++; }  
+          OnePhrase.ChildrenArray.add(SubPhrase); MarkNext = SubPhrase.ChunkEnd+1; 
+        } else if ((SubPhrase = FindClauseArray(Chunks,  Marker, RecurDepth))!=null){
+          OnePhrase.ChildrenArray.add(SubPhrase); MarkNext = SubPhrase.ChunkEnd+1; 
+        } else if ((SubPhrase = FindClauseNumber(Chunks, Marker, RecurDepth)) != null) {
+          OnePhrase.ChildrenArray.add(SubPhrase); MarkNext = SubPhrase.ChunkEnd+1;
+        } else if ((tkn.BlockType == TokenType.TextString) || (tkn.BlockType == TokenType.Word)){
+          SubPhrase = MakeLiteral(tkn.Text, Marker, Marker);// inclusive
+          OnePhrase.ChildrenArray.add(SubPhrase);
+          MarkNext++;
+        } else if (tkn.BlockType == TokenType.SingleChar){
+          if (tkn.Text.equals(",")){ }
+          MarkNext++;
+        } else if (tkn.BlockType == TokenType.Whitespace){/* skip whitespace */ MarkNext++; }  
         else {/* skip over everything else */ MarkNext++;}
         
         Marker = MarkNext;
