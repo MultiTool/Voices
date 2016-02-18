@@ -144,29 +144,31 @@ public class MainGui {
     public void SetFloater(IDrawable.IMoveable floater) {
       this.MyProject.GraphicRoot.Content.Floater = floater;
     }
+    public void MoveFloater(double ScreenX, double ScreenY) {
+      this.MyProject.GraphicRoot.MapTo(ScreenX, ScreenY, results);
+      this.GetFloater().MoveTo(results.x, results.y);
+      this.GetFloater().UpdateBoundingBoxLocal();
+      this.repaint();
+    }
     /* ********************************************************************************* */
     public void CopyBranch(double XDisp, double YDisp) {
-      //this.Query.MapThroughStack(this.ScreenMouseX, this.ScreenMouseY, results);
       if (this.Query.Leaf != null) {
         {
           BigApp.MyThread.PleaseStop();
         }
         IDrawable.IMoveable Leaf = this.Query.Leaf;
-
         if (Leaf instanceof OffsetBox) {
           OffsetBox obx = (OffsetBox) Leaf;// only cast! 
           OffsetBox clone = obx.Deep_Clone_Me();
-          // IDrawable.IMoveable clone = this.Query.Leaf.Deep_Clone_Me();
-          this.Query.CompoundStack(this.MyProject.AudioRoot, clone);
-          this.SetFloater(clone);// only deep clone handles to songlets. do not clone loudness handles. clone voicepoints? 
-          //this.Query.Leaf = clone;
-          if (false) {
+          if (false) {// one catch is that if this is a loopbox ghost handle we get a copy of the ghost instead of a native offsetbox
             ISonglet songlet = obx.GetContent();
             OffsetBox ObxCopy = songlet.Spawn_OffsetBox();
-            // this.FloatBox = ObxCopy;
+            ObxCopy.Copy_From(obx);// transfer original offsets
+            clone = ObxCopy.Deep_Clone_Me();
           }
-          this.GetFloater().MoveTo(XDisp, YDisp);
-          this.repaint();
+          this.Query.CompoundStack(this.MyProject.AudioRoot, clone);
+          this.SetFloater(clone);// only deep clone handles to songlets. do not clone loudness handles. clone voicepoints? 
+          MoveFloater(XDisp, YDisp);
         }
 //        if (Leaf.getClass().isMemberClass() == OffsetBox.class) {
 //        }
@@ -195,9 +197,7 @@ public class MainGui {
       // to do: transform coordinates
       IDrawable.IMoveable floater = this.GetFloater();
       if (true && floater != null) {
-        this.Query.MapThroughStack(this.ScreenMouseX, this.ScreenMouseY, results);// ack, get rid of this and rethink it totally
-        floater.MoveTo(results.x, results.y);
-        this.repaint();
+        MoveFloater(this.ScreenMouseX, this.ScreenMouseY);
       }
     }
     /* ********************************************************************************* */
@@ -217,8 +217,9 @@ public class MainGui {
       this.Query.DecrementStack();
       if (this.Query.Leaf != null) {
         this.Query.Leaf.SetSelected(true);
-        this.repaint();
+        //this.repaint();
       }
+      this.repaint();
     }
     @Override public void mouseReleased(MouseEvent me) {
       if (this.Query.Leaf != null) {
@@ -279,8 +280,9 @@ public class MainGui {
       int mod = ke.getModifiers();
       boolean CtrlPress = ((mod & KeyEvent.CTRL_MASK) != 0);
       if ((keycode == KeyEvent.VK_C) && CtrlPress) {
-        this.Query.MapThroughStack(this.ScreenMouseX, this.ScreenMouseY, results);
-        this.CopyBranch(results.x, results.y);
+//        this.Query.MapThroughStack(this.ScreenMouseX, this.ScreenMouseY, results);
+//        this.CopyBranch(results.x, results.y);
+        this.CopyBranch(this.ScreenMouseX, this.ScreenMouseY);
       } else if (ch == 'c') {
       } else if ((keycode == KeyEvent.VK_Q) && CtrlPress) {
         System.exit(0);

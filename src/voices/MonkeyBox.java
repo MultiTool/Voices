@@ -101,13 +101,21 @@ public class MonkeyBox implements IDrawable.IMoveable, IDeletable, ITextable {//
   }
   /* ********************************************************************************* */
   public Point2D.Double MapTo(double XLoc, double YLoc) {
-    Point2D.Double pnt = new Point2D.Double(this.UnMapTime(XLoc), this.UnMapPitch(YLoc));
+    Point2D.Double pnt = new Point2D.Double(this.MapTime(XLoc), this.MapPitch(YLoc));
     return pnt;
   }
   /* ********************************************************************************* */
   public Point2D.Double UnMap(double XLoc, double YLoc) {
-    Point2D.Double pnt = new Point2D.Double(this.MapTime(XLoc), this.MapPitch(YLoc));
+    Point2D.Double pnt = new Point2D.Double(this.UnMapTime(XLoc), this.UnMapPitch(YLoc));
     return pnt;
+  }
+  /* ********************************************************************************* */
+  public void MapTo(double XLoc, double YLoc, Point2D.Double results) {
+    results.setLocation(this.MapTime(XLoc), this.MapPitch(YLoc));
+  }
+  /* ********************************************************************************* */
+  public void UnMap(double XLoc, double YLoc, Point2D.Double results) {
+    results.setLocation(this.UnMapTime(XLoc), this.UnMapPitch(YLoc));
   }
   /* ********************************************************************************* */
   public void MapTo(Point2D.Double pnt, Point2D.Double results) {
