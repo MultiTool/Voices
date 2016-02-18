@@ -65,8 +65,14 @@ public class NoteMaker {
     //aud.Save("Synth_Pluck_Chirp_Middle.wav", wave0.GetWave());
     //aud.Save("StackedSines.wav", wave0.GetWave());
     aud.Save("Synth_Pluck_StackedSines.wav", wave0.GetWave());
-    aud.Stop();
 
+    wave0.Normalize();
+    aud.Start();
+    aud.Feed(wave0);
+    //aud.Save("Synth_Pluck_WhiteNoise.wav", wave0.GetWave());
+    aud.Save("Synth_Pluck_Chirp_Middle.wav", wave0.GetWave());
+    
+    aud.Stop();
     NoteMaker.Synth_Pluck_Flywheel(wave1, BaseFreq, Duration, Globals.SampleRate);
     wave1.Normalize();
     aud.Start();
@@ -381,21 +387,21 @@ public class NoteMaker {
     //Duration -= AttackTime;
     Wave wave = new Wave();
     switch (choice) {
-    case 0:
-      NoteMaker.Synth_Vibe_Spectrum(wave, 2699, Globals.SampleRate);//  44100 / 16.3516 = 2696.9837814036546882262286259449
-      voice = TestJunkyard.Create_SampleVoice_Stub(wave, 1);// 16.3516);
-      break;
-    case 1:
-      //NoteMaker.Synth_Pluck(wave, Globals.MiddleC4Freq, 1.0, Globals.SampleRate);
-      NoteMaker.Synth_Pluck_Flywheel(wave, Globals.MiddleC4Freq, 1.0, Globals.SampleRate);
-      voice = TestJunkyard.Create_SampleVoice_Stub(wave, 1.0 / Globals.BaseFreqC0);// 16.3516);
-      break;
-    case 2:
-      voice = new Voice();
-      break;
-    case 3:
-      voice = TestJunkyard.Create_SampleVoice_Stub(3);
-      break;
+      case 0:
+        NoteMaker.Synth_Vibe_Spectrum(wave, 2699, Globals.SampleRate);//  44100 / 16.3516 = 2696.9837814036546882262286259449
+        voice = TestJunkyard.Create_SampleVoice_Stub(wave, 1);// 16.3516);
+        break;
+      case 1:
+        //NoteMaker.Synth_Pluck(wave, Globals.MiddleC4Freq, 1.0, Globals.SampleRate);
+        NoteMaker.Synth_Pluck_Flywheel(wave, Globals.MiddleC4Freq, 1.0, Globals.SampleRate);
+        voice = TestJunkyard.Create_SampleVoice_Stub(wave, 1.0 / Globals.BaseFreqC0);// 16.3516);
+        break;
+      case 2:
+        voice = new Voice();
+        break;
+      case 3:
+        voice = TestJunkyard.Create_SampleVoice_Stub(3);
+        break;
     }
     return voice;
   }

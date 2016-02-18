@@ -308,7 +308,7 @@ class JsonParse
       if (tkn.Text.equals(Starter)){
         OnePhrase = new Phrase();
         OnePhrase.ChunkStart = Marker;
-        OnePhrase.ChildrenHash = new HashMap<>();
+        OnePhrase.ChildrenHash = new HashMap<String,Phrase>();
         MarkNext = ++Marker;
         while (Marker<Chunks.size()) {
           tkn = Chunks.get(Marker);
@@ -352,7 +352,7 @@ class JsonParse
       if (tkn.Text.equals(Starter)){
       OnePhrase = new Phrase();
       OnePhrase.ChunkStart = Marker;
-      OnePhrase.ChildrenArray = new ArrayList<>();
+      OnePhrase.ChildrenArray = new ArrayList<Phrase>();
       Marker++;
       MarkNext=Marker;
       while (Marker<Chunks.size()) {
