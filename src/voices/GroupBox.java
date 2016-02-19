@@ -285,6 +285,88 @@ public class GroupBox implements ISonglet, IDrawable {
     this.MyBounds.Copy_From(donor.MyBounds);
   }
   /* ********************************************************************************* */
+  public double DotProduct(double X0, double Y0, double X1, double Y1) {
+    return X0 * X1 + Y0 * Y1;// length of projection from one vector onto another
+  }
+  /* ********************************************************************************* */
+  public double DistanceFromLine(double LineX0, double LineY0, double LineX1, double LineY1, double XPnt, double YPnt) {// work in progress for drag and drop support
+    double XDif = LineX1 - LineX0, YDif = LineY1 - LineY0;
+    double DotProd = this.DotProduct(XDif, YDif, XPnt - LineX0, YPnt - LineY0);
+    double XLoc = LineX0 + (XDif * DotProd);// point of intersection
+    double YLoc = LineY0 + (YDif * DotProd);
+    // to do: at this point we would like to test if the intersection is between the line's endpoints. 
+//    double XLoc = (XDif * DotProd);// point of intersection
+//    double YLoc = (YDif * DotProd);
+//    double PntDX = (XLoc - XPnt); double PntDY = (YLoc - YPnt);
+    double Distance = Math.hypot(XLoc - XPnt, YLoc - YPnt);
+    return Distance;
+  }
+  /* ********************************************************************************* */
+  public double HeightFromLine(double LineX0, double LineY0, double LineX1, double LineY1, double XPnt, double YPnt) {// work in progress for drag and drop support
+    double YCross = LineYCross(LineX0, LineY0, LineX1, LineY1, XPnt);
+    double Distance = YPnt - YCross;
+    return Distance;
+  }
+  /* ********************************************************************************* */
+  public double LineYCross(double LineX0, double LineY0, double LineX1, double LineY1, double XPnt) {// work in progress for drag and drop support
+    double XDif = LineX1 - LineX0;// given a line and an X point, return the Y location of the intersect along that line
+    double YCross;
+    if (XDif == 0) {// If slope is infinite, just return the halfway point between the top and bottom of the line.
+      YCross = (LineY0 + LineY1) / 2.0;
+    } else {
+      double YDif = LineY1 - LineY0;
+      double Slope = YDif / XDif;
+      double PointXOffset = (XPnt - LineX0);
+      YCross = LineY0 + (PointXOffset * Slope);
+    }
+    return YCross;
+  }
+  /* ********************************************************************************* */
+  public void ScanForDropLoc(double XPnt, double YPnt) {// work in progress for drag and drop support
+    double Limit = 0.1;// octaves
+    int len = this.SubSongs.size();
+    OffsetBox OBox, ClosestPoint = null;
+    double XPrev = 0, YPrev = 0, YCross, YDist, MinDist = Double.POSITIVE_INFINITY;// will lose on first comparison
+    int MinDex = Integer.MIN_VALUE;// meant to explode if we use it
+    if (false) {
+      for (int cnt = 0; cnt < len; cnt++) {
+        OBox = this.SubSongs.get(cnt);
+        if (XPrev <= XPnt && XPnt <= OBox.TimeX) {
+          YCross = LineYCross(XPrev, YPrev, OBox.TimeX, OBox.OctaveY, XPnt);
+          YDist = Math.abs(YPnt - YCross);
+          if (MinDist > YDist) {
+            MinDist = YDist;
+            MinDex = cnt;
+          }
+        }
+        XPrev = OBox.TimeX;
+        YPrev = OBox.OctaveY;
+      }
+      if (MinDist < Limit) {// then we found one
+        ClosestPoint = this.SubSongs.get(MinDex);
+      }
+    }
+    // d'oh, better way
+    OffsetBox LastBox = this.SubSongs.get(len - 1);
+    if (0.0 <= XPnt && XPnt <= LastBox.TimeX) {// or this.MyBounds.Max.x) {
+      int FoundDex = Tree_Search(XPnt, 0, len);
+      if (FoundDex == 0) {
+        XPrev = YPrev = 0;
+      } else {
+        OffsetBox PrevBox = this.SubSongs.get(FoundDex - 1);
+        XPrev = PrevBox.TimeX;
+        YPrev = PrevBox.OctaveY;
+      }
+      // to do: need condition if FoundDex is greater than len. beyond-end insertion would be nice.
+      OBox = this.SubSongs.get(FoundDex);
+      YCross = LineYCross(XPrev, YPrev, OBox.TimeX, OBox.OctaveY, XPnt);
+      YDist = Math.abs(YPnt - YCross);
+      if (YDist < Limit) {// then we found one
+        ClosestPoint = this.SubSongs.get(FoundDex);
+      }
+    }
+  }
+  /* ********************************************************************************* */
   @Override public boolean Create_Me() {// IDeletable
     return true;
   }

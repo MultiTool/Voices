@@ -207,17 +207,22 @@ public class Voice implements ISonglet, IDrawable, ITextable {
     // work in progress. to do: make a ribbon-shaped polygon whose width is based on point loudness.
     // do we have to go around and then go backward? if pgon were a real array we could fill both sides at once.
     // will probably have to use the x array, y array API. bleh. 
-    int StartDex, EndDex, Range;
+    int StartDex, EndDex, Range, SpineRange;
     StartDex = 0;
     EndDex = len;
     Range = EndDex - StartDex;
     int NumDrawPoints = Range * 2;
     int[] OutlineX = new int[NumDrawPoints];
     int[] OutlineY = new int[NumDrawPoints];
-    int[] SpineX = new int[Range];
-    int[] SpineY = new int[Range];
+    SpineRange = Range + 1;
+    int[] SpineX = new int[SpineRange];
+    int[] SpineY = new int[SpineRange];
+    Xloc = ParentDC.GlobalOffset.UnMapTime(0);// map to pixels
+    Yloc = ParentDC.GlobalOffset.UnMapPitch(0);// map to pixels
+    SpineX[0] = (int) Xloc;
+    SpineY[0] = (int) Yloc;
     double LoudnessHgt;
-    int CntUp = Range, CntDown = Range - 1, CntSpine = 0;
+    int CntUp = Range, CntDown = Range - 1, CntSpine = 1;
 //    pnt = this.CPoints.get(StartDex);
 //    double LoudnessHgt = pnt.LoudnessFactor * pnt.OctavesPerLoudness;
 //    Xloc = ParentDC.GlobalOffset.UnMapTime(pnt.TimeX);
@@ -256,7 +261,7 @@ public class Voice implements ISonglet, IDrawable, ITextable {
     ParentDC.gr.setColor(Globals.ToAlpha(Emerald, 200));
 //    ParentDC.gr.setColor(Globals.ToAlpha(Color.green, 200));
 
-    ParentDC.gr.drawPolyline(SpineX, SpineY, Range);// draw spine
+    ParentDC.gr.drawPolyline(SpineX, SpineY, SpineRange);// draw spine
 
     for (int pcnt = 0; pcnt < len; pcnt++) {
       pnt = this.CPoints.get(pcnt);

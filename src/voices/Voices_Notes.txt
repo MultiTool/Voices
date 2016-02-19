@@ -620,3 +620,7 @@ void PrintItem(Item, RecurseDepth) {
   }
 }
 
+
+double DotProduct(double X0, double Y0, double X1, double Y1){
+  return X0*X1 + Y0*Y1;// length of projection from one vector onto another
+}
