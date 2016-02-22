@@ -182,9 +182,7 @@ public class OffsetBox extends MonkeyBox { //implements IDrawable.IMoveable, IDe
   }
   @Override public void GoFishing(Grabber Scoop) {// IDrawable
     if (Scoop.CurrentContext.SearchBounds.Intersects(MyBounds)) {
-      if (this.HitsMe(Scoop.CurrentContext.Loc.x, Scoop.CurrentContext.Loc.y)) {
-        Scoop.ConsiderLeaf(this);
-      }
+      Scoop.ConsiderLeaf(this);
       Scoop.AddBoxToStack(this);
       this.GetContent().GoFishing(Scoop);
       Scoop.DecrementStack();

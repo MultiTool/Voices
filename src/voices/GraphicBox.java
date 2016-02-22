@@ -19,7 +19,7 @@ public class GraphicBox implements IDrawable, ISonglet, IDeletable {//
     this.ContentOBox = content;
   }
   /* ********************************************************************************* */
-  @Override public OffsetBox Spawn_OffsetBox() {// for compose time
+  @Override public Graphic_OffsetBox Spawn_OffsetBox() {// for compose time
     return this.Spawn_My_OffsetBox();
   }
   /* ********************************************************************************* */
@@ -34,7 +34,7 @@ public class GraphicBox implements IDrawable, ISonglet, IDeletable {//
     AntiAlias(ParentDC.gr);
     Draw_Grid(ParentDC);
     this.ContentOBox.Draw_Me(ParentDC);
-    if(this.Floater!=null){
+    if (this.Floater != null) {
       this.Floater.Draw_Me(ParentDC);
     }
   }
@@ -213,7 +213,7 @@ public class GraphicBox implements IDrawable, ISonglet, IDeletable {//
       this.Content.Attach_Content(content);
     }
     /* ********************************************************************************* */
-    @Override public ISonglet GetContent() {// Problem: Need to override this, but GraphicBox is not an ISonglet
+    @Override public GraphicBox GetContent() {// Problem: Need to override this, but GraphicBox is not an ISonglet
       return this.Content;
     }
     /* ********************************************************************************* */
@@ -234,9 +234,7 @@ public class GraphicBox implements IDrawable, ISonglet, IDeletable {//
     @Override public void GoFishing(Grabber Scoop) {// IDrawable
       Scoop.AddFirstBox(this, Scoop.CurrentContext.Loc.x, Scoop.CurrentContext.Loc.y);
       if (Scoop.CurrentContext.SearchBounds.Intersects(MyBounds)) {
-        if (this.HitsMe(Scoop.CurrentContext.Loc.x, Scoop.CurrentContext.Loc.y)) {
-          Scoop.ConsiderLeaf(this);
-        }
+        Scoop.ConsiderLeaf(this);
         // Scoop.AddFirstBox(this, Scoop.CurrentContext.Loc.x, Scoop.CurrentContext.Loc.y);
         this.Content.GoFishing(Scoop);
       }

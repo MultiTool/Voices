@@ -15,6 +15,7 @@ public class VoicePoint extends MonkeyBox {
   // graphics support, will move to separate object
   double OctavesPerLoudness = 0.125;// to do: loudness will have to be mapped to screen. not a pixel value right?
   public LoudnessHandle UpHandle, DownHandle;
+  //public Voice MyParentVoice = null;
   /* ********************************************************************************* */
   public VoicePoint() {
     this.Create_Me();
@@ -73,11 +74,7 @@ public class VoicePoint extends MonkeyBox {
     System.out.print(" Point GoFishing: ");
     if (Scoop.CurrentContext.SearchBounds.Intersects(MyBounds)) {
       System.out.print(" InBounds, ");
-      //this.UpHandle.GoFishing(Scoop);
-      if (this.HitsMe(Scoop.CurrentContext.Loc.x, Scoop.CurrentContext.Loc.y)) {
-        System.out.print(" Was Hit, ");
-        Scoop.ConsiderLeaf(this);
-      }
+      Scoop.ConsiderLeaf(this);
       this.UpHandle.GoFishing(Scoop);
     }
     System.out.println();
@@ -234,10 +231,7 @@ public class VoicePoint extends MonkeyBox {
       System.out.print(" LoudnessHandle GoFishing: ");
       if (Scoop.CurrentContext.SearchBounds.Intersects(MyBounds)) {
         System.out.print(" InBounds, ");
-        if (this.HitsMe(Scoop.CurrentContext.Loc.x, Scoop.CurrentContext.Loc.y)) {
-          System.out.print(" Was Hit, ");
-          Scoop.ConsiderLeaf(this);
-        }
+        Scoop.ConsiderLeaf(this);
       }
       System.out.println();
     }

@@ -394,7 +394,7 @@ public class LoopBox implements ISonglet, IDrawable {
       this.MyBounds = new CajaDelimitadora();
     }
     /* ********************************************************************************* */
-    @Override public ISonglet GetContent() {
+    @Override public LoopBox GetContent() {
       return Content;
     }
     /* ********************************************************************************* */
@@ -466,7 +466,7 @@ public class LoopBox implements ISonglet, IDrawable {
     }
   }
   /* ********************************************************************************* */
-  private static class Ghost_OffsetBox extends OffsetBox {// TEMPORARY location box to shift child in time
+  public static class Ghost_OffsetBox extends OffsetBox {// TEMPORARY location box to shift child in time
     // Ghost obox is a filmy wrapper around LoopBox's child's real offset box. Ghost simply translates outside-world coordinates into looped coordinates and back.
     // Ghost wrapper is needed in LoopBox for 1) MoveTo, 2) Draw_Me (optional), and hopefully for 3) Singer. 
     public LoopBox Parent;

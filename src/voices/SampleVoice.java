@@ -48,7 +48,7 @@ public class SampleVoice extends Voice {
       super();
     }
     /* ********************************************************************************* */
-    @Override public ISonglet GetContent() {
+    @Override public Voice GetContent() {
       return VoiceContent;
     }
     /* ********************************************************************************* */

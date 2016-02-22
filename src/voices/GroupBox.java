@@ -31,6 +31,7 @@ public class GroupBox implements ISonglet, IDrawable {
   public OffsetBox Add_SubSong(ISonglet songlet, double TimeOffset, double OctaveOffset, double LoudnessFactor) {
     songlet.Set_Project(this.MyProject);// child inherits project from me
     OffsetBox obox = songlet.Spawn_OffsetBox();
+    obox.MyParentSong = this;
     obox.TimeX = (TimeOffset);
     obox.OctaveY = (OctaveOffset);
     obox.LoudnessFactor = (LoudnessFactor);
@@ -40,6 +41,7 @@ public class GroupBox implements ISonglet, IDrawable {
   /* ********************************************************************************* */
   public void Add_SubSong(OffsetBox obox, double TimeOffset, double OctaveOffset, double LoudnessFactor) {// Add a songlet with its offsetbox already created.
     obox.GetContent().Set_Project(this.MyProject);// child inherits project from me
+    obox.MyParentSong = this;
     obox.TimeX = (TimeOffset);
     obox.OctaveY = (OctaveOffset);
     obox.LoudnessFactor = (LoudnessFactor);
@@ -50,6 +52,10 @@ public class GroupBox implements ISonglet, IDrawable {
     obox.GetContent().Set_Project(this.MyProject);// child inherits project from me
     obox.MyParentSong = this;
     SubSongs.add(obox);
+  }
+  /* ********************************************************************************* */
+  public void Remove_SubSong(OffsetBox obox) {// Remove a songlet from my list.
+    SubSongs.remove(obox);
   }
   /* ********************************************************************************* */
   @Override public double Get_Duration() {
@@ -121,7 +127,7 @@ public class GroupBox implements ISonglet, IDrawable {
     });
   }
   /* ********************************************************************************* */
-  @Override public OffsetBox Spawn_OffsetBox() {// for compose time
+  @Override public Group_OffsetBox Spawn_OffsetBox() {// for compose time
     return this.Spawn_My_OffsetBox();
   }
   /* ********************************************************************************* */
@@ -322,7 +328,7 @@ public class GroupBox implements ISonglet, IDrawable {
     return YCross;
   }
   /* ********************************************************************************* */
-  public void ScanForDropLoc(double XPnt, double YPnt) {// work in progress for drag and drop support
+  public boolean ScanForDropLoc(double XPnt, double YPnt) {// work in progress for drag and drop support
     double Limit = 0.1;// octaves
     int len = this.SubSongs.size();
     OffsetBox OBox, ClosestPoint = null;
@@ -344,7 +350,9 @@ public class GroupBox implements ISonglet, IDrawable {
       }
       if (MinDist < Limit) {// then we found one
         ClosestPoint = this.SubSongs.get(MinDex);
+        return true;
       }
+      return false;
     }
     // d'oh, better way
     OffsetBox LastBox = this.SubSongs.get(len - 1);
@@ -363,8 +371,10 @@ public class GroupBox implements ISonglet, IDrawable {
       YDist = Math.abs(YPnt - YCross);
       if (YDist < Limit) {// then we found one
         ClosestPoint = this.SubSongs.get(FoundDex);
+        return true;
       }
     }
+    return false;
   }
   /* ********************************************************************************* */
   @Override public boolean Create_Me() {// IDeletable
@@ -534,11 +544,11 @@ public class GroupBox implements ISonglet, IDrawable {
       this.Create_Me();
     }
     /* ********************************************************************************* */
-    @Override public ISonglet GetContent() {
+    @Override public GroupBox GetContent() {
       return Content;
     }
     /* ********************************************************************************* */
-    @Override public ISonglet.Singer Spawn_Singer() {// always always always override this
+    @Override public Group_Singer Spawn_Singer() {// always always always override this
       return this.Spawn_My_Singer();
     }
     /* ********************************************************************************* */

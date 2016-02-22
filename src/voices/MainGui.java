@@ -92,6 +92,7 @@ public class MainGui {
     AudProject MyProject = null;
     MainGui BigApp;
     Grabber Query;
+    Grabber.DestinationGrabber DestQuery;
     int ScreenMouseX = 0, ScreenMouseY = 0;
     //public IDrawable.IMoveable Floater = null;// copy we are dragging around (in hover mode, no mouse buttons) 
     Point2D.Double results = new Point2D.Double();// used in multiple places as a return parameter for mapping
@@ -109,6 +110,7 @@ public class MainGui {
       }
       this.addKeyListener(this);
       this.Query = new Grabber();
+      this.DestQuery = new Grabber.DestinationGrabber();
     }
     /* ********************************************************************************* */
     public void Draw_Me(Graphics2D g2d) {
@@ -148,7 +150,51 @@ public class MainGui {
       this.MyProject.GraphicRoot.MapTo(ScreenX, ScreenY, results);
       this.GetFloater().MoveTo(results.x, results.y);
       this.GetFloater().UpdateBoundingBoxLocal();
+
+      if (true) {
+        this.DestQuery.AddFirstBox(this.MyProject.GraphicRoot, ScreenX, ScreenY);
+        // this is really ugly.  #kludgey
+        this.MyProject.GraphicRoot.Content.ContentOBox.GoFishing(this.DestQuery);// call this on graphic songlet's child obox. 
+        this.DestQuery.DecrementStack();
+        if (this.DestQuery.Leaf != null) {
+          this.DestQuery.Leaf.SetSelected(true);
+        }
+      }
+
       this.repaint();
+    }
+    /* ********************************************************************************* */
+    public void DeleteBranch() {
+      ISonglet songlet;
+      if (this.Query.Leaf != null) {
+        BigApp.MyThread.PleaseStop();
+        IDrawable.IMoveable Leaf = this.Query.Leaf;
+        if (Leaf instanceof MonkeyBox) {// hmm, we might be able to delete from voice and groupbox without having to know which is which
+          MonkeyBox mbx = (MonkeyBox) Leaf;// another cast! 
+          songlet = mbx.MyParentSong;// we would just need an IContainer interface with a virtual Remove_SubNode(MonkeyBox)
+//          if (songlet instanceof IContainer) {
+//            IContainer con = (IContainer)songlet;
+//            con.Remove_SubNode(mbx);
+//          }
+        }
+        if (Leaf instanceof OffsetBox) {
+          OffsetBox obx = (OffsetBox) Leaf;// another cast! 
+          songlet = obx.MyParentSong;
+          if (songlet instanceof GroupBox) {
+            GroupBox gbx = (GroupBox) songlet;
+            gbx.Remove_SubSong(obx);
+            this.repaint();
+          }
+        } else if (Leaf instanceof VoicePoint) {
+          VoicePoint vpnt = (VoicePoint) Leaf;// another cast! 
+          songlet = vpnt.MyParentSong;
+          if (songlet instanceof Voice) {
+            Voice voz = (Voice) songlet;
+            voz.Remove_Note(vpnt);
+            this.repaint();
+          }
+        }
+      }
     }
     /* ********************************************************************************* */
     public void CopyBranch(double XDisp, double YDisp) {
@@ -158,7 +204,7 @@ public class MainGui {
         }
         IDrawable.IMoveable Leaf = this.Query.Leaf;
         if (Leaf instanceof OffsetBox) {
-          OffsetBox obx = (OffsetBox) Leaf;// only cast! 
+          OffsetBox obx = (OffsetBox) Leaf;// another cast! 
           OffsetBox clone = obx.Deep_Clone_Me();
           if (false) {// one catch is that if this is a loopbox ghost handle we get a copy of the ghost instead of a native offsetbox
             ISonglet songlet = obx.GetContent();
@@ -283,7 +329,8 @@ public class MainGui {
 //        this.Query.MapThroughStack(this.ScreenMouseX, this.ScreenMouseY, results);
 //        this.CopyBranch(results.x, results.y);
         this.CopyBranch(this.ScreenMouseX, this.ScreenMouseY);
-      } else if (ch == 'c') {
+      } else if (keycode == KeyEvent.VK_DELETE) {
+        this.DeleteBranch();
       } else if ((keycode == KeyEvent.VK_Q) && CtrlPress) {
         System.exit(0);
       } else if (keycode == KeyEvent.VK_ESCAPE) {

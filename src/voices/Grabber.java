@@ -20,28 +20,16 @@ public class Grabber { // to do: rename this class to Grabber
   public ArrayList<StackItem> Best_Stack = new ArrayList<StackItem>();
   public IDrawable.IMoveable Leaf;// thing we hit and are going to move or copy or whatever
   double Radius = 5;
-  /* 
-   to do: put a hit stack here for best item found,
-   or a list of everything hit, each with a compressed affine transform
-   or a bunch of hit stacks for everything found (yuck)
-   or even a single item found with only a compressed affien transform
-  
-   public Object PickBest(Candidate incumbent, Candidate challenger){
-   }
-   PickBest(this.CurrentBest, challenger);
-  
-   Candidate is just an IDrawable?  
-   one way to compare unknown types is with enum attributes:
-   candidate.GetType() == Types.VoicePoint; 
-  
-   */
   public void ConsiderLeaf(IDrawable.IMoveable CandidateLeaf) {
-    if (this.Stack_Depth_Best <= this.Stack_Depth) {// prefer the most distal
-      this.Stack_Depth_Best = this.Stack_Depth;// or if equal, prefer the last drawn (most recent hit)
-      this.Leaf = CandidateLeaf;
-      Copy_Stack(this.Explore_Stack, this.Best_Stack);
+    if (CandidateLeaf.HitsMe(this.CurrentContext.Loc.x, this.CurrentContext.Loc.y)) {
+      System.out.print(" Was Hit, ");
+      if (this.Stack_Depth_Best <= this.Stack_Depth) {// prefer the most distal
+        this.Stack_Depth_Best = this.Stack_Depth;// or if equal, prefer the last drawn (most recent hit)
+        this.Leaf = CandidateLeaf;
+        Copy_Stack(this.Explore_Stack, this.Best_Stack);
+      }
+      // this.Compare(this.Leaf, leaf);
     }
-    // this.Compare(this.Leaf, leaf);
   }
   public void Init(OffsetBox starter, double XLoc, double YLoc) {// add first space map at start of search
     OffsetBox child = new OffsetBox();// first layer place holder.  not a great solution. 
@@ -201,6 +189,34 @@ public class Grabber { // to do: rename this class to Grabber
       this.SearchBounds = null;
       this.OBox = null;
       this.Loc = null;
+    }
+  }
+  /* ********************************************************************************* */
+  public static class DestinationGrabber extends Grabber {
+    // this class searches for containers in which to drop a floating, copied songlet
+    public MonkeyBox Floater = null;
+    @Override public void ConsiderLeaf(IDrawable.IMoveable CandidateLeaf) {
+      if (CandidateLeaf instanceof LoopBox.Ghost_OffsetBox) {
+        boolean nop = true;
+      }
+      if (CandidateLeaf instanceof OffsetBox) {
+        OffsetBox obx = (OffsetBox) CandidateLeaf;// other cast!
+        ISonglet songlet = obx.GetContent();
+        if (songlet instanceof GroupBox) {
+          GroupBox gbx = (GroupBox) songlet;// other cast!
+          // need to protect against immedate self-collision. hmm or not. 
+        }
+      }
+      if (CandidateLeaf instanceof GroupBox.Group_OffsetBox) {
+        GroupBox.Group_OffsetBox gobx = (GroupBox.Group_OffsetBox) CandidateLeaf;// other cast!
+        GroupBox gbx = gobx.GetContent();//.Content;
+        boolean FoundTarget = gbx.ScanForDropLoc(this.CurrentContext.Loc.x, this.CurrentContext.Loc.y);// WIP, does not do anything yet
+        if (FoundTarget && this.Stack_Depth_Best <= this.Stack_Depth) {// prefer the most distal
+          this.Stack_Depth_Best = this.Stack_Depth;// or if equal, prefer the last drawn (most recent hit)
+          this.Leaf = CandidateLeaf;
+          Copy_Stack(this.Explore_Stack, this.Best_Stack);
+        }
+      }
     }
   }
 }

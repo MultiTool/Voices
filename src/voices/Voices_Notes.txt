@@ -624,3 +624,45 @@ void PrintItem(Item, RecurseDepth) {
 double DotProduct(double X0, double Y0, double X1, double Y1){
   return X0*X1 + Y0*Y1;// length of projection from one vector onto another
 }
+
+  /* ********************************************************************************* */
+  public static class DelegateClass {
+    Grabber grabber = null;
+    public DelegateClass(Grabber grabber0) {
+      grabber = grabber0;
+    }
+    public void ConsiderLeaf(IDrawable.IMoveable CandidateLeaf) {
+      if (CandidateLeaf.HitsMe(grabber.CurrentContext.Loc.x, grabber.CurrentContext.Loc.y)) {
+        System.out.print(" Was Hit, ");
+        if (grabber.Stack_Depth_Best <= grabber.Stack_Depth) {// prefer the most distal
+          grabber.Stack_Depth_Best = grabber.Stack_Depth;// or if equal, prefer the last drawn (most recent hit)
+          grabber.Leaf = CandidateLeaf;
+          Copy_Stack(grabber.Explore_Stack, grabber.Best_Stack);
+        }
+        // this.Compare(this.Leaf, leaf);
+      }
+    }
+  }
+  /* ********************************************************************************* */
+  public static class GrabDropper extends DelegateClass {
+    Grabber grabber = null;
+    public GrabDropper(Grabber grabber0) {
+      super(grabber0);
+    }
+    public void ConsiderLeaf(IDrawable.IMoveable CandidateLeaf) {
+      if (CandidateLeaf instanceof GroupBox) {
+        GroupBox gbx = (GroupBox) CandidateLeaf;// other cast!
+//        if (gbx.ScanForDropLoc(XHit, YHit))
+        if (CandidateLeaf.HitsMe(grabber.CurrentContext.Loc.x, grabber.CurrentContext.Loc.y)) {
+          System.out.print(" Was Hit, ");
+          if (grabber.Stack_Depth_Best <= grabber.Stack_Depth) {// prefer the most distal
+            grabber.Stack_Depth_Best = grabber.Stack_Depth;// or if equal, prefer the last drawn (most recent hit)
+            grabber.Leaf = CandidateLeaf;
+            Copy_Stack(grabber.Explore_Stack, grabber.Best_Stack);
+          }
+        }
+      }
+    }
+  }
+x
+

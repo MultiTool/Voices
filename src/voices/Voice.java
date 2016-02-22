@@ -27,7 +27,7 @@ public class Voice implements ISonglet, IDrawable, ITextable {
     RefCount = 0;
   }
   /* ********************************************************************************* */
-  @Override public OffsetBox Spawn_OffsetBox() {// for compose time
+  @Override public Voice_OffsetBox Spawn_OffsetBox() {// for compose time
     return this.Spawn_My_OffsetBox();
   }
   /* ********************************************************************************* */
@@ -53,17 +53,23 @@ public class Voice implements ISonglet, IDrawable, ITextable {
   }
   /* ********************************************************************************* */
   public void Add_Note(VoicePoint pnt) {
+    pnt.MyParentSong = this;
     this.CPoints.add(pnt);
   }
   /* ********************************************************************************* */
   public VoicePoint Add_Note(double RealTime, double Octave, double Loudness) {
     VoicePoint pnt = new VoicePoint();
+    pnt.MyParentSong = this;
     pnt.OctaveY = Octave;
     pnt.TimeX = RealTime;
     pnt.SubTime = 0.0;
     pnt.LoudnessFactor = Loudness;
     this.CPoints.add(pnt);
     return pnt;
+  }
+  /* ********************************************************************************* */
+  public void Remove_Note(VoicePoint pnt) {
+    this.CPoints.remove(pnt);
   }
   /* ************************************************************************************************************************ */
   public int Tree_Search(double Time, int minloc, int maxloc) {// finds place where time would be inserted or replaced
@@ -392,7 +398,7 @@ public class Voice implements ISonglet, IDrawable, ITextable {
       this.Clear();
     }
     /* ********************************************************************************* */
-    @Override public ISonglet GetContent() {
+    @Override public Voice GetContent() {
       return VoiceContent;
     }
     /* ********************************************************************************* */
