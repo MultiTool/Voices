@@ -666,3 +666,24 @@ double DotProduct(double X0, double Y0, double X1, double Y1){
   }
 x
 
+so the before we can go further, we must make GroupBox:
+be scalable by TimeX, and 
+have an 'Align Time' button. 
+it would be nice to have a paste-repeat feature. maybe just keep floater copy until escape. 
+
+So TimeX scale!  one handle far out? one long strip under the group?  position at (Bounds.Min.y - ExtraSpace) but ugh, that expands our bounds. meh. 
+also TimeX should probably belong to the Group_OffsetBox (and ultimately to every offsetbox, as it is affine). 
+so the handle is positioned at child songlet minx - ExtraSpace, which is cool. It must have a visible line to the obox origin too. 
+so maybe the group obox's draw_me uses the current clip box to draw an extra handle in the middle of the screen? 
+selecting that handle lights it up, but may also color things inside the group itself.  
+
+voice X-scaling is untested, so this will only be for groups for now. 
+
+deep clones are shattered, they can be pasted anywhere. in that case, no need for self-inclusion test. 
+
+
+
+
+
+
+

@@ -152,15 +152,18 @@ public class MainGui {
       this.GetFloater().UpdateBoundingBoxLocal();
 
       if (true) {
+        if (this.DestQuery.PossibleDestination != null) {
+          this.DestQuery.PossibleDestination.SetSpineHighlight(false);
+        }
         this.DestQuery.AddFirstBox(this.MyProject.GraphicRoot, ScreenX, ScreenY);
         // this is really ugly.  #kludgey
         this.MyProject.GraphicRoot.Content.ContentOBox.GoFishing(this.DestQuery);// call this on graphic songlet's child obox. 
         this.DestQuery.DecrementStack();
-        if (this.DestQuery.Leaf != null) {
-          this.DestQuery.Leaf.SetSelected(true);
+        //this.DestQuery.Leaf.SetSelected(true);
+        if (this.DestQuery.PossibleDestination != null) {
+          this.DestQuery.PossibleDestination.SetSpineHighlight(true);
         }
       }
-
       this.repaint();
     }
     /* ********************************************************************************* */

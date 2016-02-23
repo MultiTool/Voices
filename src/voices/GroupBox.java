@@ -7,6 +7,7 @@ import java.awt.geom.Point2D;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 
 /**
  *
@@ -22,6 +23,7 @@ public class GroupBox implements ISonglet, IDrawable {
   private int FreshnessTimeStamp;
   public String TraceText = "";// for debugging
   private int RefCount = 0;
+  private boolean HighlightSpine = false;
   /* ********************************************************************************* */
   public GroupBox() {
     MyBounds = new CajaDelimitadora();
@@ -182,6 +184,10 @@ public class GroupBox implements ISonglet, IDrawable {
     this.FreshnessTimeStamp = TimeStampNew;
   }
   /* ********************************************************************************* */
+  public void SetSpineHighlight(boolean Highlight) {
+    this.HighlightSpine = Highlight;
+  }
+  /* ********************************************************************************* */
   @Override public void Draw_Me(DrawingContext ParentDC) {// IDrawable
     OffsetBox ChildOffsetBox;
     int len = this.SubSongs.size();
@@ -192,11 +198,18 @@ public class GroupBox implements ISonglet, IDrawable {
     // Draw Group spine
     Point2D.Double pntprev, pnt;
     Stroke oldStroke = ParentDC.gr.getStroke();
-    ParentDC.gr.setColor(Color.darkGray);
-
-    // thinner lines for more distal sub-branches
-    //BasicStroke bs = new BasicStroke((1.0f / ParentDC.RecurseDepth) * 40.0f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND);
-    BasicStroke bs = new BasicStroke((1.0f / ParentDC.RecurseDepth) * 10.0f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND);
+    BasicStroke bs;
+    if (this.HighlightSpine) {
+      ParentDC.gr.setColor(Color.yellow);
+      // thinner lines for more distal sub-branches
+      //BasicStroke bs = new BasicStroke((1.0f / ParentDC.RecurseDepth) * 40.0f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND);
+      bs = new BasicStroke((1.0f / ParentDC.RecurseDepth) * 20.0f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND);
+    } else {
+      ParentDC.gr.setColor(Color.darkGray);
+      // thinner lines for more distal sub-branches
+      //BasicStroke bs = new BasicStroke((1.0f / ParentDC.RecurseDepth) * 40.0f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND);
+      bs = new BasicStroke((1.0f / ParentDC.RecurseDepth) * 10.0f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND);
+    }
     ParentDC.gr.setStroke(bs);
     int pcnt = StartDex;
     if (false) {// #cleanme
@@ -328,7 +341,7 @@ public class GroupBox implements ISonglet, IDrawable {
     return YCross;
   }
   /* ********************************************************************************* */
-  public boolean ScanForDropLoc(double XPnt, double YPnt) {// work in progress for drag and drop support
+  public boolean HitsMyRunway(double XPnt, double YPnt) {// work in progress for drag and drop support
     double Limit = 0.1;// octaves
     int len = this.SubSongs.size();
     OffsetBox OBox, ClosestPoint = null;
@@ -534,6 +547,110 @@ public class GroupBox implements ISonglet, IDrawable {
       this.NowPlaying.clear();
     }
   }
+
+  /* ********************************************************************************* */
+  public static class ScaleXHandle implements IDrawable.IMoveable, IDeletable {
+    public CajaDelimitadora MyBounds = new CajaDelimitadora();
+    public Group_OffsetBox ParentPoint;
+    public double OctavesPerRadius = 0.007;
+    private boolean IsSelected = false;
+    /* ********************************************************************************* */
+    public double GetUnitX() {
+      return this.ParentPoint.MyBounds.GetWidth();
+    }
+    /* ********************************************************************************* */
+    public double GetX() {
+      double TimeScaleWidth = this.ParentPoint.ScaleX * this.GetUnitX();// Map timescale to screen pixels.
+      return TimeScaleWidth;
+    }
+    public double GetY() {
+      return this.ParentPoint.MyBounds.Max.y;
+    }
+    @Override public void MoveTo(double XLoc, double YLoc) {// IDrawable.IMoveable
+      if (XLoc >= 0) {// don't go backward in time
+        this.ParentPoint.ScaleX = XLoc / GetUnitX();
+      }
+      // ignore YLoc for now
+    }
+    @Override public boolean HitsMe(double XLoc, double YLoc) {// IDrawable.IMoveable
+      System.out.print("** ScaleXHandle HitsMe:");
+      boolean Hit = false;
+      if (this.MyBounds.Contains(XLoc, YLoc)) {
+        System.out.print(" InBounds ");
+        double dist = Math.hypot(XLoc - this.GetX(), YLoc - (this.GetY() + this.OctavesPerRadius));
+        if (dist <= this.OctavesPerRadius) {
+          System.out.print(" Hit!");
+          Hit = true;
+        } else {
+          System.out.print(" Missed!");
+        }
+      } else {
+        System.out.print(" OutBounds ");
+      }
+      return Hit;
+    }
+    @Override public void SetSelected(boolean Selected) {// IDrawable.IMoveable
+      this.IsSelected = Selected;
+    }
+    @Override public void Draw_Me(DrawingContext ParentDC) {
+      // this is all nonsense at the moment, will have to fill it in with better stuff
+      // Control points have the same space as their parent, so no need to create a local map.
+      /*
+       Point2D.Double pnt = ParentDC.To_Screen(this.ParentPoint.MyBounds.Max.x, this.ParentPoint.MyBounds.Max.y);
+       double RadiusPixels = Math.abs(ParentDC.GlobalOffset.ScaleY) * OctavesPerRadius;
+       double LoudnessHgt = this.ParentPoint.LoudnessFactor * this.ParentPoint.OctavesPerLoudness;
+       double XLoc = ParentDC.GlobalOffset.UnMapPitch(this.ParentPoint.OctaveY + LoudnessHgt) - RadiusPixels;// My handle rests *upon* the line I control, so I don't occlude my VoicePoint. 
+       RadiusPixels = Math.ceil(RadiusPixels);
+       MonkeyBox.Draw_Dot2(ParentDC, XLoc, pnt.y, OctavesPerRadius, this.IsSelected, Globals.ToAlpha(Color.lightGray, 100));
+       */
+    }
+    @Override public CajaDelimitadora GetBoundingBox() {
+      return this.MyBounds;
+    }
+    @Override public void UpdateBoundingBox() {
+      this.UpdateBoundingBoxLocal();
+    }
+    @Override public void UpdateBoundingBoxLocal() {
+      double XLoc = this.GetX();
+      double YLoc = this.GetY();
+      double MinX = XLoc - this.OctavesPerRadius;
+      double MaxX = XLoc + this.OctavesPerRadius;
+      double MinY = YLoc - this.OctavesPerRadius;
+      double MaxY = YLoc + this.OctavesPerRadius;
+      this.MyBounds.Assign(MinX, MinY, MaxX, MaxY);
+    }
+    @Override public void GoFishing(Grabber Scoop) {
+      System.out.println();
+      System.out.print(" ScaleXHandle GoFishing: ");
+      if (Scoop.CurrentContext.SearchBounds.Intersects(MyBounds)) {
+        System.out.print(" InBounds, ");
+        Scoop.ConsiderLeaf(this);
+      }
+      System.out.println();
+    }
+    /* ********************************************************************************* */
+    @Override public ScaleXHandle Clone_Me() {// ICloneable
+      ScaleXHandle child = new ScaleXHandle();
+      return child;
+    }
+    /* ********************************************************************************* */
+    @Override public ScaleXHandle Deep_Clone_Me() {// ICloneable
+      ScaleXHandle child = new ScaleXHandle();
+      child.OctavesPerRadius = this.OctavesPerRadius;
+      child.ParentPoint = this.ParentPoint;
+      child.MyBounds.Copy_From(this.MyBounds);
+      return child;
+    }
+    /* ********************************************************************************* */
+    @Override public boolean Create_Me() {
+      return true;
+    }
+    @Override public void Delete_Me() {
+      this.ParentPoint = null;
+      this.MyBounds.Delete_Me();
+      this.MyBounds = null;
+    }
+  }
   /* ********************************************************************************* */
   public static class Group_OffsetBox extends OffsetBox {// location box to transpose in pitch, move in time, etc. 
     public GroupBox Content = null;
@@ -546,6 +663,11 @@ public class GroupBox implements ISonglet, IDrawable {
     /* ********************************************************************************* */
     @Override public GroupBox GetContent() {
       return Content;
+    }
+    /* ********************************************************************************* */
+    @Override public void Draw_Me(DrawingContext ParentDC) {// IDrawable
+      super.Draw_Me(ParentDC);
+      // here draw the Rescale_TimeX handle
     }
     /* ********************************************************************************* */
     @Override public Group_Singer Spawn_Singer() {// always always always override this

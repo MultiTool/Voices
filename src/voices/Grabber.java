@@ -20,6 +20,7 @@ public class Grabber { // to do: rename this class to Grabber
   public ArrayList<StackItem> Best_Stack = new ArrayList<StackItem>();
   public IDrawable.IMoveable Leaf;// thing we hit and are going to move or copy or whatever
   double Radius = 5;
+  /* ********************************************************************************* */
   public void ConsiderLeaf(IDrawable.IMoveable CandidateLeaf) {
     if (CandidateLeaf.HitsMe(this.CurrentContext.Loc.x, this.CurrentContext.Loc.y)) {
       System.out.print(" Was Hit, ");
@@ -31,6 +32,7 @@ public class Grabber { // to do: rename this class to Grabber
       // this.Compare(this.Leaf, leaf);
     }
   }
+  /* ********************************************************************************* */
   public void Init(OffsetBox starter, double XLoc, double YLoc) {// add first space map at start of search
     OffsetBox child = new OffsetBox();// first layer place holder.  not a great solution. 
     child.MyBounds.Assign(Double.NEGATIVE_INFINITY, Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY, Double.POSITIVE_INFINITY);
@@ -43,6 +45,7 @@ public class Grabber { // to do: rename this class to Grabber
     this.CurrentContext = next;
     Stack_Depth = 1;// Now we have one element, whee!
   }
+  /* ********************************************************************************* */
   public void AddFirstBox(OffsetBox starter, double XLoc, double YLoc) {// add first space map at start of search
     this.Leaf = null;
     this.Stack_Depth_Best = 0;
@@ -65,6 +68,7 @@ public class Grabber { // to do: rename this class to Grabber
     this.CurrentContext = next;
     Stack_Depth = 1;// Now we have one element, whee!
   }
+  /* ********************************************************************************* */
   public void AddBoxToStack(OffsetBox child) {
     StackItem prev = this.CurrentContext;
     StackItem next = new StackItem();
@@ -98,6 +102,7 @@ public class Grabber { // to do: rename this class to Grabber
     }
     Stack.subList(resize, len).clear();// does this really work? 
   }
+  /* ********************************************************************************* */
   public int Compare(IDrawable.IMoveable thing0, IDrawable.IMoveable thing1) {// always override this
     // if thing0<thing1 then return -1,  if thing0>thing1 then return 1.
     return 0;// compare for which one is the best match
@@ -195,22 +200,37 @@ public class Grabber { // to do: rename this class to Grabber
   public static class DestinationGrabber extends Grabber {
     // this class searches for containers in which to drop a floating, copied songlet
     public MonkeyBox Floater = null;
+    public GroupBox PossibleDestination = null;
+    @Override public void AddFirstBox(OffsetBox starter, double XLoc, double YLoc) {// add first space map at start of search
+      this.PossibleDestination = null;
+      super.AddFirstBox(starter, XLoc, YLoc);
+    }
+    /* ********************************************************************************* */
     @Override public void ConsiderLeaf(IDrawable.IMoveable CandidateLeaf) {
       if (CandidateLeaf instanceof LoopBox.Ghost_OffsetBox) {
         boolean nop = true;
       }
-      if (CandidateLeaf instanceof OffsetBox) {
+      //this.PossibleDestination = null;
+      if (CandidateLeaf instanceof OffsetBox) {// only one that works so far
         OffsetBox obx = (OffsetBox) CandidateLeaf;// other cast!
         ISonglet songlet = obx.GetContent();
         if (songlet instanceof GroupBox) {
           GroupBox gbx = (GroupBox) songlet;// other cast!
-          // need to protect against immedate self-collision. hmm or not. 
+          boolean FoundTarget = gbx.HitsMyRunway(this.CurrentContext.Loc.x, this.CurrentContext.Loc.y);// WIP, does not work yet
+          FoundTarget = true;
+          // to do: need to protect against self-inclusion
+          if (FoundTarget && this.Stack_Depth_Best <= this.Stack_Depth) {// prefer the most distal
+            this.Stack_Depth_Best = this.Stack_Depth;// or if equal, prefer the last drawn (most recent hit)
+            this.Leaf = CandidateLeaf;
+            PossibleDestination = gbx;
+            Copy_Stack(this.Explore_Stack, this.Best_Stack);
+          }
         }
       }
       if (CandidateLeaf instanceof GroupBox.Group_OffsetBox) {
         GroupBox.Group_OffsetBox gobx = (GroupBox.Group_OffsetBox) CandidateLeaf;// other cast!
         GroupBox gbx = gobx.GetContent();//.Content;
-        boolean FoundTarget = gbx.ScanForDropLoc(this.CurrentContext.Loc.x, this.CurrentContext.Loc.y);// WIP, does not do anything yet
+        boolean FoundTarget = gbx.HitsMyRunway(this.CurrentContext.Loc.x, this.CurrentContext.Loc.y);// WIP, does not do anything yet
         if (FoundTarget && this.Stack_Depth_Best <= this.Stack_Depth) {// prefer the most distal
           this.Stack_Depth_Best = this.Stack_Depth;// or if equal, prefer the last drawn (most recent hit)
           this.Leaf = CandidateLeaf;

@@ -64,6 +64,11 @@ public class OffsetBox extends MonkeyBox { //implements IDrawable.IMoveable, IDe
     throw new UnsupportedOperationException("Not supported yet.");
   }
   /* ********************************************************************************* */
+  public void Rescale_TimeX(double Factor) {// for compose time
+    this.ScaleX = Factor;
+    //this.ScaleX *= Factor; // or this? 
+  }
+  /* ********************************************************************************* */
   public ISonglet GetContent() {// always always override this
     throw new UnsupportedOperationException("Not supported yet.");//  public abstract ISonglet GetContent(); ? 
   }
