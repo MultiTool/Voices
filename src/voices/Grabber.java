@@ -1,8 +1,10 @@
 package voices;
 
 import java.awt.List;
+import java.awt.Point;
 import java.awt.geom.Point2D;
 import java.util.ArrayList;
+import javafx.scene.effect.Light;
 
 /**
  *
@@ -201,8 +203,10 @@ public class Grabber { // to do: rename this class to Grabber
     // this class searches for containers in which to drop a floating, copied songlet
     public MonkeyBox Floater = null;
     public GroupBox PossibleDestination = null;
+    private double ClosestDistance = Double.POSITIVE_INFINITY;
     @Override public void AddFirstBox(OffsetBox starter, double XLoc, double YLoc) {// add first space map at start of search
       this.PossibleDestination = null;
+      this.ClosestDistance = Double.POSITIVE_INFINITY;
       super.AddFirstBox(starter, XLoc, YLoc);
     }
     /* ********************************************************************************* */
@@ -216,24 +220,30 @@ public class Grabber { // to do: rename this class to Grabber
         ISonglet songlet = obx.GetContent();
         if (songlet instanceof GroupBox) {
           GroupBox gbx = (GroupBox) songlet;// other cast!
-          boolean FoundTarget = gbx.HitsMyRunway(this.CurrentContext.Loc.x, this.CurrentContext.Loc.y);// WIP, does not work yet
-          FoundTarget = true;
+          Point.Double results = new Point.Double();
+          obx.MapTo(this.CurrentContext.Loc.x, this.CurrentContext.Loc.y, results);// we're hitting the songlet, not its offsetbox, so we have to map to obox child coordinates.
+          double FoundDistance = gbx.HitsMyVine(results.x, results.y);// WIP, does not work yet
+          //FoundDistance = true;
           // to do: need to protect against self-inclusion
-          if (FoundTarget && this.Stack_Depth_Best <= this.Stack_Depth) {// prefer the most distal
+//          if ((FoundDistance < this.ClosestDistance) && this.Stack_Depth_Best <= this.Stack_Depth) {// prefer the most distal
+          //if ((FoundDistance < this.ClosestDistance) || ((FoundDistance == this.ClosestDistance) && this.Stack_Depth_Best <= this.Stack_Depth)) {// prefer the most distal
+          if (FoundDistance < this.ClosestDistance) {// prefer the closest
             this.Stack_Depth_Best = this.Stack_Depth;// or if equal, prefer the last drawn (most recent hit)
             this.Leaf = CandidateLeaf;
             PossibleDestination = gbx;
+            this.ClosestDistance = FoundDistance;
             Copy_Stack(this.Explore_Stack, this.Best_Stack);
           }
         }
       }
-      if (CandidateLeaf instanceof GroupBox.Group_OffsetBox) {
+      if (false && CandidateLeaf instanceof GroupBox.Group_OffsetBox) {
         GroupBox.Group_OffsetBox gobx = (GroupBox.Group_OffsetBox) CandidateLeaf;// other cast!
         GroupBox gbx = gobx.GetContent();//.Content;
-        boolean FoundTarget = gbx.HitsMyRunway(this.CurrentContext.Loc.x, this.CurrentContext.Loc.y);// WIP, does not do anything yet
-        if (FoundTarget && this.Stack_Depth_Best <= this.Stack_Depth) {// prefer the most distal
+        double FoundDistance = gbx.HitsMyVine(this.CurrentContext.Loc.x, this.CurrentContext.Loc.y);// WIP, does not do anything yet
+        if ((FoundDistance < this.ClosestDistance) && this.Stack_Depth_Best <= this.Stack_Depth) {// prefer the most distal
           this.Stack_Depth_Best = this.Stack_Depth;// or if equal, prefer the last drawn (most recent hit)
           this.Leaf = CandidateLeaf;
+          this.ClosestDistance = FoundDistance;
           Copy_Stack(this.Explore_Stack, this.Best_Stack);
         }
       }

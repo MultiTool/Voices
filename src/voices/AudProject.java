@@ -50,10 +50,11 @@ public class AudProject implements IDeletable {
     GroupBox CMinor, CMajor, DMajor, DMinor;
     OffsetBox CMinorObx, CMajorObx, DMajorObx, DMinorObx;
     double Delay;
+    double TimeStep = 0.125;
     GroupBox cbx;
     NoteMaker nm;
     LoopBox lbx;
-    switch (10) {
+    switch (11) {
     case 0:
       song = TestJunkyard.Create_Random_Chorus(0, 0, 1.0);
       obox = song.Spawn_OffsetBox();
@@ -141,7 +142,7 @@ public class AudProject implements IDeletable {
       obox = gbx.Spawn_OffsetBox();
       break;
     case 10:
-      double TimeStep = 0.125;
+      TimeStep = 0.125;
       TimeStep = 1.0;
       int NumBeats = 8;
       gbx = NoteMaker.Create_Note_Chain(NumBeats, TimeStep);
@@ -153,6 +154,12 @@ public class AudProject implements IDeletable {
       lbx.Set_Duration(30);
       obox = lbx.Spawn_OffsetBox();
 
+      obox.TimeX += NoteMaker.OffsetTime;
+      obox.OctaveY = (4);
+      break;
+    case 11:
+      TimeStep = 0.125;
+      obox = NoteMaker.Create_Group_Loop(TimeStep);
       obox.TimeX += NoteMaker.OffsetTime;
       obox.OctaveY = (4);
       break;

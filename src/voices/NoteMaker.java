@@ -375,6 +375,44 @@ public class NoteMaker {
     return gbx;
   }
   /* ********************************************************************************* */
+  public static GroupBox.Group_OffsetBox Create_Group_Loop(double TimeStep) {
+    //TimeStep = 1.0;
+    int NumBeats = 8;
+    double Duration = 30;
+    GroupBox.Group_OffsetBox ChildObx;
+    GroupBox ChildGbx = NoteMaker.Create_Note_Chain(NumBeats, TimeStep);
+    GroupBox MainGbx = new GroupBox();
+    double TimeBase = 0.0;
+    int Counter = 0;
+    //NumBeats, TimeStep
+    while (TimeBase < Duration) {
+      TimeBase = TimeStep * ((double) Counter * NumBeats);
+      ChildObx = ChildGbx.Spawn_OffsetBox();
+      ChildObx.TimeX = TimeBase + NoteMaker.OffsetTime;
+      MainGbx.Add_SubSong(ChildObx);
+      Counter++;
+    }
+    GroupBox.Group_OffsetBox MainGobx;
+    MainGobx = MainGbx.Spawn_OffsetBox();
+//    MainGobx.TimeX += NoteMaker.OffsetTime;
+//    MainGobx.OctaveY = (4);
+    return MainGobx;
+  }
+  /* ********************************************************************************* */
+  public static GroupBox Create_Group_Loop(ISonglet Songlet, int Iterations, double TimeStep) {
+    OffsetBox ChildObx;
+    GroupBox MainGbx = new GroupBox();
+    double TimeBase = 0.0;
+    int Counter = 0;
+    for (Counter = 0; Counter < Iterations; Counter++) {
+      TimeBase = ((double) Counter) * TimeStep;
+      ChildObx = Songlet.Spawn_OffsetBox();
+      ChildObx.TimeX = TimeBase + NoteMaker.OffsetTime;
+      MainGbx.Add_SubSong(ChildObx);
+    }
+    return MainGbx;
+  }
+  /* ********************************************************************************* */
   public static Voice Generate_Voice(int choice) {
     //double AttackTime = 0.01;
     Voice voice = null;

@@ -341,7 +341,7 @@ public class GroupBox implements ISonglet, IDrawable {
     return YCross;
   }
   /* ********************************************************************************* */
-  public boolean HitsMyRunway(double XPnt, double YPnt) {// work in progress for drag and drop support
+  public double HitsMyVine(double XPnt, double YPnt) {// work in progress for drag and drop support
     double Limit = 0.1;// octaves
     int len = this.SubSongs.size();
     OffsetBox OBox, ClosestPoint = null;
@@ -363,9 +363,9 @@ public class GroupBox implements ISonglet, IDrawable {
       }
       if (MinDist < Limit) {// then we found one
         ClosestPoint = this.SubSongs.get(MinDex);
-        return true;
+        return MinDist;
       }
-      return false;
+      return Double.POSITIVE_INFINITY;// negative if not found
     }
     // d'oh, better way
     OffsetBox LastBox = this.SubSongs.get(len - 1);
@@ -384,10 +384,10 @@ public class GroupBox implements ISonglet, IDrawable {
       YDist = Math.abs(YPnt - YCross);
       if (YDist < Limit) {// then we found one
         ClosestPoint = this.SubSongs.get(FoundDex);
-        return true;
+        return YDist;
       }
     }
-    return false;
+    return Double.POSITIVE_INFINITY;// negative if not found
   }
   /* ********************************************************************************* */
   @Override public boolean Create_Me() {// IDeletable
