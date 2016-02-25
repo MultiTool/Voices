@@ -381,16 +381,21 @@ public class NoteMaker {
     double Duration = 30;
     GroupBox.Group_OffsetBox ChildObx;
     GroupBox ChildGbx = NoteMaker.Create_Note_Chain(NumBeats, TimeStep);
-    GroupBox MainGbx = new GroupBox();
-    double TimeBase = 0.0;
-    int Counter = 0;
-    //NumBeats, TimeStep
-    while (TimeBase < Duration) {
-      TimeBase = TimeStep * ((double) Counter * NumBeats);
-      ChildObx = ChildGbx.Spawn_OffsetBox();
-      ChildObx.TimeX = TimeBase + NoteMaker.OffsetTime;
-      MainGbx.Add_SubSong(ChildObx);
-      Counter++;
+    GroupBox MainGbx;
+    double MetaTimeStep = TimeStep * ((double) NumBeats);
+    MainGbx = Create_Group_Loop(ChildGbx, 6, MetaTimeStep);
+    if (false) {
+      MainGbx = new GroupBox();
+      double TimeBase = 0.0;
+      int Counter = 0;
+      //NumBeats, TimeStep
+      while (TimeBase < Duration) {
+        TimeBase = TimeStep * ((double) Counter * NumBeats);
+        ChildObx = ChildGbx.Spawn_OffsetBox();
+        ChildObx.TimeX = TimeBase + NoteMaker.OffsetTime;
+        MainGbx.Add_SubSong(ChildObx);
+        Counter++;
+      }
     }
     GroupBox.Group_OffsetBox MainGobx;
     MainGobx = MainGbx.Spawn_OffsetBox();

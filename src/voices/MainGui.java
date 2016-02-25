@@ -140,6 +140,34 @@ public class MainGui {
       this.MyProject.GraphicRoot.Draw_Me(dc);
     }
     /* ********************************************************************************* */
+    public void HighlightTarget(boolean Highlight) {
+      if (this.DestQuery.PossibleDestination != null) {
+        this.DestQuery.PossibleDestination.SetSpineHighlight(Highlight);
+      }
+    }
+    /* ********************************************************************************* */
+    public void DropOnTarget() {
+      IDrawable.IMoveable floater = this.GetFloater();
+      if (floater != null && floater instanceof OffsetBox) {
+        OffsetBox obox = (OffsetBox) floater;
+        if (this.DestQuery.PossibleDestination != null) {
+          //this.Query.MapThroughStack(obox.TimeX, obox.OctaveY, this.MyProject.AudioRoot, results);
+          this.DestQuery.MapThroughStack(obox.TimeX, obox.OctaveY, this.MyProject.AudioRoot, results);
+          if (true) {
+            OffsetBox UltimaCaja = (OffsetBox) this.DestQuery.Leaf;
+            UltimaCaja.MapTo(results.x, results.y, results);
+          }
+          obox.TimeX = results.x;
+          obox.OctaveY = results.y;
+          // obox.Clear();// to do: map location to destination
+          this.DestQuery.PossibleDestination.Add_SubSong(obox);
+          this.MyProject.Update_Guts();
+          this.MyProject.GraphicRoot.UpdateBoundingBox();
+          this.repaint();
+        }
+      }
+    }
+    /* ********************************************************************************* */
     public IDrawable.IMoveable GetFloater() {
       return this.MyProject.GraphicRoot.Content.Floater;
     }
@@ -152,17 +180,12 @@ public class MainGui {
       this.GetFloater().UpdateBoundingBoxLocal();
 
       if (true) {
-        if (this.DestQuery.PossibleDestination != null) {
-          this.DestQuery.PossibleDestination.SetSpineHighlight(false);
-        }
+        this.HighlightTarget(false);
         this.DestQuery.AddFirstBox(this.MyProject.GraphicRoot, ScreenX, ScreenY);
         // this is really ugly.  #kludgey
         this.MyProject.GraphicRoot.Content.ContentOBox.GoFishing(this.DestQuery);// call this on graphic songlet's child obox. 
         this.DestQuery.DecrementStack();
-        //this.DestQuery.Leaf.SetSelected(true);
-        if (this.DestQuery.PossibleDestination != null) {
-          this.DestQuery.PossibleDestination.SetSpineHighlight(true);
-        }
+        this.HighlightTarget(true);
       }
       this.repaint();
     }
@@ -227,7 +250,7 @@ public class MainGui {
     @Override public void paintComponent(Graphics g) {
       super.paintComponent(g);
       Graphics2D g2d = (Graphics2D) g;
-      Draw_Me(g2d);
+      Draw_Me(g2d);// redrawing everything is overkill for every little change or move. to do: optimize this
     }
     /* ********************************************************************************* */
     @Override public void mouseDragged(MouseEvent me) {
@@ -256,8 +279,10 @@ public class MainGui {
       if (this.Query.Leaf != null) {
         this.Query.Leaf.SetSelected(false);
       }
-      if (this.GetFloater() != null) {// need to delete these
+      if (this.GetFloater() != null) {// need to Delete_Me these
+        this.DropOnTarget();
         this.SetFloater(null);
+        this.HighlightTarget(false);
       }
       this.Query.AddFirstBox(this.MyProject.GraphicRoot, me.getX(), me.getY());
       //this.MyProject.GraphicRoot.GoFishing(this.Query);
@@ -329,8 +354,6 @@ public class MainGui {
       int mod = ke.getModifiers();
       boolean CtrlPress = ((mod & KeyEvent.CTRL_MASK) != 0);
       if ((keycode == KeyEvent.VK_C) && CtrlPress) {
-//        this.Query.MapThroughStack(this.ScreenMouseX, this.ScreenMouseY, results);
-//        this.CopyBranch(results.x, results.y);
         this.CopyBranch(this.ScreenMouseX, this.ScreenMouseY);
       } else if (keycode == KeyEvent.VK_DELETE) {
         this.DeleteBranch();
@@ -339,6 +362,7 @@ public class MainGui {
       } else if (keycode == KeyEvent.VK_ESCAPE) {
         if (this.GetFloater() != null) {// to do: delete Floater if not used
           this.SetFloater(null);
+          this.HighlightTarget(false);
           this.repaint();
         }
       }
@@ -348,11 +372,21 @@ public class MainGui {
     }
   }
   /* ********************************************************************************* */
+  public void Bleh() {// https://tips4java.wordpress.com/2009/08/30/global-event-listeners/
+    long EventMask = AWTEvent.MOUSE_MOTION_EVENT_MASK + AWTEvent.MOUSE_EVENT_MASK + AWTEvent.KEY_EVENT_MASK;
+    EventMask = AWTEvent.KEY_EVENT_MASK;
+    Toolkit.getDefaultToolkit().addAWTEventListener(new AWTEventListener() {
+      @Override public void eventDispatched(AWTEvent Event) {
+        System.out.println(Event.getID());
+      }
+    }, EventMask);
+  }
+  /* ********************************************************************************* */
   public void KeyBindings(JPanel panel) {
-    InputMap inputMap = panel.getInputMap();
-    inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_DOWN, 0, false), "Next");
-    ActionMap actionMap = panel.getActionMap();
-    actionMap.put("Next", new NextAction());
+    InputMap InMap = panel.getInputMap();
+    InMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_DOWN, 0, false), "Next");
+    ActionMap ActMap = panel.getActionMap();
+    ActMap.put("Next", new NextAction());
   }
   class NextAction extends AbstractAction {
     public void actionPerformed(ActionEvent actionEvent) {
