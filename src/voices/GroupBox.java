@@ -86,9 +86,9 @@ public class GroupBox implements ISonglet, IDrawable {
     int NumSubSongs = this.SubSongs.size();
     for (int cnt = 0; cnt < NumSubSongs; cnt++) {
       OffsetBox ob = this.SubSongs.get(cnt);
-      ISonglet vb = ob.GetContent();
+      ISonglet child = ob.GetContent();
       //if (MaxDuration < (DurBuf = (ob.UnMapTime(vb.Update_Durations())))) {
-      if (MaxDuration < (DurBuf = (ob.TimeX + vb.Update_Durations()))) {
+      if (MaxDuration < (DurBuf = (ob.TimeX + child.Update_Durations()))) {
         MaxDuration = DurBuf;
       }
     }
@@ -97,28 +97,27 @@ public class GroupBox implements ISonglet, IDrawable {
   }
   /* ********************************************************************************* */
   @Override public void Update_Guts(MetricsPacket metrics) {
-    if (this.FreshnessTimeStamp >= metrics.FreshnessTimeStamp) {// don't hit the same songlet twice on one update
-      return;
-    }
-    this.Set_Project(metrics.MyProject);
-    this.Sort_Me(); // to do: also recursively update all children guts without running update_durations more than once for each
-    this.Update_Max_Amplitude();
-    metrics.MaxDuration = 0.0;// redundant
-    double MyMaxDuration = 0.0;
-    double DurBuf = 0.0;
-    int NumSubSongs = this.SubSongs.size();
-    for (int cnt = 0; cnt < NumSubSongs; cnt++) {
-      OffsetBox obx = this.SubSongs.get(cnt);
-      ISonglet songlet = obx.GetContent();
-      metrics.MaxDuration = 0.0;
-      songlet.Update_Guts(metrics);
-      if (MyMaxDuration < (DurBuf = (obx.TimeX + metrics.MaxDuration))) {
-        MyMaxDuration = DurBuf;
+    if (this.FreshnessTimeStamp < metrics.FreshnessTimeStamp) {// don't hit the same songlet twice on one update
+      this.Set_Project(metrics.MyProject);
+      this.Sort_Me();
+      this.Update_Max_Amplitude();
+      metrics.MaxDuration = 0.0;// redundant
+      double MyMaxDuration = 0.0;
+      double DurBuf = 0.0;
+      int NumSubSongs = this.SubSongs.size();
+      for (int cnt = 0; cnt < NumSubSongs; cnt++) {
+        OffsetBox obx = this.SubSongs.get(cnt);
+        ISonglet songlet = obx.GetContent();
+        metrics.MaxDuration = 0.0;
+        songlet.Update_Guts(metrics);
+        if (MyMaxDuration < (DurBuf = (obx.TimeX + metrics.MaxDuration))) {
+          MyMaxDuration = DurBuf;
+        }
       }
+      this.Duration = MyMaxDuration;
+      this.FreshnessTimeStamp = metrics.FreshnessTimeStamp;
     }
-    this.Duration = MyMaxDuration;
-    metrics.MaxDuration = MyMaxDuration;
-    this.FreshnessTimeStamp = metrics.FreshnessTimeStamp;
+    metrics.MaxDuration = this.Duration;
   }
   /* ********************************************************************************* */
   @Override public void Sort_Me() {// sorting by RealTime
