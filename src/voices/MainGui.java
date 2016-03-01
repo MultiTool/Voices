@@ -6,6 +6,7 @@ import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import javax.swing.*;
 import voices.DrawingContext;
+import voices.GroupBox.Group_OffsetBox;
 // From http://www.tutorialspoint.com/javaexamples/gui_polygon.htm
 
 public class MainGui {
@@ -139,6 +140,26 @@ public class MainGui {
       dc.Offset = new OffsetBox();
       dc.GlobalOffset = new OffsetBox();
       this.MyProject.GraphicRoot.Draw_Me(dc);
+    }
+    /* ********************************************************************************* */
+    public void RescaleGroupTimeX() {
+      if (this.Query.Leaf != null) {//if anything is selected
+        if (this.Query.Leaf instanceof Group_OffsetBox) {
+          Group_OffsetBox gobx = (Group_OffsetBox) this.Query.Leaf;// another cast!
+          //gobx.RescaleGroupTimeX(0.5);
+          gobx.ScaleX *= 0.75;
+          this.MyProject.Update_Guts();
+          this.repaint();
+          /*
+           to do: get distance between current mouse and selected's origin
+           or rather map current mouse to selected's inner coords
+           first position found is 1:1
+           any further movements, map them, get ratio to first position.  always current/first. 
+           */
+          this.Query.MapThroughStack(this.ScreenMouseX, this.ScreenMouseY, results);
+          double Dist = Math.hypot(results.x - gobx.TimeX, results.y - gobx.OctaveY);
+        }
+      }
     }
     /* ********************************************************************************* */
     public void HighlightTarget(boolean Highlight) {
@@ -381,25 +402,6 @@ public class MainGui {
       @Override public void eventDispatched(AWTEvent Event) {
         KeyEvent ke = (KeyEvent) Event;
         HandleKeys(ke, dp);
-//        System.out.println("keyPressed:" + ke.getKeyCode() + ":" + ke.getExtendedKeyCode() + ":" + ke.getModifiers() + ":" + ke.getKeyChar() + ":" + ke.getModifiersEx());
-//        char ch = Character.toLowerCase(ke.getKeyChar());
-//        int keycode = ke.getKeyCode();
-//        int mod = ke.getModifiers();
-//        boolean CtrlPress = ((mod & KeyEvent.CTRL_MASK) != 0);
-//        if ((keycode == KeyEvent.VK_C) && CtrlPress) {
-//          dp.CopyBranch(dp.ScreenMouseX, dp.ScreenMouseY);
-//        } else if (keycode == KeyEvent.VK_DELETE) {
-//          dp.DeleteBranch();
-//        } else if ((keycode == KeyEvent.VK_Q) && CtrlPress) {
-//          System.exit(0);
-//        } else if (keycode == KeyEvent.VK_ESCAPE) {
-//          if (dp.GetFloater() != null) {// to do: delete Floater if not used
-//            dp.SetFloater(null);
-//            dp.HighlightTarget(false);
-//            dp.repaint();
-//          }
-//        }
-//        System.out.println(Event.getID());
       }
     }, EventMask);
   }
@@ -417,15 +419,7 @@ public class MainGui {
     } else if ((keycode == KeyEvent.VK_Q) && CtrlPress) {
       System.exit(0);
     } else if ((keycode == KeyEvent.VK_S)) {
-      // ScaleX
-      /*
-      if anything is selected {
-      get distance between current mouse and selected's origin
-      or rather map current mouse to selected's inner coords
-      first position found is 1:1
-      any further movements, map them, get ratio to first position.  always current/first. 
-      }
-      */
+      dp.RescaleGroupTimeX();
     } else if (keycode == KeyEvent.VK_ESCAPE) {
       if (dp.GetFloater() != null) {// to do: delete Floater if not used
         dp.SetFloater(null);

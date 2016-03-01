@@ -132,16 +132,20 @@ public class Grabber { // to do: rename this class to Grabber
   /* ********************************************************************************* */
   public void MapThroughStack(double XLoc, double YLoc, Point2D.Double results) {
     int len = this.Best_Stack.size();
-    Point2D.Double pntfrom = new Point2D.Double(), pntto = new Point2D.Double();
-    pntfrom.setLocation(XLoc, YLoc);
-    pntto.setLocation(pntfrom);// in case of no mapping at all, default to original coordinates
-    StackItem si;
-    for (int cnt = 0; cnt < len; cnt++) {
-      si = this.Best_Stack.get(cnt);
-      si.OBox.MapTo(pntfrom, pntto);
-      pntfrom.setLocation(pntto);
+    if (false) {// less code but maybe less efficient too
+      MapThroughStack(XLoc, YLoc, this.Best_Stack.get(0).OBox, results);
+    } else {
+      Point2D.Double pntfrom = new Point2D.Double(), pntto = new Point2D.Double();
+      pntfrom.setLocation(XLoc, YLoc);
+      pntto.setLocation(pntfrom);// in case of no mapping at all, default to original coordinates
+      StackItem si;
+      for (int cnt = 0; cnt < len; cnt++) {
+        si = this.Best_Stack.get(cnt);
+        si.OBox.MapTo(pntfrom, pntto);
+        pntfrom.setLocation(pntto);
+      }
+      results.setLocation(pntto);
     }
-    results.setLocation(pntto);
   }
   /* ********************************************************************************* */
   public void MapThroughStack(double XLoc, double YLoc, MonkeyBox startplace, Point2D.Double results) {

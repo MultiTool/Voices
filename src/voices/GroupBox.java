@@ -116,6 +116,8 @@ public class GroupBox implements ISonglet, IDrawable {
       }
       this.Duration = MyMaxDuration;
       this.FreshnessTimeStamp = metrics.FreshnessTimeStamp;
+    } else {
+      boolean nop = true;
     }
     metrics.MaxDuration = this.Duration;
   }
@@ -303,6 +305,14 @@ public class GroupBox implements ISonglet, IDrawable {
     this.MyBounds.Copy_From(donor.MyBounds);
   }
   /* ********************************************************************************* */
+  public void RescaleGroupTimeX(double Factor) {
+    int len = this.SubSongs.size();
+    for (int cnt = 0; cnt < len; cnt++) {
+      OffsetBox obox = this.SubSongs.get(cnt);
+      obox.TimeX *= Factor;
+    }
+  }
+  /* ********************************************************************************* */
   public double DotProduct(double X0, double Y0, double X1, double Y1) {
     return X0 * X1 + Y0 * Y1;// length of projection from one vector onto another
   }
@@ -344,29 +354,7 @@ public class GroupBox implements ISonglet, IDrawable {
     double Limit = 0.1;// octaves
     int len = this.SubSongs.size();
     OffsetBox OBox, ClosestPoint = null;
-    double XPrev = 0, YPrev = 0, YCross, YDist, MinDist = Double.POSITIVE_INFINITY;// will lose on first comparison
-    int MinDex = Integer.MIN_VALUE;// meant to explode if we use it
-    if (false) {
-      for (int cnt = 0; cnt < len; cnt++) {
-        OBox = this.SubSongs.get(cnt);
-        if (XPrev <= XPnt && XPnt <= OBox.TimeX) {
-          YCross = LineYCross(XPrev, YPrev, OBox.TimeX, OBox.OctaveY, XPnt);
-          YDist = Math.abs(YPnt - YCross);
-          if (MinDist > YDist) {
-            MinDist = YDist;
-            MinDex = cnt;
-          }
-        }
-        XPrev = OBox.TimeX;
-        YPrev = OBox.OctaveY;
-      }
-      if (MinDist < Limit) {// then we found one
-        ClosestPoint = this.SubSongs.get(MinDex);
-        return MinDist;
-      }
-      return Double.POSITIVE_INFINITY;// negative if not found
-    }
-    // d'oh, better way
+    double XPrev = 0, YPrev = 0, YCross, YDist;
     OffsetBox LastBox = this.SubSongs.get(len - 1);
     if (0.0 <= XPnt && XPnt <= LastBox.TimeX) {// or this.MyBounds.Max.x) {
       int FoundDex = Tree_Search(XPnt, 0, len);
@@ -386,7 +374,7 @@ public class GroupBox implements ISonglet, IDrawable {
         return YDist;
       }
     }
-    return Double.POSITIVE_INFINITY;// negative if not found
+    return Double.POSITIVE_INFINITY;// infinite if not found
   }
   /* ********************************************************************************* */
   @Override public boolean Create_Me() {// IDeletable
@@ -653,6 +641,7 @@ public class GroupBox implements ISonglet, IDrawable {
   /* ********************************************************************************* */
   public static class Group_OffsetBox extends OffsetBox {// location box to transpose in pitch, move in time, etc. 
     public GroupBox Content = null;
+    public double GroupScaleX = 1.0;
     /* ********************************************************************************* */
     public Group_OffsetBox() {
       super();
@@ -662,6 +651,10 @@ public class GroupBox implements ISonglet, IDrawable {
     /* ********************************************************************************* */
     @Override public GroupBox GetContent() {
       return Content;
+    }
+    /* ********************************************************************************* */
+    public void RescaleGroupTimeX(double Factor) {
+      this.Content.RescaleGroupTimeX(Factor);
     }
     /* ********************************************************************************* */
     @Override public void Draw_Me(DrawingContext ParentDC) {// IDrawable

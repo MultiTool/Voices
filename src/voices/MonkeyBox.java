@@ -77,6 +77,10 @@ public class MonkeyBox implements IDrawable.IMoveable, IDeletable, ITextable {//
     this.ScaleY *= donor.ScaleY;
   }
   /* ********************************************************************************* */
+  public void RescaleTimeX(double Factor) {
+    this.ScaleX = Factor;
+  }
+  /* ********************************************************************************* */
   public void Rebase_Time(double Time) {
     this.TimeX = Time;
     double RelativeMinBound = this.MyBounds.Min.x;// preserve the relative relationship of my bounds and my origin.
