@@ -10,6 +10,8 @@ public interface ISonglet extends IDrawable, IDeletable {// Cancionita
     // public static class Singer extends OffsetBox { // Cantante
     public AudProject MyProject;
     double Inherited_Time = 0.0, Inherited_Octave = 0.0, Inherited_Loudness = 1.0;// time, octave, and loudness context
+    double Inherited_ScaleX = 1.0;// tempo rescale context
+    double Inherited_ScaleY = 1.0;// 'temper' context, which we will NEVER use unless we want to make ugly anharmonic noise.
     double Inherited_OctaveRate = 0.0;// bend context, change dyanimcally while rendering
     public boolean IsFinished = false;
     public Singer ParentSinger;
@@ -35,6 +37,8 @@ public interface ISonglet extends IDrawable, IDeletable {// Cancionita
       Inherited_Time = parent.Inherited_Time;
       Inherited_Octave = parent.Inherited_Octave;
       Inherited_Loudness = parent.Inherited_Loudness;
+      Inherited_ScaleX = parent.Inherited_ScaleX;
+      Inherited_ScaleY = parent.Inherited_ScaleY;
       this.Compound();
     }
     /* ********************************************************************************* */
@@ -46,6 +50,8 @@ public interface ISonglet extends IDrawable, IDeletable {// Cancionita
       Inherited_Time += donor.TimeX;
       Inherited_Octave += donor.OctaveY;
       Inherited_Loudness *= donor.LoudnessFactor;
+      Inherited_ScaleX *= donor.ScaleX;
+      Inherited_ScaleY *= donor.ScaleY;
     }
     /* ********************************************************************************* */
     public abstract OffsetBox Get_OffsetBox();
@@ -80,7 +86,8 @@ public interface ISonglet extends IDrawable, IDeletable {// Cancionita
   public int FreshnessTimeStamp_g();
   public void FreshnessTimeStamp_s(int TimeStampNew);
   /* ********************************************************************************* */
-  @Override ISonglet Deep_Clone_Me();
+  @Override
+  ISonglet Deep_Clone_Me();
   /* ********************************************************************************* */
   int Ref_Songlet();// Reference Counting: increment ref counter and return new value just for kicks
   int UnRef_Songlet();// Reference Counting: decrement ref counter and return new value just for kicks

@@ -38,7 +38,7 @@ public class Voice implements ISonglet, IDrawable, ITextable {
     return lbox;
   }
   /* ********************************************************************************* */
-  @Override public Singer Spawn_Singer() {// for render time
+  @Override public Voice_Singer Spawn_Singer() {// for render time
     return this.Spawn_My_Singer();
   }
   /* ********************************************************************************* */
@@ -682,7 +682,10 @@ public class Voice implements ISonglet, IDrawable, ITextable {
     public void Render_Segment_Integral(VoicePoint pnt0, VoicePoint pnt1, Wave wave) {// stateless calculus integral approach
       //double BaseFreq = Globals.BaseFreqC0;
       double SRate = this.MyProject.SampleRate;
-      double TimeRange = pnt1.TimeX - pnt0.TimeX;
+      double Time0 = pnt0.TimeX * this.Inherited_ScaleX;
+      double Time1 = pnt1.TimeX * this.Inherited_ScaleX;
+      double SubTime0 = pnt0.SubTime * this.Inherited_ScaleX;// tempo rescale
+      double TimeRange = Time1 - Time0;
       double FrequencyFactorStart = pnt0.GetFrequencyFactor();
       double FrequencyFactorInherited = Math.pow(2.0, this.Inherited_Octave);// inherit transposition 
       double Octave0 = this.Inherited_Octave + pnt0.OctaveY, Octave1 = this.Inherited_Octave + pnt1.OctaveY;
@@ -696,17 +699,16 @@ public class Voice implements ISonglet, IDrawable, ITextable {
       double LoudnessRate = LoudnessRange / TimeRange;
       double SubTimeLocal;
       double SubTimeAbsolute;
-      int EndSample = (int) (pnt1.TimeX * SRate);// absolute
+      int EndSample = (int) (Time1 * SRate);// absolute
       double TimeAlong;
       double CurrentLoudness;
       double Amplitude;
       int SampleCnt;
       for (SampleCnt = this.Bone_Sample_Mark; SampleCnt < EndSample; SampleCnt++) {
-        TimeAlong = (SampleCnt / SRate) - pnt0.TimeX;
+        TimeAlong = (SampleCnt / SRate) - Time0;
         CurrentLoudness = pnt0.LoudnessFactor + (TimeAlong * LoudnessRate);
         SubTimeLocal = Integral(OctaveRate, TimeAlong);
-        SubTimeAbsolute = (pnt0.SubTime + (FrequencyFactorStart * SubTimeLocal)) * FrequencyFactorInherited;
-        //Amplitude = this.MyVoice.GetWaveForm(SubTimeAbsolute);
+        SubTimeAbsolute = (SubTime0 + (FrequencyFactorStart * SubTimeLocal)) * FrequencyFactorInherited;
         Amplitude = this.GetWaveForm(SubTimeAbsolute);
         wave.Set(this.Render_Sample_Count, Amplitude * CurrentLoudness);
         this.Render_Sample_Count++;
