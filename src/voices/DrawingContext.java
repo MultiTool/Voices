@@ -7,14 +7,13 @@ import java.awt.geom.Point2D;
  *
  * @author MultiTool
  */
-
 // Every IDrawable has a bounding box, and every DrawingContext also has a bounding box for clipping. 
 // Drawing will always be called from the top, and the bounding box will define what to draw. 
 /* ********************************************************************************* */
 public final class DrawingContext implements IDeletable {// Let's be final until we can't anymore
   public Graphics2D gr;
   public CajaDelimitadora ClipBounds;
-  public OffsetBox Offset, GlobalOffset;// Global Offset is transformation to and from pixels
+  public OffsetBox Offset, GlobalOffset = new OffsetBox();// Global Offset is transformation to and from pixels
   public int RecurseDepth;
   public double Excitement;// to highlight animation, range 0 to 1. 
   /* ********************************************************************************* */
@@ -29,7 +28,11 @@ public final class DrawingContext implements IDeletable {// Let's be final until
   /* ********************************************************************************* */
   public DrawingContext(DrawingContext Fresh_Parent, OffsetBox Fresh_Transform) {
     this.Offset = Fresh_Transform;
-    this.GlobalOffset = Fresh_Parent.GlobalOffset.Clone_Me();
+    try {
+      this.GlobalOffset.Copy_From(Fresh_Parent.GlobalOffset);// = Fresh_Parent.GlobalOffset.Clone_Me();
+    } catch (Exception ex) {
+      boolean nop = true;
+    }
     this.GlobalOffset.Compound(this.Offset);// inherit and further transform parent space
     this.ClipBounds = new CajaDelimitadora();
     // inherit and transform bounding box.
@@ -61,4 +64,3 @@ public final class DrawingContext implements IDeletable {// Let's be final until
     this.gr = null;
   }
 }
-

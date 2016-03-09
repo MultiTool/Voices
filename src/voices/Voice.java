@@ -125,15 +125,14 @@ public class Voice implements ISonglet, IDrawable, ITextable {
   }
   /* ********************************************************************************* */
   @Override public void Update_Guts(MetricsPacket metrics) {
-    if (this.FreshnessTimeStamp >= metrics.FreshnessTimeStamp) {// don't hit the same songlet twice on one update
-      return;
+    if (this.FreshnessTimeStamp < metrics.FreshnessTimeStamp) {// don't hit the same songlet twice on one update
+      this.Set_Project(metrics.MyProject);
+      this.Sort_Me();
+      this.Recalc_Line_SubTime();
+      this.Update_Max_Amplitude();
+      this.FreshnessTimeStamp = metrics.FreshnessTimeStamp;
     }
-    this.Set_Project(metrics.MyProject);
-    this.Sort_Me();
-    this.Recalc_Line_SubTime();
-    this.Update_Max_Amplitude();
     metrics.MaxDuration = this.Get_Duration();
-    this.FreshnessTimeStamp = metrics.FreshnessTimeStamp;
   }
   /* ********************************************************************************* */
   @Override public void Sort_Me() {// sorting by TimeX
@@ -513,7 +512,7 @@ public class Voice implements ISonglet, IDrawable, ITextable {
       VoicePoint Next_Point = null;
       EndTime = this.MyOffsetBox.MapTime(EndTime);// EndTime is now time internal to voice's own coordinate system
 
-      double UnMapped_Prev_Time = this.MyOffsetBox.UnMapTime(this.Cursor_Point.TimeX);// get start time in parent coordinates
+      double UnMapped_Prev_Time = this.GlobalOffset.UnMapTime(this.Cursor_Point.TimeX);// get start time in global coordinates
       this.Render_Sample_Count = 0;
       int NumPoints = this.MyVoice.CPoints.size();
       if (NumPoints < 2) {// this should really just throw an error
@@ -522,8 +521,8 @@ public class Voice implements ISonglet, IDrawable, ITextable {
         return;
       }
       EndTime = this.ClipTime(EndTime);
-      double UnMapped_EndTime = this.MyOffsetBox.UnMapTime(EndTime);
-      wave.Init(UnMapped_Prev_Time, UnMapped_EndTime, this.MyProject.SampleRate);// wave times are in parent coordinates because the parent will be reading the wave data.
+      double UnMapped_EndTime = this.GlobalOffset.UnMapTime(EndTime);
+      wave.Init(UnMapped_Prev_Time, UnMapped_EndTime, this.MyProject.SampleRate);// wave times are in global coordinates because samples are always real time
       Prev_Point = this.Cursor_Point;
       int pdex = this.Next_Point_Dex;
 

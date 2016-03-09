@@ -116,8 +116,6 @@ public class GroupBox implements ISonglet, IDrawable {
       }
       this.Duration = MyMaxDuration;
       this.FreshnessTimeStamp = metrics.FreshnessTimeStamp;
-    } else {
-      boolean nop = true;
     }
     metrics.MaxDuration = this.Duration;
   }
@@ -427,15 +425,16 @@ public class GroupBox implements ISonglet, IDrawable {
       }
       double Clipped_EndTime = this.Tee_Up(EndTime);
       int NumPlaying = NowPlaying.size();
+      Singer player = null;
       int cnt = 0;
       while (cnt < NumPlaying) {// then play the whole pool
-        Singer player = this.NowPlaying.get(cnt);
+        player = this.NowPlaying.get(cnt);
         player.Skip_To(Clipped_EndTime);
         cnt++;
       }
       cnt = 0;// now pack down the finished ones
       while (cnt < this.NowPlaying.size()) {
-        Singer player = this.NowPlaying.get(cnt);
+        player = this.NowPlaying.get(cnt);
         if (player.IsFinished) {
           this.NowPlaying.remove(player);
           player.Delete_Me();
@@ -451,7 +450,7 @@ public class GroupBox implements ISonglet, IDrawable {
         return;
       }
       EndTime = this.MyOffsetBox.MapTime(EndTime);// EndTime is now time internal to GroupBox's own coordinate system
-      double UnMapped_Prev_Time = this.MyOffsetBox.UnMapTime(this.Prev_Time);// get start time in parent coordinates
+      double UnMapped_Prev_Time = this.GlobalOffset.UnMapTime(this.Prev_Time);// get start time in parent coordinates
       if (this.MySonglet.SubSongs.size() <= 0) {
         this.IsFinished = true;
         wave.Init(UnMapped_Prev_Time, UnMapped_Prev_Time, this.MyProject.SampleRate);// wave times are in parent coordinates because the parent will be reading the wave data.
@@ -459,26 +458,24 @@ public class GroupBox implements ISonglet, IDrawable {
         return;
       }
       double Clipped_EndTime = this.Tee_Up(EndTime);
-      double UnMapped_EndTime = this.MyOffsetBox.UnMapTime(Clipped_EndTime);
+      //double UnMapped_EndTime = this.MyOffsetBox.UnMapTime(Clipped_EndTime);
+      double UnMapped_EndTime = this.GlobalOffset.UnMapTime(Clipped_EndTime);
       wave.Init(UnMapped_Prev_Time, UnMapped_EndTime, this.MyProject.SampleRate);// wave times are in parent coordinates because the parent will be reading the wave data.
       Wave ChildWave = new Wave();
       int NumPlaying = NowPlaying.size();
+      Singer player = null;
       int cnt = 0;
       while (cnt < NumPlaying) {// then play the whole pool
-        Singer player = null;
-        try {
-          player = this.NowPlaying.get(cnt);
-        } catch (Exception ex) {
-          boolean nop = true;
-        }
+        player = this.NowPlaying.get(cnt);
         player.Render_To(Clipped_EndTime, ChildWave);
-        ChildWave.Rebase_Time(this.MyOffsetBox.UnMapTime(ChildWave.StartTime));// shift child data to my parent's time base. hacky? 
+        //ChildWave.Rebase_Time(this.MyOffsetBox.UnMapTime(ChildWave.StartTime));// shift child data to my parent's time base. hacky? 
+        //ChildWave.Rebase_Time(this.GlobalOffset.UnMapTime(ChildWave.StartTime));// shift child data to my parent's time base. hacky? 
         wave.Overdub(ChildWave);// sum/overdub the waves 
         cnt++;
       }
       cnt = 0;// now pack down the finished ones
       while (cnt < this.NowPlaying.size()) {
-        Singer player = this.NowPlaying.get(cnt);
+        player = this.NowPlaying.get(cnt);
         if (player.IsFinished) {
           this.NowPlaying.remove(player);
           player.Delete_Me();
@@ -495,7 +492,8 @@ public class GroupBox implements ISonglet, IDrawable {
         EndTime = 0;// clip time
       }
       int NumSonglets = MySonglet.SubSongs.size();
-      double Final_Start = this.MySonglet.SubSongs.get(NumSonglets - 1).TimeX;
+      int FinalSongletDex = NumSonglets - 1;
+      double Final_Start = this.MySonglet.SubSongs.get(FinalSongletDex).TimeX;
       Final_Start = Math.min(Final_Start, EndTime);
       double Final_Time = this.MySonglet.Get_Duration();
       if (EndTime > Final_Time) {
@@ -505,7 +503,7 @@ public class GroupBox implements ISonglet, IDrawable {
       OffsetBox obox;
       while (this.Current_Dex < NumSonglets) {// first find new songlets in this time range and add them to pool
         obox = MySonglet.SubSongs.get(this.Current_Dex);
-        if (Final_Start < obox.TimeX) {// repeat until cb start time overtakes EndTime
+        if (Final_Start < obox.TimeX) {// repeat until obox start time overtakes EndTime
           break;
         }
         Singer singer = obox.Spawn_Singer();

@@ -147,7 +147,7 @@ public class MainGui {
         if (this.Query.Leaf instanceof Group_OffsetBox) {
           Group_OffsetBox gobx = (Group_OffsetBox) this.Query.Leaf;// another cast!
           //gobx.RescaleGroupTimeX(0.5);
-          gobx.ScaleX *= 0.75;
+          gobx.ScaleX = 0.5;// *= 0.75;
           this.MyProject.Update_Guts();
           this.repaint();
           /*

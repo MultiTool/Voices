@@ -16,6 +16,7 @@ public interface ISonglet extends IDrawable, IDeletable {// Cancionita
     public boolean IsFinished = false;
     public Singer ParentSinger;
     protected OffsetBox MyOffsetBox = null;
+    public MonkeyBox GlobalOffset = new OffsetBox();// Global Offset is transformation to and from samples. possible replacement for Inherited_* 
     // public boolean exists = Create_Me();
     /* ********************************************************************************* */
     public Singer() {
@@ -39,6 +40,7 @@ public interface ISonglet extends IDrawable, IDeletable {// Cancionita
       Inherited_Loudness = parent.Inherited_Loudness;
       Inherited_ScaleX = parent.Inherited_ScaleX;
       Inherited_ScaleY = parent.Inherited_ScaleY;
+      this.GlobalOffset.Copy_From(parent.GlobalOffset);
       this.Compound();
     }
     /* ********************************************************************************* */
@@ -46,12 +48,13 @@ public interface ISonglet extends IDrawable, IDeletable {// Cancionita
       this.Compound(this.Get_OffsetBox());
     }
     /* ********************************************************************************* */
-    public void Compound(OffsetBox donor) {// accumulate my own transformation
-      Inherited_Time += donor.TimeX;
-      Inherited_Octave += donor.OctaveY;
-      Inherited_Loudness *= donor.LoudnessFactor;
-      Inherited_ScaleX *= donor.ScaleX;
-      Inherited_ScaleY *= donor.ScaleY;
+    public void Compound(MonkeyBox donor) {// accumulate my own transformation
+      this.Inherited_Time += (this.Inherited_ScaleX * donor.TimeX);// to do: combine matrices here. 
+      this.Inherited_Octave += (this.Inherited_ScaleY * donor.OctaveY);
+      this.Inherited_Loudness *= donor.LoudnessFactor;
+      this.Inherited_ScaleX *= donor.ScaleX;
+      this.Inherited_ScaleY *= donor.ScaleY;
+      this.GlobalOffset.Compound(donor);
     }
     /* ********************************************************************************* */
     public abstract OffsetBox Get_OffsetBox();

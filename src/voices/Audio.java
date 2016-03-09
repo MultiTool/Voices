@@ -148,11 +148,11 @@ public class Audio implements IDeletable {
     }
   }
   /* ********************************************************************************* */
-  public void SaveAudioChunks(String filename, OffsetBox song) {
-    ISonglet.Singer RootPlayer = song.Spawn_Singer();
-    RootPlayer.Compound(song);
+  public void SaveAudioChunks(String filename, OffsetBox SongHandle) {
+    ISonglet.Singer RootPlayer = SongHandle.Spawn_Singer();
+    RootPlayer.Compound(SongHandle);
 
-    double FinalTime = song.GetContent().Get_Duration();
+    double FinalTime = SongHandle.GetContent().Get_Duration();
     Wave wave_render = new Wave();
     wave_render.Init(0, FinalTime, SampleRate);
     wave_render.Fill(Wave.Debug_Fill);
@@ -174,11 +174,11 @@ public class Audio implements IDeletable {
     this.Save(filename, wave_render.GetWave());
   }
   /* ********************************************************************************* */
-  public void SaveAudio(String filename, OffsetBox song) {
-    ISonglet.Singer RootPlayer = song.Spawn_Singer();
-    RootPlayer.Compound(song);
+  public void SaveAudio(String filename, OffsetBox SongHandle) {
+    ISonglet.Singer RootPlayer = SongHandle.Spawn_Singer();
+    RootPlayer.Compound(SongHandle);
 
-    double FinalTime = song.GetContent().Get_Duration();
+    double FinalTime = SongHandle.GetContent().Get_Duration();
 
     Wave wave_render = new Wave();
     wave_render.Init(0, FinalTime, SampleRate);

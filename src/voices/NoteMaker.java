@@ -332,7 +332,17 @@ public class NoteMaker {
     return voice;
   }
   /* ********************************************************************************* */
-  public static Voice Create_Tapered_Note(Voice voice, double TimeOffset, double Duration, double OctaveOffset, double LoudnessOffset, int numsteps) {
+  public static void Create_Block_Voice(Voice voice, double Duration, int numsteps) {
+    double midfrac;
+    voice.Add_Note(0, 0, 0.0);
+    for (int cnt = 0; cnt <= numsteps; cnt++) {
+      midfrac = ((double) cnt) / (double) numsteps;
+      voice.Add_Note((Duration * midfrac), 0, 1.0);
+    }
+    //return voice;
+  }
+  /* ********************************************************************************* */
+  public static void Create_Tapered_Voice(Voice voice, double TimeOffset, double Duration, double OctaveOffset, double LoudnessOffset, int numsteps) {
     double AttackTime = 0.01;
     Duration -= AttackTime;
 //    if (true) {
@@ -356,7 +366,7 @@ public class NoteMaker {
       midfrac = ((double) cnt) / (double) numsteps;
       voice.Add_Note(TimeOffset + AttackTime + (Duration * midfrac), OctaveOffset, LoudnessOffset * (1.0 - midfrac));
     }
-    return voice;
+    //return voice;
   }
   /* ********************************************************************************* */
   public static GroupBox Create_Note_Chain(int TotalNotes, double TimeStep) {
@@ -369,50 +379,56 @@ public class NoteMaker {
     GroupBox gbx = new GroupBox();
     for (int cnt = 0; cnt < TotalNotes; cnt++) {
       Voice voz = Generate_Voice(2);
-      note = Create_Tapered_Note(voz, NoteMaker.OffsetTime, Duration, Octave, Loudness, NoteBreaks);
-      gbx.Add_SubSong(note, (TimeStep * (double) cnt) + NoteMaker.OffsetTime, OctaveOffset, Loudness);
+      Create_Tapered_Voice(voz, NoteMaker.OffsetTime, Duration, Octave, Loudness, NoteBreaks);
+      gbx.Add_SubSong(voz, (TimeStep * (double) cnt) + NoteMaker.OffsetTime, OctaveOffset, Loudness);
+    }
+    return gbx;
+  }
+  /* ********************************************************************************* */
+  public static GroupBox Create_Note_Chain(ISonglet Songlet, int TotalNotes, double TimeStep) {
+    double Loudness = 1.0;
+    double OctaveOffset = 0;
+    GroupBox gbx = new GroupBox();
+    double OffsetTime = NoteMaker.OffsetTime * 0;
+    for (int cnt = 0; cnt < TotalNotes; cnt++) {
+      gbx.Add_SubSong(Songlet, (TimeStep * (double) cnt) + OffsetTime, OctaveOffset, Loudness);
     }
     return gbx;
   }
   /* ********************************************************************************* */
   public static GroupBox.Group_OffsetBox Create_Group_Loop(double TimeStep) {
-    //TimeStep = 1.0;
     int NumBeats = 8;
     double Duration = 30;
-    GroupBox.Group_OffsetBox ChildObx;
-    GroupBox ChildGbx = NoteMaker.Create_Note_Chain(NumBeats, TimeStep);
+
+    Voice voz = new Voice();
+    if (false) {
+      NoteMaker.Create_Block_Voice(voz, TimeStep, 3);
+    } else {
+      NoteMaker.Create_Tapered_Voice(voz, NoteMaker.OffsetTime, TimeStep, 0, 1.0, 3);
+    }
+    GroupBox ChildGbx = NoteMaker.Create_Note_Chain(voz, NumBeats, TimeStep);
+    ChildGbx.MyName = "ChildGbx";
+
+    //GroupBox ChildGbx = NoteMaker.Create_Note_Chain(NumBeats, TimeStep);
     GroupBox MainGbx;
     double MetaTimeStep = TimeStep * ((double) NumBeats);
-    MainGbx = Create_Group_Loop(ChildGbx, 6, MetaTimeStep);
-    if (false) {
-      MainGbx = new GroupBox();
-      double TimeBase = 0.0;
-      int Counter = 0;
-      //NumBeats, TimeStep
-      while (TimeBase < Duration) {
-        TimeBase = TimeStep * ((double) Counter * NumBeats);
-        ChildObx = ChildGbx.Spawn_OffsetBox();
-        ChildObx.TimeX = TimeBase + NoteMaker.OffsetTime;
-        MainGbx.Add_SubSong(ChildObx);
-        Counter++;
-      }
-    }
+    MainGbx = Create_Group_Loop(ChildGbx, 2, MetaTimeStep);// was 6
+    MainGbx.MyName = "MainGbx";
     GroupBox.Group_OffsetBox MainGobx;
     MainGobx = MainGbx.Spawn_OffsetBox();
-//    MainGobx.TimeX += NoteMaker.OffsetTime;
-//    MainGobx.OctaveY = (4);
     return MainGobx;
   }
   /* ********************************************************************************* */
   public static GroupBox Create_Group_Loop(ISonglet Songlet, int Iterations, double TimeStep) {
     OffsetBox ChildObx;
     GroupBox MainGbx = new GroupBox();
+    double OffsetTime = NoteMaker.OffsetTime * 0;
     double TimeBase = 0.0;
     int Counter = 0;
     for (Counter = 0; Counter < Iterations; Counter++) {
       TimeBase = ((double) Counter) * TimeStep;
       ChildObx = Songlet.Spawn_OffsetBox();
-      ChildObx.TimeX = TimeBase + NoteMaker.OffsetTime;
+      ChildObx.TimeX = TimeBase + OffsetTime;
       MainGbx.Add_SubSong(ChildObx);
     }
     return MainGbx;
