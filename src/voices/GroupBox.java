@@ -458,7 +458,6 @@ public class GroupBox implements ISonglet, IDrawable {
         return;
       }
       double Clipped_EndTime = this.Tee_Up(EndTime);
-      //double UnMapped_EndTime = this.MyOffsetBox.UnMapTime(Clipped_EndTime);
       double UnMapped_EndTime = this.GlobalOffset.UnMapTime(Clipped_EndTime);
       wave.Init(UnMapped_Prev_Time, UnMapped_EndTime, this.MyProject.SampleRate);// wave times are in parent coordinates because the parent will be reading the wave data.
       Wave ChildWave = new Wave();
@@ -468,8 +467,6 @@ public class GroupBox implements ISonglet, IDrawable {
       while (cnt < NumPlaying) {// then play the whole pool
         player = this.NowPlaying.get(cnt);
         player.Render_To(Clipped_EndTime, ChildWave);
-        //ChildWave.Rebase_Time(this.MyOffsetBox.UnMapTime(ChildWave.StartTime));// shift child data to my parent's time base. hacky? 
-        //ChildWave.Rebase_Time(this.GlobalOffset.UnMapTime(ChildWave.StartTime));// shift child data to my parent's time base. hacky? 
         wave.Overdub(ChildWave);// sum/overdub the waves 
         cnt++;
       }
@@ -682,6 +679,13 @@ public class GroupBox implements ISonglet, IDrawable {
       child.Copy_From(this);
       child.Content = this.Content.Deep_Clone_Me();
       return child;
+    }
+    /* ********************************************************************************* */
+    @Override public void BreakClone() {// for compose time. detach from my songlet and attach to an identical but unlinked songlet
+      GroupBox clone = this.Content.Deep_Clone_Me();
+      this.Content.UnRef_Songlet();
+      this.Content = clone;
+      this.Content.Ref_Songlet();
     }
     /* ********************************************************************************* */
     @Override public boolean Create_Me() {// IDeletable

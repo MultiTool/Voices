@@ -6,12 +6,12 @@ import java.util.Random;
 /**
  *
  * @author MultiTool
-// C++ stuff
-#define boolean bool 
-#define jpublic 
-#define jprivate
-#define implements :
-#define extends :
+ // C++ stuff
+ #define boolean bool 
+ #define jpublic 
+ #define jprivate
+ #define implements :
+ #define extends :
 
  */
 public class Globals {
@@ -35,6 +35,20 @@ public class Globals {
     } else {
       Fraction = Math.min((Fraction - 0.5) * 2, 1.0);
       return new Color(0, (float) (1.0 - Fraction), (float) Fraction);
+    }
+  }
+  /* ********************************************************************************* */
+  public static Color ToColorWheel(double Fraction) {
+    Fraction = Fraction - Math.floor(Fraction); // remove whole number part if any
+    if (Fraction < (1.0 / 3.0)) {// red to green
+      Fraction *= 6.0;
+      return new Color((float) Math.min(2.0 - Fraction, 1.0), (float) Math.min(Fraction, 1.0), 0);
+    } else if (Fraction < (2.0 / 3.0)) {// green to blue
+      Fraction = (Fraction - (1.0 / 3.0)) * 6.0;
+      return new Color(0, (float) Math.min(2.0 - Fraction, 1.0), (float) Math.min(Fraction, 1.0));
+    } else {// blue to red
+      Fraction = (Fraction - (2.0 / 3.0)) * 6.0;
+      return new Color((float) Math.min(2.0 - Fraction, 1.0), 0, (float) Math.min(Fraction, 1.0));
     }
   }
 }

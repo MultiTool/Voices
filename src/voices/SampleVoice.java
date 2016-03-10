@@ -74,6 +74,13 @@ public class SampleVoice extends Voice {
       child.VoiceContent = child.SampleVoiceContent = this.SampleVoiceContent.Deep_Clone_Me();
       return child;
     }
+    /* ********************************************************************************* */
+    @Override public void BreakClone() {// for compose time. detach from my songlet and attach to an identical but unlinked songlet
+      SampleVoice clone = this.SampleVoiceContent.Deep_Clone_Me();
+      this.SampleVoiceContent.UnRef_Songlet();
+      this.SampleVoiceContent = clone;
+      this.SampleVoiceContent.Ref_Songlet();
+    }
   }
   /* ********************************************************************************* */
   public static class SampleVoice_Singer extends Voice_Singer {

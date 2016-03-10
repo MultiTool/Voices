@@ -11,6 +11,7 @@ import java.util.ArrayList;
 /**
  *
  * @author MultiTool
+ * LoopBox is most likely deprecated. It creates too many problems with the UI and is easily replaceable with a specialized GroupBox. 
  */
 public class LoopBox implements ISonglet, IDrawable {
   public ArrayList<Ghost_OffsetBox> SubSongs = new ArrayList<Ghost_OffsetBox>();
@@ -419,6 +420,13 @@ public class LoopBox implements ISonglet, IDrawable {
       Loop_OffsetBox child = this.Clone_Me();
       child.Content = this.Content.Deep_Clone_Me();
       return child;
+    }
+    /* ********************************************************************************* */
+    @Override public void BreakClone() {// for compose time. detach from my songlet and attach to an identical but unlinked songlet
+      LoopBox clone = this.Content.Deep_Clone_Me();
+      this.Content.UnRef_Songlet();
+      this.Content = clone;
+      this.Content.Ref_Songlet();
     }
     /* ********************************************************************************* */
     @Override public void Draw_Me(DrawingContext ParentDC) {

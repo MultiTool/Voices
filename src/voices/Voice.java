@@ -18,13 +18,15 @@ public class Voice implements ISonglet, IDrawable, ITextable {
   private double MaxAmplitude;
   private int FreshnessTimeStamp;
   protected double BaseFreq = Globals.BaseFreqC0;
+  private int RefCount = 0;
   // graphics support
   CajaDelimitadora MyBounds = new CajaDelimitadora();
-  private int RefCount = 0;
+  Color FillColor;
   /* ********************************************************************************* */
   public Voice() {
     this.MaxAmplitude = 1.0;
     RefCount = 0;
+    this.FillColor = Globals.ToColorWheel(Globals.RandomGenerator.nextDouble());
   }
   /* ********************************************************************************* */
   @Override public Voice_OffsetBox Spawn_OffsetBox() {// for compose time
@@ -255,7 +257,8 @@ public class Voice implements ISonglet, IDrawable, ITextable {
       CntSpine++;
     }
     //int colorToSet = Color.argb(alpha, red, green, blue); 
-    ParentDC.gr.setColor(Globals.ToAlpha(Color.cyan, 60));// Color.yellow
+    //ParentDC.gr.setColor(Globals.ToAlpha(Color.cyan, 60));// Color.yellow
+    ParentDC.gr.setColor(Globals.ToAlpha(this.FillColor, 60));// Color.yellow
     ParentDC.gr.fillPolygon(OutlineX, OutlineY, NumDrawPoints);// voice fill
 
     ParentDC.gr.setColor(Globals.ToAlpha(Color.darkGray, 100));
@@ -424,6 +427,13 @@ public class Voice implements ISonglet, IDrawable, ITextable {
       return child;
     }
     /* ********************************************************************************* */
+    @Override public void BreakClone() {// for compose time. detach from my songlet and attach to an identical but unlinked songlet
+      Voice clone = this.VoiceContent.Deep_Clone_Me();
+      this.VoiceContent.UnRef_Songlet();
+      this.VoiceContent = clone;
+      this.VoiceContent.Ref_Songlet();
+    }
+    /* ********************************************************************************* */
     @Override public boolean Create_Me() {// IDeletable
       return true;
     }
@@ -446,7 +456,7 @@ public class Voice implements ISonglet, IDrawable, ITextable {
     int Prev_Point_Dex, Next_Point_Dex;
     int Render_Sample_Count;
     VoicePoint Cursor_Point = new VoicePoint();
-    protected int Bone_Sample_Mark = 0;
+    protected int Bone_Sample_Mark = 0;// number of samples since time 0
     double BaseFreq;
     /* ********************************************************************************* */
     protected Voice_Singer() {
@@ -465,7 +475,8 @@ public class Voice implements ISonglet, IDrawable, ITextable {
       this.IsFinished = false;
       if (this.MyVoice.CPoints.size() > 0) {
         VoicePoint pnt = this.MyVoice.CPoints.get(0);
-        this.Bone_Sample_Mark = (int) (pnt.TimeX * this.MyProject.SampleRate);
+        //this.Bone_Sample_Mark = (int) ((pnt.TimeX * this.Inherited_ScaleX) * this.MyProject.SampleRate);
+        this.Bone_Sample_Mark = (int) ((pnt.TimeX * this.GlobalOffset.ScaleX) * this.MyProject.SampleRate);
       }
       //if (this.Parent != null) {
       VoicePoint ppnt = this.MyVoice.CPoints.get(this.Prev_Point_Dex);
@@ -679,7 +690,6 @@ public class Voice implements ISonglet, IDrawable, ITextable {
     }
     /* ********************************************************************************* */
     public void Render_Segment_Integral(VoicePoint pnt0, VoicePoint pnt1, Wave wave) {// stateless calculus integral approach
-      //double BaseFreq = Globals.BaseFreqC0;
       double SRate = this.MyProject.SampleRate;
       double Time0 = pnt0.TimeX * this.Inherited_ScaleX;
       double Time1 = pnt1.TimeX * this.Inherited_ScaleX;

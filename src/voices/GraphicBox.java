@@ -261,6 +261,13 @@ public class GraphicBox implements IDrawable, ISonglet, IDeletable {//
       return child;
     }
     /* ********************************************************************************* */
+    @Override public void BreakClone() {// for compose time. detach from my songlet and attach to an identical but unlinked songlet
+      GraphicBox clone = this.Content.Deep_Clone_Me();
+      this.Content.UnRef_Songlet();
+      this.Content = clone;
+      this.Content.Ref_Songlet();
+    }
+    /* ********************************************************************************* */
     @Override public boolean Create_Me() {// IDeletable
       return true;
     }

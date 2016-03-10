@@ -243,23 +243,38 @@ public class MainGui {
       }
     }
     /* ********************************************************************************* */
+    public void BreakClone() {
+      if (this.Query.Leaf != null) {
+        BigApp.MyThread.PleaseStop();
+        IDrawable.IMoveable Leaf = this.Query.Leaf;
+        if (Leaf instanceof OffsetBox) {
+          OffsetBox obx = (OffsetBox) Leaf;// another cast! 
+          obx.BreakClone();
+          this.repaint();
+        }
+      }
+    }
+    /* ********************************************************************************* */
     public void CopyBranch(double XDisp, double YDisp) {
       if (this.Query.Leaf != null) {
         {
           BigApp.MyThread.PleaseStop();
         }
         IDrawable.IMoveable Leaf = this.Query.Leaf;
+        OffsetBox FloatHandle, clone;
         if (Leaf instanceof OffsetBox) {
           OffsetBox obx = (OffsetBox) Leaf;// another cast! 
-          OffsetBox clone = obx.Deep_Clone_Me();
+          //FloatHandle = obx.Deep_Clone_Me();
+          FloatHandle = obx.GetContent().Spawn_OffsetBox();
+          FloatHandle.Copy_From(obx);
           if (false) {// one catch is that if this is a loopbox ghost handle we get a copy of the ghost instead of a native offsetbox
             ISonglet songlet = obx.GetContent();
             OffsetBox ObxCopy = songlet.Spawn_OffsetBox();
             ObxCopy.Copy_From(obx);// transfer original offsets
             clone = ObxCopy.Deep_Clone_Me();
           }
-          this.Query.CompoundStack(this.MyProject.AudioRoot, clone);
-          this.SetFloater(clone);// only deep clone handles to songlets. do not clone loudness handles. clone voicepoints? 
+          this.Query.CompoundStack(this.MyProject.AudioRoot, FloatHandle);
+          this.SetFloater(FloatHandle);// only deep clone handles to songlets. do not clone loudness handles. clone voicepoints? 
           MoveFloater(XDisp, YDisp);
         }
 //        if (Leaf.getClass().isMemberClass() == OffsetBox.class) {
@@ -420,6 +435,8 @@ public class MainGui {
       System.exit(0);
     } else if ((keycode == KeyEvent.VK_S)) {
       dp.RescaleGroupTimeX();
+    } else if ((keycode == KeyEvent.VK_X) && CtrlPress) {
+      dp.BreakClone();
     } else if (keycode == KeyEvent.VK_ESCAPE) {
       if (dp.GetFloater() != null) {// to do: delete Floater if not used
         dp.SetFloater(null);

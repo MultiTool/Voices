@@ -13,10 +13,10 @@ public interface ISonglet extends IDrawable, IDeletable {// Cancionita
     double Inherited_ScaleX = 1.0;// tempo rescale context
     double Inherited_ScaleY = 1.0;// 'temper' context, which we will NEVER use unless we want to make ugly anharmonic noise.
     double Inherited_OctaveRate = 0.0;// bend context, change dyanimcally while rendering
+    public MonkeyBox GlobalOffset = new OffsetBox();// Global Offset is transformation to and from samples. Possible replacement for Inherited_* 
     public boolean IsFinished = false;
     public Singer ParentSinger;
     protected OffsetBox MyOffsetBox = null;
-    public MonkeyBox GlobalOffset = new OffsetBox();// Global Offset is transformation to and from samples. possible replacement for Inherited_* 
     // public boolean exists = Create_Me();
     /* ********************************************************************************* */
     public Singer() {

@@ -258,6 +258,15 @@ public class Wave implements IDeletable {
     }
   }
   /* ********************************************************************************* */
+  public void WhiteNoise_Fill() {
+    double val;
+    for (int SampCnt = 0; SampCnt < this.NumSamples; SampCnt++) {
+      val = Globals.RandomGenerator.nextDouble() * 2.0 - 1.0;// white noise
+      this.wave[SampCnt] = val;
+    }
+    this.Center();
+  }
+  /* ********************************************************************************* */
   public double[] GetWave() {// just for testing. remove later
     return this.wave;
   }

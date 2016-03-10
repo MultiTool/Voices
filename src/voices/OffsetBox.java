@@ -46,6 +46,9 @@ public class OffsetBox extends MonkeyBox { //implements IDrawable.IMoveable, IDe
     return child;
   }
   /* ********************************************************************************* */
+  public void BreakClone() {// virtual
+  }
+  /* ********************************************************************************* */
   public void Copy_From(OffsetBox donor) {
     super.Copy_From(donor);
   }
