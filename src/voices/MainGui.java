@@ -178,6 +178,7 @@ public class MainGui {
             OffsetBox UltimaCaja = (OffsetBox) this.DestQuery.Leaf;// another cast! 
             UltimaCaja.MapTo(results.x, results.y, results);
           }
+          this.DestQuery.Floater = null;
           obox.TimeX = results.x;
           obox.OctaveY = results.y;
           this.DestQuery.PossibleDestination.Add_SubSong(obox);
@@ -243,13 +244,13 @@ public class MainGui {
       }
     }
     /* ********************************************************************************* */
-    public void BreakClone() {
+    public void BreakFromHerd() {
       if (this.Query.Leaf != null) {
-        BigApp.MyThread.PleaseStop();
         IDrawable.IMoveable Leaf = this.Query.Leaf;
         if (Leaf instanceof OffsetBox) {
           OffsetBox obx = (OffsetBox) Leaf;// another cast! 
-          obx.BreakClone();
+          BigApp.MyThread.PleaseStop();
+          obx.BreakFromHerd();
           this.repaint();
         }
       }
@@ -257,9 +258,7 @@ public class MainGui {
     /* ********************************************************************************* */
     public void CopyBranch(double XDisp, double YDisp) {
       if (this.Query.Leaf != null) {
-        {
-          BigApp.MyThread.PleaseStop();
-        }
+        BigApp.MyThread.PleaseStop();
         IDrawable.IMoveable Leaf = this.Query.Leaf;
         OffsetBox FloatHandle, clone;
         if (Leaf instanceof OffsetBox) {
@@ -275,6 +274,7 @@ public class MainGui {
           }
           this.Query.CompoundStack(this.MyProject.AudioRoot, FloatHandle);
           this.SetFloater(FloatHandle);// only deep clone handles to songlets. do not clone loudness handles. clone voicepoints? 
+          this.DestQuery.Floater = obx;
           MoveFloater(XDisp, YDisp);
         }
 //        if (Leaf.getClass().isMemberClass() == OffsetBox.class) {
@@ -436,7 +436,7 @@ public class MainGui {
     } else if ((keycode == KeyEvent.VK_S)) {
       dp.RescaleGroupTimeX();
     } else if ((keycode == KeyEvent.VK_X) && CtrlPress) {
-      dp.BreakClone();
+      dp.BreakFromHerd();
     } else if (keycode == KeyEvent.VK_ESCAPE) {
       if (dp.GetFloater() != null) {// to do: delete Floater if not used
         dp.SetFloater(null);

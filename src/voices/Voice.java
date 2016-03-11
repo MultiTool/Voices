@@ -427,7 +427,7 @@ public class Voice implements ISonglet, IDrawable, ITextable {
       return child;
     }
     /* ********************************************************************************* */
-    @Override public void BreakClone() {// for compose time. detach from my songlet and attach to an identical but unlinked songlet
+    @Override public void BreakFromHerd() {// for compose time. detach from my songlet and attach to an identical but unlinked songlet
       Voice clone = this.VoiceContent.Deep_Clone_Me();
       this.VoiceContent.UnRef_Songlet();
       this.VoiceContent = clone;

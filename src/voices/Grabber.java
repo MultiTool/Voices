@@ -35,6 +35,10 @@ public class Grabber { // to do: rename this class to Grabber
     }
   }
   /* ********************************************************************************* */
+  public boolean KeepDigging(IDrawable.IMoveable Candidate) {// Determine whether we should look into the children of Candidate to select a songlet
+    return (this.CurrentContext.SearchBounds.Intersects(Candidate.GetBoundingBox()));
+  }
+  /* ********************************************************************************* */
   public void Init(OffsetBox starter, double XLoc, double YLoc) {// add first space map at start of search
     OffsetBox child = new OffsetBox();// first layer place holder.  not a great solution. 
     child.MyBounds.Assign(Double.NEGATIVE_INFINITY, Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY, Double.POSITIVE_INFINITY);
@@ -229,7 +233,7 @@ public class Grabber { // to do: rename this class to Grabber
   /* ********************************************************************************* */
   public static class DestinationGrabber extends Grabber {
     // this class searches for containers in which to drop a floating, copied songlet
-    public MonkeyBox Floater = null;
+    public OffsetBox Floater = null;
     public GroupBox PossibleDestination = null;
     private double ClosestDistance = Double.POSITIVE_INFINITY;
     @Override public void AddFirstBox(OffsetBox starter, double XLoc, double YLoc) {// add first space map at start of search
@@ -252,7 +256,6 @@ public class Grabber { // to do: rename this class to Grabber
           obx.MapTo(this.CurrentContext.Loc.x, this.CurrentContext.Loc.y, results);// we're hitting the songlet, not its offsetbox, so we have to map to obox child coordinates.
           double FoundDistance = gbx.HitsMyVine(results.x, results.y);// WIP, does not work yet
           //FoundDistance = true;
-          // to do: need to protect against self-inclusion
 //          if ((FoundDistance < this.ClosestDistance) && this.Stack_Depth_Best <= this.Stack_Depth) {// prefer the most distal
           //if ((FoundDistance < this.ClosestDistance) || ((FoundDistance == this.ClosestDistance) && this.Stack_Depth_Best <= this.Stack_Depth)) {// prefer the most distal
           if (FoundDistance < this.ClosestDistance) {// prefer the closest
@@ -275,6 +278,17 @@ public class Grabber { // to do: rename this class to Grabber
           Copy_Stack(this.Explore_Stack, this.Best_Stack);
         }
       }
+    }
+    /* ********************************************************************************* */
+    @Override public boolean KeepDigging(IDrawable.IMoveable Candidate) {// Determine whether we should look into the children of Candidate for a place to paste our songlet.
+      if (Candidate instanceof OffsetBox) {
+        OffsetBox obx = (OffsetBox) Candidate;// other cast!
+        ISonglet songlet = obx.GetContent();
+        if (this.Floater.GetContent() == songlet) {// Never drop a songlet inside of itself or you will get a stack overflow.
+          return false;
+        }
+      }
+      return (this.CurrentContext.SearchBounds.Intersects(Candidate.GetBoundingBox()));
     }
   }
 }

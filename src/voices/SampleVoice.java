@@ -75,7 +75,7 @@ public class SampleVoice extends Voice {
       return child;
     }
     /* ********************************************************************************* */
-    @Override public void BreakClone() {// for compose time. detach from my songlet and attach to an identical but unlinked songlet
+    @Override public void BreakFromHerd() {// for compose time. detach from my songlet and attach to an identical but unlinked songlet
       SampleVoice clone = this.SampleVoiceContent.Deep_Clone_Me();
       this.SampleVoiceContent.UnRef_Songlet();
       this.SampleVoiceContent = clone;

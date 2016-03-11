@@ -527,48 +527,6 @@ float[] dist = {0.0f, 0.2f, 1.0f};
 Color[] colors = {Color.RED, Color.WHITE, Color.BLUE};
 RadialGradientPaint p = new RadialGradientPaint(center, radius, dist, colors);
 
-
-to do:
-Create LoopBox Draw_Me(). - done
-Rename ChorusBox to GroupBox everywhere. - done
-Put playing and drawing in separate threads. - done
-More zoomed-in octave scale. - done
-GroupBox Draw_Me needs to draw its own vine spine. Draw it behind its children. - done, touch it up more. 
-Test live audio on faster machines. - done, TOO MUCH CLICKING, seek fix. 
-Fix graphic clipping to work right. - done
-Clean: Make ISonglet inherit IDrawable and remove redundant code. - done
-Clean: Get rid of IOffsetBox.  - done
-Clean: Big code cleanup. Consolidate all weird testing code into one place. - done
-Put grid in background, seconds by octaves. - done
-*** Fix bounds bug where covering origin of main branch hides everything, and bounds width is too short too.  - done
-MemLeaks: Make IDeleteable interface and apply to *everything* to get ready for C++ port. - done
-Add Zoom, ZoomX, and ZoomY. ctrl or shift or alt-scrollwheel?  Also add panning.  - done
-Do we need update_guts timestamps? - done
-Separate out the drawing/graphics layer. - done
-** Start grabbing mouse clicks and creating hit stacks. !!!  - done
-Import TunePad colors and alpha tricks. - done enough.
-SubRange: Update and test all Skip_To.  - done? so far so good.
-SubRange: Let user draw box on screen to trigger play within range. - IMPORTANT 
-CopyPaste: Copy and paste - IMPORTANT
-CopyPaste: Make Deep_Clone_Me use a hashtable and refcounts to preserve directed graph nodes. 
-CopyPaste: Highlight selected, add selected flag to all IMoveables (maybe ISonglets too?)
-MemLeaks: All IDeleteable have a global creation counter and a global deletion counter. 
-MemLeaks: Add refcounting for eventual serialization, IDeleteable, and C++ port. 
-LoopBox graphics - mayabe an arc, Ellipse2D.Double?  Or a very rounded rectangle behind each unit cell? Put handles on the rectangle and change Delay. 
-On load, zoom to object bounds. 
-SweepAnimation: Add moving cursor during play.  - IMPORTANT 
-SweepAnimation: Add 'excitement' double to drawing context, and animate drawings as we play. 
-SweepAnimation: Draw to buffer and draw buffer as a strip to main image, for cursor animation. 
-Customize colors for each songlet! 
-Widgets! SFGUI? 
-(Someday) create a sample_voice type. http://soundbible.com/37-Chain-Saw.html 
-Add ISerializable for saving and loading! 
-Undo/Redo?  probably need IClonable and or ICopyable, like ISerializable.  Clone invokes Copy, and copy just copies all guts. 
-Optimize voice polygon graphic clipping. 
-Control points of a songlet should only show up when the songlet is selected. 
-Line widths should scale with zooming. 
-FX box, with sigmoid clipping, reverb etc. 
-
 samplerate / middleC = 167 sample cycle
 44100 / 261.6 = 168.57798165137614678899082568807
 
@@ -680,6 +638,61 @@ selecting that handle lights it up, but may also color things inside the group i
 voice X-scaling is untested, so this will only be for groups for now. 
 
 deep clones are shattered, they can be pasted anywhere. in that case, no need for self-inclusion test. 
+
+
+
+to do:
+Create LoopBox Draw_Me(). - done
+Rename ChorusBox to GroupBox everywhere. - done
+Put playing and drawing in separate threads. - done
+More zoomed-in octave scale. - done
+GroupBox Draw_Me needs to draw its own vine spine. Draw it behind its children. - done, touch it up more. 
+Test live audio on faster machines. - done, TOO MUCH CLICKING, seek fix. 
+Fix graphic clipping to work right. - done
+Clean: Make ISonglet inherit IDrawable and remove redundant code. - done
+Clean: Get rid of IOffsetBox.  - done
+Clean: Big code cleanup. Consolidate all weird testing code into one place. - done
+Put grid in background, seconds by octaves. - done
+Bug: *** Fix bounds bug where covering origin of main branch hides everything, and bounds width is too short too.  - done
+MemLeaks: Make IDeleteable interface and apply to *everything* to get ready for C++ port. - done
+Add Zoom, ZoomX, and ZoomY. ctrl or shift or alt-scrollwheel?  Also add panning.  - done
+Do we need update_guts timestamps? - done
+Separate out the drawing/graphics layer. - done
+** Start grabbing mouse clicks and creating hit stacks. !!!  - done
+Import TunePad colors and alpha tricks. - done enough.
+SubRange: Update and test all Skip_To.  - done? so far so good.
+SubRange: Let user draw box on screen to trigger play within range. - IMPORTANT 
+CopyPaste: Highlight selected, add selected flag to all IMoveables (maybe ISonglets too?) - done
+CopyPaste: Prevent self-inclusion - done
+CopyPaste: Copy and paste - IMPORTANT - done?
+CopyPaste: Make Deep_Clone_Me use a hashtable and refcounts to preserve directed graph nodes. 
+CopyPaste: Vine spine click?
+MemLeaks: All IDeleteable have a global creation counter and a global deletion counter. 
+MemLeaks: Add refcounting for eventual serialization, IDeleteable, and C++ port. 
+LoopBox graphics - mayabe an arc, Ellipse2D.Double?  Or a very rounded rectangle behind each unit cell? Put handles on the rectangle and change Delay. 
+On load, zoom to object bounds. 
+SweepAnimation: Add moving cursor during play.  - IMPORTANT 
+SweepAnimation: Add 'excitement' double to drawing context, and animate drawings as we play. 
+SweepAnimation: Draw to buffer and draw buffer as a strip to main image, for cursor animation. 
+Customize colors for each songlet! 
+Widgets! SFGUI? 
+(Someday) create a sample_voice type. http://soundbible.com/37-Chain-Saw.html 
+Add ISerializable for saving and loading! 
+Undo/Redo?  probably need IClonable and or ICopyable, like ISerializable.  Clone invokes Copy, and copy just copies all guts. 
+Optimize voice polygon graphic clipping. 
+Control points of a songlet should only show up when the songlet is selected. 
+Line widths should scale with zooming. 
+FX box, with sigmoid clipping, reverb etc. 
+Bug: Fix grabbing on scaled objects. 
+Shallow ScaleX just for groups.
+AlignX too?
+Maybe a button menu for each selection.
+Pluck for prettier sound.
+Wave table.
+ScaleX: fix grab handle problem with scaled objects.
+
+
+
 
 
 

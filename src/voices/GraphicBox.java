@@ -233,9 +233,8 @@ public class GraphicBox implements IDrawable, ISonglet, IDeletable {//
     }
     @Override public void GoFishing(Grabber Scoop) {// IDrawable
       Scoop.AddFirstBox(this, Scoop.CurrentContext.Loc.x, Scoop.CurrentContext.Loc.y);
-      if (Scoop.CurrentContext.SearchBounds.Intersects(MyBounds)) {
+      if (Scoop.KeepDigging(this)) {
         Scoop.ConsiderLeaf(this);
-        // Scoop.AddFirstBox(this, Scoop.CurrentContext.Loc.x, Scoop.CurrentContext.Loc.y);
         this.Content.GoFishing(Scoop);
       }
       Scoop.DecrementStack();
@@ -261,7 +260,7 @@ public class GraphicBox implements IDrawable, ISonglet, IDeletable {//
       return child;
     }
     /* ********************************************************************************* */
-    @Override public void BreakClone() {// for compose time. detach from my songlet and attach to an identical but unlinked songlet
+    @Override public void BreakFromHerd() {// for compose time. detach from my songlet and attach to an identical but unlinked songlet
       GraphicBox clone = this.Content.Deep_Clone_Me();
       this.Content.UnRef_Songlet();
       this.Content = clone;

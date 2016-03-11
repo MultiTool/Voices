@@ -681,7 +681,7 @@ public class GroupBox implements ISonglet, IDrawable {
       return child;
     }
     /* ********************************************************************************* */
-    @Override public void BreakClone() {// for compose time. detach from my songlet and attach to an identical but unlinked songlet
+    @Override public void BreakFromHerd() {// for compose time. detach from my songlet and attach to an identical but unlinked songlet
       GroupBox clone = this.Content.Deep_Clone_Me();
       this.Content.UnRef_Songlet();
       this.Content = clone;

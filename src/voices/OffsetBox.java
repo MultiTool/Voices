@@ -46,7 +46,7 @@ public class OffsetBox extends MonkeyBox { //implements IDrawable.IMoveable, IDe
     return child;
   }
   /* ********************************************************************************* */
-  public void BreakClone() {// virtual
+  public void BreakFromHerd() {// virtual
   }
   /* ********************************************************************************* */
   public void Copy_From(OffsetBox donor) {
@@ -189,7 +189,7 @@ public class OffsetBox extends MonkeyBox { //implements IDrawable.IMoveable, IDe
     this.MyBounds.IncludePoint(this.TimeX + OctavesPerRadius, this.OctaveY + OctavesPerRadius);
   }
   @Override public void GoFishing(Grabber Scoop) {// IDrawable
-    if (Scoop.CurrentContext.SearchBounds.Intersects(MyBounds)) {
+    if (Scoop.KeepDigging(this)) {
       Scoop.ConsiderLeaf(this);
       Scoop.AddBoxToStack(this);
       this.GetContent().GoFishing(Scoop);
