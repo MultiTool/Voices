@@ -13,7 +13,7 @@ public interface ISonglet extends IDrawable, IDeletable {// Cancionita
     double Inherited_ScaleX = 1.0;// tempo rescale context
     double Inherited_ScaleY = 1.0;// 'temper' context, which we will NEVER use unless we want to make ugly anharmonic noise.
     double Inherited_OctaveRate = 0.0;// bend context, change dyanimcally while rendering
-    public MonkeyBox GlobalOffset = new OffsetBox();// Global Offset is transformation to and from samples. Possible replacement for Inherited_* 
+    public MonkeyBox InheritedMap = new OffsetBox();// Global Offset is transformation to and from samples. Possible replacement for Inherited_* 
     public boolean IsFinished = false;
     public Singer ParentSinger;
     protected OffsetBox MyOffsetBox = null;
@@ -40,7 +40,7 @@ public interface ISonglet extends IDrawable, IDeletable {// Cancionita
       Inherited_Loudness = parent.Inherited_Loudness;
       Inherited_ScaleX = parent.Inherited_ScaleX;
       Inherited_ScaleY = parent.Inherited_ScaleY;
-      this.GlobalOffset.Copy_From(parent.GlobalOffset);
+      this.InheritedMap.Copy_From(parent.InheritedMap);
       this.Compound();
     }
     /* ********************************************************************************* */
@@ -54,7 +54,7 @@ public interface ISonglet extends IDrawable, IDeletable {// Cancionita
       this.Inherited_Loudness *= donor.LoudnessFactor;
       this.Inherited_ScaleX *= donor.ScaleX;
       this.Inherited_ScaleY *= donor.ScaleY;
-      this.GlobalOffset.Compound(donor);
+      this.InheritedMap.Compound(donor);
     }
     /* ********************************************************************************* */
     public abstract OffsetBox Get_OffsetBox();

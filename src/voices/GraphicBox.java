@@ -1,8 +1,10 @@
 package voices;
 
+import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
+import java.awt.Stroke;
 
 /**
  *
@@ -77,51 +79,66 @@ public class GraphicBox implements IDrawable, ISonglet, IDeletable {//
   /* ********************************************************************************* */
   public void Draw_Grid(DrawingContext ParentDC) {
     double xloc, yloc;
-    int MinX, MinY, MaxX, MaxY;
+    double MinX, MinY, MaxX, MaxY;// in audio coordinates
+    int ScreenMinX, ScreenMinY, ScreenMaxX, ScreenMaxY;// in screen coordinates
     int X0, Y0;
     int width, height;
 
-    MinX = (int) ParentDC.GlobalOffset.UnMapTime(Math.floor(ParentDC.ClipBounds.Min.x));
-    MinY = (int) ParentDC.GlobalOffset.UnMapPitch(Math.floor(ParentDC.ClipBounds.Min.y));
+    MinX = Math.floor(ParentDC.ClipBounds.Min.x);
+    MinY = Math.floor(ParentDC.ClipBounds.Min.y);
+    MaxX = Math.ceil(ParentDC.ClipBounds.Max.x);
+    MaxY = Math.ceil(ParentDC.ClipBounds.Max.y);
+    
+    ScreenMinX = (int) ParentDC.GlobalOffset.UnMapTime(MinX);
+    ScreenMinY = (int) ParentDC.GlobalOffset.UnMapPitch(MinY);
+    ScreenMaxX = (int) ParentDC.GlobalOffset.UnMapTime(MaxX);
+    ScreenMaxY = (int) ParentDC.GlobalOffset.UnMapPitch(MaxY);
 
-    MaxX = (int) ParentDC.GlobalOffset.UnMapTime(Math.ceil(ParentDC.ClipBounds.Max.x));
-    MaxY = (int) ParentDC.GlobalOffset.UnMapPitch(Math.ceil(ParentDC.ClipBounds.Max.y));
-
-    if (MaxY < MinY) {// swap
-      int temp = MaxY;
-      MaxY = MinY;
-      MinY = temp;
+    if (ScreenMaxY < ScreenMinY) {// swap
+      int temp = ScreenMaxY;
+      ScreenMaxY = ScreenMinY;
+      ScreenMinY = temp;
     }
 
-    width = MaxX - MinX;// (int) ParentDC.GlobalOffset.UnMapTime(100);
-    height = MaxY - MinY;//(int) ParentDC.GlobalOffset.UnMapPitch(100);
+    width = ScreenMaxX - ScreenMinX;// (int) ParentDC.GlobalOffset.UnMapTime(100);
+    height = ScreenMaxY - ScreenMinY;//(int) ParentDC.GlobalOffset.UnMapPitch(100);
 
-    // draw horizontal lines
-    ParentDC.gr.setColor(Globals.ToAlpha(Color.lightGray, 100));
-    for (double ysemi = MinY; ysemi < MaxY; ysemi += 1.0 / 12.0) {
+    ParentDC.gr.setColor(Globals.ToAlpha(Color.lightGray, 100));// draw minor horizontal pitch lines
+    for (double ysemi = MinY; ysemi < MaxY; ysemi += 1.0 / 12.0) {// semitone lines
       yloc = ParentDC.GlobalOffset.UnMapPitch(ysemi);
-      ParentDC.gr.drawLine(MinX, (int) yloc, width, (int) yloc);
-    }
-    ParentDC.gr.setColor(Globals.ToAlpha(Color.darkGray, 100));
-    for (int xcnt = MinX; xcnt < MaxX; xcnt++) {
-      xloc = ParentDC.GlobalOffset.UnMapTime(xcnt);
-      ParentDC.gr.drawLine((int) xloc, MinY, (int) xloc, height);
+      ParentDC.gr.drawLine(ScreenMinX, (int) yloc, ScreenMaxX, (int) yloc);
     }
 
-    // draw vertical lines
-    ParentDC.gr.setColor(Globals.ToAlpha(Color.darkGray, 100));
-    for (int ycnt = MinY; ycnt < MaxY; ycnt++) {
+    ParentDC.gr.setColor(Globals.ToAlpha(Color.lightGray, 100));// draw minor vertical time lines
+    for (double xsemi = MinX; xsemi < MaxX; xsemi += 1.0 / 4.0) {// 1/4 second time lines
+      xloc = ParentDC.GlobalOffset.UnMapTime(xsemi);
+      ParentDC.gr.drawLine((int) xloc, ScreenMinY, (int) xloc, ScreenMaxY);
+    }
+
+    Stroke PrevStroke = ParentDC.gr.getStroke();
+    BasicStroke bs = new BasicStroke(2.0f, BasicStroke.CAP_SQUARE, BasicStroke.JOIN_MITER);
+    ParentDC.gr.setStroke(bs);
+    ParentDC.gr.setColor(Globals.ToAlpha(Color.darkGray, 100));// draw major horizontal pitch lines
+    for (double ycnt = MinY; ycnt < MaxY; ycnt++) {// octave lines
       yloc = ParentDC.GlobalOffset.UnMapPitch(ycnt);
-      ParentDC.gr.drawLine(MinX, (int) yloc, width, (int) yloc);
+      ParentDC.gr.drawLine(ScreenMinX, (int) yloc, ScreenMaxX, (int) yloc);
+    }
+
+    ParentDC.gr.setColor(Globals.ToAlpha(Color.darkGray, 100));// draw major vertical time lines
+    for (double xcnt = MinX; xcnt < MaxX; xcnt++) {// 1 second time lines
+      xloc = ParentDC.GlobalOffset.UnMapTime(xcnt);
+      ParentDC.gr.drawLine((int) xloc, ScreenMinY, (int) xloc, ScreenMaxY);
     }
 
     // draw origin lines
     ParentDC.gr.setColor(Globals.ToAlpha(Color.red, 255));
     X0 = (int) ParentDC.GlobalOffset.UnMapTime(0);
-    ParentDC.gr.drawLine(X0, MinY, X0, height);
+    ParentDC.gr.drawLine(X0, ScreenMinY, X0, ScreenMaxY);
 
     Y0 = (int) ParentDC.GlobalOffset.UnMapPitch(0);
-    ParentDC.gr.drawLine(MinX, Y0, width, Y0);
+    ParentDC.gr.drawLine(ScreenMinX, Y0, ScreenMaxX, Y0);
+
+    ParentDC.gr.setStroke(PrevStroke);
   }
   /* ********************************************************************************* */
   public static void AntiAlias(Graphics2D g2d) {//http://www.exampledepot.com/egs/java.awt/AntiAlias.html?l=rel

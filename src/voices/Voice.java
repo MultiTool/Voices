@@ -232,10 +232,10 @@ public class Voice implements ISonglet, IDrawable, ITextable {
     int CntUp = Range, CntDown = Range - 1, CntSpine = 1;
 //    pnt = this.CPoints.get(StartDex);
 //    double LoudnessHgt = pnt.LoudnessFactor * pnt.OctavesPerLoudness;
-//    Xloc = ParentDC.GlobalOffset.UnMapTime(pnt.TimeX);
-//    Yloc = ParentDC.GlobalOffset.UnMapPitch(pnt.OctaveY);
-//    YlocLow = ParentDC.GlobalOffset.UnMapPitch(pnt.OctaveY - LoudnessHgt);
-//    YlocHigh = ParentDC.GlobalOffset.UnMapPitch(pnt.OctaveY + LoudnessHgt);
+//    Xloc = ParentDC.InheritedMap.UnMapTime(pnt.TimeX);
+//    Yloc = ParentDC.InheritedMap.UnMapPitch(pnt.OctaveY);
+//    YlocLow = ParentDC.InheritedMap.UnMapPitch(pnt.OctaveY - LoudnessHgt);
+//    YlocHigh = ParentDC.InheritedMap.UnMapPitch(pnt.OctaveY + LoudnessHgt);
 //    pgon.moveTo(Xloc, Yloc);
     for (int pcnt = StartDex; pcnt < EndDex; pcnt++) {
       pnt = this.CPoints.get(pcnt);
@@ -476,7 +476,7 @@ public class Voice implements ISonglet, IDrawable, ITextable {
       if (this.MyVoice.CPoints.size() > 0) {
         VoicePoint pnt = this.MyVoice.CPoints.get(0);
         //this.Bone_Sample_Mark = (int) ((pnt.TimeX * this.Inherited_ScaleX) * this.MyProject.SampleRate);
-        this.Bone_Sample_Mark = (int) ((pnt.TimeX * this.GlobalOffset.ScaleX) * this.MyProject.SampleRate);
+        this.Bone_Sample_Mark = (int) ((pnt.TimeX * this.InheritedMap.ScaleX) * this.MyProject.SampleRate);
       }
       //if (this.Parent != null) {
       VoicePoint ppnt = this.MyVoice.CPoints.get(this.Prev_Point_Dex);
@@ -523,7 +523,7 @@ public class Voice implements ISonglet, IDrawable, ITextable {
       VoicePoint Next_Point = null;
       EndTime = this.MyOffsetBox.MapTime(EndTime);// EndTime is now time internal to voice's own coordinate system
 
-      double UnMapped_Prev_Time = this.GlobalOffset.UnMapTime(this.Cursor_Point.TimeX);// get start time in global coordinates
+      double UnMapped_Prev_Time = this.InheritedMap.UnMapTime(this.Cursor_Point.TimeX);// get start time in global coordinates
       this.Render_Sample_Count = 0;
       int NumPoints = this.MyVoice.CPoints.size();
       if (NumPoints < 2) {// this should really just throw an error
@@ -532,7 +532,7 @@ public class Voice implements ISonglet, IDrawable, ITextable {
         return;
       }
       EndTime = this.ClipTime(EndTime);
-      double UnMapped_EndTime = this.GlobalOffset.UnMapTime(EndTime);
+      double UnMapped_EndTime = this.InheritedMap.UnMapTime(EndTime);
       wave.Init(UnMapped_Prev_Time, UnMapped_EndTime, this.MyProject.SampleRate);// wave times are in global coordinates because samples are always real time
       Prev_Point = this.Cursor_Point;
       int pdex = this.Next_Point_Dex;
@@ -691,9 +691,9 @@ public class Voice implements ISonglet, IDrawable, ITextable {
     /* ********************************************************************************* */
     public void Render_Segment_Integral(VoicePoint pnt0, VoicePoint pnt1, Wave wave) {// stateless calculus integral approach
       double SRate = this.MyProject.SampleRate;
-      double Time0 = pnt0.TimeX * this.Inherited_ScaleX;
-      double Time1 = pnt1.TimeX * this.Inherited_ScaleX;
-      double SubTime0 = pnt0.SubTime * this.Inherited_ScaleX;// tempo rescale
+      double Time0 = pnt0.TimeX * this.InheritedMap.ScaleX;
+      double Time1 = pnt1.TimeX * this.InheritedMap.ScaleX;
+      double SubTime0 = pnt0.SubTime * this.InheritedMap.ScaleX;// tempo rescale
       double TimeRange = Time1 - Time0;
       double FrequencyFactorStart = pnt0.GetFrequencyFactor();
       double FrequencyFactorInherited = Math.pow(2.0, this.Inherited_Octave);// inherit transposition 

@@ -666,7 +666,7 @@ CopyPaste: Highlight selected, add selected flag to all IMoveables (maybe ISongl
 CopyPaste: Prevent self-inclusion - done
 CopyPaste: Copy and paste - IMPORTANT - done?
 CopyPaste: Make Deep_Clone_Me use a hashtable and refcounts to preserve directed graph nodes. 
-CopyPaste: Vine spine click?
+CopyPaste: Vine spine click to select draggable? 
 MemLeaks: All IDeleteable have a global creation counter and a global deletion counter. 
 MemLeaks: Add refcounting for eventual serialization, IDeleteable, and C++ port. 
 LoopBox graphics - mayabe an arc, Ellipse2D.Double?  Or a very rounded rectangle behind each unit cell? Put handles on the rectangle and change Delay. 
@@ -687,8 +687,8 @@ Bug: Fix grabbing on scaled objects.
 Shallow ScaleX just for groups.
 AlignX too?
 Maybe a button menu for each selection.
-Pluck for prettier sound.
-Wave table.
+GoodSynth: Pluck for prettier sound.
+GoodSynth: Wave table.
 ScaleX: fix grab handle problem with scaled objects.
 
 

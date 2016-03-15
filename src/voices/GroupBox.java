@@ -450,7 +450,7 @@ public class GroupBox implements ISonglet, IDrawable {
         return;
       }
       EndTime = this.MyOffsetBox.MapTime(EndTime);// EndTime is now time internal to GroupBox's own coordinate system
-      double UnMapped_Prev_Time = this.GlobalOffset.UnMapTime(this.Prev_Time);// get start time in parent coordinates
+      double UnMapped_Prev_Time = this.InheritedMap.UnMapTime(this.Prev_Time);// get start time in parent coordinates
       if (this.MySonglet.SubSongs.size() <= 0) {
         this.IsFinished = true;
         wave.Init(UnMapped_Prev_Time, UnMapped_Prev_Time, this.MyProject.SampleRate);// wave times are in parent coordinates because the parent will be reading the wave data.
@@ -458,7 +458,7 @@ public class GroupBox implements ISonglet, IDrawable {
         return;
       }
       double Clipped_EndTime = this.Tee_Up(EndTime);
-      double UnMapped_EndTime = this.GlobalOffset.UnMapTime(Clipped_EndTime);
+      double UnMapped_EndTime = this.InheritedMap.UnMapTime(Clipped_EndTime);
       wave.Init(UnMapped_Prev_Time, UnMapped_EndTime, this.MyProject.SampleRate);// wave times are in parent coordinates because the parent will be reading the wave data.
       Wave ChildWave = new Wave();
       int NumPlaying = NowPlaying.size();
@@ -579,9 +579,9 @@ public class GroupBox implements ISonglet, IDrawable {
       // Control points have the same space as their parent, so no need to create a local map.
       /*
        Point2D.Double pnt = ParentDC.To_Screen(this.ParentPoint.MyBounds.Max.x, this.ParentPoint.MyBounds.Max.y);
-       double RadiusPixels = Math.abs(ParentDC.GlobalOffset.ScaleY) * OctavesPerRadius;
+       double RadiusPixels = Math.abs(ParentDC.InheritedMap.ScaleY) * OctavesPerRadius;
        double LoudnessHgt = this.ParentPoint.LoudnessFactor * this.ParentPoint.OctavesPerLoudness;
-       double XLoc = ParentDC.GlobalOffset.UnMapPitch(this.ParentPoint.OctaveY + LoudnessHgt) - RadiusPixels;// My handle rests *upon* the line I control, so I don't occlude my VoicePoint. 
+       double XLoc = ParentDC.InheritedMap.UnMapPitch(this.ParentPoint.OctaveY + LoudnessHgt) - RadiusPixels;// My handle rests *upon* the line I control, so I don't occlude my VoicePoint. 
        RadiusPixels = Math.ceil(RadiusPixels);
        MonkeyBox.Draw_Dot2(ParentDC, XLoc, pnt.y, OctavesPerRadius, this.IsSelected, Globals.ToAlpha(Color.lightGray, 100));
        */

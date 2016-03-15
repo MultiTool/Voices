@@ -116,7 +116,6 @@ public class MainGui {
     }
     /* ********************************************************************************* */
     public void Draw_Me(Graphics2D g2d) {
-      // to do: move this to MainGui, and base clipping, zoom etc. on canvas size. 
       DrawingContext dc = new DrawingContext();
       dc.gr = g2d;
       int wdt, hgt;
@@ -125,7 +124,12 @@ public class MainGui {
       hgt = this.getHeight();
 
       Rectangle2D rect = new Rectangle2D.Float();
-      rect.setRect(0, 0, wdt, hgt);
+      if (true) {
+        rect.setRect(0, 0, wdt, hgt);
+      } else {
+        int shrink = 100;// to test clipping
+        rect.setRect(shrink, shrink, wdt - (shrink * 2), hgt - (shrink * 2));
+      }
       if (false) {// disable real clipping to see how much unnecessary drawing is being done.
         g2d.setClip(rect);
       }
@@ -133,10 +137,9 @@ public class MainGui {
       BasicStroke bs = new BasicStroke(5f, BasicStroke.CAP_SQUARE, BasicStroke.JOIN_MITER);
       g2d.setStroke(bs);
       g2d.setColor(Color.green);
-      g2d.draw(rect);// red rectangle confidence check for clipping
+      g2d.draw(rect);// green rectangle confidence check for clipping
       g2d.setStroke(oldStroke);
-      dc.ClipBounds.Assign(0, 0, wdt, hgt);
-
+      dc.ClipBounds.Assign(rect.getMinX(), rect.getMinY(), rect.getMaxX(), rect.getMaxY());
       dc.Offset = new OffsetBox();
       dc.GlobalOffset = new OffsetBox();
       this.MyProject.GraphicRoot.Draw_Me(dc);
