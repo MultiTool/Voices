@@ -31,14 +31,10 @@ public class CajaDelimitadora implements IDeletable, ITextable {// DIY BoundingB
   }
   /* ********************************************************************************* */
   public boolean Intersects(CajaDelimitadora other) {
-    try {
-      if (!this.LineFramed(this.Min.x, this.Max.x, other.Min.x, other.Max.x)) {
-        return false;
-      } else if (!this.LineFramed(this.Min.y, this.Max.y, other.Min.y, other.Max.y)) {
-        return false;
-      }
-    } catch (Exception ex) {
-      boolean nop = true;
+    if (!this.LineFramed(this.Min.x, this.Max.x, other.Min.x, other.Max.x)) {
+      return false;
+    } else if (!this.LineFramed(this.Min.y, this.Max.y, other.Min.y, other.Max.y)) {
+      return false;
     }
     return true;
   }
@@ -59,6 +55,9 @@ public class CajaDelimitadora implements IDeletable, ITextable {// DIY BoundingB
   }
   /* ********************************************************************************* */
   public void Copy_From(CajaDelimitadora donor) {
+    if (this.Min == null || donor == null) {
+      boolean nop = true;
+    }
     this.Min.setLocation(donor.Min);
     this.Max.setLocation(donor.Max);
   }
@@ -106,11 +105,7 @@ public class CajaDelimitadora implements IDeletable, ITextable {// DIY BoundingB
   }
   /* ********************************************************************************* */
   public void Reset() {// reset for min, max comparisons
-    try {
-      this.Min.setLocation(Double.POSITIVE_INFINITY, Double.POSITIVE_INFINITY);
-    } catch (Exception ex) {
-      boolean nop = true;
-    }
+    this.Min.setLocation(Double.POSITIVE_INFINITY, Double.POSITIVE_INFINITY);
     this.Max.setLocation(Double.NEGATIVE_INFINITY, Double.NEGATIVE_INFINITY);
     this.ZeroCheck();
   }

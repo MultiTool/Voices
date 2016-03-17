@@ -221,7 +221,7 @@ public class OffsetBox extends MonkeyBox { //implements IDrawable.IMoveable, IDe
   }
   @Override public void Delete_Me() {// IDeletable
     this.MyBounds.Delete_Me();
-    this.MyBounds = null;
+    this.MyBounds = null;// this one does not cause snox
     if (false) {// we can probably enable this and remove it from everywhere else
       ISonglet Content = this.GetContent();
       if (Content != null) {

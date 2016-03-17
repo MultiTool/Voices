@@ -259,6 +259,22 @@ public class MainGui {
       }
     }
     /* ********************************************************************************* */
+    public void PlayWholeBranch() {
+      if (this.Query.Leaf != null) {
+        IDrawable.IMoveable Leaf = this.Query.Leaf;
+        OffsetBox PlayHandle;
+        if (Leaf instanceof OffsetBox) {
+          OffsetBox obx = (OffsetBox) Leaf;// another cast! 
+          PlayHandle = obx.GetContent().Spawn_OffsetBox();
+          //PlayHandle.Copy_From(obx);
+          BigApp.MyThread.PleaseStop();
+          this.Query.CompoundStack(this.MyProject.AudioRoot, PlayHandle);
+          PlayHandle.Compound(obx);// Why do we have to do this? It should work without this extra compound. The final item in the stack should be obox iteslf. #kludgey
+          BigApp.MyThread.start(PlayHandle);
+        }
+      }
+    }
+    /* ********************************************************************************* */
     public void CopyBranch(double XDisp, double YDisp) {
       if (this.Query.Leaf != null) {
         BigApp.MyThread.PleaseStop();
@@ -341,7 +357,10 @@ public class MainGui {
         this.MyProject.Update_Guts();
         this.MyProject.GraphicRoot.UpdateBoundingBox();
         //this.Query.UpdateBoundingBoxes();
-        {
+
+        if (false) {
+          this.PlayWholeBranch();
+        } else {
           double TimeRadius = 0.15;
           double Time = this.MyProject.GraphicRoot.MapTime(me.getX());
           BigApp.MyThread.Skip_To(Time - TimeRadius);

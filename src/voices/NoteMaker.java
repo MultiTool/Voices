@@ -286,7 +286,6 @@ public class NoteMaker {
       Inertia = 1.0 - ((1.0 - Inertia) * InertiaPersist);
       WindowSize = (int) Math.ceil((((double) SampCnt) / (double) MegaSamples) * (double) SamplesPerCycle);
       //WindowSize++;
-      boolean nop = true;
     }
   }
   /* ********************************************************************************* */

@@ -60,9 +60,6 @@ public class Wave implements IDeletable {
     this.SampleRate = SampleRate0;
     double TimeSpan = EndTime0 - StartTime0;
     int nsamps = (int) Math.ceil(TimeSpan * SampleRate0);
-    if (nsamps < 0) {
-      boolean nop = true;
-    }
     this.StartDex = (int) (this.StartTime * SampleRate0);// StartDex is the number of empty samples from Time=0 to wave[0]
     this.NumSamples = nsamps;
     wave = new double[nsamps + 1];// plus 1 because converting from double to int truncates. 
@@ -197,11 +194,11 @@ public class Wave implements IDeletable {
     Current_Index++;
   }
   public void Set(int dex, double value) {
-    if (dex < this.wave.length) {
-      this.wave[dex] = value;
-    } else {
-      boolean nop = true;// range check
-    }
+//    if (dex < this.wave.length) {
+    this.wave[dex] = value;
+//    } else {
+//      boolean nop = true;// range check
+//    }
   }
   /* ******************************************************************* */
   public double GetResample(double TimeSeconds) { // linear interpolation between points. FlexDex is fractional index is in seconds, not samples
@@ -217,9 +214,6 @@ public class Wave implements IDeletable {
   /* ******************************************************************* */
   public double GetResampleLooped(double TimeSeconds) { // linear interpolation between points. FlexDex is fractional index is in seconds, not samples
     double SampleDex = TimeSeconds * this.SampleRate;
-    if (SampleDex > this.NumSamples) {
-      boolean nop = true;
-    }
     double SampleDexFlat = Math.floor(SampleDex);
     int Dex0 = ((int) SampleDexFlat) % this.NumSamples;
     int Dex1 = (Dex0 + 1) % this.NumSamples;

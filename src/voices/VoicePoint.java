@@ -23,6 +23,7 @@ public class VoicePoint extends MonkeyBox {
     this.UpHandle.ParentPoint = this;
     this.DownHandle = new LoudnessHandle();
     this.DownHandle.ParentPoint = this;
+    this.MyBounds = new CajaDelimitadora();
   }
   /* ********************************************************************************* */
   public void CopyFrom(VoicePoint source) {

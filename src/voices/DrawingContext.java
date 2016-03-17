@@ -28,11 +28,7 @@ public final class DrawingContext implements IDeletable {// Let's be final until
   /* ********************************************************************************* */
   public DrawingContext(DrawingContext Fresh_Parent, OffsetBox Fresh_Transform) {
     this.Offset = Fresh_Transform;
-    try {
-      this.GlobalOffset.Copy_From(Fresh_Parent.GlobalOffset);// = Fresh_Parent.GlobalOffset.Clone_Me();
-    } catch (Exception ex) {
-      boolean nop = true;
-    }
+    this.GlobalOffset.Copy_From(Fresh_Parent.GlobalOffset);// = Fresh_Parent.GlobalOffset.Clone_Me();
     this.GlobalOffset.Compound(this.Offset);// inherit and further transform parent space
     this.ClipBounds = new CajaDelimitadora();
     // inherit and transform bounding box.
@@ -58,7 +54,7 @@ public final class DrawingContext implements IDeletable {// Let's be final until
   @Override public void Delete_Me() {// IDeletable
     this.ClipBounds.Delete_Me();
     this.ClipBounds = null;
-    this.GlobalOffset.Delete_Me();
+    this.GlobalOffset.Delete_Me();// this one does not cause snox
     this.GlobalOffset = null;
     this.Offset = null;
     this.gr = null;

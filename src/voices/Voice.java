@@ -522,7 +522,9 @@ public class Voice implements ISonglet, IDrawable, ITextable {
       VoicePoint Prev_Point = null;
       VoicePoint Next_Point = null;
       EndTime = this.MyOffsetBox.MapTime(EndTime);// EndTime is now time internal to voice's own coordinate system
-
+      if (this.Cursor_Point == null) {
+        boolean nop = true;
+      }
       double UnMapped_Prev_Time = this.InheritedMap.UnMapTime(this.Cursor_Point.TimeX);// get start time in global coordinates
       this.Render_Sample_Count = 0;
       int NumPoints = this.MyVoice.CPoints.size();
@@ -730,7 +732,14 @@ public class Voice implements ISonglet, IDrawable, ITextable {
     }
     @Override public void Delete_Me() {// IDeletable
       super.Delete_Me();
-      this.Cursor_Point.Delete_Me();
+      this.Cursor_Point.Delete_Me();// this leads to snox
+      this.Cursor_Point = null;
+      this.MyVoice = null;// wreck everything so we crash if we try to use a dead object
+      this.Phase = this.Cycles = this.SubTime = Double.NEGATIVE_INFINITY;
+      this.Current_Octave = this.Current_Frequency = Double.NEGATIVE_INFINITY;
+      this.BaseFreq = Double.NEGATIVE_INFINITY;
+      this.Prev_Point_Dex = this.Next_Point_Dex = Integer.MIN_VALUE;
+      this.Render_Sample_Count = this.Bone_Sample_Mark = Integer.MIN_VALUE;
     }
   }
 }

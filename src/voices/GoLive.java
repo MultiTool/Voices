@@ -20,7 +20,8 @@ public class GoLive implements Runnable, IDeletable {
   Wave wave_render = new Wave();
   boolean KeepGoing;
   /* ********************************************************************************* */
-  public boolean IsRunning = false;
+  //public boolean IsRunning = false;
+  public int NumRunning = 0;
 //  {
 //    return !this.KeepGoing;// do not use this it is broken
 //  }
@@ -35,6 +36,11 @@ public class GoLive implements Runnable, IDeletable {
   /* ********************************************************************************* */
   public void start() {
     System.out.println("Starting " + ThreadName);
+    
+    this.PleaseStop();
+    while (this.RootPlayer != null) {// stall until the singer is deleted
+    }
+    
     //this.CurrentTime = 0;
     //FinalTime = this.MyProject.AudioRoot.GetContent().Get_Duration();
     wave_render.Init(0, TimeIncrement, this.MyProject.SampleRate);
@@ -43,20 +49,44 @@ public class GoLive implements Runnable, IDeletable {
     RootPlayer.Compound(this.MyProject.AudioRoot);
     RootPlayer.Start();
     RootPlayer.Skip_To(this.CurrentTime);
-
-    this.PleaseStop();
-
-    this.KeepGoing = true;
-
     this.audio.Start();
-    if (thread == null) {
-      thread = new Thread(this, ThreadName + Globals.RandomGenerator.nextDouble());
-    }
+    thread = new Thread(this, ThreadName + Globals.RandomGenerator.nextDouble());
+    this.KeepGoing = true;
     try {
       thread.start();
     } catch (Exception ex) {
       boolean nop = true;
     }
+  }
+  /* ********************************************************************************* */
+  public void start(OffsetBox obx) {
+    System.out.println("Starting " + ThreadName);
+    this.PleaseStop();
+    while (this.RootPlayer != null) {// stall until the singer is deleted
+    }
+    wave_render.Init(0, TimeIncrement, this.MyProject.SampleRate);
+    RootPlayer = obx.Spawn_Singer();
+    RootPlayer.Compound(obx);
+    RootPlayer.Start();
+    //RootPlayer.Skip_To(obx.UnMapTime(0));
+
+    this.audio.Start();
+    thread = new Thread(this, ThreadName + Globals.RandomGenerator.nextDouble());
+    System.out.println("thread.getName():" + thread.getName());
+    this.CurrentTime = obx.UnMapTime(0);
+    this.FinalTime = obx.UnMapTime(obx.GetContent().Get_Duration());
+    this.KeepGoing = true;
+    try {
+      thread.start();
+    } catch (Exception ex) {
+      boolean nop = true;
+    }
+  }
+  /* ********************************************************************************* */
+  public void Play_Branch(OffsetBox obx) {
+    this.CurrentTime = obx.UnMapTime(0);// obx is assumed to map between songlet and global
+    this.FinalTime = obx.UnMapTime(obx.GetContent().Get_Duration());
+    this.start(obx);
   }
   /* ********************************************************************************* */
   public void Play_All() {
@@ -75,21 +105,22 @@ public class GoLive implements Runnable, IDeletable {
   }
   /* ********************************************************************************* */
   @Override public void run() {
-    while (this.IsRunning) {// block until existing thread has finished
+    while (this.NumRunning > 0) {// block until existing threads have finished
     }
-    this.IsRunning = true;
+    this.NumRunning++;
     while (this.CurrentTime < this.FinalTime && this.KeepGoing) {
       this.wave_render.Rebase_Time(this.CurrentTime);
       this.RootPlayer.Render_To(CurrentTime, this.wave_render);
       this.wave_render.Amplify(0.2);
       audio.Feed(this.wave_render);
       this.CurrentTime += this.TimeIncrement;
+      this.CurrentTime = Math.min(this.CurrentTime, FinalTime - Globals.Fudge);
       if (this.RootPlayer.IsFinished) {
         break;
       }
     }
     this.stop();
-    this.IsRunning = false;
+    this.NumRunning--;
   }
   /* ********************************************************************************* */
   public void PleaseStop() {// polite stopping without interrupt
@@ -97,9 +128,11 @@ public class GoLive implements Runnable, IDeletable {
   }
   /* ********************************************************************************* */
   public void stop() {
+    this.PleaseStop();
     thread = null;// is there no way to reset a thread without destroying it? 
     audio.Stop();
     this.RootPlayer.Delete_Me();
+    this.RootPlayer = null;
   }
   /* ********************************************************************************* */
   @Override public boolean Create_Me() {// IDeletable
