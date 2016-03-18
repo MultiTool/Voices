@@ -1,5 +1,9 @@
 package voices;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.text.DecimalFormat;
 import java.util.Arrays;
 
 /**
@@ -263,6 +267,25 @@ public class Wave implements IDeletable {
   /* ********************************************************************************* */
   public double[] GetWave() {// just for testing. remove later
     return this.wave;
+  }
+  /* ********************************************************************************* */
+  public static void SaveWaveToCsv(String filename, Wave wave) {// export wave as csv
+    double val;
+    DecimalFormat df = new DecimalFormat("#.######");
+    try {
+      FileWriter writer = new FileWriter(filename, true);
+      for (int SampCnt = 0; SampCnt < wave.NumSamples; SampCnt++) {
+        val = wave.wave[SampCnt];
+        writer.write(df.format(val) + ", ");
+        //writer.write(String.format("%.06f", val) + ", ");
+        if ((SampCnt + 1) % 20 == 0) {
+          writer.write("\r\n");   // write new line
+        }
+      }
+      writer.close();
+    } catch (Exception ex) {
+      //System.exit(1);
+    }
   }
   /* ********************************************************************************* */
   @Override public boolean Create_Me() {// IDeletable

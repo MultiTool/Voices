@@ -196,6 +196,9 @@ public class MainGui {
       return this.MyProject.GraphicRoot.Content.Floater;
     }
     public void SetFloater(IDrawable.IMoveable floater) {
+      if (floater == null) {
+        //this.MyProject.GraphicRoot.Content.Floater.Delete_Me();
+      }
       this.MyProject.GraphicRoot.Content.Floater = floater;
     }
     public void MoveFloater(double ScreenX, double ScreenY) {
@@ -259,18 +262,23 @@ public class MainGui {
       }
     }
     /* ********************************************************************************* */
-    public void PlayWholeBranch() {
+    public void InstantPlayback(double XLoc) {
       if (this.Query.Leaf != null) {
         IDrawable.IMoveable Leaf = this.Query.Leaf;
         OffsetBox PlayHandle;
-        if (Leaf instanceof OffsetBox) {
+        if (Leaf instanceof OffsetBox) {// if we moved a whole songlet, play the whole thing
           OffsetBox obx = (OffsetBox) Leaf;// another cast! 
           PlayHandle = obx.GetContent().Spawn_OffsetBox();
-          //PlayHandle.Copy_From(obx);
           BigApp.MyThread.PleaseStop();
           this.Query.CompoundStack(this.MyProject.AudioRoot, PlayHandle);
           PlayHandle.Compound(obx);// Why do we have to do this? It should work without this extra compound. The final item in the stack should be obox iteslf. #kludgey
-          BigApp.MyThread.start(PlayHandle);
+          BigApp.MyThread.Play_Branch(PlayHandle);
+        } else {// if we just moved a voicepoint, play a small sample
+          double TimeRadius = 0.15;
+          double Time = this.MyProject.GraphicRoot.MapTime(XLoc);
+          BigApp.MyThread.Skip_To(Time - TimeRadius);
+          BigApp.MyThread.Assign_Stop_Time(Time + TimeRadius);
+          BigApp.MyThread.start();// to do: find the voicepoint's voice offsetbox and play through that, shutting out simultaneous voices. 
         }
       }
     }
@@ -322,7 +330,7 @@ public class MainGui {
       this.ScreenMouseY = me.getY();
       // to do: transform coordinates
       IDrawable.IMoveable floater = this.GetFloater();
-      if (true && floater != null) {
+      if (floater != null) {
         MoveFloater(this.ScreenMouseX, this.ScreenMouseY);
       }
     }
@@ -356,17 +364,7 @@ public class MainGui {
         }
         this.MyProject.Update_Guts();
         this.MyProject.GraphicRoot.UpdateBoundingBox();
-        //this.Query.UpdateBoundingBoxes();
-
-        if (false) {
-          this.PlayWholeBranch();
-        } else {
-          double TimeRadius = 0.15;
-          double Time = this.MyProject.GraphicRoot.MapTime(me.getX());
-          BigApp.MyThread.Skip_To(Time - TimeRadius);
-          BigApp.MyThread.Assign_Stop_Time(Time + TimeRadius);
-          BigApp.MyThread.start();
-        }
+        this.InstantPlayback(me.getX());
         this.repaint();
       }
     }

@@ -80,14 +80,13 @@ public class LoopBox implements ISonglet, IDrawable {
   }
   /* ********************************************************************************* */
   @Override public void Update_Guts(MetricsPacket metrics) {
-    if (this.FreshnessTimeStamp >= metrics.FreshnessTimeStamp) {// don't hit the same songlet twice on one update
-      return;
+    if (this.FreshnessTimeStamp < metrics.FreshnessTimeStamp) {// don't hit the same songlet twice on one update
+      this.Set_Project(metrics.MyProject);
+      metrics.MaxDuration = 0;
+      this.Content.Update_Guts(metrics);
+      this.FreshnessTimeStamp = metrics.FreshnessTimeStamp;
     }
-    this.Set_Project(metrics.MyProject);
-    metrics.MaxDuration = 0;
-    this.Content.Update_Guts(metrics);
     metrics.MaxDuration = this.MyDuration;
-    this.FreshnessTimeStamp = metrics.FreshnessTimeStamp;
   }
   /* ********************************************************************************* */
   @Override public void Sort_Me() {

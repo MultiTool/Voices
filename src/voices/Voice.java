@@ -659,8 +659,10 @@ public class Voice implements ISonglet, IDrawable, ITextable {
       double TimeRange = pnt1.TimeX - pnt0.TimeX;
       double SampleDuration = 1.0 / SRate;
       double FrequencyFactorStart = pnt0.GetFrequencyFactor();
-      FrequencyFactorStart *= Math.pow(2.0, this.Inherited_Octave);// inherit transposition 
-      double Octave0 = this.Inherited_Octave + pnt0.OctaveY, Octave1 = this.Inherited_Octave + pnt1.OctaveY;
+      // FrequencyFactorStart *= Math.pow(2.0, this.Inherited_Octave);// inherit transposition 
+      //double Octave0 = this.Inherited_Octave + pnt0.OctaveY, Octave1 = this.Inherited_Octave + pnt1.OctaveY;
+      FrequencyFactorStart *= Math.pow(2.0, this.InheritedMap.OctaveY);// inherit transposition 
+      double Octave0 = this.InheritedMap.OctaveY + pnt0.OctaveY, Octave1 = this.InheritedMap.OctaveY + pnt1.OctaveY;
       double OctaveRange = Octave1 - Octave0;
       if (OctaveRange == 0.0) {
         OctaveRange = Globals.Fudge;// Fudge to avoid div by 0 
@@ -698,8 +700,11 @@ public class Voice implements ISonglet, IDrawable, ITextable {
       double SubTime0 = pnt0.SubTime * this.InheritedMap.ScaleX;// tempo rescale
       double TimeRange = Time1 - Time0;
       double FrequencyFactorStart = pnt0.GetFrequencyFactor();
-      double FrequencyFactorInherited = Math.pow(2.0, this.Inherited_Octave);// inherit transposition 
-      double Octave0 = this.Inherited_Octave + pnt0.OctaveY, Octave1 = this.Inherited_Octave + pnt1.OctaveY;
+//      double FrequencyFactorInherited = Math.pow(2.0, this.Inherited_Octave);// inherit transposition 
+//      double Octave0 = this.Inherited_Octave + pnt0.OctaveY, Octave1 = this.Inherited_Octave + pnt1.OctaveY;
+      double FrequencyFactorInherited = Math.pow(2.0, this.InheritedMap.OctaveY);// inherit transposition 
+      double Octave0 = this.InheritedMap.OctaveY + pnt0.OctaveY, Octave1 = this.InheritedMap.OctaveY + pnt1.OctaveY;
+
       double OctaveRange = Octave1 - Octave0;
 //      if (OctaveRange == 0.0) {
 //        OctaveRange = Globals.Fudge;// Fudge to avoid div by 0 

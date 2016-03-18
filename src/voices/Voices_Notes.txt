@@ -683,13 +683,13 @@ Optimize voice polygon graphic clipping.
 Control points of a songlet should only show up when the songlet is selected. 
 Line widths should scale with zooming. 
 FX box, with sigmoid clipping, reverb etc. 
-Bug: Fix grabbing on scaled objects. 
 Shallow ScaleX just for groups.
 AlignX too?
 Maybe a button menu for each selection.
 GoodSynth: Pluck for prettier sound.
 GoodSynth: Wave table.
 ScaleX: fix grab handle problem with scaled objects.
+Bug: Fix grabbing on scaled objects. 
 
 
 

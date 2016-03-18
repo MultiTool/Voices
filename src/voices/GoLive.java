@@ -36,11 +36,11 @@ public class GoLive implements Runnable, IDeletable {
   /* ********************************************************************************* */
   public void start() {
     System.out.println("Starting " + ThreadName);
-    
+
     this.PleaseStop();
-    while (this.RootPlayer != null) {// stall until the singer is deleted
+    while (this.RootPlayer != null) {// block until the singer is deleted
+      System.out.println("Blocking until RootPlayer is null");
     }
-    
     //this.CurrentTime = 0;
     //FinalTime = this.MyProject.AudioRoot.GetContent().Get_Duration();
     wave_render.Init(0, TimeIncrement, this.MyProject.SampleRate);
@@ -59,22 +59,26 @@ public class GoLive implements Runnable, IDeletable {
     }
   }
   /* ********************************************************************************* */
-  public void start(OffsetBox obx) {
+  public void start(OffsetBox obx, double StartTime, double EndTime) {
+    //public void start(OffsetBox obx) {
     System.out.println("Starting " + ThreadName);
     this.PleaseStop();
-    while (this.RootPlayer != null) {// stall until the singer is deleted
+    while (this.RootPlayer != null) {// block until the singer is deleted
+      System.out.println("Blocking until RootPlayer is null");
     }
+
+    this.CurrentTime = StartTime;// obx.UnMapTime(0);
+    this.FinalTime = EndTime;// obx.UnMapTime(obx.GetContent().Get_Duration());
+
     wave_render.Init(0, TimeIncrement, this.MyProject.SampleRate);
     RootPlayer = obx.Spawn_Singer();
     RootPlayer.Compound(obx);
     RootPlayer.Start();
-    //RootPlayer.Skip_To(obx.UnMapTime(0));
+    RootPlayer.Skip_To(StartTime);
 
     this.audio.Start();
     thread = new Thread(this, ThreadName + Globals.RandomGenerator.nextDouble());
     System.out.println("thread.getName():" + thread.getName());
-    this.CurrentTime = obx.UnMapTime(0);
-    this.FinalTime = obx.UnMapTime(obx.GetContent().Get_Duration());
     this.KeepGoing = true;
     try {
       thread.start();
@@ -84,9 +88,9 @@ public class GoLive implements Runnable, IDeletable {
   }
   /* ********************************************************************************* */
   public void Play_Branch(OffsetBox obx) {
-    this.CurrentTime = obx.UnMapTime(0);// obx is assumed to map between songlet and global
-    this.FinalTime = obx.UnMapTime(obx.GetContent().Get_Duration());
-    this.start(obx);
+    double StartTime = obx.UnMapTime(0);// obx is assumed to map between songlet and global
+    double EndTime = obx.UnMapTime(obx.GetContent().Get_Duration());
+    this.start(obx, StartTime, EndTime);
   }
   /* ********************************************************************************* */
   public void Play_All() {
@@ -106,19 +110,23 @@ public class GoLive implements Runnable, IDeletable {
   /* ********************************************************************************* */
   @Override public void run() {
     while (this.NumRunning > 0) {// block until existing threads have finished
+      System.out.println("Blocking on threads:" + this.NumRunning);
     }
     this.NumRunning++;
     while (this.CurrentTime < this.FinalTime && this.KeepGoing) {
-      this.wave_render.Rebase_Time(this.CurrentTime);
       this.RootPlayer.Render_To(CurrentTime, this.wave_render);
       this.wave_render.Amplify(0.2);
       audio.Feed(this.wave_render);
       this.CurrentTime += this.TimeIncrement;
-      this.CurrentTime = Math.min(this.CurrentTime, FinalTime - Globals.Fudge);
+      //this.CurrentTime = Math.min(this.CurrentTime, FinalTime - Globals.Fudge);// #kludgey
       if (this.RootPlayer.IsFinished) {
         break;
       }
     }
+    this.RootPlayer.Render_To(this.FinalTime, this.wave_render);// play last little bit, if any
+    this.wave_render.Amplify(0.2);
+    audio.Feed(this.wave_render);
+
     this.stop();
     this.NumRunning--;
   }

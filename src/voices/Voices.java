@@ -1,6 +1,7 @@
 package voices;
 
 import java.awt.geom.Point2D;
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 //import voices.VoiceBase.Point;
@@ -18,6 +19,14 @@ public class Voices {
    */
   /* ********************************************************************************* */
   public static void main(String[] args) {
+    if (false){
+      Wave wav = new Wave();
+      String flpath = new File("").getAbsolutePath();
+      Audio.Read(flpath + "\\..\\samples\\trombone_C4_15_pianissimo_normal_shortloop.wav", wav);
+      wav.Normalize();
+      Wave.SaveWaveToCsv("horn.csv", wav);
+      return;
+    }
     if (false){
       NoteMaker.Wave_Test();
       return;
