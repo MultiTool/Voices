@@ -13,10 +13,10 @@ public interface ITextable {// DIY Json ISerializable - more control
   // hmm if we can't override statics, maybe every object can create a single MeFactory class that makes one of the parent object. 
   //void InhaleMySoul(JsonParse.Phrase phrase);
 
-  void ShallowLoad(JsonParse.Phrase phrase);// just fill in primitive fields that belong to this object, don't follow up pointers.
   void Textify(StringBuilder sb);// to do: pass a collision table parameter
-  JsonParse.Phrase Export(CollisionTable CTable);// to do: pass a collision table parameter
-
+  JsonParse.Phrase Export(CollisionTable HitTable);// to do: pass a collision table parameter
+  void ShallowLoad(JsonParse.Phrase phrase);// just fill in primitive fields that belong to this object, don't follow up pointers.
+  void Consume(JsonParse.Phrase phrase);// Fill in all the values of an already-created object, including deep pointers.
 //  IFactory GetMyFactory();// this always returns a singleton of IFactory, one for each class declaration. 
 //  
   public interface IFactory {// probably overkill. will try delegate pointers to static methods instead
@@ -50,11 +50,18 @@ public interface ITextable {// DIY Json ISerializable - more control
         }
         return retval;
       }
-      public static <ThingType extends ITextable> ArrayList<JsonParse.Phrase> MakeArray(CollisionTable CTable, ArrayList<ThingType> Things) {
+      public static JsonParse.Phrase LookUpField(HashMap<String, JsonParse.Phrase> Fields, String FieldName) {
+        if (Fields.containsKey(FieldName)) {
+          return Fields.get(FieldName);
+        } else {
+          return null;
+        }
+      }
+      public static <ThingType extends ITextable> ArrayList<JsonParse.Phrase> MakeArray(CollisionTable HitTable, ArrayList<ThingType> Things) {
         ArrayList<JsonParse.Phrase> stuff = new ArrayList<JsonParse.Phrase>();
         int len = Things.size();
         for (int cnt = 0; cnt < len; cnt++) {
-          stuff.add(Things.get(cnt).Export(CTable));
+          stuff.add(Things.get(cnt).Export(HitTable));
         }
         return stuff;
       }
@@ -71,7 +78,7 @@ public interface ITextable {// DIY Json ISerializable - more control
   }
   public class CollisionTable {
     int ItemIdNum = 0;
-    public HashMap<ITextable, CollisionItem> table;
+    public HashMap<ITextable, CollisionItem> table = new HashMap<ITextable, CollisionItem>();
     public void InsertNewItem(ITextable Key) {
       CollisionItem ci = new CollisionItem();
       ci.ItemPtr = "some unique counter" + ItemIdNum;

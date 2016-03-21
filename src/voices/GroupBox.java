@@ -13,8 +13,9 @@ import java.util.HashMap;
  *
  * @author MultiTool
  */
-public class GroupBox implements ISonglet, IDrawable {
+public class GroupBox implements ISonglet, IDrawable, ITextable {
   public ArrayList<OffsetBox> SubSongs = new ArrayList<OffsetBox>();
+  public String SubSongsName = "SubSongs";
   public double Duration = 0.0;
   private AudProject MyProject;
   public String MyName;// for debugging
@@ -380,13 +381,17 @@ public class GroupBox implements ISonglet, IDrawable {
   }
   @Override public void Delete_Me() {// IDeletable
     this.MyBounds.Delete_Me();
-    this.MyBounds = null;
+    this.MyBounds = null;// wreck everything to prevent accidental re-use
+    this.MyProject = null;
+    this.Wipe_SubSongs();
+    this.SubSongs = null;
+  }
+  public void Wipe_SubSongs() {
     int len = this.SubSongs.size();
     for (int cnt = 0; cnt < len; cnt++) {
       this.SubSongs.get(cnt).Delete_Me();
     }
     this.SubSongs.clear();
-    this.SubSongs = null;
   }
   /* ********************************************************************************* */
   @Override public int Ref_Songlet() {// ISonglet Reference Counting: increment ref counter and return new value just for kicks
@@ -397,6 +402,60 @@ public class GroupBox implements ISonglet, IDrawable {
   }
   @Override public int GetRefCount() {// ISonglet Reference Counting: get number of references for serialization
     return this.RefCount;
+  }
+  /* ********************************************************************************* */
+  @Override public void Textify(StringBuilder sb) {// ITextable
+    // or maybe we'd rather export to a Phrase tree first? might be easier, less redundant { and } code. 
+    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+  }
+  @Override public JsonParse.Phrase Export(CollisionTable HitTable) {// ITextable
+    JsonParse.Phrase phrase = new JsonParse.Phrase();
+    HashMap<String, JsonParse.Phrase> Fields = (phrase.ChildrenHash = new HashMap<String, JsonParse.Phrase>());
+    Fields.put("MyName", IFactory.Utils.PackField(this.MyName));
+
+    // Save my array of songlets.
+    JsonParse.Phrase CPointsPhrase = new JsonParse.Phrase();
+    CPointsPhrase.ChildrenArray = IFactory.Utils.MakeArray(HitTable, this.SubSongs);
+    Fields.put(this.SubSongsName, CPointsPhrase);
+
+    Fields.put("MaxAmplitude", IFactory.Utils.PackField(this.MaxAmplitude));// can be calculated
+    Fields.put("MyBounds", MyBounds.Export(HitTable));// can be calculated
+
+    /*
+     public double Duration = 0.0;// can be calculated
+     private AudProject MyProject;// can be calculated
+     private int RefCount = 0;// can be calculated
+     */
+    return phrase;
+  }
+  @Override public void ShallowLoad(JsonParse.Phrase phrase) {// ITextable
+    HashMap<String, JsonParse.Phrase> Fields = phrase.ChildrenHash;
+    this.MyName = IFactory.Utils.GetField(Fields, "MyName", "GroupBoxName");
+    // this.MaxAmplitude = Double.parseDouble(IFactory.Utils.GetField(Fields, "MaxAmplitude", "0.125")); can be calculated
+  }
+  @Override public void Consume(JsonParse.Phrase phrase) {// ITextable - Fill in all the values of an already-created object, including deep pointers.
+    if (phrase == null) {
+      return;
+    }
+    this.ShallowLoad(phrase);
+    HashMap<String, JsonParse.Phrase> Fields = phrase.ChildrenHash;
+    JsonParse.Phrase PhrasePointList = IFactory.Utils.LookUpField(Fields, this.SubSongsName);
+    if (PhrasePointList != null && PhrasePointList.ChildrenArray != null) {
+      this.Wipe_SubSongs();
+      ISonglet SubSong;
+      JsonParse.Phrase PhrasePoint;
+      int len = PhrasePointList.ChildrenArray.size();
+      for (int pcnt = 0; pcnt < len; pcnt++) {
+        PhrasePoint = PhrasePointList.ChildrenArray.get(pcnt);
+// ugh, messy where deserialization meets object inheritance/polymorphism. each base object must own a factory that creates child objects?
+// or have a master registry of object types? that is a hashtable of factories, indexed by object type name
+//        SubSong = new VoicePoint();// to do: replace this with a factory owned by VoicePoint.
+//        SubSong.Consume(PhrasePoint);
+// also must really leave deserialization to SubSong's offset box. 
+// first the obox must figure out what type it is, then it deserializes its child. 
+//        this.Add_SubSong(SubSong);
+      }
+    }
   }
   /* ********************************************************************************* */
   public static class Group_Singer extends Singer {

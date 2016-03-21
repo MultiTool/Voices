@@ -405,6 +405,13 @@ public class NoteMaker {
     } else {
       NoteMaker.Create_Tapered_Voice(voz, NoteMaker.OffsetTime, TimeStep, 0, 1.0, 3);
     }
+    if (false) {// test serialization
+      ITextable.CollisionTable HitTable = new ITextable.CollisionTable();
+      JsonParse.Phrase phrase = voz.Export(HitTable);
+      voz.Delete_Me();
+      voz = new Voice();
+      voz.Consume(phrase);
+    }
     GroupBox ChildGbx = NoteMaker.Create_Note_Chain(voz, NumBeats, TimeStep);
     ChildGbx.MyName = "ChildGbx";
 

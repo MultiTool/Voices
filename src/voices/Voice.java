@@ -14,6 +14,7 @@ import java.util.HashMap;
 public class Voice implements ISonglet, IDrawable, ITextable {
   // collection of control points, each one having a pitch and a volume. rendering morphs from one cp to another. 
   public ArrayList<VoicePoint> CPoints = new ArrayList<VoicePoint>();
+  public String CPointsName = "ControlPoints";// for serialization
   protected AudProject MyProject;
   private double MaxAmplitude;
   private int FreshnessTimeStamp;
@@ -353,6 +354,9 @@ public class Voice implements ISonglet, IDrawable, ITextable {
   }
   @Override public void Delete_Me() {// IDeletable
     this.MyBounds.Delete_Me();
+    this.Wipe_CPoints();
+  }
+  public void Wipe_CPoints() {
     int len = this.CPoints.size();
     for (int cnt = 0; cnt < len; cnt++) {
       this.CPoints.get(cnt).Delete_Me();
@@ -370,25 +374,46 @@ public class Voice implements ISonglet, IDrawable, ITextable {
     return this.RefCount;
   }
   /* ********************************************************************************* */
-  @Override public void ShallowLoad(JsonParse.Phrase phrase) {// ITextable
-    HashMap<String, JsonParse.Phrase> Fields = phrase.ChildrenHash;
-    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-  }
   @Override public void Textify(StringBuilder sb) {// ITextable
     // or maybe we'd rather export to a Phrase tree first? might be easier, less redundant { and } code. 
     throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
   }
-  @Override public JsonParse.Phrase Export(CollisionTable CTable) {// ITextable
+  @Override public JsonParse.Phrase Export(CollisionTable HitTable) {// ITextable
     JsonParse.Phrase phrase = new JsonParse.Phrase();
     HashMap<String, JsonParse.Phrase> Fields = (phrase.ChildrenHash = new HashMap<String, JsonParse.Phrase>());
     Fields.put("BaseFreq", IFactory.Utils.PackField(this.BaseFreq));
     Fields.put("MaxAmplitude", IFactory.Utils.PackField(this.MaxAmplitude));
-    Fields.put("MyBounds", MyBounds.Export(CTable));
+    Fields.put("MyBounds", MyBounds.Export(HitTable));
     // Save my array of control points.
     JsonParse.Phrase CPointsPhrase = new JsonParse.Phrase();
-    CPointsPhrase.ChildrenArray = IFactory.Utils.MakeArray(CTable, this.CPoints);
-    Fields.put("CPoints", CPointsPhrase);
+    CPointsPhrase.ChildrenArray = IFactory.Utils.MakeArray(HitTable, this.CPoints);
+    Fields.put(this.CPointsName, CPointsPhrase);
     return phrase;
+  }
+  @Override public void ShallowLoad(JsonParse.Phrase phrase) {// ITextable
+    HashMap<String, JsonParse.Phrase> Fields = phrase.ChildrenHash;
+    this.BaseFreq = Double.parseDouble(IFactory.Utils.GetField(Fields, "BaseFreq", Double.toString(Globals.BaseFreqC0)));
+    // this.MaxAmplitude = Double.parseDouble(IFactory.Utils.GetField(Fields, "MaxAmplitude", "0.125")); can be calculated
+  }
+  @Override public void Consume(JsonParse.Phrase phrase) {// ITextable - Fill in all the values of an already-created object, including deep pointers.
+    if (phrase == null) {
+      return;
+    }
+    this.ShallowLoad(phrase);
+    HashMap<String, JsonParse.Phrase> Fields = phrase.ChildrenHash;
+    JsonParse.Phrase PhrasePointList = IFactory.Utils.LookUpField(Fields, this.CPointsName);
+    if (PhrasePointList != null && PhrasePointList.ChildrenArray != null) {
+      this.Wipe_CPoints();
+      VoicePoint vp;
+      JsonParse.Phrase PhrasePoint;
+      int len = PhrasePointList.ChildrenArray.size();
+      for (int pcnt = 0; pcnt < len; pcnt++) {
+        PhrasePoint = PhrasePointList.ChildrenArray.get(pcnt);
+        vp = new VoicePoint();// to do: replace this with a factory owned by VoicePoint.
+        vp.Consume(PhrasePoint);
+        this.Add_Note(vp);
+      }
+    }
   }
   /* ********************************************************************************* */
   public static class Voice_OffsetBox extends OffsetBox {// location box to transpose in pitch, move in time, etc. 

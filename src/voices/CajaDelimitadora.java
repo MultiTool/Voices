@@ -168,28 +168,31 @@ public class CajaDelimitadora implements IDeletable, ITextable {// DIY BoundingB
     return false;
   }
   /* ********************************************************************************* */
-  @Override public void ShallowLoad(JsonParse.Phrase phrase) {// ITextable
-    HashMap<String, JsonParse.Phrase> Fields = phrase.ChildrenHash;
-    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-  }
   @Override public void Textify(StringBuilder sb) {// ITextable
     // or maybe we'd rather export to a Phrase tree first? might be easier, less redundant { and } code. 
     throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
   }
-  @Override public JsonParse.Phrase Export(CollisionTable CTable) {// ITextable
+  @Override public JsonParse.Phrase Export(CollisionTable HitTable) {// ITextable
     JsonParse.Phrase phrase = new JsonParse.Phrase();
     if (false) {// Caja always has a single owner when we save it. (do we ever really need to save it?  it is constantly regenerated.)
-      if (CTable.table.containsKey(this)) {
-        phrase.ItemPtr = CTable.table.get(this).ItemPtr;
+      if (HitTable.table.containsKey(this)) {
+        phrase.ItemPtr = HitTable.table.get(this).ItemPtr;
         return phrase;
       }
-      CTable.InsertNewItem(this);
-      phrase.ItemPtr = CTable.table.get(this).ItemPtr;
+      HitTable.InsertNewItem(this);
+      phrase.ItemPtr = HitTable.table.get(this).ItemPtr;
     }
     phrase.ChildrenHash = new HashMap<String, JsonParse.Phrase>();
     HashMap<String, JsonParse.Phrase> Fields = phrase.ChildrenHash;
     Fields.put("Min", IFactory.Utils.PackField(this.Min.toString()));
     Fields.put("Max", IFactory.Utils.PackField(this.Max.toString()));
     return phrase;
+  }
+  @Override public void ShallowLoad(JsonParse.Phrase phrase) {// ITextable
+    HashMap<String, JsonParse.Phrase> Fields = phrase.ChildrenHash;
+    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+  }
+  @Override public void Consume(JsonParse.Phrase phrase) {// ITextable - Fill in all the values of an already-created object, including deep pointers.
+    throw new UnsupportedOperationException("Not supported yet.");
   }
 }

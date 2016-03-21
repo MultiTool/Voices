@@ -130,25 +130,40 @@ public class VoicePoint extends MonkeyBox {
     this.DownHandle = null;
   }
   /* ********************************************************************************* */
-  @Override public void ShallowLoad(JsonParse.Phrase phrase) {// ITextable
-    HashMap<String, JsonParse.Phrase> Fields = phrase.ChildrenHash;
-    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-  }
   @Override public void Textify(StringBuilder sb) {// ITextable
     // or maybe we'd rather export to a Phrase tree first? might be easier, less redundant { and } code. 
     throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
   }
-  @Override public JsonParse.Phrase Export(CollisionTable CTable) {// ITextable
-    JsonParse.Phrase phrase = super.Export(CTable);
+  @Override public JsonParse.Phrase Export(CollisionTable HitTable) {// ITextable
+    JsonParse.Phrase phrase = super.Export(HitTable);
     HashMap<String, JsonParse.Phrase> Fields = phrase.ChildrenHash;
-    Fields.put("SubTime", IFactory.Utils.PackField(this.SubTime));
     Fields.put("OctavesPerLoudness", IFactory.Utils.PackField(this.OctavesPerLoudness));
-    Fields.put("UpHandle", this.UpHandle.Export(CTable));
-    Fields.put("DownHandle", this.DownHandle.Export(CTable));
+    Fields.put("SubTime", IFactory.Utils.PackField(this.SubTime));// can be calculated
+    Fields.put("UpHandle", this.UpHandle.Export(HitTable));
+    Fields.put("DownHandle", this.DownHandle.Export(HitTable));
+    this.UpHandle.Export(HitTable);
+    this.DownHandle.Export(HitTable);
     return phrase;
   }
+  @Override public void ShallowLoad(JsonParse.Phrase phrase) {// ITextable
+    super.ShallowLoad(phrase);
+    HashMap<String, JsonParse.Phrase> Fields = phrase.ChildrenHash;
+    this.OctavesPerLoudness = Double.parseDouble(IFactory.Utils.GetField(Fields, "OctavesPerLoudness", "0.125"));
+    if (false) {
+      this.SubTime = Double.parseDouble(IFactory.Utils.GetField(Fields, "SubTime", "0"));// can be calculated
+    }
+  }
+  @Override public void Consume(JsonParse.Phrase phrase) {// ITextable - Fill in all the values of an already-created object, including deep pointers.
+    if (phrase == null) {
+      return;
+    }
+    this.ShallowLoad(phrase);
+    HashMap<String, JsonParse.Phrase> Fields = phrase.ChildrenHash;
+    this.UpHandle.Consume(IFactory.Utils.LookUpField(Fields, "UpHandle"));
+    this.DownHandle.Consume(IFactory.Utils.LookUpField(Fields, "DownHandle"));
+  }
   /* ********************************************************************************* */
-  public static class LoudnessHandle implements IDrawable.IMoveable, IDeletable, ITextable {
+  public static class LoudnessHandle implements IDrawable.IMoveable, IDeletable, ITextable {// probably should not be ITextable
     public CajaDelimitadora MyBounds = new CajaDelimitadora();
     public VoicePoint ParentPoint;
     public double OctavesPerRadius = 0.007;
@@ -259,21 +274,29 @@ public class VoicePoint extends MonkeyBox {
       this.MyBounds = null;
     }
     /* ********************************************************************************* */
-    @Override public void ShallowLoad(JsonParse.Phrase phrase) {// ITextable
-      HashMap<String, JsonParse.Phrase> Fields = phrase.ChildrenHash;
-      throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
     @Override public void Textify(StringBuilder sb) {// ITextable
       // or maybe we'd rather export to a Phrase tree first? might be easier, less redundant { and } code. 
       throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
-    @Override public JsonParse.Phrase Export(CollisionTable CTable) {// ITextable
+    @Override public JsonParse.Phrase Export(CollisionTable HitTable) {// ITextable
       JsonParse.Phrase phrase = new JsonParse.Phrase();
       HashMap<String, JsonParse.Phrase> Fields = (phrase.ChildrenHash = new HashMap<String, JsonParse.Phrase>());
       Fields.put("OctavesPerRadius", IFactory.Utils.PackField(this.OctavesPerRadius));
-      Fields.put("IsSelected", IFactory.Utils.PackField(this.IsSelected));
-      Fields.put("MyBounds", this.MyBounds.Export(CTable));
+      if (false) {// can be calculated
+        Fields.put("IsSelected", IFactory.Utils.PackField(this.IsSelected));
+        Fields.put("MyBounds", this.MyBounds.Export(HitTable));
+      }
       return phrase;
+    }
+    @Override public void ShallowLoad(JsonParse.Phrase phrase) {// ITextable
+      HashMap<String, JsonParse.Phrase> Fields = phrase.ChildrenHash;
+      this.OctavesPerRadius = Double.parseDouble(IFactory.Utils.GetField(Fields, "OctavesPerRadius", "0.007"));
+    }
+    @Override public void Consume(JsonParse.Phrase phrase) {// ITextable - Fill in all the values of an already-created object, including deep pointers.
+      if (phrase == null) {
+        return;
+      }
+      this.ShallowLoad(phrase);
     }
   }
 }
