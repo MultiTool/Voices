@@ -13,9 +13,9 @@ import java.util.HashMap;
  *
  * @author MultiTool
  */
-public class GroupBox implements ISonglet, IDrawable, ITextable {
+public class GroupBox implements ISonglet, IDrawable {
   public ArrayList<OffsetBox> SubSongs = new ArrayList<OffsetBox>();
-  public String SubSongsName = "SubSongs";
+  public static String SubSongsName = "SubSongs";
   public double Duration = 0.0;
   private AudProject MyProject;
   public String MyName;// for debugging
@@ -385,6 +385,8 @@ public class GroupBox implements ISonglet, IDrawable, ITextable {
     this.MyProject = null;
     this.Wipe_SubSongs();
     this.SubSongs = null;
+    this.Duration = Double.NEGATIVE_INFINITY;
+    this.FreshnessTimeStamp = Integer.MAX_VALUE;
   }
   public void Wipe_SubSongs() {
     int len = this.SubSongs.size();
@@ -408,24 +410,26 @@ public class GroupBox implements ISonglet, IDrawable, ITextable {
     // or maybe we'd rather export to a Phrase tree first? might be easier, less redundant { and } code. 
     throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
   }
-  @Override public JsonParse.Phrase Export(CollisionTable HitTable) {// ITextable
+  @Override public JsonParse.Phrase Export(InstanceCollisionTable HitTable) {// ITextable
     JsonParse.Phrase phrase = new JsonParse.Phrase();
     HashMap<String, JsonParse.Phrase> Fields = (phrase.ChildrenHash = new HashMap<String, JsonParse.Phrase>());
     Fields.put("MyName", IFactory.Utils.PackField(this.MyName));
+
+    if (false) {
+      Fields.put("MaxAmplitude", IFactory.Utils.PackField(this.MaxAmplitude));// can be calculated
+      Fields.put("MyBounds", MyBounds.Export(HitTable));// can be calculated
+    }
+    /*
+     public double Duration = 0.0;// can be calculated
+     private AudProject MyProject;// can be calculated
+     private int RefCount = 0;// can be calculated
+     */
 
     // Save my array of songlets.
     JsonParse.Phrase CPointsPhrase = new JsonParse.Phrase();
     CPointsPhrase.ChildrenArray = IFactory.Utils.MakeArray(HitTable, this.SubSongs);
     Fields.put(this.SubSongsName, CPointsPhrase);
 
-    Fields.put("MaxAmplitude", IFactory.Utils.PackField(this.MaxAmplitude));// can be calculated
-    Fields.put("MyBounds", MyBounds.Export(HitTable));// can be calculated
-
-    /*
-     public double Duration = 0.0;// can be calculated
-     private AudProject MyProject;// can be calculated
-     private int RefCount = 0;// can be calculated
-     */
     return phrase;
   }
   @Override public void ShallowLoad(JsonParse.Phrase phrase) {// ITextable
@@ -433,27 +437,24 @@ public class GroupBox implements ISonglet, IDrawable, ITextable {
     this.MyName = IFactory.Utils.GetField(Fields, "MyName", "GroupBoxName");
     // this.MaxAmplitude = Double.parseDouble(IFactory.Utils.GetField(Fields, "MaxAmplitude", "0.125")); can be calculated
   }
-  @Override public void Consume(JsonParse.Phrase phrase) {// ITextable - Fill in all the values of an already-created object, including deep pointers.
-    if (phrase == null) {
+  @Override public void Consume(JsonParse.Phrase phrase, TextCollisionTable ExistingInstances) {// ITextable - Fill in all the values of an already-created object, including deep pointers.
+    if (phrase == null) {// ready for test
       return;
     }
     this.ShallowLoad(phrase);
-    HashMap<String, JsonParse.Phrase> Fields = phrase.ChildrenHash;
-    JsonParse.Phrase PhrasePointList = IFactory.Utils.LookUpField(Fields, this.SubSongsName);
-    if (PhrasePointList != null && PhrasePointList.ChildrenArray != null) {
+    JsonParse.Phrase ChildPhraseList = IFactory.Utils.LookUpField(phrase.ChildrenHash, this.SubSongsName);// array of subsongs object
+    if (ChildPhraseList != null && ChildPhraseList.ChildrenArray != null) {
       this.Wipe_SubSongs();
-      ISonglet SubSong;
-      JsonParse.Phrase PhrasePoint;
-      int len = PhrasePointList.ChildrenArray.size();
-      for (int pcnt = 0; pcnt < len; pcnt++) {
-        PhrasePoint = PhrasePointList.ChildrenArray.get(pcnt);
-// ugh, messy where deserialization meets object inheritance/polymorphism. each base object must own a factory that creates child objects?
-// or have a master registry of object types? that is a hashtable of factories, indexed by object type name
-//        SubSong = new VoicePoint();// to do: replace this with a factory owned by VoicePoint.
-//        SubSong.Consume(PhrasePoint);
-// also must really leave deserialization to SubSong's offset box. 
-// first the obox must figure out what type it is, then it deserializes its child. 
-//        this.Add_SubSong(SubSong);
+      OffsetBox obox;
+      JsonParse.Phrase ChildPhrase;
+      int len = ChildPhraseList.ChildrenArray.size();
+      for (int pcnt = 0; pcnt < len; pcnt++) {// iterate through the array
+        ChildPhrase = ChildPhraseList.ChildrenArray.get(pcnt);
+        String TypeName = IFactory.Utils.GetField(ChildPhrase.ChildrenHash, Globals.ObjectTypeName, "null");
+        IFactory factory = Globals.FactoryLUT.get(TypeName);// use factories to deal with polymorphism
+        ITextable child = factory.Create(ChildPhrase, ExistingInstances);// child.Consume(ChildPhrase, ExistingInstances);
+        obox = (OffsetBox) child;// another cast!
+        this.Add_SubSong(obox);
       }
     }
   }
@@ -588,7 +589,6 @@ public class GroupBox implements ISonglet, IDrawable, ITextable {
       this.NowPlaying.clear();
     }
   }
-
   /* ********************************************************************************* */
   public static class ScaleXHandle implements IDrawable.IMoveable, IDeletable {
     public CajaDelimitadora MyBounds = new CajaDelimitadora();
@@ -742,7 +742,9 @@ public class GroupBox implements ISonglet, IDrawable, ITextable {
     /* ********************************************************************************* */
     @Override public void BreakFromHerd() {// for compose time. detach from my songlet and attach to an identical but unlinked songlet
       GroupBox clone = this.Content.Deep_Clone_Me();
-      this.Content.UnRef_Songlet();
+      if (this.Content.UnRef_Songlet() <= 0) {
+        this.Content.Delete_Me();
+      }
       this.Content = clone;
       this.Content.Ref_Songlet();
     }
@@ -752,11 +754,59 @@ public class GroupBox implements ISonglet, IDrawable, ITextable {
     }
     @Override public void Delete_Me() {// IDeletable
       super.Delete_Me();
+      this.GroupScaleX = Double.NEGATIVE_INFINITY;
       if (this.Content != null) {
         if (this.Content.UnRef_Songlet() <= 0) {
           this.Content.Delete_Me();
           this.Content = null;
         }
+      }
+    }
+    /* ********************************************************************************* */
+    public static class Factory implements IFactory {// for serialization
+      @Override public Group_OffsetBox Create(JsonParse.Phrase phrase, TextCollisionTable ExistingInstances) {// under construction, this does not do anything yet
+        String ContentTxt = IFactory.Utils.GetField(phrase.ChildrenHash, OffsetBox.ContentName, "null");// get the 
+        GroupBox songlet;
+        /* 
+         oy, ContentTxt can be either the pointer to a library item, OR it can be the full-on songlet object in brackets {}.
+         UNLESS everything is a pointer to the library, and all descriptions are stored in the library.
+         anything that has more than one instance exists only in the library and is referenced.
+         so easy: before we look for an instance of this item we see if it is a pointer at all. if not, then create the songlet right here (do not add to instance table)
+         and attach it right here. repeat for all Factory.Create()s. 
+        
+         .if songlet is not a pointer{
+         .  create it
+         .  songlet.consume();
+         .} else if songlet is pointer {
+         .  if (!exists){
+         .    create and add to table.
+         .    songlet.consume();
+         .  }
+         .}
+         .obox = songlet.spawn_obox();
+         .obox.shallow_consume();
+         .return obox;
+        
+         */
+        if ((songlet = (GroupBox) ExistingInstances.GetInstance(ContentTxt)) == null) {// another cast!
+          songlet = new GroupBox();// if not instantiated, create one and save it
+          ExistingInstances.InsertUniqueInstance(ContentTxt, songlet);
+          JsonParse.Phrase SubPhrase = null;// broken! 
+          songlet.Consume(SubPhrase, ExistingInstances);
+          /*
+           where do we put obox.consume() and songlet.consume? 
+           obox consume can't call factory because obox must exist first, and factory creates obox.
+           obox factory must call consume. 
+           so do we move ExistingInstances collision detection to obox.consume()? 
+           group songlet consume calls obox factories. factories create oboxes. 
+           so factory Create() must call consume internally. 
+           each obox child songlet created can consume, no problem. 
+           but since each obox is created AFTER its songlet, it must consume afterward via shallow load probably. 
+           */
+        }
+        Group_OffsetBox obox = songlet.Spawn_OffsetBox();
+        obox.ShallowLoad(phrase);
+        return songlet.Spawn_OffsetBox();
       }
     }
   }

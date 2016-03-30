@@ -19,7 +19,8 @@ public class Voices {
    */
   /* ********************************************************************************* */
   public static void main(String[] args) {
-    if (false){
+    RegisterFactories();
+    if (false) {
       Wave wav = new Wave();
       String flpath = new File("").getAbsolutePath();
       Audio.Read(flpath + "\\..\\samples\\trombone_C4_15_pianissimo_normal_shortloop.wav", wav);
@@ -27,7 +28,7 @@ public class Voices {
       Wave.SaveWaveToCsv("horn.csv", wav);
       return;
     }
-    if (false){
+    if (false) {
       NoteMaker.Wave_Test();
       return;
     }
@@ -42,6 +43,16 @@ public class Voices {
     if (false) {
       Test_Synthesis();
     }
+  }
+  /* ********************************************************************************* */
+  public static void RegisterFactories() {
+    // Because you can't count on Java static variables being initialized EVER, we are initializing these explicitly here.
+    Globals.FactoryLUT.put("Graphic_OffsetBox", new GraphicBox.Graphic_OffsetBox.Factory());
+    Globals.FactoryLUT.put("Voice_OffsetBox", new Voice.Voice_OffsetBox.Factory());
+    Globals.FactoryLUT.put("SampleVoice_OffsetBox", new SampleVoice.SampleVoice_OffsetBox.Factory());
+    Globals.FactoryLUT.put("Group_OffsetBox", new GroupBox.Group_OffsetBox.Factory());
+    Globals.FactoryLUT.put("Loop_OffsetBox", new LoopBox.Loop_OffsetBox.Factory());
+    //Globals.FactoryLUT.put("OffsetBox", new OffsetBox.Factory());
   }
   /* ********************************************************************************* */
   public static AudProject Test_Synthesis() {

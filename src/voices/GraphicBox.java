@@ -5,6 +5,7 @@ import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.awt.Stroke;
+import java.util.HashMap;
 
 /**
  *
@@ -88,7 +89,7 @@ public class GraphicBox implements IDrawable, ISonglet, IDeletable {//
     MinY = Math.floor(ParentDC.ClipBounds.Min.y);
     MaxX = Math.ceil(ParentDC.ClipBounds.Max.x);
     MaxY = Math.ceil(ParentDC.ClipBounds.Max.y);
-    
+
     ScreenMinX = (int) ParentDC.GlobalOffset.UnMapTime(MinX);
     ScreenMinY = (int) ParentDC.GlobalOffset.UnMapPitch(MinY);
     ScreenMaxX = (int) ParentDC.GlobalOffset.UnMapTime(MaxX);
@@ -179,6 +180,30 @@ public class GraphicBox implements IDrawable, ISonglet, IDeletable {//
     return this.RefCount;
   }
   /* ********************************************************************************* */
+  @Override public void Textify(StringBuilder sb) {// ITextable
+    // or maybe we'd rather export to a Phrase tree first? might be easier, less redundant { and } code. 
+    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+  }
+  @Override public JsonParse.Phrase Export(InstanceCollisionTable HitTable) {// ITextable
+    JsonParse.Phrase phrase = new JsonParse.Phrase();
+    HashMap<String, JsonParse.Phrase> Fields = (phrase.ChildrenHash = new HashMap<String, JsonParse.Phrase>());
+//    Fields.put("BaseFreq", IFactory.Utils.PackField(this.BaseFreq));
+//    Fields.put("MaxAmplitude", IFactory.Utils.PackField(this.MaxAmplitude));
+    return phrase;
+  }
+  @Override public void ShallowLoad(JsonParse.Phrase phrase) {// ITextable
+    HashMap<String, JsonParse.Phrase> Fields = phrase.ChildrenHash;
+    //this.BaseFreq = Double.parseDouble(IFactory.Utils.GetField(Fields, "BaseFreq", Double.toString(Globals.BaseFreqC0)));
+    // this.MaxAmplitude = Double.parseDouble(IFactory.Utils.GetField(Fields, "MaxAmplitude", "0.125")); can be calculated
+  }
+  @Override public void Consume(JsonParse.Phrase phrase, TextCollisionTable ExistingInstances) {// ITextable - Fill in all the values of an already-created object, including deep pointers.
+    if (phrase == null) {
+      return;
+    }
+    this.ShallowLoad(phrase);
+    HashMap<String, JsonParse.Phrase> Fields = phrase.ChildrenHash;
+  }
+  /* ********************************************************************************* */
   // this is all junk that is never used
   @Override public Singer Spawn_Singer() {
     throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
@@ -215,7 +240,7 @@ public class GraphicBox implements IDrawable, ISonglet, IDeletable {//
     this.FreshnessTimeStamp = TimeStampNew;
   }
   /* ********************************************************************************* */
-  public class Graphic_OffsetBox extends OffsetBox {
+  public static class Graphic_OffsetBox extends OffsetBox {
     GraphicBox Content;
     /* ********************************************************************************* */
     public Graphic_OffsetBox() {
@@ -279,7 +304,9 @@ public class GraphicBox implements IDrawable, ISonglet, IDeletable {//
     /* ********************************************************************************* */
     @Override public void BreakFromHerd() {// for compose time. detach from my songlet and attach to an identical but unlinked songlet
       GraphicBox clone = this.Content.Deep_Clone_Me();
-      this.Content.UnRef_Songlet();
+      if (this.Content.UnRef_Songlet() <= 0) {
+        this.Content.Delete_Me();
+      }
       this.Content = clone;
       this.Content.Ref_Songlet();
     }
@@ -306,6 +333,18 @@ public class GraphicBox implements IDrawable, ISonglet, IDeletable {//
 
       this.ScaleX *= Scale;
       this.ScaleY *= Scale;
+    }
+    /* ********************************************************************************* */
+    public static class Factory implements IFactory {// for serialization
+      @Override public Graphic_OffsetBox Create(JsonParse.Phrase phrase, TextCollisionTable ExistingInstances) {// under construction, this does not do anything yet
+        String ContentTxt = IFactory.Utils.GetField(phrase.ChildrenHash, OffsetBox.ContentName, "null");
+        GraphicBox songlet;
+        if ((songlet = (GraphicBox) ExistingInstances.GetInstance(ContentTxt)) == null) {// another cast!
+          songlet = new GraphicBox();// if not instantiated, create one and save it
+          ExistingInstances.InsertUniqueInstance(ContentTxt, songlet);
+        }
+        return songlet.Spawn_OffsetBox();
+      }
     }
   }
 }

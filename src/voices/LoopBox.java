@@ -7,6 +7,7 @@ import java.awt.Stroke;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 /**
  *
@@ -260,6 +261,25 @@ public class LoopBox implements ISonglet, IDrawable {
     return this.RefCount;
   }
   /* ********************************************************************************* */
+  @Override public void Textify(StringBuilder sb) {// ITextable
+    // or maybe we'd rather export to a Phrase tree first? might be easier, less redundant { and } code. 
+    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+  }
+  @Override public JsonParse.Phrase Export(InstanceCollisionTable HitTable) {// ITextable
+    JsonParse.Phrase phrase = new JsonParse.Phrase();
+    return phrase;
+  }
+  @Override public void ShallowLoad(JsonParse.Phrase phrase) {// ITextable
+    HashMap<String, JsonParse.Phrase> Fields = phrase.ChildrenHash;
+  }
+  @Override public void Consume(JsonParse.Phrase phrase, TextCollisionTable ExistingInstances) {// ITextable - Fill in all the values of an already-created object, including deep pointers.
+    if (phrase == null) {
+      return;
+    }
+    this.ShallowLoad(phrase);
+    HashMap<String, JsonParse.Phrase> Fields = phrase.ChildrenHash;
+  }
+  /* ********************************************************************************* */
   public static class Loop_Singer extends Singer {
     protected LoopBox MySonglet;
     //private Loop_OffsetBox MyOffsetBox;
@@ -423,7 +443,9 @@ public class LoopBox implements ISonglet, IDrawable {
     /* ********************************************************************************* */
     @Override public void BreakFromHerd() {// for compose time. detach from my songlet and attach to an identical but unlinked songlet
       LoopBox clone = this.Content.Deep_Clone_Me();
-      this.Content.UnRef_Songlet();
+      if (this.Content.UnRef_Songlet() <= 0) {
+        this.Content.Delete_Me();
+      }
       this.Content = clone;
       this.Content.Ref_Songlet();
     }
@@ -469,6 +491,18 @@ public class LoopBox implements ISonglet, IDrawable {
           this.Content.Delete_Me();
           this.Content = null;
         }
+      }
+    }
+    /* ********************************************************************************* */
+    public static class Factory implements IFactory {// for serialization
+      @Override public Loop_OffsetBox Create(JsonParse.Phrase phrase, TextCollisionTable ExistingInstances) {// under construction, this does not do anything yet
+        String ContentTxt = IFactory.Utils.GetField(phrase.ChildrenHash, OffsetBox.ContentName, "null");
+        LoopBox songlet;
+        if ((songlet = (LoopBox) ExistingInstances.GetInstance(ContentTxt)) == null) {// another cast!
+          songlet = new LoopBox();// if not instantiated, create one and save it
+          ExistingInstances.InsertUniqueInstance(ContentTxt, songlet);
+        }
+        return songlet.Spawn_OffsetBox();
       }
     }
   }
@@ -577,6 +611,12 @@ public class LoopBox implements ISonglet, IDrawable {
       child.ContentLayer = this.ContentLayer.Deep_Clone_Me();// ??? 
       //throw new UnsupportedOperationException("Never clone a ghost!");
       return child;
+    }
+    /* ********************************************************************************* */
+    public static class Factory implements IFactory {// for serialization
+      @Override public Ghost_OffsetBox Create(JsonParse.Phrase phrase, TextCollisionTable ExistingInstances) {// under construction, this does not do anything yet
+        return null;
+      }
     }
   }
 }

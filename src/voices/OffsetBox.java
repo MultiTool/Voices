@@ -7,6 +7,7 @@ import java.awt.Paint;
 import java.awt.RadialGradientPaint;
 import java.awt.Stroke;
 import java.awt.geom.Point2D;
+import java.util.HashMap;
 import voices.ISonglet.Singer;
 
 /**
@@ -27,6 +28,8 @@ public class OffsetBox extends MonkeyBox { //implements IDrawable.IMoveable, IDe
 
   // graphics support, will move to separate object
 //  double OctavesPerRadius = 0.03;
+  public static Factory MyFactory = InitFactory();
+  public static String ContentName = "Content";
   /* ********************************************************************************* */
   public OffsetBox() {
     //this.Clear();
@@ -230,6 +233,73 @@ public class OffsetBox extends MonkeyBox { //implements IDrawable.IMoveable, IDe
           Content = null;// well maybe this makes a problem with the above plan. need a NullContent() ? 
         }
       }
+    }
+  }
+  /* ********************************************************************************* */
+  @Override public void Textify(StringBuilder sb) {// ITextable
+    super.Textify(sb);
+  }
+  @Override public JsonParse.Phrase Export(InstanceCollisionTable HitTable) {// ITextable
+    return super.Export(HitTable);
+  }
+  @Override public void ShallowLoad(JsonParse.Phrase phrase) {// ITextable
+    super.ShallowLoad(phrase);
+  }
+  @Override public void Consume(JsonParse.Phrase phrase, TextCollisionTable ExistingInstances) {// ITextable - Fill in all the values of an already-created object, including deep pointers.
+    if (phrase == null) {
+      return;
+    }
+    /*
+     only container songlets (eg group boxes) must do an object-type factory lookup for each of their children oboxes. 
+     all and only oboxes must do an instance lookup to see if their child songlet already exists in the instance hit table, on consume. 
+     all and only oboxes must provide custom factories. the instance lookup happens in these factories. 
+     */
+    this.ShallowLoad(phrase);
+    HashMap<String, JsonParse.Phrase> Fields = phrase.ChildrenHash;
+    JsonParse.Phrase ContentPhrase = IFactory.Utils.LookUpField(Fields, OffsetBox.ContentName);
+    if (ContentPhrase.ItemPtr != null) {
+      String ContentTxt = ContentPhrase.ItemPtr;
+      int strloc;// get pointer index from content 
+      if ((strloc = ContentTxt.indexOf(Globals.PtrPrefix)) >= 0) {
+        strloc += Globals.PtrPrefix.length();
+        ContentTxt = ContentTxt.substring(strloc);
+        int ThingDex = Integer.parseInt(ContentTxt);
+        ITextable obj;
+        if ((obj = ExistingInstances.GetInstance(ContentTxt)) == null) { // do some collision testing here. 
+          // to do: create content here
+          ExistingInstances.InsertUniqueInstance(ContentTxt, null);
+        }
+      }
+    } else {// else the content is not a pointer, probably real data
+      //ContentPhrase.ChildrenHash;
+    }
+    /*
+    
+     now we have to decide if we want 
+     1. parse the library LUT first, then link them to their children later?  this is hard to do because real objects don't hold StringKeys to link to the LUT later. 
+     .  you have to create the tree depth-first. 
+     2. parse from the top, then every time we hit a child pointer
+     . a. look up that child in the library and link to it
+     . b. create that child if it is not in the library, link to it and add it to the library
+    
+    
+     ok, every obox gets a phrase - we already know it is the right one for our type
+     so we get it, and we have to decide if its Content object is a text pointer (to look up in collision table) or an actual object.
+     of course ALL songlets could be text pointers with everything stored in the collision table.
+     if so then create the whole collision table first and then do the hierarchy? 
+     */
+  }
+  /* ********************************************************************************* */
+  public static Factory InitFactory() {// for serialization
+    if (OffsetBox.MyFactory == null) {
+      OffsetBox.MyFactory = new Factory();
+    }
+    return OffsetBox.MyFactory;
+  }
+  /* ********************************************************************************* */
+  public static class Factory implements IFactory {// for serialization
+    @Override public OffsetBox Create(JsonParse.Phrase phrase, TextCollisionTable ExistingInstances) {// under construction, this does not do anything yet
+      return null;
     }
   }
 }

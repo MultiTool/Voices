@@ -11,14 +11,15 @@ import java.util.HashMap;
  *
  * @author MultiTool
  */
-public class Voice implements ISonglet, IDrawable, ITextable {
+public class Voice implements ISonglet, IDrawable {
   // collection of control points, each one having a pitch and a volume. rendering morphs from one cp to another. 
   public ArrayList<VoicePoint> CPoints = new ArrayList<VoicePoint>();
-  public String CPointsName = "ControlPoints";// for serialization
+  public static String CPointsName = "ControlPoints";// for serialization
   protected AudProject MyProject;
   private double MaxAmplitude;
   private int FreshnessTimeStamp;
   protected double BaseFreq = Globals.BaseFreqC0;
+  double ReverbDelay = 0.125 / 4.0;// delay in seconds
   private int RefCount = 0;
   // graphics support
   CajaDelimitadora MyBounds = new CajaDelimitadora();
@@ -35,7 +36,7 @@ public class Voice implements ISonglet, IDrawable, ITextable {
   }
   /* ********************************************************************************* */
   public Voice_OffsetBox Spawn_My_OffsetBox() {// for compose time
-    Voice_OffsetBox lbox = new Voice_OffsetBox();// Deliver a OffsetBox specific to this type of phrase.
+    Voice_OffsetBox lbox = new Voice_OffsetBox();// Deliver an OffsetBox specific to this type of phrase.
     lbox.VoiceContent = this;
     lbox.VoiceContent.Ref_Songlet();
     return lbox;
@@ -103,7 +104,7 @@ public class Voice implements ISonglet, IDrawable, ITextable {
       return 0;
     }
     VoicePoint Final_Point = this.CPoints.get(len - 1);
-    return Final_Point.TimeX;
+    return Final_Point.TimeX + this.ReverbDelay;
   }
   /* ********************************************************************************* */
   @Override public double Update_Durations() {
@@ -353,8 +354,13 @@ public class Voice implements ISonglet, IDrawable, ITextable {
     return true;
   }
   @Override public void Delete_Me() {// IDeletable
+    this.BaseFreq = Double.NEGATIVE_INFINITY;
+    this.MyProject = null;
+    this.MaxAmplitude = Double.NEGATIVE_INFINITY;
     this.MyBounds.Delete_Me();
+    this.MyBounds = null;
     this.Wipe_CPoints();
+    this.CPoints = null;
   }
   public void Wipe_CPoints() {
     int len = this.CPoints.size();
@@ -378,16 +384,26 @@ public class Voice implements ISonglet, IDrawable, ITextable {
     // or maybe we'd rather export to a Phrase tree first? might be easier, less redundant { and } code. 
     throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
   }
-  @Override public JsonParse.Phrase Export(CollisionTable HitTable) {// ITextable
+  @Override public JsonParse.Phrase Export(InstanceCollisionTable HitTable) {// ITextable
     JsonParse.Phrase phrase = new JsonParse.Phrase();
-    HashMap<String, JsonParse.Phrase> Fields = (phrase.ChildrenHash = new HashMap<String, JsonParse.Phrase>());
-    Fields.put("BaseFreq", IFactory.Utils.PackField(this.BaseFreq));
-    Fields.put("MaxAmplitude", IFactory.Utils.PackField(this.MaxAmplitude));
-    Fields.put("MyBounds", MyBounds.Export(HitTable));
-    // Save my array of control points.
-    JsonParse.Phrase CPointsPhrase = new JsonParse.Phrase();
-    CPointsPhrase.ChildrenArray = IFactory.Utils.MakeArray(HitTable, this.CPoints);
-    Fields.put(this.CPointsName, CPointsPhrase);
+    /*
+     if I'm already in the collision table, then set phrase's pointer to that key.
+     if I am not in the table, put me in the table and generate my new itemptr.
+     also generate my full phrase data and return it but store it for reference where? 
+     that is if another object needs to point to my serialized output, it needs a map from me to my pointer text. done.
+     */
+    if (HitTable.ContainsInstance(this)) {// already exists, just return pointer
+      phrase.ItemPtr = HitTable.GetItemPtr(this);// assign txt pointer to the existing library entry
+    } else {
+      HashMap<String, JsonParse.Phrase> Fields = this.SerializeMyContents(HitTable);
+      if (true) {// to do: if refcount equals 1
+        phrase.ChildrenHash = Fields;// If only one instance of this songlet exists, serialize it inline
+      } else {// If refcount is more than 1, serialize this into the library and just point to it.
+        CollisionItem ci = HitTable.InsertUniqueInstance(this);
+        ci.JsonPhrase.ChildrenHash = Fields;
+        phrase.ItemPtr = ci.ItemPtr; // assign txt pointer to the new library entry
+      }
+    }
     return phrase;
   }
   @Override public void ShallowLoad(JsonParse.Phrase phrase) {// ITextable
@@ -395,10 +411,11 @@ public class Voice implements ISonglet, IDrawable, ITextable {
     this.BaseFreq = Double.parseDouble(IFactory.Utils.GetField(Fields, "BaseFreq", Double.toString(Globals.BaseFreqC0)));
     // this.MaxAmplitude = Double.parseDouble(IFactory.Utils.GetField(Fields, "MaxAmplitude", "0.125")); can be calculated
   }
-  @Override public void Consume(JsonParse.Phrase phrase) {// ITextable - Fill in all the values of an already-created object, including deep pointers.
-    if (phrase == null) {
+  @Override public void Consume(JsonParse.Phrase phrase, TextCollisionTable ExistingInstances) {// ITextable - Fill in all the values of an already-created object, including deep pointers.
+    if (phrase == null) {// this function is tested and works
       return;
     }
+    // to do: before we even enter this function, first determine if phrase just has a txt pointer instead of a ChildrenHash. 
     this.ShallowLoad(phrase);
     HashMap<String, JsonParse.Phrase> Fields = phrase.ChildrenHash;
     JsonParse.Phrase PhrasePointList = IFactory.Utils.LookUpField(Fields, this.CPointsName);
@@ -410,14 +427,26 @@ public class Voice implements ISonglet, IDrawable, ITextable {
       for (int pcnt = 0; pcnt < len; pcnt++) {
         PhrasePoint = PhrasePointList.ChildrenArray.get(pcnt);
         vp = new VoicePoint();// to do: replace this with a factory owned by VoicePoint.
-        vp.Consume(PhrasePoint);
+        vp.Consume(PhrasePoint, ExistingInstances);
         this.Add_Note(vp);
       }
     }
   }
   /* ********************************************************************************* */
+  public HashMap<String, JsonParse.Phrase> SerializeMyContents(InstanceCollisionTable HitTable) {
+    HashMap<String, JsonParse.Phrase> Fields = new HashMap<String, JsonParse.Phrase>();
+    Fields.put("BaseFreq", IFactory.Utils.PackField(this.BaseFreq));
+    Fields.put("MaxAmplitude", IFactory.Utils.PackField(this.MaxAmplitude));
+    Fields.put("MyBounds", MyBounds.Export(HitTable));
+    JsonParse.Phrase CPointsPhrase = new JsonParse.Phrase();// Save my array of control points.
+    CPointsPhrase.ChildrenArray = IFactory.Utils.MakeArray(HitTable, this.CPoints);
+    Fields.put(this.CPointsName, CPointsPhrase);
+    return Fields;
+  }
+  /* ********************************************************************************* */
   public static class Voice_OffsetBox extends OffsetBox {// location box to transpose in pitch, move in time, etc. 
     public Voice VoiceContent;
+    public static String MyTypeName = "Voice_OffsetBox";// for serialization
     /* ********************************************************************************* */
     public Voice_OffsetBox() {
       super();
@@ -454,7 +483,9 @@ public class Voice implements ISonglet, IDrawable, ITextable {
     /* ********************************************************************************* */
     @Override public void BreakFromHerd() {// for compose time. detach from my songlet and attach to an identical but unlinked songlet
       Voice clone = this.VoiceContent.Deep_Clone_Me();
-      this.VoiceContent.UnRef_Songlet();
+      if (this.VoiceContent.UnRef_Songlet() <= 0) {
+        this.VoiceContent.Delete_Me();
+      }
       this.VoiceContent = clone;
       this.VoiceContent.Ref_Songlet();
     }
@@ -469,6 +500,18 @@ public class Voice implements ISonglet, IDrawable, ITextable {
           this.VoiceContent.Delete_Me();
           this.VoiceContent = null;
         }
+      }
+    }
+    /* ********************************************************************************* */
+    public static class Factory implements IFactory {// for serialization
+      @Override public Voice_OffsetBox Create(JsonParse.Phrase phrase, TextCollisionTable ExistingInstances) {// under construction, this does not do anything yet
+        String ContentTxt = IFactory.Utils.GetField(phrase.ChildrenHash, OffsetBox.ContentName, "null");
+        Voice songlet;
+        if ((songlet = (Voice) ExistingInstances.GetInstance(ContentTxt)) == null) {// another cast!
+          songlet = new Voice();// if not instantiated, create one and save it
+          ExistingInstances.InsertUniqueInstance(ContentTxt, songlet);
+        }
+        return songlet.Spawn_OffsetBox();
       }
     }
   }
@@ -602,6 +645,7 @@ public class Voice implements ISonglet, IDrawable, ITextable {
       if (false) {
         this.Distortion_Effect(wave, 10.0);
 //        this.Noise_Effect(wave);
+        Reverb_Effect(wave);
       }
       wave.NumSamples = this.Render_Sample_Count;
     }
@@ -630,6 +674,22 @@ public class Voice implements ISonglet, IDrawable, ITextable {
         double val = wave.Get(cnt) * gain;
         val = val / Math.pow(1 + Math.abs(Math.pow(val, power)), 1.0 / power);
         wave.Set(cnt, val);
+      }
+    }
+    /* ********************************************************************************* */
+    public void Reverb_Effect(Wave wave) {// not finished, need to extend the length of the sample 'wave' object
+      double Delay = this.MyVoice.ReverbDelay;// delay in seconds
+      double gain = 0.95;// diminish
+      int SampleDelay = (int) Math.round(Delay * (double) wave.SampleRate);
+      int PrevDex = 0;
+      double PrevVal, NowVal;
+      int len = wave.NumSamples;
+      for (int cnt = SampleDelay; cnt < len; cnt++) {
+        PrevVal = wave.Get(PrevDex);
+        NowVal = wave.Get(cnt);
+        NowVal = NowVal + (PrevVal * gain);
+        wave.Set(cnt, NowVal);
+        PrevDex++;
       }
     }
     /* ********************************************************************************* */

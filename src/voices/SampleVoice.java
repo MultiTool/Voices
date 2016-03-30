@@ -7,9 +7,23 @@ package voices;
 public class SampleVoice extends Voice {
   public Wave MySample = null;
   /* ********************************************************************************* */
+  public SampleVoice() {
+//    this.MySample = new Wave();// a default
+//    this.MySample.Ingest(Horn, Globals.SampleRate);
+//    this.BaseFreq = Globals.BaseFreqC0 / 265.0;//265.663;//264.072;//572.727;//265.663;
+    //Globals.BaseFreqC0 / 263.54581673306772913616450532531;// middle C-ish
+  }
+  /* ********************************************************************************* */
   public void AttachWaveSample(Wave Sample, double BaseFrequency) {
     MySample = Sample;
     this.BaseFreq = BaseFrequency;
+  }
+  /* ********************************************************************************* */
+  @Override public SampleVoice_OffsetBox Spawn_OffsetBox() {// for compose time
+    SampleVoice_OffsetBox lbox = new SampleVoice_OffsetBox();// Deliver an OffsetBox specific to this type of phrase.
+    lbox.VoiceContent = lbox.SampleVoiceContent = this;
+    lbox.VoiceContent.Ref_Songlet();
+    return lbox;
   }
   /* ********************************************************************************* */
   @Override public SampleVoice_Singer Spawn_My_Singer() {// for render time
@@ -77,9 +91,23 @@ public class SampleVoice extends Voice {
     /* ********************************************************************************* */
     @Override public void BreakFromHerd() {// for compose time. detach from my songlet and attach to an identical but unlinked songlet
       SampleVoice clone = this.SampleVoiceContent.Deep_Clone_Me();
-      this.SampleVoiceContent.UnRef_Songlet();
+      if (this.SampleVoiceContent.UnRef_Songlet() <= 0) {
+        this.SampleVoiceContent.Delete_Me();
+      }
       this.SampleVoiceContent = clone;
       this.SampleVoiceContent.Ref_Songlet();
+    }
+    /* ********************************************************************************* */
+    public static class Factory implements IFactory {// for serialization
+      @Override public SampleVoice_OffsetBox Create(JsonParse.Phrase phrase, TextCollisionTable ExistingInstances) {// under construction, this does not do anything yet
+        String ContentTxt = IFactory.Utils.GetField(phrase.ChildrenHash, OffsetBox.ContentName, "null");
+        SampleVoice songlet;
+        if ((songlet = (SampleVoice) ExistingInstances.GetInstance(ContentTxt)) == null) {// another cast!
+          songlet = new SampleVoice();// if not instantiated, create one and save it
+          ExistingInstances.InsertUniqueInstance(ContentTxt, songlet);
+        }
+        return songlet.Spawn_OffsetBox();
+      }
     }
   }
   /* ********************************************************************************* */

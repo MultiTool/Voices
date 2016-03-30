@@ -4,7 +4,7 @@ package voices;
  *
  * @author MultiTool
  */
-public interface ISonglet extends IDrawable, IDeletable {// Cancionita
+public interface ISonglet extends IDrawable, IDeletable, ITextable {// Cancionita
   /* ********************************************************************************* */
   public abstract static class Singer implements IDeletable {// Cantante
     // public static class Singer extends OffsetBox { // Cantante

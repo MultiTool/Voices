@@ -693,8 +693,23 @@ Bug: Fix grabbing on scaled objects.
 
 
 
+ugh, messy where deserialization meets object inheritance/polymorphism. each base object must own a factory that creates child objects?
+or have a master registry of object types? that is a hashtable of factories, indexed by object type name
+	SubSong = new VoicePoint();// to do: replace this with a factory owned by VoicePoint.
+	SubSong.Consume(PhrasePoint);
+also must really leave deserialization to SubSong's offset box. 
+first the obox must figure out what type it is, then it deserializes its child. 
 
-
+file format?
+{
+  "version":123,
+  "root":{ root structure here, or "ptr:x" },
+  "library":{
+    "ptr:0":{ songlet },
+    "ptr:1":{ songlet },
+    "ptr:2":{ songlet }
+  }
+}
 
 
 

@@ -75,6 +75,15 @@ public class Wave implements IDeletable {
     this.Current_Index = 0;
   }
   /* ********************************************************************************* */
+  public void Ingest(double[] Sample, int SampleRate0) {
+    int len = Sample.length;
+    double Duration = ((double) len) / (double) SampleRate0;
+    this.Init(0, Duration, SampleRate0);
+    for (int cnt = 0; cnt < len; cnt++) {
+      this.wave[cnt] = Sample[cnt];
+    }
+  }
+  /* ********************************************************************************* */
   public void Overdub(Wave other) {
     int MeStart, YouStart, MeStop, YouStop;
     if (other.StartDex > this.StartDex) {

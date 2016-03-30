@@ -172,16 +172,8 @@ public class CajaDelimitadora implements IDeletable, ITextable {// DIY BoundingB
     // or maybe we'd rather export to a Phrase tree first? might be easier, less redundant { and } code. 
     throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
   }
-  @Override public JsonParse.Phrase Export(CollisionTable HitTable) {// ITextable
+  @Override public JsonParse.Phrase Export(InstanceCollisionTable HitTable) {// ITextable
     JsonParse.Phrase phrase = new JsonParse.Phrase();
-    if (false) {// Caja always has a single owner when we save it. (do we ever really need to save it?  it is constantly regenerated.)
-      if (HitTable.table.containsKey(this)) {
-        phrase.ItemPtr = HitTable.table.get(this).ItemPtr;
-        return phrase;
-      }
-      HitTable.InsertNewItem(this);
-      phrase.ItemPtr = HitTable.table.get(this).ItemPtr;
-    }
     phrase.ChildrenHash = new HashMap<String, JsonParse.Phrase>();
     HashMap<String, JsonParse.Phrase> Fields = phrase.ChildrenHash;
     Fields.put("Min", IFactory.Utils.PackField(this.Min.toString()));
@@ -192,7 +184,7 @@ public class CajaDelimitadora implements IDeletable, ITextable {// DIY BoundingB
     HashMap<String, JsonParse.Phrase> Fields = phrase.ChildrenHash;
     throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
   }
-  @Override public void Consume(JsonParse.Phrase phrase) {// ITextable - Fill in all the values of an already-created object, including deep pointers.
+  @Override public void Consume(JsonParse.Phrase phrase, TextCollisionTable ExistingInstances) {// ITextable - Fill in all the values of an already-created object, including deep pointers.
     throw new UnsupportedOperationException("Not supported yet.");
   }
 }
