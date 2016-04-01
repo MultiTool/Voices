@@ -114,6 +114,7 @@ public class GoLive implements Runnable, IDeletable {
     }
     this.NumRunning++;
     while (this.CurrentTime < this.FinalTime && this.KeepGoing) {
+      System.out.println("CurrentTime:" + CurrentTime + " KeepGoing:" + this.KeepGoing);
       this.RootPlayer.Render_To(CurrentTime, this.wave_render);
       this.wave_render.Amplify(0.2);
       audio.Feed(this.wave_render);
@@ -123,10 +124,11 @@ public class GoLive implements Runnable, IDeletable {
         break;
       }
     }
-    this.RootPlayer.Render_To(this.FinalTime, this.wave_render);// play last little bit, if any
-    this.wave_render.Amplify(0.2);
-    audio.Feed(this.wave_render);
-
+    if (this.KeepGoing) {
+      this.RootPlayer.Render_To(this.FinalTime, this.wave_render);// play last little bit, if any
+      this.wave_render.Amplify(0.2);
+      audio.Feed(this.wave_render);
+    }
     this.stop();
     this.NumRunning--;
   }
@@ -139,8 +141,10 @@ public class GoLive implements Runnable, IDeletable {
     this.PleaseStop();
     thread = null;// is there no way to reset a thread without destroying it? 
     audio.Stop();
-    this.RootPlayer.Delete_Me();
-    this.RootPlayer = null;
+    if (this.RootPlayer != null) {
+      this.RootPlayer.Delete_Me();
+      this.RootPlayer = null;
+    }
   }
   /* ********************************************************************************* */
   @Override public boolean Create_Me() {// IDeletable

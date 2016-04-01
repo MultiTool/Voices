@@ -18,7 +18,7 @@ public class AudProject implements IDeletable {
   /* ********************************************************************************* */
   public AudProject() {
     this.GBox = new GraphicBox();
-    this.GraphicRoot = this.GBox.Spawn_My_OffsetBox();
+    this.GraphicRoot = this.GBox.Spawn_OffsetBox();
   }
   /* ********************************************************************************* */
   public void Wrap_For_Graphics(OffsetBox obox) {
@@ -164,7 +164,7 @@ public class AudProject implements IDeletable {
       obox.OctaveY = (4);
       GroupBox trunk = new GroupBox();
       trunk.Add_SubSong(obox);
-      obox = trunk.Spawn_My_OffsetBox();
+      obox = trunk.Spawn_OffsetBox();
       break;
     case 12:
       TimeStep = 0.125;
@@ -173,7 +173,7 @@ public class AudProject implements IDeletable {
       int TotalNotes = 1;
       NoteMaker.Create_Block_Voice(voz, Dur, 3);
       GroupBox gbx2 = NoteMaker.Create_Note_Chain(voz, TotalNotes, TimeStep);
-      obox = gbx2.Spawn_My_OffsetBox();
+      obox = gbx2.Spawn_OffsetBox();
       obox.TimeX += NoteMaker.OffsetTime;
       obox.OctaveY = 4;
       break;

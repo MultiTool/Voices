@@ -32,14 +32,9 @@ public class Voice implements ISonglet, IDrawable {
   }
   /* ********************************************************************************* */
   @Override public Voice_OffsetBox Spawn_OffsetBox() {// for compose time
-    return this.Spawn_My_OffsetBox();
-  }
-  /* ********************************************************************************* */
-  public Voice_OffsetBox Spawn_My_OffsetBox() {// for compose time
-    Voice_OffsetBox lbox = new Voice_OffsetBox();// Deliver an OffsetBox specific to this type of phrase.
-    lbox.VoiceContent = this;
-    lbox.VoiceContent.Ref_Songlet();
-    return lbox;
+    Voice_OffsetBox vbox = new Voice_OffsetBox();// Deliver an OffsetBox specific to this type of phrase.
+    vbox.Attach_Songlet(this);
+    return vbox;
   }
   /* ********************************************************************************* */
   @Override public Voice_Singer Spawn_Singer() {// for render time
@@ -401,7 +396,7 @@ public class Voice implements ISonglet, IDrawable {
       } else {// If refcount is more than 1, serialize this into the library and just point to it.
         CollisionItem ci = HitTable.InsertUniqueInstance(this);
         ci.JsonPhrase.ChildrenHash = Fields;
-        phrase.ItemPtr = ci.ItemPtr; // assign txt pointer to the new library entry
+        phrase.ItemPtr = ci.ItemTxtPtr; // assign txt pointer to the new library entry
       }
     }
     return phrase;
@@ -458,6 +453,11 @@ public class Voice implements ISonglet, IDrawable {
       return VoiceContent;
     }
     /* ********************************************************************************* */
+    public void Attach_Songlet(Voice songlet) {// for serialization
+      this.VoiceContent = songlet;
+      songlet.Ref_Songlet();
+    }
+    /* ********************************************************************************* */
     @Override public Voice_Singer Spawn_Singer() {// for render time.  always always always override this
       return this.Spawn_My_Singer();
     }
@@ -500,6 +500,39 @@ public class Voice implements ISonglet, IDrawable {
           this.VoiceContent.Delete_Me();
           this.VoiceContent = null;
         }
+      }
+    }
+    /* ********************************************************************************* */
+    @Override public JsonParse.Phrase Export(InstanceCollisionTable HitTable) {// ITextable
+      return super.Export(HitTable);
+    }
+    @Override public void ShallowLoad(JsonParse.Phrase phrase) {// ITextable
+      super.ShallowLoad(phrase);
+    }
+    @Override public void Consume(JsonParse.Phrase phrase, TextCollisionTable ExistingInstances) {// ITextable - Fill in all the values of an already-created object, including deep pointers.
+      if (phrase == null) {
+        return;
+      }
+      this.ShallowLoad(phrase);
+      String ContentTxt = IFactory.Utils.GetField(phrase.ChildrenHash, OffsetBox.ContentName, "null");// get my songlet node content - a TxtPtr
+      /*
+       first look up whatever phrase is in my songlet field
+       next, IF the phrase is a TxtPtr, use the library.
+       IF the phrase is not a TxtPtr, create a songlet and have it consume this phrase:
+       JsonParse.Phrase SongletPhrase = phrase.ChildrenHash.get(OffsetBox.ContentName);
+       songlet.Consume(SongletPhrase, ExistingInstances);
+       */
+      Voice songlet;
+      CollisionItem ci = ExistingInstances.GetItem(ContentTxt);// look up my songlet in the library
+      if (ci != null) {
+        if ((songlet = (Voice) ci.Item) == null) {// another cast!
+          songlet = new Voice();// if not instantiated, create one and save it
+          songlet.Consume(ci.JsonPhrase, ExistingInstances);
+          ci.Item = songlet;
+        }
+        this.Attach_Songlet(songlet);
+      } else {
+        // then the json is corrupt - null reference
       }
     }
     /* ********************************************************************************* */

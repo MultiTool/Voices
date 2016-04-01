@@ -73,7 +73,7 @@ public interface ITextable {// DIY Json ISerializable - more control
     }
   }
   public class CollisionItem {// do we really need this? 
-    public String ItemPtr;
+    public String ItemTxtPtr;
     public ITextable Item;
     JsonParse.Phrase JsonPhrase = new JsonParse.Phrase();// serialization of the ITextable Item
     // ci.JsonPhrase = new JsonParse.Phrase();
@@ -83,8 +83,8 @@ public interface ITextable {// DIY Json ISerializable - more control
     private HashMap<ITextable, CollisionItem> Instances = new HashMap<ITextable, CollisionItem>();
     public CollisionItem InsertUniqueInstance(ITextable Key) {
       CollisionItem ci = new CollisionItem();
-      //ci.ItemPtr = "some unique counter" + ItemIdNum;
-      ci.ItemPtr = Globals.PtrPrefix + ItemIdNum;
+      //ci.ItemTxtPtr = "some unique counter" + ItemIdNum;
+      ci.ItemTxtPtr = Globals.PtrPrefix + ItemIdNum;
       ci.Item = Key;
       this.Instances.put(Key, ci);// ITextable
       ItemIdNum++;
@@ -94,7 +94,7 @@ public interface ITextable {// DIY Json ISerializable - more control
       return this.Instances.containsKey(Key);
     }
     public String GetItemPtr(ITextable Key) {
-      return this.Instances.get(Key).ItemPtr;
+      return this.Instances.get(Key).ItemTxtPtr;
     }
   }
   /*
@@ -102,6 +102,8 @@ public interface ITextable {// DIY Json ISerializable - more control
    for import, we must map from stringptr to json phrase, and from stringptr to songlet pointer
    */
   public class TextCollisionTable {// contains list of instances of (usually) songlets for DEserialization
+    //CollisionItem
+    private HashMap<String, CollisionItem> Items = new HashMap<String, CollisionItem>();
     private HashMap<String, JsonParse.Phrase> RawDescriptions = new HashMap<String, JsonParse.Phrase>();
     private HashMap<String, ITextable> Instances = new HashMap<String, ITextable>();
     public void InsertJsonDescription(String KeyPtr, JsonParse.Phrase Item) {
@@ -119,6 +121,17 @@ public interface ITextable {// DIY Json ISerializable - more control
     }
     public boolean ContainsKey(ITextable Key) {
       return this.Instances.containsKey(Key);
+    }
+    //************
+    public void InsertUniqueItem(String KeyPtr, ITextable Item) {// for deserialization
+      CollisionItem ci = new CollisionItem();
+      ci.Item = Item;
+      ci.ItemTxtPtr = KeyPtr;
+      ci.JsonPhrase = null;
+      this.Items.put(KeyPtr, ci);// ITextable
+    }
+    public CollisionItem GetItem(String KeyPtr) {
+      return this.Items.get(KeyPtr);
     }
   }
 }

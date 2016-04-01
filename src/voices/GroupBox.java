@@ -130,14 +130,8 @@ public class GroupBox implements ISonglet, IDrawable {
   }
   /* ********************************************************************************* */
   @Override public Group_OffsetBox Spawn_OffsetBox() {// for compose time
-    return this.Spawn_My_OffsetBox();
-  }
-  /* ********************************************************************************* */
-  public Group_OffsetBox Spawn_My_OffsetBox() {// for compose time
     Group_OffsetBox lbox = new Group_OffsetBox();// Deliver an OffsetBox specific to this type of songlet.
-    lbox.Clear();
-    lbox.Content = this;
-    lbox.Content.Ref_Songlet();
+    lbox.Attach_Songlet(this);
     return lbox;
   }
   /* ********************************************************************************* */
@@ -705,6 +699,12 @@ public class GroupBox implements ISonglet, IDrawable {
     /* ********************************************************************************* */
     @Override public GroupBox GetContent() {
       return Content;
+    }
+    /* ********************************************************************************* */
+    public void Attach_Songlet(GroupBox songlet) {// for serialization
+      this.Clear();
+      this.Content = songlet;
+      songlet.Ref_Songlet();
     }
     /* ********************************************************************************* */
     public void RescaleGroupTimeX(double Factor) {

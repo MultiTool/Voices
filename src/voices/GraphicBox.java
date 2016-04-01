@@ -23,13 +23,8 @@ public class GraphicBox implements IDrawable, ISonglet, IDeletable {//
   }
   /* ********************************************************************************* */
   @Override public Graphic_OffsetBox Spawn_OffsetBox() {// for compose time
-    return this.Spawn_My_OffsetBox();
-  }
-  /* ********************************************************************************* */
-  public Graphic_OffsetBox Spawn_My_OffsetBox() {// for compose time
     Graphic_OffsetBox lbox = new Graphic_OffsetBox();// Deliver a OffsetBox specific to this type of phrase.
-    lbox.Content = this;
-    lbox.Content.Ref_Songlet();
+    lbox.Attach_Songlet(this);
     return lbox;
   }
   /* ********************************************************************************* */
@@ -257,6 +252,11 @@ public class GraphicBox implements IDrawable, ISonglet, IDeletable {//
     /* ********************************************************************************* */
     @Override public GraphicBox GetContent() {// Problem: Need to override this, but GraphicBox is not an ISonglet
       return this.Content;
+    }
+    /* ********************************************************************************* */
+    public void Attach_Songlet(GraphicBox songlet) {// for serialization
+      this.Content = songlet;
+      songlet.Ref_Songlet();
     }
     /* ********************************************************************************* */
     @Override public void Draw_Me(DrawingContext ParentDC) {// IDrawable

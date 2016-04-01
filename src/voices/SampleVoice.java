@@ -21,8 +21,7 @@ public class SampleVoice extends Voice {
   /* ********************************************************************************* */
   @Override public SampleVoice_OffsetBox Spawn_OffsetBox() {// for compose time
     SampleVoice_OffsetBox lbox = new SampleVoice_OffsetBox();// Deliver an OffsetBox specific to this type of phrase.
-    lbox.VoiceContent = lbox.SampleVoiceContent = this;
-    lbox.VoiceContent.Ref_Songlet();
+    lbox.Attach_Songlet(this);
     return lbox;
   }
   /* ********************************************************************************* */
@@ -64,6 +63,12 @@ public class SampleVoice extends Voice {
     /* ********************************************************************************* */
     @Override public Voice GetContent() {
       return VoiceContent;
+    }
+    /* ********************************************************************************* */
+    public void Attach_Songlet(SampleVoice songlet) {// for serialization
+      this.SampleVoiceContent = songlet;
+      this.VoiceContent = this.SampleVoiceContent = songlet;
+      songlet.Ref_Songlet();
     }
     /* ********************************************************************************* */
     @Override public SampleVoice_Singer Spawn_Singer() {// always always always override this

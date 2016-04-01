@@ -427,7 +427,7 @@ public class NoteMaker {
     }
     SampleVoice svoz = NoteMaker.Create_Horn();
     NoteMaker.Create_Tapered_Voice(svoz, NoteMaker.OffsetTime, TimeStep, 0, 1.0, 3);
-    if (false) {// test serialization
+    if (true) {// test serialization
       ITextable.InstanceCollisionTable HitTable = new ITextable.InstanceCollisionTable();
       JsonParse.Phrase phrase = voz.Export(HitTable);
       voz.Delete_Me();
@@ -437,7 +437,7 @@ public class NoteMaker {
     GroupBox ChildGbx = NoteMaker.Create_Note_Chain(voz, NumBeats, TimeStep);
     ChildGbx.MyName = "ChildGbx";
 
-    OffsetBox SObox = svoz.Spawn_My_OffsetBox();
+    OffsetBox SObox = svoz.Spawn_OffsetBox();
     SObox.OctaveY = NoteMaker.SemitoneFraction;
     ChildGbx.Add_SubSong(SObox);
 

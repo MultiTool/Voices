@@ -34,14 +34,8 @@ public class LoopBox implements ISonglet, IDrawable {
   }
   /* ********************************************************************************* */
   @Override public Loop_OffsetBox Spawn_OffsetBox() {
-    return this.Spawn_My_OffsetBox();
-  }
-  /* ********************************************************************************* */
-  public Loop_OffsetBox Spawn_My_OffsetBox() {// for compose time
     Loop_OffsetBox lbox = new Loop_OffsetBox();// Deliver an OffsetBox specific to this type of songlet.
-    lbox.Clear();
-    lbox.Content = this;
-    lbox.Content.Ref_Songlet();
+    lbox.Attach_Songlet(this);
     return lbox;
   }
   /* ********************************************************************************* */
@@ -416,6 +410,12 @@ public class LoopBox implements ISonglet, IDrawable {
     /* ********************************************************************************* */
     @Override public LoopBox GetContent() {
       return Content;
+    }
+    /* ********************************************************************************* */
+    public void Attach_Songlet(LoopBox songlet) {// for serialization
+      this.Clear();
+      this.Content = songlet;
+      songlet.Ref_Songlet();
     }
     /* ********************************************************************************* */
     @Override public ISonglet.Singer Spawn_Singer() {// always always always override this
