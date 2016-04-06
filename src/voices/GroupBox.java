@@ -765,48 +765,9 @@ public class GroupBox implements ISonglet, IDrawable {
     /* ********************************************************************************* */
     public static class Factory implements IFactory {// for serialization
       @Override public Group_OffsetBox Create(JsonParse.Phrase phrase, TextCollisionTable ExistingInstances) {// under construction, this does not do anything yet
-        String ContentTxt = IFactory.Utils.GetField(phrase.ChildrenHash, OffsetBox.ContentName, "null");// get the 
-        GroupBox songlet;
-        /* 
-         oy, ContentTxt can be either the pointer to a library item, OR it can be the full-on songlet object in brackets {}.
-         UNLESS everything is a pointer to the library, and all descriptions are stored in the library.
-         anything that has more than one instance exists only in the library and is referenced.
-         so easy: before we look for an instance of this item we see if it is a pointer at all. if not, then create the songlet right here (do not add to instance table)
-         and attach it right here. repeat for all Factory.Create()s. 
-        
-         .if songlet is not a pointer{
-         .  create it
-         .  songlet.consume();
-         .} else if songlet is pointer {
-         .  if (!exists){
-         .    create and add to table.
-         .    songlet.consume();
-         .  }
-         .}
-         .obox = songlet.spawn_obox();
-         .obox.shallow_consume();
-         .return obox;
-        
-         */
-        if ((songlet = (GroupBox) ExistingInstances.GetInstance(ContentTxt)) == null) {// another cast!
-          songlet = new GroupBox();// if not instantiated, create one and save it
-          ExistingInstances.InsertUniqueInstance(ContentTxt, songlet);
-          JsonParse.Phrase SubPhrase = null;// broken! 
-          songlet.Consume(SubPhrase, ExistingInstances);
-          /*
-           where do we put obox.consume() and songlet.consume? 
-           obox consume can't call factory because obox must exist first, and factory creates obox.
-           obox factory must call consume. 
-           so do we move ExistingInstances collision detection to obox.consume()? 
-           group songlet consume calls obox factories. factories create oboxes. 
-           so factory Create() must call consume internally. 
-           each obox child songlet created can consume, no problem. 
-           but since each obox is created AFTER its songlet, it must consume afterward via shallow load probably. 
-           */
-        }
-        Group_OffsetBox obox = songlet.Spawn_OffsetBox();
-        obox.ShallowLoad(phrase);
-        return songlet.Spawn_OffsetBox();
+        Group_OffsetBox obox = new Group_OffsetBox();
+        obox.Consume(phrase, ExistingInstances);
+        return obox;
       }
     }
   }

@@ -711,6 +711,13 @@ file format?
   }
 }
 
+} else {// If refcount is more than 1, serialize this into the library and just point to it.
+CollisionItem ci = HitTable.InsertUniqueInstance(this);
+ci.JsonPhrase = new JsonParse.Phrase();
+ci.JsonPhrase.ChildrenHash = Fields;
+phrase.Literal = ci.ItemTxtPtr; // assign txt pointer to the new library entry
+}
+
 
 
 

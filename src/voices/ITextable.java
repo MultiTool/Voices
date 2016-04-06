@@ -73,65 +73,64 @@ public interface ITextable {// DIY Json ISerializable - more control
     }
   }
   public class CollisionItem {// do we really need this? 
-    public String ItemTxtPtr;
-    public ITextable Item;
-    JsonParse.Phrase JsonPhrase = new JsonParse.Phrase();// serialization of the ITextable Item
-    // ci.JsonPhrase = new JsonParse.Phrase();
+    public String ItemTxtPtr;// Key, usually
+    public ITextable Item = null;
+    public JsonParse.Phrase JsonPhrase = null;// serialization of the ITextable Item
   }
-  public class InstanceCollisionTable {// contains list of instances of (usually) songlets for serialization
+  public class InstanceCollisionTable {// contains list of instances of (usually) songlet/phrase pairs for serialization
     int ItemIdNum = 0;
     private HashMap<ITextable, CollisionItem> Instances = new HashMap<ITextable, CollisionItem>();
     public CollisionItem InsertUniqueInstance(ITextable Key) {
       CollisionItem ci = new CollisionItem();
-      //ci.ItemTxtPtr = "some unique counter" + ItemIdNum;
       ci.ItemTxtPtr = Globals.PtrPrefix + ItemIdNum;
       ci.Item = Key;
       this.Instances.put(Key, ci);// ITextable
       ItemIdNum++;
       return ci;
     }
-    public boolean ContainsInstance(ITextable Key) {
-      return this.Instances.containsKey(Key);
-    }
-    public String GetItemPtr(ITextable Key) {
-      return this.Instances.get(Key).ItemTxtPtr;
+    public CollisionItem GetItem(ITextable KeyObj) {
+      return this.Instances.get(KeyObj);
     }
   }
-  /*
-   for export, we must map from songlet pointer to stringptr
-   for import, we must map from stringptr to json phrase, and from stringptr to songlet pointer
-   */
-  public class TextCollisionTable {// contains list of instances of (usually) songlets for DEserialization
-    //CollisionItem
+  public class TextCollisionTable {// contains list of instances of (usually) songlet/phrase pairs for DEserialization
     private HashMap<String, CollisionItem> Items = new HashMap<String, CollisionItem>();
-    private HashMap<String, JsonParse.Phrase> RawDescriptions = new HashMap<String, JsonParse.Phrase>();
-    private HashMap<String, ITextable> Instances = new HashMap<String, ITextable>();
-    public void InsertJsonDescription(String KeyPtr, JsonParse.Phrase Item) {
-      this.RawDescriptions.put(KeyPtr, Item);
-    }
-    public JsonParse.Phrase GetJsonDescription(String KeyPtr) {
-      return this.RawDescriptions.get(KeyPtr);
-    }
-    public void InsertUniqueInstance(String KeyPtr, ITextable Item) {
-      this.Instances.put(KeyPtr, Item);// ITextable
-    }
-    public ITextable GetInstance(String KeyPtr) {
-      return this.Instances.get(KeyPtr);
-      //if (this.table.containsKey(KeyPtr)) { return this.table.get(KeyPtr); } else { return null; }
-    }
-    public boolean ContainsKey(ITextable Key) {
-      return this.Instances.containsKey(Key);
-    }
-    //************
-    public void InsertUniqueItem(String KeyPtr, ITextable Item) {// for deserialization
+    public void InsertUniqueItem(String KeyTxt, ITextable Item) {// for deserialization
       CollisionItem ci = new CollisionItem();
       ci.Item = Item;
-      ci.ItemTxtPtr = KeyPtr;
+      ci.ItemTxtPtr = KeyTxt;
       ci.JsonPhrase = null;
-      this.Items.put(KeyPtr, ci);// ITextable
+      this.Items.put(KeyTxt, ci);// ITextable
     }
-    public CollisionItem GetItem(String KeyPtr) {
-      return this.Items.get(KeyPtr);
+    public CollisionItem GetItem(String KeyTxt) {
+      return this.Items.get(KeyTxt);
+    }
+  }
+  public class SuperCollider {// contains twice-indexed list of instances of (usually) songlet/phrase pairs for serialization and DEserialization
+    int ItemIdNum = 0;
+    private HashMap<ITextable, CollisionItem> Instances = new HashMap<ITextable, CollisionItem>();// serialization
+    private HashMap<String, CollisionItem> Items = new HashMap<String, CollisionItem>();// DEserialization
+    public CollisionItem InsertUniqueInstance(ITextable KeyObj) {// for serialization
+      CollisionItem ci = new CollisionItem();
+      ci.ItemTxtPtr = Globals.PtrPrefix + ItemIdNum;
+      ci.Item = KeyObj;
+      this.Instances.put(KeyObj, ci);// object is key
+      this.Items.put(ci.ItemTxtPtr, ci);// string is key
+      ItemIdNum++;
+      return ci;
+    }
+    public void InsertRecordedItem(String KeyTxt, JsonParse.Phrase Item) {// for deserialization
+      CollisionItem ci = new CollisionItem();
+      ci.Item = null;
+      ci.ItemTxtPtr = KeyTxt;
+      ci.JsonPhrase = null;
+      this.Items.put(KeyTxt, ci);// string is key
+      //this.Instances.put(Item, ci);// object is key - wait, this won't work
+    }
+    public CollisionItem GetItem(ITextable KeyObj) {
+      return this.Instances.get(KeyObj);
+    }
+    public CollisionItem GetItem(String KeyTxt) {
+      return this.Items.get(KeyTxt);
     }
   }
 }

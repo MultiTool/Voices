@@ -496,13 +496,9 @@ public class LoopBox implements ISonglet, IDrawable {
     /* ********************************************************************************* */
     public static class Factory implements IFactory {// for serialization
       @Override public Loop_OffsetBox Create(JsonParse.Phrase phrase, TextCollisionTable ExistingInstances) {// under construction, this does not do anything yet
-        String ContentTxt = IFactory.Utils.GetField(phrase.ChildrenHash, OffsetBox.ContentName, "null");
-        LoopBox songlet;
-        if ((songlet = (LoopBox) ExistingInstances.GetInstance(ContentTxt)) == null) {// another cast!
-          songlet = new LoopBox();// if not instantiated, create one and save it
-          ExistingInstances.InsertUniqueInstance(ContentTxt, songlet);
-        }
-        return songlet.Spawn_OffsetBox();
+        Loop_OffsetBox obox = new Loop_OffsetBox();
+        obox.Consume(phrase, ExistingInstances);
+        return obox;
       }
     }
   }

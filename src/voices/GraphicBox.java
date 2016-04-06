@@ -337,13 +337,9 @@ public class GraphicBox implements IDrawable, ISonglet, IDeletable {//
     /* ********************************************************************************* */
     public static class Factory implements IFactory {// for serialization
       @Override public Graphic_OffsetBox Create(JsonParse.Phrase phrase, TextCollisionTable ExistingInstances) {// under construction, this does not do anything yet
-        String ContentTxt = IFactory.Utils.GetField(phrase.ChildrenHash, OffsetBox.ContentName, "null");
-        GraphicBox songlet;
-        if ((songlet = (GraphicBox) ExistingInstances.GetInstance(ContentTxt)) == null) {// another cast!
-          songlet = new GraphicBox();// if not instantiated, create one and save it
-          ExistingInstances.InsertUniqueInstance(ContentTxt, songlet);
-        }
-        return songlet.Spawn_OffsetBox();
+        Graphic_OffsetBox obox = new Graphic_OffsetBox();
+        obox.Consume(phrase, ExistingInstances);
+        return obox;
       }
     }
   }

@@ -28,6 +28,14 @@ public class Globals {
   public static String ObjectTypeName = "ObjectTypeName";// for serialization
   public static HashMap<String, ITextable.IFactory> FactoryLUT = new HashMap<String, ITextable.IFactory>();// for serialization
   /* ********************************************************************************* */
+  public static boolean IsTxtPtr(String ContentTxt) {// for serialization
+    if (ContentTxt == null) {
+      return false;
+    }
+    int strloc;
+    return ((strloc = ContentTxt.indexOf(Globals.PtrPrefix)) >= 0);
+  }
+  /* ********************************************************************************* */
   public static Color ToAlpha(Color col, int Alpha) {
     return new Color(col.getRed(), col.getGreen(), col.getBlue(), Alpha);// rgba 
   }

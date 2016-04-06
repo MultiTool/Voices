@@ -105,13 +105,9 @@ public class SampleVoice extends Voice {
     /* ********************************************************************************* */
     public static class Factory implements IFactory {// for serialization
       @Override public SampleVoice_OffsetBox Create(JsonParse.Phrase phrase, TextCollisionTable ExistingInstances) {// under construction, this does not do anything yet
-        String ContentTxt = IFactory.Utils.GetField(phrase.ChildrenHash, OffsetBox.ContentName, "null");
-        SampleVoice songlet;
-        if ((songlet = (SampleVoice) ExistingInstances.GetInstance(ContentTxt)) == null) {// another cast!
-          songlet = new SampleVoice();// if not instantiated, create one and save it
-          ExistingInstances.InsertUniqueInstance(ContentTxt, songlet);
-        }
-        return songlet.Spawn_OffsetBox();
+        SampleVoice_OffsetBox obox = new SampleVoice_OffsetBox();
+        obox.Consume(phrase, ExistingInstances);
+        return obox;
       }
     }
   }

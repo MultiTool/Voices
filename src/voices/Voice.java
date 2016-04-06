@@ -381,24 +381,7 @@ public class Voice implements ISonglet, IDrawable {
   }
   @Override public JsonParse.Phrase Export(InstanceCollisionTable HitTable) {// ITextable
     JsonParse.Phrase phrase = new JsonParse.Phrase();
-    /*
-     if I'm already in the collision table, then set phrase's pointer to that key.
-     if I am not in the table, put me in the table and generate my new itemptr.
-     also generate my full phrase data and return it but store it for reference where? 
-     that is if another object needs to point to my serialized output, it needs a map from me to my pointer text. done.
-     */
-    if (HitTable.ContainsInstance(this)) {// already exists, just return pointer
-      phrase.ItemPtr = HitTable.GetItemPtr(this);// assign txt pointer to the existing library entry
-    } else {
-      HashMap<String, JsonParse.Phrase> Fields = this.SerializeMyContents(HitTable);
-      if (true) {// to do: if refcount equals 1
-        phrase.ChildrenHash = Fields;// If only one instance of this songlet exists, serialize it inline
-      } else {// If refcount is more than 1, serialize this into the library and just point to it.
-        CollisionItem ci = HitTable.InsertUniqueInstance(this);
-        ci.JsonPhrase.ChildrenHash = Fields;
-        phrase.ItemPtr = ci.ItemTxtPtr; // assign txt pointer to the new library entry
-      }
-    }
+    phrase.ChildrenHash = this.SerializeMyContents(HitTable);
     return phrase;
   }
   @Override public void ShallowLoad(JsonParse.Phrase phrase) {// ITextable
@@ -428,7 +411,7 @@ public class Voice implements ISonglet, IDrawable {
     }
   }
   /* ********************************************************************************* */
-  public HashMap<String, JsonParse.Phrase> SerializeMyContents(InstanceCollisionTable HitTable) {
+  public HashMap<String, JsonParse.Phrase> SerializeMyContents(InstanceCollisionTable HitTable) {// sort of the counterpart to ShallowLoad
     HashMap<String, JsonParse.Phrase> Fields = new HashMap<String, JsonParse.Phrase>();
     Fields.put("BaseFreq", IFactory.Utils.PackField(this.BaseFreq));
     Fields.put("MaxAmplitude", IFactory.Utils.PackField(this.MaxAmplitude));
@@ -504,47 +487,55 @@ public class Voice implements ISonglet, IDrawable {
     }
     /* ********************************************************************************* */
     @Override public JsonParse.Phrase Export(InstanceCollisionTable HitTable) {// ITextable
-      return super.Export(HitTable);
+      JsonParse.Phrase SelfPackage = super.Export(HitTable);// ready for test?
+      JsonParse.Phrase ChildPackage;
+      if (this.VoiceContent.GetRefCount() != 1) {// songlet exists in more than one place, use a pointer to library
+        ChildPackage = new JsonParse.Phrase();// multiple references, use a pointer to library instead
+        CollisionItem ci;// songlet is already in library, just create a child phrase and assign its textptr to that entry key
+        if ((ci = HitTable.GetItem(this.VoiceContent)) == null) {
+          ci = HitTable.InsertUniqueInstance(this.VoiceContent);// songlet is NOT in library, serialize it and add to library
+          ci.JsonPhrase = this.VoiceContent.Export(HitTable);
+        }
+        ChildPackage.Literal = ci.ItemTxtPtr;
+      } else {// songlet only exists in one place, make it inline.
+        ChildPackage = this.VoiceContent.Export(HitTable);
+      }
+      HashMap<String, JsonParse.Phrase> Fields = SelfPackage.ChildrenHash;
+      Fields.put(OffsetBox.ContentName, ChildPackage);
+      return SelfPackage;
     }
     @Override public void ShallowLoad(JsonParse.Phrase phrase) {// ITextable
       super.ShallowLoad(phrase);
     }
     @Override public void Consume(JsonParse.Phrase phrase, TextCollisionTable ExistingInstances) {// ITextable - Fill in all the values of an already-created object, including deep pointers.
-      if (phrase == null) {
+      if (phrase == null) {// ready for test?
         return;
       }
       this.ShallowLoad(phrase);
-      String ContentTxt = IFactory.Utils.GetField(phrase.ChildrenHash, OffsetBox.ContentName, "null");// get my songlet node content - a TxtPtr
-      /*
-       first look up whatever phrase is in my songlet field
-       next, IF the phrase is a TxtPtr, use the library.
-       IF the phrase is not a TxtPtr, create a songlet and have it consume this phrase:
-       JsonParse.Phrase SongletPhrase = phrase.ChildrenHash.get(OffsetBox.ContentName);
-       songlet.Consume(SongletPhrase, ExistingInstances);
-       */
+      JsonParse.Phrase SongletPhrase = phrase.ChildrenHash.get(OffsetBox.ContentName);// value of songlet field
+      String ContentTxt = SongletPhrase.Literal;
       Voice songlet;
-      CollisionItem ci = ExistingInstances.GetItem(ContentTxt);// look up my songlet in the library
-      if (ci != null) {
-        if ((songlet = (Voice) ci.Item) == null) {// another cast!
-          songlet = new Voice();// if not instantiated, create one and save it
-          songlet.Consume(ci.JsonPhrase, ExistingInstances);
-          ci.Item = songlet;
+      if (Globals.IsTxtPtr(ContentTxt)) {// if songlet content is just a pointer into the library
+        CollisionItem ci = ExistingInstances.GetItem(ContentTxt);// look up my songlet in the library
+        if (ci == null) {// then null reference even in file - the json is corrupt
+          return;// or throw an error
         }
-        this.Attach_Songlet(songlet);
+        if ((songlet = (Voice) ci.Item) == null) {// another cast!
+          ci.Item = songlet = new Voice();// if not instantiated, create one and save it
+          songlet.Consume(ci.JsonPhrase, ExistingInstances);
+        }
       } else {
-        // then the json is corrupt - null reference
+        songlet = new Voice();// songlet is inline, inside this one offsetbox
+        songlet.Consume(SongletPhrase, ExistingInstances);
       }
+      this.Attach_Songlet(songlet);
     }
     /* ********************************************************************************* */
     public static class Factory implements IFactory {// for serialization
       @Override public Voice_OffsetBox Create(JsonParse.Phrase phrase, TextCollisionTable ExistingInstances) {// under construction, this does not do anything yet
-        String ContentTxt = IFactory.Utils.GetField(phrase.ChildrenHash, OffsetBox.ContentName, "null");
-        Voice songlet;
-        if ((songlet = (Voice) ExistingInstances.GetInstance(ContentTxt)) == null) {// another cast!
-          songlet = new Voice();// if not instantiated, create one and save it
-          ExistingInstances.InsertUniqueInstance(ContentTxt, songlet);
-        }
-        return songlet.Spawn_OffsetBox();
+        Voice_OffsetBox obox = new Voice_OffsetBox();
+        obox.Consume(phrase, ExistingInstances);
+        return obox;
       }
     }
   }
