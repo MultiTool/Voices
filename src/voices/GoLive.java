@@ -9,7 +9,7 @@ import java.util.logging.Logger;
  */
 public class GoLive implements Runnable, IDeletable {
   private Thread thread;
-  private final String ThreadName;
+  private String ThreadName;
   public AudProject MyProject;
   //public double StartTime = 0;
   Audio audio;
@@ -153,5 +153,18 @@ public class GoLive implements Runnable, IDeletable {
   @Override public void Delete_Me() {// IDeletable
     this.stop();
     this.audio.Delete_Me();
+    this.thread = null;
+    this.ThreadName = null;
+    this.MyProject = null;
+    if (this.RootPlayer != null) {
+      this.RootPlayer.Delete_Me();
+      this.RootPlayer = null;
+    }
+    this.TimeIncrement = this.CurrentTime = this.FinalTime = Double.NEGATIVE_INFINITY;
+    if (this.wave_render != null) {
+      this.wave_render.Delete_Me();
+      this.wave_render = null;
+    }
+    this.KeepGoing = false;
   }
 }

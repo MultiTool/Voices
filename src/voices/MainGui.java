@@ -256,7 +256,8 @@ public class MainGui {
         if (Leaf instanceof OffsetBox) {
           OffsetBox obx = (OffsetBox) Leaf;// another cast! 
           BigApp.MyThread.PleaseStop();
-          obx.BreakFromHerd();
+          ITextable.CollisionLibrary HitTable = new ITextable.CollisionLibrary();
+          obx.BreakFromHerd(HitTable);
           this.repaint();
         }
       }
@@ -290,14 +291,15 @@ public class MainGui {
         OffsetBox FloatHandle, clone;
         if (Leaf instanceof OffsetBox) {
           OffsetBox obx = (OffsetBox) Leaf;// another cast! 
-          //FloatHandle = obx.Deep_Clone_Me();
+          //FloatHandle = obx.Deep_Clone_Me(HitTable);
           FloatHandle = obx.GetContent().Spawn_OffsetBox();
           FloatHandle.Copy_From(obx);
           if (false) {// one catch is that if this is a loopbox ghost handle we get a copy of the ghost instead of a native offsetbox
             ISonglet songlet = obx.GetContent();
             OffsetBox ObxCopy = songlet.Spawn_OffsetBox();
             ObxCopy.Copy_From(obx);// transfer original offsets
-            clone = ObxCopy.Deep_Clone_Me();
+            ITextable.CollisionLibrary HitTable = new ITextable.CollisionLibrary();
+            clone = ObxCopy.Deep_Clone_Me(HitTable);
           }
           this.Query.CompoundStack(this.MyProject.AudioRoot, FloatHandle);
           this.SetFloater(FloatHandle);// only deep clone handles to songlets. do not clone loudness handles. clone voicepoints? 

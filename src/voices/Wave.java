@@ -302,5 +302,7 @@ public class Wave implements IDeletable {
   }
   @Override public void Delete_Me() {// IDeletable
     this.wave = null;// without GC we would just free this memory
+    this.NumSamples = this.Current_Index = this.StartDex = this.SampleRate = Integer.MIN_VALUE;// wreck everything
+    this.StartTime = this.EndTime = Double.NEGATIVE_INFINITY;
   }
 }

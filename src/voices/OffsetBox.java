@@ -44,12 +44,12 @@ public class OffsetBox extends MonkeyBox { //implements IDrawable.IMoveable, IDe
     return child;
   }
   /* ********************************************************************************* */
-  @Override public OffsetBox Deep_Clone_Me() {// ICloneable
+  @Override public OffsetBox Deep_Clone_Me(ITextable.CollisionLibrary HitTable) {// ICloneable
     OffsetBox child = this.Clone_Me();
     return child;
   }
   /* ********************************************************************************* */
-  public void BreakFromHerd() {// virtual
+  public void BreakFromHerd(ITextable.CollisionLibrary HitTable) {// virtual
   }
   /* ********************************************************************************* */
   public void Copy_From(OffsetBox donor) {
@@ -72,7 +72,6 @@ public class OffsetBox extends MonkeyBox { //implements IDrawable.IMoveable, IDe
   /* ********************************************************************************* */
   public void Rescale_TimeX(double Factor) {// for compose time
     this.ScaleX = Factor;
-    //this.ScaleX *= Factor; // or this? 
   }
   /* ********************************************************************************* */
   public ISonglet GetContent() {// always always override this
@@ -224,7 +223,7 @@ public class OffsetBox extends MonkeyBox { //implements IDrawable.IMoveable, IDe
   }
   @Override public void Delete_Me() {// IDeletable
     this.MyBounds.Delete_Me();
-    this.MyBounds = null;// this one does not cause snox
+    this.MyBounds = null;// wreck everything
     if (false) {// we can probably enable this and remove it from everywhere else
       ISonglet Content = this.GetContent();
       if (Content != null) {
@@ -239,13 +238,13 @@ public class OffsetBox extends MonkeyBox { //implements IDrawable.IMoveable, IDe
   @Override public void Textify(StringBuilder sb) {// ITextable
     super.Textify(sb);
   }
-  @Override public JsonParse.Phrase Export(InstanceCollisionTable HitTable) {// ITextable
+  @Override public JsonParse.Phrase Export(CollisionLibrary HitTable) {// ITextable
     return super.Export(HitTable);// should never hit this line
   }
   @Override public void ShallowLoad(JsonParse.Phrase phrase) {// ITextable
     super.ShallowLoad(phrase);
   }
-  @Override public void Consume(JsonParse.Phrase phrase, TextCollisionTable ExistingInstances) {// ITextable - Fill in all the values of an already-created object, including deep pointers.
+  @Override public void Consume(JsonParse.Phrase phrase, CollisionLibrary ExistingInstances) {// ITextable - Fill in all the values of an already-created object, including deep pointers.
     this.ShallowLoad(phrase);// should never hit this line
   }
   /* ********************************************************************************* */
@@ -257,7 +256,7 @@ public class OffsetBox extends MonkeyBox { //implements IDrawable.IMoveable, IDe
   }
   /* ********************************************************************************* */
   public static class Factory implements IFactory {// for serialization
-    @Override public OffsetBox Create(JsonParse.Phrase phrase, TextCollisionTable ExistingInstances) {// under construction, this does not do anything yet
+    @Override public OffsetBox Create(JsonParse.Phrase phrase, CollisionLibrary ExistingInstances) {// under construction, this does not do anything yet
       return null;
     }
   }

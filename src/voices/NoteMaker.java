@@ -428,7 +428,7 @@ public class NoteMaker {
     SampleVoice svoz = NoteMaker.Create_Horn();
     NoteMaker.Create_Tapered_Voice(svoz, NoteMaker.OffsetTime, TimeStep, 0, 1.0, 3);
     if (true) {// test serialization
-      ITextable.InstanceCollisionTable HitTable = new ITextable.InstanceCollisionTable();
+      ITextable.CollisionLibrary HitTable = new ITextable.CollisionLibrary();
       JsonParse.Phrase phrase = voz.Export(HitTable);
       voz.Delete_Me();
       voz = new Voice();

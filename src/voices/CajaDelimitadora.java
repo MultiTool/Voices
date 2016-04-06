@@ -172,7 +172,7 @@ public class CajaDelimitadora implements IDeletable, ITextable {// DIY BoundingB
     // or maybe we'd rather export to a Phrase tree first? might be easier, less redundant { and } code. 
     throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
   }
-  @Override public JsonParse.Phrase Export(InstanceCollisionTable HitTable) {// ITextable
+  @Override public JsonParse.Phrase Export(CollisionLibrary HitTable) {// ITextable
     JsonParse.Phrase phrase = new JsonParse.Phrase();
     phrase.ChildrenHash = new HashMap<String, JsonParse.Phrase>();
     HashMap<String, JsonParse.Phrase> Fields = phrase.ChildrenHash;
@@ -184,7 +184,7 @@ public class CajaDelimitadora implements IDeletable, ITextable {// DIY BoundingB
     HashMap<String, JsonParse.Phrase> Fields = phrase.ChildrenHash;
     throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
   }
-  @Override public void Consume(JsonParse.Phrase phrase, TextCollisionTable ExistingInstances) {// ITextable - Fill in all the values of an already-created object, including deep pointers.
+  @Override public void Consume(JsonParse.Phrase phrase, CollisionLibrary ExistingInstances) {// ITextable - Fill in all the values of an already-created object, including deep pointers.
     throw new UnsupportedOperationException("Not supported yet.");
   }
 }

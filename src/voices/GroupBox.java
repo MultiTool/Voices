@@ -32,23 +32,25 @@ public class GroupBox implements ISonglet, IDrawable {
   }
   /* ********************************************************************************* */
   public OffsetBox Add_SubSong(ISonglet songlet, double TimeOffset, double OctaveOffset, double LoudnessFactor) {
-    songlet.Set_Project(this.MyProject);// child inherits project from me
     OffsetBox obox = songlet.Spawn_OffsetBox();
-    obox.MyParentSong = this;
-    obox.TimeX = (TimeOffset);
-    obox.OctaveY = (OctaveOffset);
-    obox.LoudnessFactor = (LoudnessFactor);
-    SubSongs.add(obox);
+    if (false) {// test serialization - gibberish right now, not expected to work
+      ITextable.CollisionLibrary HitTable = new ITextable.CollisionLibrary();
+      JsonParse.Phrase phrase = obox.Export(HitTable);
+      HitTable.Wipe_Songlets();
+      obox.GetContent().Delete_Me();// this might make a crash if unref IS working
+      obox.Delete_Me();// should be enough unrefs, right?
+      //obox = new WHAT??();// hmm need the right factory here
+      obox.Consume(phrase, HitTable);
+    }
+    this.Add_SubSong(obox, TimeOffset, OctaveOffset, LoudnessFactor);
     return obox;
   }
   /* ********************************************************************************* */
   public void Add_SubSong(OffsetBox obox, double TimeOffset, double OctaveOffset, double LoudnessFactor) {// Add a songlet with its offsetbox already created.
-    obox.GetContent().Set_Project(this.MyProject);// child inherits project from me
-    obox.MyParentSong = this;
     obox.TimeX = (TimeOffset);
     obox.OctaveY = (OctaveOffset);
     obox.LoudnessFactor = (LoudnessFactor);
-    SubSongs.add(obox);
+    this.Add_SubSong(obox);
   }
   /* ********************************************************************************* */
   public void Add_SubSong(OffsetBox obox) {// Add a songlet with its offsetbox already created and filled out.
@@ -276,7 +278,7 @@ public class GroupBox implements ISonglet, IDrawable {
     return child;
   }
   /* ********************************************************************************* */
-  @Override public GroupBox Deep_Clone_Me() {// ICloneable
+  @Override public GroupBox Deep_Clone_Me(ITextable.CollisionLibrary HitTable) {// ICloneable
     GroupBox child = new GroupBox();
     child.TraceText = "I am a clone";
     child.Copy_From(this);
@@ -284,7 +286,7 @@ public class GroupBox implements ISonglet, IDrawable {
     int len = this.SubSongs.size();
     for (int cnt = 0; cnt < len; cnt++) {
       SubSongHandle = this.SubSongs.get(cnt);
-      child.Add_SubSong(SubSongHandle.Deep_Clone_Me());
+      child.Add_SubSong(SubSongHandle.Deep_Clone_Me(HitTable));
     }
     return child;
   }
@@ -404,7 +406,7 @@ public class GroupBox implements ISonglet, IDrawable {
     // or maybe we'd rather export to a Phrase tree first? might be easier, less redundant { and } code. 
     throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
   }
-  @Override public JsonParse.Phrase Export(InstanceCollisionTable HitTable) {// ITextable
+  @Override public JsonParse.Phrase Export(CollisionLibrary HitTable) {// ITextable
     JsonParse.Phrase phrase = new JsonParse.Phrase();
     HashMap<String, JsonParse.Phrase> Fields = (phrase.ChildrenHash = new HashMap<String, JsonParse.Phrase>());
     Fields.put("MyName", IFactory.Utils.PackField(this.MyName));
@@ -431,7 +433,7 @@ public class GroupBox implements ISonglet, IDrawable {
     this.MyName = IFactory.Utils.GetField(Fields, "MyName", "GroupBoxName");
     // this.MaxAmplitude = Double.parseDouble(IFactory.Utils.GetField(Fields, "MaxAmplitude", "0.125")); can be calculated
   }
-  @Override public void Consume(JsonParse.Phrase phrase, TextCollisionTable ExistingInstances) {// ITextable - Fill in all the values of an already-created object, including deep pointers.
+  @Override public void Consume(JsonParse.Phrase phrase, CollisionLibrary ExistingInstances) {// ITextable - Fill in all the values of an already-created object, including deep pointers.
     if (phrase == null) {// ready for test
       return;
     }
@@ -669,7 +671,7 @@ public class GroupBox implements ISonglet, IDrawable {
       return child;
     }
     /* ********************************************************************************* */
-    @Override public ScaleXHandle Deep_Clone_Me() {// ICloneable
+    @Override public ScaleXHandle Deep_Clone_Me(ITextable.CollisionLibrary HitTable) {// ICloneable
       ScaleXHandle child = new ScaleXHandle();
       child.OctavesPerRadius = this.OctavesPerRadius;
       child.ParentPoint = this.ParentPoint;
@@ -733,15 +735,15 @@ public class GroupBox implements ISonglet, IDrawable {
       return child;
     }
     /* ********************************************************************************* */
-    @Override public Group_OffsetBox Deep_Clone_Me() {// ICloneable
+    @Override public Group_OffsetBox Deep_Clone_Me(ITextable.CollisionLibrary HitTable) {// ICloneable
       Group_OffsetBox child = new Group_OffsetBox();
       child.Copy_From(this);
-      child.Content = this.Content.Deep_Clone_Me();
+      child.Content = this.Content.Deep_Clone_Me(HitTable);
       return child;
     }
     /* ********************************************************************************* */
-    @Override public void BreakFromHerd() {// for compose time. detach from my songlet and attach to an identical but unlinked songlet
-      GroupBox clone = this.Content.Deep_Clone_Me();
+    @Override public void BreakFromHerd(ITextable.CollisionLibrary HitTable) {// for compose time. detach from my songlet and attach to an identical but unlinked songlet
+      GroupBox clone = this.Content.Deep_Clone_Me(HitTable);
       if (this.Content.UnRef_Songlet() <= 0) {
         this.Content.Delete_Me();
       }
@@ -764,7 +766,7 @@ public class GroupBox implements ISonglet, IDrawable {
     }
     /* ********************************************************************************* */
     public static class Factory implements IFactory {// for serialization
-      @Override public Group_OffsetBox Create(JsonParse.Phrase phrase, TextCollisionTable ExistingInstances) {// under construction, this does not do anything yet
+      @Override public Group_OffsetBox Create(JsonParse.Phrase phrase, CollisionLibrary ExistingInstances) {// under construction, this does not do anything yet
         Group_OffsetBox obox = new Group_OffsetBox();
         obox.Consume(phrase, ExistingInstances);
         return obox;

@@ -208,13 +208,13 @@ public class LoopBox implements ISonglet, IDrawable {
     return child;
   }
   /* ********************************************************************************* */
-  @Override public LoopBox Deep_Clone_Me() {// ICloneable
+  @Override public LoopBox Deep_Clone_Me(ITextable.CollisionLibrary HitTable) {// ICloneable
     LoopBox child = this.Clone_Me();
     child.Copy_From(this);
-    child.Add_Content(this.Content.Deep_Clone_Me());
+    child.Add_Content(this.Content.Deep_Clone_Me(HitTable));
     //child.Add_Content(this.ContentOBox.GetContent().Deep_Clone_Me());
-    //child.ContentOBox = this.ContentOBox.Deep_Clone_Me();
-    //child.Content = this.Content.Deep_Clone_Me();
+    //child.ContentOBox = this.ContentOBox.Deep_Clone_Me(HitTable);
+    //child.Content = this.Content.Deep_Clone_Me(HitTable);
     return child;
   }
   /* ********************************************************************************* */
@@ -259,14 +259,14 @@ public class LoopBox implements ISonglet, IDrawable {
     // or maybe we'd rather export to a Phrase tree first? might be easier, less redundant { and } code. 
     throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
   }
-  @Override public JsonParse.Phrase Export(InstanceCollisionTable HitTable) {// ITextable
+  @Override public JsonParse.Phrase Export(CollisionLibrary HitTable) {// ITextable
     JsonParse.Phrase phrase = new JsonParse.Phrase();
     return phrase;
   }
   @Override public void ShallowLoad(JsonParse.Phrase phrase) {// ITextable
     HashMap<String, JsonParse.Phrase> Fields = phrase.ChildrenHash;
   }
-  @Override public void Consume(JsonParse.Phrase phrase, TextCollisionTable ExistingInstances) {// ITextable - Fill in all the values of an already-created object, including deep pointers.
+  @Override public void Consume(JsonParse.Phrase phrase, CollisionLibrary ExistingInstances) {// ITextable - Fill in all the values of an already-created object, including deep pointers.
     if (phrase == null) {
       return;
     }
@@ -435,14 +435,14 @@ public class LoopBox implements ISonglet, IDrawable {
       return child;
     }
     /* ********************************************************************************* */
-    @Override public Loop_OffsetBox Deep_Clone_Me() {// ICloneable
+    @Override public Loop_OffsetBox Deep_Clone_Me(ITextable.CollisionLibrary HitTable) {// ICloneable
       Loop_OffsetBox child = this.Clone_Me();
-      child.Content = this.Content.Deep_Clone_Me();
+      child.Content = this.Content.Deep_Clone_Me(HitTable);
       return child;
     }
     /* ********************************************************************************* */
-    @Override public void BreakFromHerd() {// for compose time. detach from my songlet and attach to an identical but unlinked songlet
-      LoopBox clone = this.Content.Deep_Clone_Me();
+    @Override public void BreakFromHerd(ITextable.CollisionLibrary HitTable) {// for compose time. detach from my songlet and attach to an identical but unlinked songlet
+      LoopBox clone = this.Content.Deep_Clone_Me(HitTable);
       if (this.Content.UnRef_Songlet() <= 0) {
         this.Content.Delete_Me();
       }
@@ -495,7 +495,7 @@ public class LoopBox implements ISonglet, IDrawable {
     }
     /* ********************************************************************************* */
     public static class Factory implements IFactory {// for serialization
-      @Override public Loop_OffsetBox Create(JsonParse.Phrase phrase, TextCollisionTable ExistingInstances) {// under construction, this does not do anything yet
+      @Override public Loop_OffsetBox Create(JsonParse.Phrase phrase, CollisionLibrary ExistingInstances) {// under construction, this does not do anything yet
         Loop_OffsetBox obox = new Loop_OffsetBox();
         obox.Consume(phrase, ExistingInstances);
         return obox;
@@ -602,15 +602,15 @@ public class LoopBox implements ISonglet, IDrawable {
       return child;
     }
     /* ********************************************************************************* */
-    @Override public Ghost_OffsetBox Deep_Clone_Me() {// ICloneable
+    @Override public Ghost_OffsetBox Deep_Clone_Me(ITextable.CollisionLibrary HitTable) {// ICloneable
       Ghost_OffsetBox child = this.Clone_Me();
-      child.ContentLayer = this.ContentLayer.Deep_Clone_Me();// ??? 
+      child.ContentLayer = this.ContentLayer.Deep_Clone_Me(HitTable);// ??? 
       //throw new UnsupportedOperationException("Never clone a ghost!");
       return child;
     }
     /* ********************************************************************************* */
     public static class Factory implements IFactory {// for serialization
-      @Override public Ghost_OffsetBox Create(JsonParse.Phrase phrase, TextCollisionTable ExistingInstances) {// under construction, this does not do anything yet
+      @Override public Ghost_OffsetBox Create(JsonParse.Phrase phrase, CollisionLibrary ExistingInstances) {// under construction, this does not do anything yet
         return null;
       }
     }

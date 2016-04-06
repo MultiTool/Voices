@@ -42,10 +42,10 @@ public class SampleVoice extends Voice {
     return child;
   }
   /* ********************************************************************************* */
-  @Override public SampleVoice Deep_Clone_Me() {// ICloneable
+  @Override public SampleVoice Deep_Clone_Me(ITextable.CollisionLibrary HitTable) {// ICloneable
     SampleVoice child = new SampleVoice();
     child.Copy_From(this);
-    child.Copy_Children(this);
+    child.Copy_Children(this, HitTable);
     return child;
   }
   /* ********************************************************************************* */
@@ -88,14 +88,14 @@ public class SampleVoice extends Voice {
       return child;
     }
     /* ********************************************************************************* */
-    @Override public SampleVoice_OffsetBox Deep_Clone_Me() {// ICloneable
+    @Override public SampleVoice_OffsetBox Deep_Clone_Me(ITextable.CollisionLibrary HitTable) {// ICloneable
       SampleVoice_OffsetBox child = this.Clone_Me();
-      child.VoiceContent = child.SampleVoiceContent = this.SampleVoiceContent.Deep_Clone_Me();
+      child.VoiceContent = child.SampleVoiceContent = this.SampleVoiceContent.Deep_Clone_Me(HitTable);
       return child;
     }
     /* ********************************************************************************* */
-    @Override public void BreakFromHerd() {// for compose time. detach from my songlet and attach to an identical but unlinked songlet
-      SampleVoice clone = this.SampleVoiceContent.Deep_Clone_Me();
+    @Override public void BreakFromHerd(ITextable.CollisionLibrary HitTable) {// for compose time. detach from my songlet and attach to an identical but unlinked songlet
+      SampleVoice clone = this.SampleVoiceContent.Deep_Clone_Me(HitTable);
       if (this.SampleVoiceContent.UnRef_Songlet() <= 0) {
         this.SampleVoiceContent.Delete_Me();
       }
@@ -104,7 +104,7 @@ public class SampleVoice extends Voice {
     }
     /* ********************************************************************************* */
     public static class Factory implements IFactory {// for serialization
-      @Override public SampleVoice_OffsetBox Create(JsonParse.Phrase phrase, TextCollisionTable ExistingInstances) {// under construction, this does not do anything yet
+      @Override public SampleVoice_OffsetBox Create(JsonParse.Phrase phrase, CollisionLibrary ExistingInstances) {// under construction, this does not do anything yet
         SampleVoice_OffsetBox obox = new SampleVoice_OffsetBox();
         obox.Consume(phrase, ExistingInstances);
         return obox;

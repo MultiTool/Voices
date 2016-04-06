@@ -17,12 +17,12 @@ public interface IDrawable extends ICloneable {
   void UpdateBoundingBoxLocal();
   void GoFishing(Grabber Scoop);
   @Override IDrawable Clone_Me();
-  @Override IDrawable Deep_Clone_Me();
+  @Override IDrawable Deep_Clone_Me(ITextable.CollisionLibrary HitTable);
   public interface IMoveable extends IDrawable {// IMoveable is for things that can be selected, dragged, copied, pasted, deleted etc. through the UI.
     void MoveTo(double XLoc, double YLoc);
     boolean HitsMe(double XLoc, double YLoc);// click detection
     void SetSelected(boolean Selected);
     @Override IMoveable Clone_Me();
-    @Override IMoveable Deep_Clone_Me();
+    @Override IMoveable Deep_Clone_Me(ITextable.CollisionLibrary HitTable);
   }
 }

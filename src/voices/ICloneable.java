@@ -6,5 +6,5 @@ package voices;
  */
 public interface ICloneable {
   ICloneable Clone_Me();
-  ICloneable Deep_Clone_Me();
+  ICloneable Deep_Clone_Me(ITextable.CollisionLibrary HitTable);
 }

@@ -46,7 +46,7 @@ public class MonkeyBox implements IDrawable.IMoveable, IDeletable, ITextable {//
     return child;
   }
   /* ********************************************************************************* */
-  @Override public MonkeyBox Deep_Clone_Me() {// ICloneable
+  @Override public MonkeyBox Deep_Clone_Me(ITextable.CollisionLibrary HitTable) {// ICloneable
     MonkeyBox child = this.Clone_Me();
     return child;
   }
@@ -227,14 +227,17 @@ public class MonkeyBox implements IDrawable.IMoveable, IDeletable, ITextable {//
   }
   @Override public void Delete_Me() {// IDeletable
     this.MyBounds.Delete_Me();
-    // also uref my contents
+    this.MyBounds = null;
+    this.TimeX = this.OctaveY = this.LoudnessFactor = this.ScaleX = this.ScaleY = this.OctavesPerRadius = Double.NEGATIVE_INFINITY;
+    this.MyParentSong = null;
+    this.IsSelected = false;
   }
   /* ********************************************************************************* */
   @Override public void Textify(StringBuilder sb) {// ITextable
     // or maybe we'd rather export to a Phrase tree first? might be easier, less redundant { and } code. 
     throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
   }
-  @Override public JsonParse.Phrase Export(InstanceCollisionTable HitTable) {// ITextable
+  @Override public JsonParse.Phrase Export(CollisionLibrary HitTable) {// ITextable
     JsonParse.Phrase phrase = new JsonParse.Phrase();// in the MonkeyBox base class, we export only shallow values, no songlet children
     HashMap<String, JsonParse.Phrase> Fields = new HashMap<String, JsonParse.Phrase>();
     phrase.ChildrenHash = Fields;
@@ -259,7 +262,7 @@ public class MonkeyBox implements IDrawable.IMoveable, IDeletable, ITextable {//
       this.OctavesPerRadius = Double.parseDouble(IFactory.Utils.GetField(Fields, "OctavesPerRadius", "0.01"));
     }
   }
-  @Override public void Consume(JsonParse.Phrase phrase, TextCollisionTable ExistingInstances) {// ITextable - Fill in all the values of an already-created object, including deep pointers.
+  @Override public void Consume(JsonParse.Phrase phrase, CollisionLibrary ExistingInstances) {// ITextable - Fill in all the values of an already-created object, including deep pointers.
     if (phrase == null) {
       return;
     }

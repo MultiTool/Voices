@@ -60,10 +60,10 @@ public class GraphicBox implements IDrawable, ISonglet, IDeletable {//
     return child;
   }
   /* ********************************************************************************* */
-  @Override public GraphicBox Deep_Clone_Me() {// ICloneable
+  @Override public GraphicBox Deep_Clone_Me(ITextable.CollisionLibrary HitTable) {// ICloneable
     GraphicBox child = new GraphicBox();
     child.Copy_From(this);
-    child.ContentOBox = this.ContentOBox.Deep_Clone_Me();
+    child.ContentOBox = this.ContentOBox.Deep_Clone_Me(HitTable);
     return child;
   }
   /* ********************************************************************************* */
@@ -163,6 +163,9 @@ public class GraphicBox implements IDrawable, ISonglet, IDeletable {//
   @Override public void Delete_Me() {// IDeletable
     this.MyBounds.Delete_Me();
     this.ContentOBox.Delete_Me();
+    this.Floater = null;// wreck everything
+    this.RefCount = Integer.MIN_VALUE;
+    this.FreshnessTimeStamp = Integer.MIN_VALUE;
   }
   /* ********************************************************************************* */
   @Override public int Ref_Songlet() {// ISonglet Reference Counting: increment ref counter and return new value just for kicks
@@ -179,7 +182,7 @@ public class GraphicBox implements IDrawable, ISonglet, IDeletable {//
     // or maybe we'd rather export to a Phrase tree first? might be easier, less redundant { and } code. 
     throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
   }
-  @Override public JsonParse.Phrase Export(InstanceCollisionTable HitTable) {// ITextable
+  @Override public JsonParse.Phrase Export(CollisionLibrary HitTable) {// ITextable
     JsonParse.Phrase phrase = new JsonParse.Phrase();
     HashMap<String, JsonParse.Phrase> Fields = (phrase.ChildrenHash = new HashMap<String, JsonParse.Phrase>());
 //    Fields.put("BaseFreq", IFactory.Utils.PackField(this.BaseFreq));
@@ -191,7 +194,7 @@ public class GraphicBox implements IDrawable, ISonglet, IDeletable {//
     //this.BaseFreq = Double.parseDouble(IFactory.Utils.GetField(Fields, "BaseFreq", Double.toString(Globals.BaseFreqC0)));
     // this.MaxAmplitude = Double.parseDouble(IFactory.Utils.GetField(Fields, "MaxAmplitude", "0.125")); can be calculated
   }
-  @Override public void Consume(JsonParse.Phrase phrase, TextCollisionTable ExistingInstances) {// ITextable - Fill in all the values of an already-created object, including deep pointers.
+  @Override public void Consume(JsonParse.Phrase phrase, CollisionLibrary ExistingInstances) {// ITextable - Fill in all the values of an already-created object, including deep pointers.
     if (phrase == null) {
       return;
     }
@@ -295,15 +298,15 @@ public class GraphicBox implements IDrawable, ISonglet, IDeletable {//
       return child;
     }
     /* ********************************************************************************* */
-    @Override public Graphic_OffsetBox Deep_Clone_Me() {// ICloneable
+    @Override public Graphic_OffsetBox Deep_Clone_Me(ITextable.CollisionLibrary HitTable) {// ICloneable
       Graphic_OffsetBox child = this.Clone_Me();
-      child.Content = this.Content.Deep_Clone_Me();
+      child.Content = this.Content.Deep_Clone_Me(HitTable);
       child.Content.Ref_Songlet();
       return child;
     }
     /* ********************************************************************************* */
-    @Override public void BreakFromHerd() {// for compose time. detach from my songlet and attach to an identical but unlinked songlet
-      GraphicBox clone = this.Content.Deep_Clone_Me();
+    @Override public void BreakFromHerd(ITextable.CollisionLibrary HitTable) {// for compose time. detach from my songlet and attach to an identical but unlinked songlet
+      GraphicBox clone = this.Content.Deep_Clone_Me(HitTable);
       if (this.Content.UnRef_Songlet() <= 0) {
         this.Content.Delete_Me();
       }
@@ -336,7 +339,7 @@ public class GraphicBox implements IDrawable, ISonglet, IDeletable {//
     }
     /* ********************************************************************************* */
     public static class Factory implements IFactory {// for serialization
-      @Override public Graphic_OffsetBox Create(JsonParse.Phrase phrase, TextCollisionTable ExistingInstances) {// under construction, this does not do anything yet
+      @Override public Graphic_OffsetBox Create(JsonParse.Phrase phrase, CollisionLibrary ExistingInstances) {// under construction, this does not do anything yet
         Graphic_OffsetBox obox = new Graphic_OffsetBox();
         obox.Consume(phrase, ExistingInstances);
         return obox;

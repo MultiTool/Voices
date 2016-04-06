@@ -105,11 +105,11 @@ public class VoicePoint extends MonkeyBox {
     return child;
   }
   /* ********************************************************************************* */
-  @Override public VoicePoint Deep_Clone_Me() {// ICloneable
+  @Override public VoicePoint Deep_Clone_Me(ITextable.CollisionLibrary HitTable) {// ICloneable
     VoicePoint child = new VoicePoint();
     child.Copy_From(this);
-    (child.UpHandle = this.UpHandle.Deep_Clone_Me()).ParentPoint = child; //child.UpHandle.ParentPoint = child;
-    (child.DownHandle = this.DownHandle.Deep_Clone_Me()).ParentPoint = child; //child.DownHandle.ParentPoint = child;
+    (child.UpHandle = this.UpHandle.Deep_Clone_Me(HitTable)).ParentPoint = child; //child.UpHandle.ParentPoint = child;
+    (child.DownHandle = this.DownHandle.Deep_Clone_Me(HitTable)).ParentPoint = child; //child.DownHandle.ParentPoint = child;
     return child;
   }
   /* ********************************************************************************* */
@@ -135,7 +135,7 @@ public class VoicePoint extends MonkeyBox {
     // or maybe we'd rather export to a Phrase tree first? might be easier, less redundant { and } code. 
     throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
   }
-  @Override public JsonParse.Phrase Export(InstanceCollisionTable HitTable) {// ITextable
+  @Override public JsonParse.Phrase Export(CollisionLibrary HitTable) {// ITextable
     JsonParse.Phrase phrase = super.Export(HitTable);
     HashMap<String, JsonParse.Phrase> Fields = phrase.ChildrenHash;
     Fields.put("OctavesPerLoudness", IFactory.Utils.PackField(this.OctavesPerLoudness));
@@ -154,7 +154,7 @@ public class VoicePoint extends MonkeyBox {
       this.SubTime = Double.parseDouble(IFactory.Utils.GetField(Fields, "SubTime", "0"));// can be calculated
     }
   }
-  @Override public void Consume(JsonParse.Phrase phrase, TextCollisionTable ExistingInstances) {// ITextable - Fill in all the values of an already-created object, including deep pointers.
+  @Override public void Consume(JsonParse.Phrase phrase, CollisionLibrary ExistingInstances) {// ITextable - Fill in all the values of an already-created object, including deep pointers.
     if (phrase == null) {
       return;
     }
@@ -258,7 +258,7 @@ public class VoicePoint extends MonkeyBox {
       return child;
     }
     /* ********************************************************************************* */
-    @Override public LoudnessHandle Deep_Clone_Me() {// ICloneable
+    @Override public LoudnessHandle Deep_Clone_Me(ITextable.CollisionLibrary HitTable) {// ICloneable
       LoudnessHandle child = new LoudnessHandle();
       child.OctavesPerRadius = this.OctavesPerRadius;
       child.ParentPoint = this.ParentPoint;
@@ -270,16 +270,18 @@ public class VoicePoint extends MonkeyBox {
       return true;
     }
     @Override public void Delete_Me() {
-      this.ParentPoint = null;
       this.MyBounds.Delete_Me();
-      this.MyBounds = null;
+      this.MyBounds = null;// wreck everything
+      this.OctavesPerRadius = Double.NEGATIVE_INFINITY;
+      this.ParentPoint = null;
+      this.IsSelected = false;
     }
     /* ********************************************************************************* */
     @Override public void Textify(StringBuilder sb) {// ITextable
       // or maybe we'd rather export to a Phrase tree first? might be easier, less redundant { and } code. 
       throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
-    @Override public JsonParse.Phrase Export(InstanceCollisionTable HitTable) {// ITextable
+    @Override public JsonParse.Phrase Export(CollisionLibrary HitTable) {// ITextable
       JsonParse.Phrase phrase = new JsonParse.Phrase();
       HashMap<String, JsonParse.Phrase> Fields = (phrase.ChildrenHash = new HashMap<String, JsonParse.Phrase>());
       Fields.put("OctavesPerRadius", IFactory.Utils.PackField(this.OctavesPerRadius));
@@ -293,7 +295,7 @@ public class VoicePoint extends MonkeyBox {
       HashMap<String, JsonParse.Phrase> Fields = phrase.ChildrenHash;
       this.OctavesPerRadius = Double.parseDouble(IFactory.Utils.GetField(Fields, "OctavesPerRadius", "0.007"));
     }
-    @Override public void Consume(JsonParse.Phrase phrase, TextCollisionTable ExistingInstances) {// ITextable - Fill in all the values of an already-created object, including deep pointers.
+    @Override public void Consume(JsonParse.Phrase phrase, CollisionLibrary ExistingInstances) {// ITextable - Fill in all the values of an already-created object, including deep pointers.
       if (phrase == null) {
         return;
       }

@@ -53,8 +53,8 @@ public final class DrawingContext implements IDeletable {// Let's be final until
   }
   @Override public void Delete_Me() {// IDeletable
     this.ClipBounds.Delete_Me();
-    this.ClipBounds = null;
-    this.GlobalOffset.Delete_Me();// this one does not cause snox
+    this.ClipBounds = null;// wreck everything
+    this.GlobalOffset.Delete_Me();
     this.GlobalOffset = null;
     this.Offset = null;
     this.gr = null;

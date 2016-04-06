@@ -179,7 +179,8 @@ public class AudProject implements IDeletable {
       break;
     }
     if (false) {
-      obox_clone = obox.Deep_Clone_Me();// deep clone test
+      ITextable.CollisionLibrary HitTable = new ITextable.CollisionLibrary();
+      obox_clone = obox.Deep_Clone_Me(HitTable);// deep clone test
       obox.Delete_Me();
       obox = obox_clone;
     }
@@ -276,5 +277,9 @@ public class AudProject implements IDeletable {
   }
   @Override public void Delete_Me() {// IDeletable
     this.GraphicRoot.Delete_Me();
+    this.GraphicRoot = null;// wreck everything
+    this.AudioRoot = null;
+    this.GBox = null;
+    this.SampleRate = this.UpdateCounter = Integer.MIN_VALUE;
   }
 }

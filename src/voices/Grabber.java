@@ -228,6 +228,7 @@ public class Grabber { // to do: rename this class to Grabber
       this.SearchBounds = null;
       this.OBox = null;
       this.Loc = null;
+      this.HitDex = Integer.MAX_VALUE;
     }
   }
   /* ********************************************************************************* */
