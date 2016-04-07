@@ -5,23 +5,22 @@ import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Map;
 import java.util.Set;
+/*
+Ok the rules:
+in a class there can be:
+ variables
+ methods
+ classes
+in a method there can be:
+ variables
+
+*/
 /* ********************************************************************************************************* */
-class JsonParse
+class JavaParse
 {
   public enum TokenType { None, CommentStar, CommentSlash, Word, Whitespace, SingleChar, TextString }
   public static String Environment_NewLine = "\r\n";
   public static String PhraseEnd=",";
-  /* ********************************************************************************************************* */
-  public static Phrase Parse(String JsonText) {
-    ArrayList<Token> Chunks = Tokenizer.Tokenize(0, JsonText);
-    System.out.println("");
-    System.out.println("-----------------------------------------------------");
-    int Marker = 0;
-    Phrase parent;
-    parent = Tokenizer.Chomp_HashMap(Chunks, Marker, 0);
-    System.out.println("Done");
-    return parent;
-  }
   /* ********************************************************************************************************* */
   public static class Tokenizer
   {
@@ -38,7 +37,7 @@ class JsonParse
         if (loc >= 0) { loc += ender.length(); } else { loc = txt.length(); }
         String chunk = txt.substring(StartPlace, loc);
         tkn = new Token();//{ Text = chunk, BlockType = TokenType.CommentStar };
-        tkn.Text = chunk; tkn.BlockType = TokenType.CommentStar;
+        tkn. Text = chunk; tkn.BlockType = TokenType.CommentStar;
         Tokens.add(tkn);
       }
       return loc;
@@ -201,6 +200,14 @@ class JsonParse
       if (' ' == ch || ch == '\t' || ch == '\n' || ch == '\r') { return true; }
       return false;
     }
+    /* ********************************************************************************************************* */
+    public static boolean InList(String text,String[] List){
+      int len = List.length;
+      for (int cnt=0;cnt<len;cnt++){
+        if (text.equals(List[cnt])){ return true; }
+      }
+      return false;
+    }
     // </editor-fold>
     /* ********************************************************************************************************* */
     public static int CompareStartStay(String txt, int StartPlace, String target)
@@ -275,21 +282,13 @@ class JsonParse
       Text= Text.trim();
       if (Text.length()<2){return Text;}
       if (Text.charAt(0)=='\'' || Text.charAt(0)=='\"'){
-        Text = Text.substring(1);
+      Text = Text.substring(1);
       }
       int last = Text.length()-1;
       if (Text.charAt(last)=='\'' || Text.charAt(last)=='\"'){
-        Text = Text.substring(0, last);
+      Text = Text.substring(0, last);
       }
       return Text;
-    }
-    /* ********************************************************************************************************* */
-    public static String EnQuote(String txt){
-      if (txt==null){
-        System.out.println("txt");
-      }
-      txt = txt.replace("\"", "\"\"");
-      return "\"" + txt + "\"";
     }
     /* ********************************************************************************************************* */
     public static Phrase Chomp_Number(ArrayList<Token> Chunks, int Marker, int RecurDepth)
@@ -401,17 +400,151 @@ class JsonParse
       }
       return OnePhrase;
     }
+    /* ********************************************************************************************************* */
+    public static Phrase Chomp_Template(ArrayList<Token> Chunks, int Marker, int RecurDepth){
+      Phrase OnePhrase=null,SubPhrase=null;
+      String Starter="<", Ender=">";
+      int MarkNext=Marker;
+      RecurDepth++;
+      Token tkn = Chunks.get(Marker);
+      if (tkn.Text.equals(Starter)){
+        OnePhrase = new Phrase();
+        OnePhrase.ChunkStart = Marker;
+        OnePhrase.ChildrenArray = new ArrayList<Phrase>();
+        Marker++;
+        MarkNext=Marker;
+        while (Marker<Chunks.size()) {
+          tkn = Chunks.get(Marker);
+          if (tkn.Text.equals(Ender)){break;}
+          if ((SubPhrase = Chomp_Template(Chunks,  Marker, RecurDepth))!=null){// nested templates
+            OnePhrase.ChildrenArray.add(SubPhrase); MarkNext = SubPhrase.ChunkEnd+1; 
+          } else if (tkn.BlockType == TokenType.Word){
+            SubPhrase = MakeLiteral(tkn.Text, Marker, Marker);// inclusive
+            OnePhrase.ChildrenArray.add(SubPhrase);
+            MarkNext++;
+          } else if (tkn.BlockType == TokenType.SingleChar){
+            if (tkn.Text.equals(",")){ }// sloppy: we just ignore commas
+            MarkNext++;
+          } else {/* skip over everything else */ MarkNext++;}// sloppy: no detection of bogus tokens like string literals or reserved words
+          Marker = MarkNext;
+        }
+        OnePhrase.ChunkEnd = Marker;// inclusive? 
+      }
+      return OnePhrase;
+    }
+    /* ********************************************************************************************************* */
+    public static int Skip_Until(ArrayList<Token> Chunks, int Marker, TokenType[] Targets){
+      Token tkn=null;// how to indicate failure? 
+      int tcnt;
+      int NumTargets = Targets.length;
+      //int MarkerNext = Marker;
+      while (Marker<Chunks.size()) {// skip everything that does not matter
+        tkn = Chunks.get(Marker);
+        for (tcnt=0;tcnt<NumTargets;tcnt++){
+          if (Targets[tcnt].equals(tkn)){break;}
+        }
+        Marker++;
+      }
+      return Marker;
+    }
+    /* ********************************************************************************************************* */
+    public static Phrase Chomp_VariableDeclaration(ArrayList<Token> Chunks, int Marker, int RecurDepth){// not working yet, just scribbles
+      /*
+      so variable declarations go:
+      <public private protected> <int double string boolean objectname> <<type, type...> for templates> <[] for arrays> 
+      <variablename> <=equals <literal, new object(), functioncall()>>
+      */
+      String Preludes[]={"public","private","protected","default","static"};// or none
+      String Staticness = "static";// or none
+      Token tkn=null;
+      //CompareStartAny(String txt, Marker, Exposure);
+      // or just read until semicolon; and NOT method and NOT class
+      Phrase OnePhrase=null,SubPhrase=null;
+      OnePhrase = new Phrase();
+      String Starter="[", Ender="]";
+      int MarkNext=Marker;
+      RecurDepth++;
+      int BlockCnt=0;
+      int AccessCnt=0, StaticnessCnt=0;
+      while (Marker<Chunks.size()) {// skip preludes
+        tkn = Chunks.get(Marker);
+        if (tkn.BlockType == TokenType.Word){// no whitespace, no comments 
+          if (InList(tkn.Text, Preludes)){
+            AccessCnt++;
+          }else if(tkn.Text.equals(Staticness)){
+            StaticnessCnt++;
+          } else {break;}// sloppy: could lead with "public private private protected static private static" forever
+          BlockCnt++;
+        }
+        Marker++;
+      }
+      Token TypeTkn=null;
+      while (Marker<Chunks.size()) {// now look for variable type, can be anything
+        tkn = Chunks.get(Marker);
+        if (tkn.BlockType == TokenType.Word){// no whitespace, no comments 
+          TypeTkn = tkn;
+          BlockCnt++;
+          break;
+        }
+        Marker++;
+      }
+      TokenType[] Targets = {TokenType.Word, TokenType.SingleChar};
+      Marker=Skip_Until( Chunks, Marker, Targets);
+      if ((SubPhrase = Chomp_Template(Chunks,  Marker, RecurDepth))!=null){// now look for templates<>, if any. 
+        OnePhrase.ChildrenArray.add(SubPhrase); MarkNext = SubPhrase.ChunkEnd+1; 
+        BlockCnt++;
+        Marker++;
+      }
+      // next look for array[], if any. 
+      
+      //None, CommentStar, CommentSlash, Word, Whitespace, SingleChar, TextString }
+      /*
+      need a chain finder:
+      [x, y, z, none] how do you find none? 
+      if first is 
+      */
+      if (tkn.Text.equals(Starter)){
+        OnePhrase = new Phrase();
+        OnePhrase.ChunkStart = Marker;
+        OnePhrase.ChildrenArray = new ArrayList<Phrase>();
+        Marker++;
+        MarkNext=Marker;
+        while (Marker<Chunks.size()) {
+          tkn = Chunks.get(Marker);
+          if (tkn.Text.equals(Ender)){break;}
+          if ((SubPhrase = Chomp_HashMap(Chunks,  Marker, RecurDepth))!=null){
+            OnePhrase.ChildrenArray.add(SubPhrase); MarkNext = SubPhrase.ChunkEnd+1; 
+          } else if ((SubPhrase = Chomp_Array(Chunks,  Marker, RecurDepth))!=null){
+            OnePhrase.ChildrenArray.add(SubPhrase); MarkNext = SubPhrase.ChunkEnd+1; 
+          } else if ((SubPhrase = Chomp_Number(Chunks, Marker, RecurDepth)) != null) {
+            OnePhrase.ChildrenArray.add(SubPhrase); MarkNext = SubPhrase.ChunkEnd+1;
+          } else if ((tkn.BlockType == TokenType.TextString) || (tkn.BlockType == TokenType.Word)){
+            SubPhrase = MakeLiteral(tkn.Text, Marker, Marker);// inclusive
+            OnePhrase.ChildrenArray.add(SubPhrase);
+            MarkNext++;
+          } else if (tkn.BlockType == TokenType.SingleChar){
+            if (tkn.Text.equals(",")){ }
+            MarkNext++;
+          } else if (tkn.BlockType == TokenType.Whitespace){/* skip whitespace */ MarkNext++; }  
+          else {/* skip over everything else */ MarkNext++;}
+
+          Marker = MarkNext;
+        }// while (Marker<Chunks.size() && !(tkn = Chunks.get(Marker)).Text.equals(Ender));
+        OnePhrase.ChunkEnd = Marker;// inclusive? 
+      }
+      return OnePhrase;
+    }
     // </editor-fold>
     /* ********************************************************************************************************* */
-    public static Phrase Fold(ArrayList<Token> Chunks) {
-      System.out.println("");
-      System.out.println("-----------------------------------------------------");
-      int Marker = 0;
-      Phrase parent;
-      parent = Chomp_HashMap(Chunks, Marker, 0);
-      System.out.println("Done");
-      return parent;
-    }
+  public static Phrase Fold(ArrayList<Token> Chunks) {
+    System.out.println("");
+    System.out.println("-----------------------------------------------------");
+    int Marker = 0;
+    Phrase parent;
+    parent = Chomp_HashMap(Chunks, Marker, 0);
+    System.out.println("Done");
+    return parent;
+  }
   }
   /* ********************************************************************************************************* */
   public static class Token
@@ -421,7 +554,6 @@ class JsonParse
     public String SpecificType = "None";
     public void ToJava(StringBuilder sb) { sb.append(this.Text); }
     public void ToHpp(StringBuilder sb) { sb.append(this.Text); }
-    public String DeQuoted() { return Tokenizer.DeQuote(this.Text); }
   }
   /* ********************************************************************************************************* */
   public static class Phrase
@@ -442,8 +574,7 @@ class JsonParse
       }else if (this.ChildrenArray!=null){
         sb.append(ToArray());
       }else if (this.Literal!=null){
-        sb.append(Tokenizer.EnQuote(this.Literal));// maybe put quotes around this
-        //sb.append(this.Literal);// maybe put quotes around this
+        sb.append(this.Literal);// maybe put quotes around this
       }else if (this.ItemPtr!=null){
         sb.append(this.ItemPtr);// maybe put quotes around this
       }
@@ -459,22 +590,20 @@ class JsonParse
       this.ChildrenHash.keySet().toArray();
       if (0<len){
         Set<Map.Entry<String, Phrase>> Entries = this.ChildrenHash.entrySet();
-        Object[] objray = Entries.toArray();
-        //Map.Entry<String, Phrase>[] EntRay = (Map.Entry<String, Phrase>[]) Entries.toArray();
+        Map.Entry<String, Phrase>[] EntRay = (Map.Entry<String, Phrase>[]) Entries.toArray();
         int cnt=0;
         while (cnt<ultimo){
-          Map.Entry<String, Phrase> entry = (Map.Entry<String, Phrase>) objray[cnt];
-          key = entry.getKey();
-          child = entry.getValue();
-          sb.append(Tokenizer.EnQuote(key));
+          key = EntRay[cnt].getKey();
+          child = EntRay[cnt].getValue();
+          sb.append(key);
           sb.append(" : ");
           sb.append(child.ToJson());
           sb.append(", ");
           cnt++;
         }
-        key = ((Map.Entry<String, Phrase>)objray[cnt]).getKey();
-        child = this.ChildrenHash.get(key);
-        sb.append(Tokenizer.EnQuote(key));
+        key = EntRay[cnt].getKey();
+        child = this.ChildrenArray.get(ultimo);
+        sb.append(key);
         sb.append(" : ");
         sb.append(child.ToJson());
       }

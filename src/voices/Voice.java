@@ -353,10 +353,14 @@ public class Voice implements ISonglet, IDrawable {
     this.MyProject = null;
     this.MaxAmplitude = Double.NEGATIVE_INFINITY;
     this.FreshnessTimeStamp = Integer.MIN_VALUE;
-    this.MyBounds.Delete_Me();
-    this.MyBounds = null;
-    this.Wipe_CPoints();
-    this.CPoints = null;
+    if (this.MyBounds != null) {
+      this.MyBounds.Delete_Me();
+      this.MyBounds = null;
+    }
+    if (this.CPoints != null) {
+      this.Wipe_CPoints();
+      this.CPoints = null;
+    }
     this.ReverbDelay = Double.NEGATIVE_INFINITY;
     this.RefCount = Integer.MIN_VALUE;
     this.FillColor = null;
@@ -373,6 +377,9 @@ public class Voice implements ISonglet, IDrawable {
     return ++this.RefCount;
   }
   @Override public int UnRef_Songlet() {// ISonglet Reference Counting: decrement ref counter and return new value just for kicks
+    if (this.RefCount < 0) {
+      throw new RuntimeException("Voice: Negative RefCount:" + this.RefCount);
+    }
     return --this.RefCount;
   }
   @Override public int GetRefCount() {// ISonglet Reference Counting: get number of references for serialization
@@ -428,7 +435,7 @@ public class Voice implements ISonglet, IDrawable {
   /* ********************************************************************************* */
   public static class Voice_OffsetBox extends OffsetBox {// location box to transpose in pitch, move in time, etc. 
     public Voice VoiceContent;
-    public static String MyTypeName = "Voice_OffsetBox";// for serialization
+    public static String ObjectTypeName = "Voice_OffsetBox";// for serialization
     /* ********************************************************************************* */
     public Voice_OffsetBox() {
       super();
@@ -505,6 +512,7 @@ public class Voice implements ISonglet, IDrawable {
         ChildPackage = this.VoiceContent.Export(HitTable);
       }
       HashMap<String, JsonParse.Phrase> Fields = SelfPackage.ChildrenHash;
+      Fields.put(Globals.ObjectTypeName, IFactory.Utils.PackField(ObjectTypeName));
       Fields.put(OffsetBox.ContentName, ChildPackage);
       return SelfPackage;
     }
@@ -522,7 +530,8 @@ public class Voice implements ISonglet, IDrawable {
       if (Globals.IsTxtPtr(ContentTxt)) {// if songlet content is just a pointer into the library
         CollisionItem ci = ExistingInstances.GetItem(ContentTxt);// look up my songlet in the library
         if (ci == null) {// then null reference even in file - the json is corrupt
-          return;// or throw an error
+          throw new RuntimeException("CollisionItem is null in " + ObjectTypeName);
+          //return;
         }
         if ((songlet = (Voice) ci.Item) == null) {// another cast!
           ci.Item = songlet = new Voice();// if not instantiated, create one and save it

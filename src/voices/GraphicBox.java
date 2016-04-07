@@ -240,6 +240,7 @@ public class GraphicBox implements IDrawable, ISonglet, IDeletable {//
   /* ********************************************************************************* */
   public static class Graphic_OffsetBox extends OffsetBox {
     GraphicBox Content;
+    public static String ObjectTypeName = "Graphic_OffsetBox";
     /* ********************************************************************************* */
     public Graphic_OffsetBox() {
       ScaleX = 40;// pixels per second

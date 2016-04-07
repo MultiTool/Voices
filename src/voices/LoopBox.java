@@ -403,6 +403,7 @@ public class LoopBox implements ISonglet, IDrawable {
   /* ********************************************************************************* */
   public static class Loop_OffsetBox extends OffsetBox {// location box to transpose LoopBox in pitch, move in time, etc. 
     public LoopBox Content;
+    public static String ObjectTypeName = "Loop_OffsetBox";
     /* ********************************************************************************* */
     public Loop_OffsetBox() {
       this.MyBounds = new CajaDelimitadora();
@@ -510,6 +511,7 @@ public class LoopBox implements ISonglet, IDrawable {
     public OffsetBox ContentLayer;
     OffsetBox TempObox = null;
     public int MyIteration = 0;// which loop iteration I represent
+    public static String ObjectTypeName = "Ghost_OffsetBox";
     /* ********************************************************************************* */
     public void Assign_Parent_Songlet(LoopBox Parent) {
       this.MyParentSong = this.Parent = Parent;

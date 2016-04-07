@@ -47,11 +47,11 @@ public class Voices {
   /* ********************************************************************************* */
   public static void RegisterFactories() {
     // Because you can't count on Java static variables being initialized EVER, we are initializing these explicitly here.
-    Globals.FactoryLUT.put("Graphic_OffsetBox", new GraphicBox.Graphic_OffsetBox.Factory());
-    Globals.FactoryLUT.put("Voice_OffsetBox", new Voice.Voice_OffsetBox.Factory());
-    Globals.FactoryLUT.put("SampleVoice_OffsetBox", new SampleVoice.SampleVoice_OffsetBox.Factory());
-    Globals.FactoryLUT.put("Group_OffsetBox", new GroupBox.Group_OffsetBox.Factory());
-    Globals.FactoryLUT.put("Loop_OffsetBox", new LoopBox.Loop_OffsetBox.Factory());
+    Globals.FactoryLUT.put(GraphicBox.Graphic_OffsetBox.ObjectTypeName, new GraphicBox.Graphic_OffsetBox.Factory());
+    Globals.FactoryLUT.put(Voice.Voice_OffsetBox.ObjectTypeName, new Voice.Voice_OffsetBox.Factory());
+    Globals.FactoryLUT.put(SampleVoice.SampleVoice_OffsetBox.ObjectTypeName, new SampleVoice.SampleVoice_OffsetBox.Factory());
+    Globals.FactoryLUT.put(GroupBox.Group_OffsetBox.ObjectTypeName, new GroupBox.Group_OffsetBox.Factory());
+    Globals.FactoryLUT.put(LoopBox.Loop_OffsetBox.ObjectTypeName, new LoopBox.Loop_OffsetBox.Factory());
     //Globals.FactoryLUT.put("OffsetBox", new OffsetBox.Factory());
   }
   /* ********************************************************************************* */

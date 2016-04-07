@@ -56,6 +56,7 @@ public class SampleVoice extends Voice {
   /* ********************************************************************************* */
   public static class SampleVoice_OffsetBox extends Voice_OffsetBox {// location box to transpose in pitch, move in time, etc. 
     public SampleVoice SampleVoiceContent;
+    public static String ObjectTypeName = "SampleVoice_OffsetBox";
     /* ********************************************************************************* */
     public SampleVoice_OffsetBox() {
       super();

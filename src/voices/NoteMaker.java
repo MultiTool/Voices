@@ -437,7 +437,23 @@ public class NoteMaker {
     GroupBox ChildGbx = NoteMaker.Create_Note_Chain(voz, NumBeats, TimeStep);
     ChildGbx.MyName = "ChildGbx";
 
-    OffsetBox SObox = svoz.Spawn_OffsetBox();
+    String txt = null, txt2 = null;
+    JsonParse.Phrase phrase2;
+    if (true) {// test serialization
+      ITextable.CollisionLibrary HitTable = new ITextable.CollisionLibrary();
+      JsonParse.Phrase phrase = ChildGbx.Export(HitTable);
+      txt = phrase.ToJson();
+      if (false) {
+        phrase2 = JsonParse.Parse(txt);// does not work right yet
+        txt2 = phrase2.ToJson();
+      }
+      HitTable.Wipe_Songlets();
+      ChildGbx.Delete_Me();
+      ChildGbx = new GroupBox();
+      ChildGbx.Consume(phrase, HitTable);
+    }
+
+    OffsetBox SObox = svoz.Spawn_OffsetBox();// add horn 
     SObox.OctaveY = NoteMaker.SemitoneFraction;
     ChildGbx.Add_SubSong(SObox);
 

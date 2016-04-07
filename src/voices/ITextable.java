@@ -139,7 +139,7 @@ public interface ITextable {// DIY Json ISerializable - more control
       for (Map.Entry<String, CollisionItem> entry : this.Items.entrySet()) {
         ci = entry.getValue();
         if ((deletable = (IDeletable) ci.Item) != null) {
-          deletable.Delete_Me();
+          //deletable.Delete_Me();
           ci.Item = null;
         }
       }

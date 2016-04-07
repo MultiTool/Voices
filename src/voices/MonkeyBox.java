@@ -226,7 +226,7 @@ public class MonkeyBox implements IDrawable.IMoveable, IDeletable, ITextable {//
     return true;
   }
   @Override public void Delete_Me() {// IDeletable
-    this.MyBounds.Delete_Me();
+    this.MyBounds.Delete_Me();// wreck everything
     this.MyBounds = null;
     this.TimeX = this.OctaveY = this.LoudnessFactor = this.ScaleX = this.ScaleY = this.OctavesPerRadius = Double.NEGATIVE_INFINITY;
     this.MyParentSong = null;

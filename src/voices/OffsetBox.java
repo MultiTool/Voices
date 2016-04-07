@@ -222,8 +222,7 @@ public class OffsetBox extends MonkeyBox { //implements IDrawable.IMoveable, IDe
     return true;
   }
   @Override public void Delete_Me() {// IDeletable
-    this.MyBounds.Delete_Me();
-    this.MyBounds = null;// wreck everything
+    super.Delete_Me();// wreck everything
     if (false) {// we can probably enable this and remove it from everywhere else
       ISonglet Content = this.GetContent();
       if (Content != null) {

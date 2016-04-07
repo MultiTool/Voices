@@ -34,13 +34,18 @@ public class GroupBox implements ISonglet, IDrawable {
   public OffsetBox Add_SubSong(ISonglet songlet, double TimeOffset, double OctaveOffset, double LoudnessFactor) {
     OffsetBox obox = songlet.Spawn_OffsetBox();
     if (false) {// test serialization - gibberish right now, not expected to work
-      ITextable.CollisionLibrary HitTable = new ITextable.CollisionLibrary();
-      JsonParse.Phrase phrase = obox.Export(HitTable);
-      HitTable.Wipe_Songlets();
-      obox.GetContent().Delete_Me();// this might make a crash if unref IS working
-      obox.Delete_Me();// should be enough unrefs, right?
-      //obox = new WHAT??();// hmm need the right factory here
-      obox.Consume(phrase, HitTable);
+      if (obox instanceof Voice.Voice_OffsetBox) {
+        Voice.Voice_OffsetBox vobx = (Voice.Voice_OffsetBox) obox;// another cast!
+        ITextable.CollisionLibrary HitTable = new ITextable.CollisionLibrary();
+        JsonParse.Phrase phrase = vobx.Export(HitTable);
+        HitTable.Wipe_Songlets();
+        vobx.VoiceContent = null;
+        obox = vobx = new Voice.Voice_OffsetBox();// #hacky: stupid non-factory way to regenerate obox
+        //obox.Delete_Me();// should be enough unrefs, right?
+        //obox = new WHAT??();// hmm need the right factory here
+        obox.Clear();
+        obox.Consume(phrase, HitTable);
+      }
     }
     this.Add_SubSong(obox, TimeOffset, OctaveOffset, LoudnessFactor);
     return obox;
@@ -692,6 +697,7 @@ public class GroupBox implements ISonglet, IDrawable {
   public static class Group_OffsetBox extends OffsetBox {// location box to transpose in pitch, move in time, etc. 
     public GroupBox Content = null;
     public double GroupScaleX = 1.0;
+    public static String ObjectTypeName = "Group_OffsetBox";
     /* ********************************************************************************* */
     public Group_OffsetBox() {
       super();
@@ -763,6 +769,57 @@ public class GroupBox implements ISonglet, IDrawable {
           this.Content = null;
         }
       }
+    }
+    // Fields.put(Globals.ObjectTypeName, IFactory.Utils.PackField(ObjectTypeName));
+    // ack, need an export and Consume
+    /* ********************************************************************************* */
+    @Override public JsonParse.Phrase Export(CollisionLibrary HitTable) {// ITextable
+      JsonParse.Phrase SelfPackage = super.Export(HitTable);// ready for test?
+      HashMap<String, JsonParse.Phrase> Fields = SelfPackage.ChildrenHash;
+      Fields.put(Globals.ObjectTypeName, IFactory.Utils.PackField(ObjectTypeName));
+      Fields.put("GroupScaleX", IFactory.Utils.PackField(this.GroupScaleX));
+      JsonParse.Phrase ChildPackage;
+      if (this.Content.GetRefCount() != 1) {// songlet exists in more than one place, use a pointer to library
+        ChildPackage = new JsonParse.Phrase();// multiple references, use a pointer to library instead
+        CollisionItem ci;// songlet is already in library, just create a child phrase and assign its textptr to that entry key
+        if ((ci = HitTable.GetItem(this.Content)) == null) {
+          ci = HitTable.InsertUniqueInstance(this.Content);// songlet is NOT in library, serialize it and add to library
+          ci.JsonPhrase = this.Content.Export(HitTable);
+        }
+        ChildPackage.Literal = ci.ItemTxtPtr;
+      } else {// songlet only exists in one place, make it inline.
+        ChildPackage = this.Content.Export(HitTable);
+      }
+      Fields.put(OffsetBox.ContentName, ChildPackage);
+      return SelfPackage;
+    }
+    @Override public void ShallowLoad(JsonParse.Phrase phrase) {// ITextable
+      super.ShallowLoad(phrase);
+      this.GroupScaleX = Double.parseDouble(IFactory.Utils.GetField(phrase.ChildrenHash, "GroupScaleX", "1.0"));
+    }
+    @Override public void Consume(JsonParse.Phrase phrase, CollisionLibrary ExistingInstances) {// ITextable - Fill in all the values of an already-created object, including deep pointers.
+      if (phrase == null) {// ready for test?
+        return;
+      }
+      this.ShallowLoad(phrase);
+      JsonParse.Phrase SongletPhrase = phrase.ChildrenHash.get(OffsetBox.ContentName);// value of songlet field
+      String ContentTxt = SongletPhrase.Literal;
+      GroupBox songlet;
+      if (Globals.IsTxtPtr(ContentTxt)) {// if songlet content is just a pointer into the library
+        CollisionItem ci = ExistingInstances.GetItem(ContentTxt);// look up my songlet in the library
+        if (ci == null) {// then null reference even in file - the json is corrupt
+          throw new RuntimeException("CollisionItem is null in " + ObjectTypeName);
+          //return;
+        }
+        if ((songlet = (GroupBox) ci.Item) == null) {// another cast!
+          ci.Item = songlet = new GroupBox();// if not instantiated, create one and save it
+          songlet.Consume(ci.JsonPhrase, ExistingInstances);
+        }
+      } else {
+        songlet = new GroupBox();// songlet is inline, inside this one offsetbox
+        songlet.Consume(SongletPhrase, ExistingInstances);
+      }
+      this.Attach_Songlet(songlet);
     }
     /* ********************************************************************************* */
     public static class Factory implements IFactory {// for serialization
