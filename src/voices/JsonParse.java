@@ -345,7 +345,7 @@ class JsonParse
               Key = tkn.Text;
               if (tkn.BlockType == TokenType.TextString) { Key = DeQuote(Key); }
             } else {
-              SubPhrase = MakeLiteral(tkn.Text, Marker, Marker);// inclusive
+              SubPhrase = MakeLiteral(DeQuote(tkn.Text), Marker, Marker);// inclusive
               OnePhrase.ChildrenHash.put(Key, SubPhrase);
               Key = null;
             }
@@ -386,7 +386,7 @@ class JsonParse
           } else if ((SubPhrase = Chomp_Number(Chunks, Marker, RecurDepth)) != null) {
             OnePhrase.ChildrenArray.add(SubPhrase); MarkNext = SubPhrase.ChunkEnd+1;
           } else if ((tkn.BlockType == TokenType.TextString) || (tkn.BlockType == TokenType.Word)){
-            SubPhrase = MakeLiteral(tkn.Text, Marker, Marker);// inclusive
+            SubPhrase = MakeLiteral(DeQuote(tkn.Text), Marker, Marker);// inclusive
             OnePhrase.ChildrenArray.add(SubPhrase);
             MarkNext++;
           } else if (tkn.BlockType == TokenType.SingleChar){

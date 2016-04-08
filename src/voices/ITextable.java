@@ -133,6 +133,20 @@ public interface ITextable {// DIY Json ISerializable - more control
     public CollisionItem GetItem(String KeyTxt) {
       return this.Items.get(KeyTxt);
     }
+    public JsonParse.Phrase ExportJson() {
+      JsonParse.Phrase MainPhrase = new JsonParse.Phrase();
+      MainPhrase.ChildrenHash = new HashMap<String, JsonParse.Phrase>();
+      JsonParse.Phrase ChildPhrase;
+      CollisionItem ci;
+      for (Map.Entry<String, CollisionItem> entry : this.Items.entrySet()) {
+        ci = entry.getValue();
+        if (ci.JsonPhrase != null) {
+          //ChildPhrase = new JsonParse.Phrase();// should we clone the child phrase? 
+          MainPhrase.ChildrenHash.put(ci.ItemTxtPtr, ci.JsonPhrase);
+        }
+      }
+      return MainPhrase;
+    }
     public void Wipe_Songlets() {// for testing
       CollisionItem ci;
       IDeletable deletable;

@@ -443,8 +443,9 @@ public class NoteMaker {
       ITextable.CollisionLibrary HitTable = new ITextable.CollisionLibrary();
       JsonParse.Phrase phrase = ChildGbx.Export(HitTable);
       txt = phrase.ToJson();
-      if (false) {
-        phrase2 = JsonParse.Parse(txt);// does not work right yet
+      if (true) {
+        phrase2 = JsonParse.Parse(txt);// works!
+        phrase = phrase2;
         txt2 = phrase2.ToJson();
       }
       HitTable.Wipe_Songlets();

@@ -420,12 +420,7 @@ public class GroupBox implements ISonglet, IDrawable {
       Fields.put("MaxAmplitude", IFactory.Utils.PackField(this.MaxAmplitude));// can be calculated
       Fields.put("MyBounds", MyBounds.Export(HitTable));// can be calculated
     }
-    /*
-     public double Duration = 0.0;// can be calculated
-     private AudProject MyProject;// can be calculated
-     private int RefCount = 0;// can be calculated
-     */
-
+    
     // Save my array of songlets.
     JsonParse.Phrase CPointsPhrase = new JsonParse.Phrase();
     CPointsPhrase.ChildrenArray = IFactory.Utils.MakeArray(HitTable, this.SubSongs);

@@ -17,6 +17,8 @@ public class GraphicBox implements IDrawable, ISonglet, IDeletable {//
   private CajaDelimitadora MyBounds = new CajaDelimitadora();
   int RefCount = 0;
   private int FreshnessTimeStamp;
+
+  public static String ContentOBoxName = "ContentOBox";
   /* ********************************************************************************* */
   public void Attach_Content(OffsetBox content) {
     this.ContentOBox = content;
@@ -185,8 +187,8 @@ public class GraphicBox implements IDrawable, ISonglet, IDeletable {//
   @Override public JsonParse.Phrase Export(CollisionLibrary HitTable) {// ITextable
     JsonParse.Phrase phrase = new JsonParse.Phrase();
     HashMap<String, JsonParse.Phrase> Fields = (phrase.ChildrenHash = new HashMap<String, JsonParse.Phrase>());
-//    Fields.put("BaseFreq", IFactory.Utils.PackField(this.BaseFreq));
-//    Fields.put("MaxAmplitude", IFactory.Utils.PackField(this.MaxAmplitude));
+    JsonParse.Phrase ContentOBoxPhrase = this.ContentOBox.Export(HitTable);
+    Fields.put(ContentOBoxName, ContentOBoxPhrase);
     return phrase;
   }
   @Override public void ShallowLoad(JsonParse.Phrase phrase) {// ITextable
@@ -195,11 +197,17 @@ public class GraphicBox implements IDrawable, ISonglet, IDeletable {//
     // this.MaxAmplitude = Double.parseDouble(IFactory.Utils.GetField(Fields, "MaxAmplitude", "0.125")); can be calculated
   }
   @Override public void Consume(JsonParse.Phrase phrase, CollisionLibrary ExistingInstances) {// ITextable - Fill in all the values of an already-created object, including deep pointers.
-    if (phrase == null) {
+    if (phrase == null) {// ready for test
       return;
     }
     this.ShallowLoad(phrase);
-    HashMap<String, JsonParse.Phrase> Fields = phrase.ChildrenHash;
+    JsonParse.Phrase ChildPhrase = IFactory.Utils.LookUpField(phrase.ChildrenHash, this.ContentOBoxName);// array of subsongs object
+    if (ChildPhrase != null) {
+      String TypeName = IFactory.Utils.GetField(ChildPhrase.ChildrenHash, Globals.ObjectTypeName, "null");
+      IFactory factory = Globals.FactoryLUT.get(TypeName);// use factories to deal with polymorphism
+      ITextable child = factory.Create(ChildPhrase, ExistingInstances);// child.Consume(ChildPhrase, ExistingInstances);
+      this.ContentOBox = (OffsetBox) child;// another cast!
+    }
   }
   /* ********************************************************************************* */
   // this is all junk that is never used
@@ -326,6 +334,52 @@ public class GraphicBox implements IDrawable, ISonglet, IDeletable {//
           this.Content = null;
         }
       }
+    }
+    /* ********************************************************************************* */
+    @Override public JsonParse.Phrase Export(CollisionLibrary HitTable) {// ITextable
+      JsonParse.Phrase SelfPackage = super.Export(HitTable);// ready for test?
+      HashMap<String, JsonParse.Phrase> Fields = SelfPackage.ChildrenHash;
+      Fields.put(Globals.ObjectTypeName, IFactory.Utils.PackField(ObjectTypeName));
+      JsonParse.Phrase ChildPackage;
+      if (this.Content.GetRefCount() != 1) {// songlet exists in more than one place, use a pointer to library
+        ChildPackage = new JsonParse.Phrase();// multiple references, use a pointer to library instead
+        CollisionItem ci;// songlet is already in library, just create a child phrase and assign its textptr to that entry key
+        if ((ci = HitTable.GetItem(this.Content)) == null) {
+          ci = HitTable.InsertUniqueInstance(this.Content);// songlet is NOT in library, serialize it and add to library
+          ci.JsonPhrase = this.Content.Export(HitTable);
+        }
+        ChildPackage.Literal = ci.ItemTxtPtr;
+      } else {// songlet only exists in one place, make it inline.
+        ChildPackage = this.Content.Export(HitTable);
+      }
+      Fields.put(OffsetBox.ContentName, ChildPackage);
+      return SelfPackage;
+    }
+    @Override public void ShallowLoad(JsonParse.Phrase phrase) {// ITextable
+      super.ShallowLoad(phrase);
+    }
+    @Override public void Consume(JsonParse.Phrase phrase, CollisionLibrary ExistingInstances) {// ITextable - Fill in all the values of an already-created object, including deep pointers.
+      if (phrase == null) {// ready for test?
+        return;
+      }
+      this.ShallowLoad(phrase);
+      JsonParse.Phrase SongletPhrase = phrase.ChildrenHash.get(OffsetBox.ContentName);// value of songlet field
+      String ContentTxt = SongletPhrase.Literal;
+      GraphicBox songlet;
+      if (Globals.IsTxtPtr(ContentTxt)) {// if songlet content is just a pointer into the library
+        CollisionItem ci = ExistingInstances.GetItem(ContentTxt);// look up my songlet in the library
+        if (ci == null) {// then null reference even in file - the json is corrupt
+          throw new RuntimeException("CollisionItem is null in " + ObjectTypeName);
+        }
+        if ((songlet = (GraphicBox) ci.Item) == null) {// another cast!
+          ci.Item = songlet = new GraphicBox();// if not instantiated, create one and save it
+          songlet.Consume(ci.JsonPhrase, ExistingInstances);
+        }
+      } else {
+        songlet = new GraphicBox();// songlet is inline, inside this one offsetbox
+        songlet.Consume(SongletPhrase, ExistingInstances);
+      }
+      this.Attach_Songlet(songlet);
     }
     /* ********************************************************************************* */
     public void Zoom(double XCtr, double YCtr, double Scale) {

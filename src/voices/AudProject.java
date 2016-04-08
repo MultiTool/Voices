@@ -1,5 +1,7 @@
 package voices;
 
+import java.util.HashMap;
+import java.util.Map;
 import voices.GraphicBox.Graphic_OffsetBox;
 import voices.ISonglet.MetricsPacket;
 import voices.ISonglet.Singer;
@@ -15,6 +17,7 @@ public class AudProject implements IDeletable {
   GraphicBox GBox;
   public int SampleRate = Globals.SampleRate;
   public int UpdateCounter = 1;
+  public static String TreePhraseName = "Tree", LibraryPhraseName = "Library";// for serialization
   /* ********************************************************************************* */
   public AudProject() {
     this.GBox = new GraphicBox();
@@ -185,6 +188,12 @@ public class AudProject implements IDeletable {
       obox = obox_clone;
     }
     Wrap_For_Graphics(obox);
+    JsonParse.Phrase MainPhrase = this.Textify();
+    String JsonTxt = MainPhrase.ToJson();
+    System.out.println(JsonTxt);
+    if (false) {
+      this.UnTextify(JsonTxt);// this probably does not work yet
+    }
     if (false) {
       Audio_Test();
     }
@@ -270,6 +279,32 @@ public class AudProject implements IDeletable {
     if (false) {
       SaveWave(wave_render, "wave_render.csv");
     }
+  }
+  /* ********************************************************************************* */
+  public JsonParse.Phrase Textify() {// serialize
+    JsonParse.Phrase MainPhrase = new JsonParse.Phrase();
+    MainPhrase.ChildrenHash = new HashMap<String, JsonParse.Phrase>();
+    ITextable.CollisionLibrary HitTable = new ITextable.CollisionLibrary();
+    JsonParse.Phrase Tree = this.GraphicRoot.Export(HitTable);
+    JsonParse.Phrase Library = HitTable.ExportJson();
+    MainPhrase.ChildrenHash.put(TreePhraseName, Tree);
+    MainPhrase.ChildrenHash.put(LibraryPhraseName, Library);
+    return MainPhrase;
+  }
+  /* ********************************************************************************* */
+  public void UnTextify(String JsonTxt) {// deserialize
+    JsonParse.Phrase MainPhrase = JsonParse.Parse(JsonTxt);
+    JsonParse.Phrase TreePhrase = MainPhrase.ChildrenHash.get(TreePhraseName);
+    JsonParse.Phrase LibraryPhrase = MainPhrase.ChildrenHash.get(LibraryPhraseName);
+
+    ITextable.CollisionLibrary HitTable = new ITextable.CollisionLibrary();
+    for (Map.Entry<String, JsonParse.Phrase> entry : LibraryPhrase.ChildrenHash.entrySet()) {
+      HitTable.InsertTextifiedItem(entry.getKey(), entry.getValue());
+    }
+
+    OffsetBox Tree;
+    this.GraphicRoot.Consume(TreePhrase, HitTable);
+    boolean nop = true;
   }
   /* ********************************************************************************* */
   @Override public boolean Create_Me() {// IDeletable
