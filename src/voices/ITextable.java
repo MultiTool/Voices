@@ -123,7 +123,7 @@ public interface ITextable {// DIY Json ISerializable - more control
       CollisionItem ci = new CollisionItem();
       ci.Item = null;
       ci.ItemTxtPtr = KeyTxt;
-      ci.JsonPhrase = null;
+      ci.JsonPhrase = Item;
       this.Items.put(KeyTxt, ci);// string is key
       //this.Instances.put(Item, ci);// object is key - wait, this won't work
     }
@@ -146,6 +146,13 @@ public interface ITextable {// DIY Json ISerializable - more control
         }
       }
       return MainPhrase;
+    }
+    public void ConsumePhrase(JsonParse.Phrase LibraryPhrase) {
+      this.Items.clear();
+      this.Instances.clear();
+      for (Map.Entry<String, JsonParse.Phrase> entry : LibraryPhrase.ChildrenHash.entrySet()) {
+        this.InsertTextifiedItem(entry.getKey(), entry.getValue());
+      }
     }
     public void Wipe_Songlets() {// for testing
       CollisionItem ci;

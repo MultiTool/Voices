@@ -83,6 +83,9 @@ public class CajaDelimitadora implements IDeletable, ITextable {// DIY BoundingB
   /* ********************************************************************************* */
   public void Sort_Me() {// CajaDelimitadora bounds are ALWAYS to be sorted min->max, even if we are in an inverted space such as screen graphics. 
     double temp;
+    if (this.Min.x == Double.POSITIVE_INFINITY) {
+      boolean nop = true;
+    }
     if (this.Max.x < this.Min.x) {
       temp = this.Max.x;// swap
       this.Max.x = this.Min.x;

@@ -420,7 +420,7 @@ public class GroupBox implements ISonglet, IDrawable {
       Fields.put("MaxAmplitude", IFactory.Utils.PackField(this.MaxAmplitude));// can be calculated
       Fields.put("MyBounds", MyBounds.Export(HitTable));// can be calculated
     }
-    
+
     // Save my array of songlets.
     JsonParse.Phrase CPointsPhrase = new JsonParse.Phrase();
     CPointsPhrase.ChildrenArray = IFactory.Utils.MakeArray(HitTable, this.SubSongs);
@@ -452,6 +452,9 @@ public class GroupBox implements ISonglet, IDrawable {
         obox = (OffsetBox) child;// another cast!
         this.Add_SubSong(obox);
       }
+    }
+    if (this.SubSongs.isEmpty()) {
+      boolean nop = true;
     }
   }
   /* ********************************************************************************* */
@@ -773,19 +776,21 @@ public class GroupBox implements ISonglet, IDrawable {
       HashMap<String, JsonParse.Phrase> Fields = SelfPackage.ChildrenHash;
       Fields.put(Globals.ObjectTypeName, IFactory.Utils.PackField(ObjectTypeName));
       Fields.put("GroupScaleX", IFactory.Utils.PackField(this.GroupScaleX));
-      JsonParse.Phrase ChildPackage;
-      if (this.Content.GetRefCount() != 1) {// songlet exists in more than one place, use a pointer to library
-        ChildPackage = new JsonParse.Phrase();// multiple references, use a pointer to library instead
-        CollisionItem ci;// songlet is already in library, just create a child phrase and assign its textptr to that entry key
-        if ((ci = HitTable.GetItem(this.Content)) == null) {
-          ci = HitTable.InsertUniqueInstance(this.Content);// songlet is NOT in library, serialize it and add to library
-          ci.JsonPhrase = this.Content.Export(HitTable);
+      if (false) {
+        JsonParse.Phrase ChildPackage;
+        if (this.Content.GetRefCount() != 1) {// songlet exists in more than one place, use a pointer to library
+          ChildPackage = new JsonParse.Phrase();// multiple references, use a pointer to library instead
+          CollisionItem ci;// songlet is already in library, just create a child phrase and assign its textptr to that entry key
+          if ((ci = HitTable.GetItem(this.Content)) == null) {
+            ci = HitTable.InsertUniqueInstance(this.Content);// songlet is NOT in library, serialize it and add to library
+            ci.JsonPhrase = this.Content.Export(HitTable);
+          }
+          ChildPackage.Literal = ci.ItemTxtPtr;
+        } else {// songlet only exists in one place, make it inline.
+          ChildPackage = this.Content.Export(HitTable);
         }
-        ChildPackage.Literal = ci.ItemTxtPtr;
-      } else {// songlet only exists in one place, make it inline.
-        ChildPackage = this.Content.Export(HitTable);
+        Fields.put(OffsetBox.ContentName, ChildPackage);
       }
-      Fields.put(OffsetBox.ContentName, ChildPackage);
       return SelfPackage;
     }
     @Override public void ShallowLoad(JsonParse.Phrase phrase) {// ITextable
@@ -808,6 +813,9 @@ public class GroupBox implements ISonglet, IDrawable {
         }
         if ((songlet = (GroupBox) ci.Item) == null) {// another cast!
           ci.Item = songlet = new GroupBox();// if not instantiated, create one and save it
+          if (ci.JsonPhrase==null){
+            boolean nop = true;
+          }
           songlet.Consume(ci.JsonPhrase, ExistingInstances);
         }
       } else {
@@ -815,6 +823,11 @@ public class GroupBox implements ISonglet, IDrawable {
         songlet.Consume(SongletPhrase, ExistingInstances);
       }
       this.Attach_Songlet(songlet);
+    }
+    @Override public ISonglet Spawn_And_Attach_Songlet() {// reverse birth, use ONLY for deserialization
+      GroupBox songlet = new GroupBox();
+      this.Attach_Songlet(songlet);
+      return songlet;
     }
     /* ********************************************************************************* */
     public static class Factory implements IFactory {// for serialization

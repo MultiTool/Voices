@@ -499,21 +499,23 @@ public class Voice implements ISonglet, IDrawable {
     /* ********************************************************************************* */
     @Override public JsonParse.Phrase Export(CollisionLibrary HitTable) {// ITextable
       JsonParse.Phrase SelfPackage = super.Export(HitTable);// ready for test?
-      JsonParse.Phrase ChildPackage;
-      if (this.VoiceContent.GetRefCount() != 1) {// songlet exists in more than one place, use a pointer to library
-        ChildPackage = new JsonParse.Phrase();// multiple references, use a pointer to library instead
-        CollisionItem ci;// songlet is already in library, just create a child phrase and assign its textptr to that entry key
-        if ((ci = HitTable.GetItem(this.VoiceContent)) == null) {
-          ci = HitTable.InsertUniqueInstance(this.VoiceContent);// songlet is NOT in library, serialize it and add to library
-          ci.JsonPhrase = this.VoiceContent.Export(HitTable);
-        }
-        ChildPackage.Literal = ci.ItemTxtPtr;
-      } else {// songlet only exists in one place, make it inline.
-        ChildPackage = this.VoiceContent.Export(HitTable);
-      }
       HashMap<String, JsonParse.Phrase> Fields = SelfPackage.ChildrenHash;
       Fields.put(Globals.ObjectTypeName, IFactory.Utils.PackField(ObjectTypeName));
-      Fields.put(OffsetBox.ContentName, ChildPackage);
+      if (false) {
+        JsonParse.Phrase ChildPackage;
+        if (this.VoiceContent.GetRefCount() != 1) {// songlet exists in more than one place, use a pointer to library
+          ChildPackage = new JsonParse.Phrase();// multiple references, use a pointer to library instead
+          CollisionItem ci;// songlet is already in library, just create a child phrase and assign its textptr to that entry key
+          if ((ci = HitTable.GetItem(this.VoiceContent)) == null) {
+            ci = HitTable.InsertUniqueInstance(this.VoiceContent);// songlet is NOT in library, serialize it and add to library
+            ci.JsonPhrase = this.VoiceContent.Export(HitTable);
+          }
+          ChildPackage.Literal = ci.ItemTxtPtr;
+        } else {// songlet only exists in one place, make it inline.
+          ChildPackage = this.VoiceContent.Export(HitTable);
+        }
+        SelfPackage.ChildrenHash.put(OffsetBox.ContentName, ChildPackage);
+      }
       return SelfPackage;
     }
     @Override public void ShallowLoad(JsonParse.Phrase phrase) {// ITextable
@@ -531,7 +533,6 @@ public class Voice implements ISonglet, IDrawable {
         CollisionItem ci = ExistingInstances.GetItem(ContentTxt);// look up my songlet in the library
         if (ci == null) {// then null reference even in file - the json is corrupt
           throw new RuntimeException("CollisionItem is null in " + ObjectTypeName);
-          //return;
         }
         if ((songlet = (Voice) ci.Item) == null) {// another cast!
           ci.Item = songlet = new Voice();// if not instantiated, create one and save it
@@ -542,6 +543,11 @@ public class Voice implements ISonglet, IDrawable {
         songlet.Consume(SongletPhrase, ExistingInstances);
       }
       this.Attach_Songlet(songlet);
+    }
+    @Override public ISonglet Spawn_And_Attach_Songlet() {// reverse birth, use ONLY for deserialization
+      Voice songlet = new Voice();
+      this.Attach_Songlet(songlet);
+      return songlet;
     }
     /* ********************************************************************************* */
     public static class Factory implements IFactory {// for serialization

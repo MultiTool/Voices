@@ -338,21 +338,24 @@ public class GraphicBox implements IDrawable, ISonglet, IDeletable {//
     /* ********************************************************************************* */
     @Override public JsonParse.Phrase Export(CollisionLibrary HitTable) {// ITextable
       JsonParse.Phrase SelfPackage = super.Export(HitTable);// ready for test?
-      HashMap<String, JsonParse.Phrase> Fields = SelfPackage.ChildrenHash;
-      Fields.put(Globals.ObjectTypeName, IFactory.Utils.PackField(ObjectTypeName));
-      JsonParse.Phrase ChildPackage;
-      if (this.Content.GetRefCount() != 1) {// songlet exists in more than one place, use a pointer to library
-        ChildPackage = new JsonParse.Phrase();// multiple references, use a pointer to library instead
-        CollisionItem ci;// songlet is already in library, just create a child phrase and assign its textptr to that entry key
-        if ((ci = HitTable.GetItem(this.Content)) == null) {
-          ci = HitTable.InsertUniqueInstance(this.Content);// songlet is NOT in library, serialize it and add to library
-          ci.JsonPhrase = this.Content.Export(HitTable);
+      SelfPackage.ChildrenHash.put(Globals.ObjectTypeName, IFactory.Utils.PackField(ObjectTypeName));
+      if (false) {
+        HashMap<String, JsonParse.Phrase> Fields = SelfPackage.ChildrenHash;
+        Fields.put(Globals.ObjectTypeName, IFactory.Utils.PackField(ObjectTypeName));
+        JsonParse.Phrase ChildPackage;
+        if (this.Content.GetRefCount() != 1) {// songlet exists in more than one place, use a pointer to library
+          ChildPackage = new JsonParse.Phrase();// multiple references, use a pointer to library instead
+          CollisionItem ci;// songlet is already in library, just create a child phrase and assign its textptr to that entry key
+          if ((ci = HitTable.GetItem(this.Content)) == null) {
+            ci = HitTable.InsertUniqueInstance(this.Content);// songlet is NOT in library, serialize it and add to library
+            ci.JsonPhrase = this.Content.Export(HitTable);
+          }
+          ChildPackage.Literal = ci.ItemTxtPtr;
+        } else {// songlet only exists in one place, make it inline.
+          ChildPackage = this.Content.Export(HitTable);
         }
-        ChildPackage.Literal = ci.ItemTxtPtr;
-      } else {// songlet only exists in one place, make it inline.
-        ChildPackage = this.Content.Export(HitTable);
+        Fields.put(OffsetBox.ContentName, ChildPackage);
       }
-      Fields.put(OffsetBox.ContentName, ChildPackage);
       return SelfPackage;
     }
     @Override public void ShallowLoad(JsonParse.Phrase phrase) {// ITextable
@@ -380,6 +383,11 @@ public class GraphicBox implements IDrawable, ISonglet, IDeletable {//
         songlet.Consume(SongletPhrase, ExistingInstances);
       }
       this.Attach_Songlet(songlet);
+    }
+    @Override public ISonglet Spawn_And_Attach_Songlet() {// reverse birth, use ONLY for deserialization
+      GraphicBox songlet = new GraphicBox();
+      this.Attach_Songlet(songlet);
+      return songlet;
     }
     /* ********************************************************************************* */
     public void Zoom(double XCtr, double YCtr, double Scale) {

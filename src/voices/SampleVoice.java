@@ -1,5 +1,8 @@
 package voices;
 
+import java.util.HashMap;
+import static voices.Voice.Voice_OffsetBox.ObjectTypeName;
+
 /**
  *
  * @author MultiTool
@@ -102,6 +105,59 @@ public class SampleVoice extends Voice {
       }
       this.SampleVoiceContent = clone;
       this.SampleVoiceContent.Ref_Songlet();
+    }
+    /* ********************************************************************************* */
+    @Override public JsonParse.Phrase Export(CollisionLibrary HitTable) {// ITextable
+      JsonParse.Phrase SelfPackage = super.Export(HitTable);// ready for test?
+      HashMap<String, JsonParse.Phrase> Fields = SelfPackage.ChildrenHash;
+      Fields.put(Globals.ObjectTypeName, IFactory.Utils.PackField(ObjectTypeName));
+      if (false) {
+        JsonParse.Phrase ChildPackage;
+        if (this.GetContent().GetRefCount() != 1) {// songlet exists in more than one place, use a pointer to library
+          ChildPackage = new JsonParse.Phrase();// multiple references, use a pointer to library instead
+          CollisionItem ci;// songlet is already in library, just create a child phrase and assign its textptr to that entry key
+          if ((ci = HitTable.GetItem(this.GetContent())) == null) {
+            ci = HitTable.InsertUniqueInstance(this.GetContent());// songlet is NOT in library, serialize it and add to library
+            ci.JsonPhrase = this.GetContent().Export(HitTable);
+          }
+          ChildPackage.Literal = ci.ItemTxtPtr;
+        } else {// songlet only exists in one place, make it inline.
+          ChildPackage = this.GetContent().Export(HitTable);
+        }
+        SelfPackage.ChildrenHash.put(OffsetBox.ContentName, ChildPackage);
+      }
+      return SelfPackage;
+    }
+    @Override public void ShallowLoad(JsonParse.Phrase phrase) {// ITextable
+      super.ShallowLoad(phrase);
+    }
+    @Override public void Consume(JsonParse.Phrase phrase, CollisionLibrary ExistingInstances) {// ITextable - Fill in all the values of an already-created object, including deep pointers.
+      if (phrase == null) {// ready for test?
+        return;
+      }
+      this.ShallowLoad(phrase);
+      JsonParse.Phrase SongletPhrase = phrase.ChildrenHash.get(OffsetBox.ContentName);// value of songlet field
+      String ContentTxt = SongletPhrase.Literal;
+      SampleVoice songlet;
+      if (Globals.IsTxtPtr(ContentTxt)) {// if songlet content is just a pointer into the library
+        CollisionItem ci = ExistingInstances.GetItem(ContentTxt);// look up my songlet in the library
+        if (ci == null) {// then null reference even in file - the json is corrupt
+          throw new RuntimeException("CollisionItem is null in " + ObjectTypeName);
+        }
+        if ((songlet = (SampleVoice) ci.Item) == null) {// another cast!
+          ci.Item = songlet = new SampleVoice();// if not instantiated, create one and save it
+          songlet.Consume(ci.JsonPhrase, ExistingInstances);
+        }
+      } else {
+        songlet = new SampleVoice();// songlet is inline, inside this one offsetbox
+        songlet.Consume(SongletPhrase, ExistingInstances);
+      }
+      this.Attach_Songlet(songlet);
+    }
+    @Override public ISonglet Spawn_And_Attach_Songlet() {// reverse birth, use ONLY for deserialization
+      SampleVoice songlet = new SampleVoice();
+      this.Attach_Songlet(songlet);
+      return songlet;
     }
     /* ********************************************************************************* */
     public static class Factory implements IFactory {// for serialization

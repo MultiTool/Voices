@@ -298,12 +298,15 @@ public class AudProject implements IDeletable {
     JsonParse.Phrase LibraryPhrase = MainPhrase.ChildrenHash.get(LibraryPhraseName);
 
     ITextable.CollisionLibrary HitTable = new ITextable.CollisionLibrary();
-    for (Map.Entry<String, JsonParse.Phrase> entry : LibraryPhrase.ChildrenHash.entrySet()) {
-      HitTable.InsertTextifiedItem(entry.getKey(), entry.getValue());
-    }
+    HitTable.ConsumePhrase(LibraryPhrase);
 
     OffsetBox Tree;
+    this.GraphicRoot = new GraphicBox.Graphic_OffsetBox();
     this.GraphicRoot.Consume(TreePhrase, HitTable);
+    this.AudioRoot = this.GraphicRoot.Content.ContentOBox;
+    this.Update_Guts();
+    this.AudioRoot.UpdateBoundingBox();
+    this.GraphicRoot.UpdateBoundingBox();
     boolean nop = true;
   }
   /* ********************************************************************************* */
