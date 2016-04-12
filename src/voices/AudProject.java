@@ -191,7 +191,7 @@ public class AudProject implements IDeletable {
     JsonParse.Phrase MainPhrase = this.Textify();
     String JsonTxt = MainPhrase.ToJson();
     System.out.println(JsonTxt);
-    if (false) {
+    if (true) {
       this.UnTextify(JsonTxt);// this probably does not work yet
     }
     if (false) {
@@ -305,9 +305,7 @@ public class AudProject implements IDeletable {
     this.GraphicRoot.Consume(TreePhrase, HitTable);
     this.AudioRoot = this.GraphicRoot.Content.ContentOBox;
     this.Update_Guts();
-    this.AudioRoot.UpdateBoundingBox();
     this.GraphicRoot.UpdateBoundingBox();
-    boolean nop = true;
   }
   /* ********************************************************************************* */
   @Override public boolean Create_Me() {// IDeletable

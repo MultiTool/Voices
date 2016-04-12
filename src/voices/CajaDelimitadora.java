@@ -113,6 +113,11 @@ public class CajaDelimitadora implements IDeletable, ITextable {// DIY BoundingB
     this.ZeroCheck();
   }
   /* ********************************************************************************* */
+  public void ClearZero() {// for empty boxes
+    this.Min.setLocation(0, 0);
+    this.Max.setLocation(0, 0);
+  }
+  /* ********************************************************************************* */
   public void Include(CajaDelimitadora other) {// for aggregating with all of my child boxes
     this.Min.x = Math.min(this.Min.x, other.Min.x);
     this.Min.y = Math.min(this.Min.y, other.Min.y);

@@ -406,6 +406,7 @@ public class LoopBox implements ISonglet, IDrawable {
     public static String ObjectTypeName = "Loop_OffsetBox";
     /* ********************************************************************************* */
     public Loop_OffsetBox() {
+      this.Clear();
       this.MyBounds = new CajaDelimitadora();
     }
     /* ********************************************************************************* */
@@ -414,7 +415,6 @@ public class LoopBox implements ISonglet, IDrawable {
     }
     /* ********************************************************************************* */
     public void Attach_Songlet(LoopBox songlet) {// for serialization
-      this.Clear();
       this.Content = songlet;
       songlet.Ref_Songlet();
     }

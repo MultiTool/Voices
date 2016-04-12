@@ -259,10 +259,14 @@ public class GroupBox implements ISonglet, IDrawable {
     CajaDelimitadora ChildBBoxUnMapped;
     this.MyBounds.Reset();
     int len = this.SubSongs.size();
-    for (int pcnt = 0; pcnt < len; pcnt++) {
-      ChildOffsetBox = this.SubSongs.get(pcnt);
-      ChildBBoxUnMapped = ChildOffsetBox.GetBoundingBox();// project child limits into parent (my) space
-      this.MyBounds.Include(ChildBBoxUnMapped);
+    if (len == 0) {
+      this.MyBounds.ClearZero();
+    } else {
+      for (int pcnt = 0; pcnt < len; pcnt++) {
+        ChildOffsetBox = this.SubSongs.get(pcnt);
+        ChildBBoxUnMapped = ChildOffsetBox.GetBoundingBox();// project child limits into parent (my) space
+        this.MyBounds.Include(ChildBBoxUnMapped);
+      }
     }
   }
   /* ********************************************************************************* */
@@ -699,6 +703,7 @@ public class GroupBox implements ISonglet, IDrawable {
     /* ********************************************************************************* */
     public Group_OffsetBox() {
       super();
+      this.Clear();
       MyBounds = new CajaDelimitadora();
       this.Create_Me();
     }
@@ -708,7 +713,6 @@ public class GroupBox implements ISonglet, IDrawable {
     }
     /* ********************************************************************************* */
     public void Attach_Songlet(GroupBox songlet) {// for serialization
-      this.Clear();
       this.Content = songlet;
       songlet.Ref_Songlet();
     }
@@ -813,10 +817,12 @@ public class GroupBox implements ISonglet, IDrawable {
         }
         if ((songlet = (GroupBox) ci.Item) == null) {// another cast!
           ci.Item = songlet = new GroupBox();// if not instantiated, create one and save it
-          if (ci.JsonPhrase==null){
+          if (ci.JsonPhrase == null) {
             boolean nop = true;
           }
           songlet.Consume(ci.JsonPhrase, ExistingInstances);
+        }else{
+          boolean nop = true;
         }
       } else {
         songlet = new GroupBox();// songlet is inline, inside this one offsetbox

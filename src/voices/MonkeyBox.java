@@ -255,6 +255,7 @@ public class MonkeyBox implements IDrawable.IMoveable, IDeletable, ITextable {//
     HashMap<String, JsonParse.Phrase> Fields = phrase.ChildrenHash;
     this.TimeX = Double.parseDouble(IFactory.Utils.GetField(Fields, MonkeyBox.TimeXName, "0"));
     this.OctaveY = Double.parseDouble(IFactory.Utils.GetField(Fields, MonkeyBox.OctaveYName, "0"));
+    JsonParse.Phrase ph = Fields.get( MonkeyBox.OctaveYName);
     this.LoudnessFactor = Double.parseDouble(IFactory.Utils.GetField(Fields, MonkeyBox.LoudnessFactorName, "1.0"));
     this.ScaleX = Double.parseDouble(IFactory.Utils.GetField(Fields, MonkeyBox.ScaleXName, "1.0"));
     this.ScaleY = Double.parseDouble(IFactory.Utils.GetField(Fields, MonkeyBox.ScaleYName, "1.0"));

@@ -305,4 +305,38 @@ public class Wave implements IDeletable {
     this.NumSamples = this.Current_Index = this.StartDex = this.SampleRate = Integer.MIN_VALUE;// wreck everything
     this.StartTime = this.EndTime = Double.NEGATIVE_INFINITY;
   }
+  /* ********************************************************************************* */
+  public Wave Clone_Me() {
+    Wave child = new Wave();
+    child.Copy_From(this);
+    return child;
+  }
+  public void Copy_From(Wave donor) {
+    this.Init(donor.StartTime, donor.EndTime, donor.SampleRate);
+    System.arraycopy(donor.wave, 0, this.wave, 0, donor.NumSamples);
+  }
+  public String Export() {
+    StringBuilder sb = new StringBuilder();
+    int len = this.wave.length;
+    sb.append("[");
+    if (len > 0) {
+      sb.append(this.wave[0]);
+      for (int cnt = 1; cnt < len; cnt++) {
+        sb.append("," + this.wave[cnt]);
+      }
+    }
+    sb.append("]");
+    return sb.toString();
+  }
+  public void Consume(String text) {
+    StringBuilder sb = new StringBuilder();
+    text = text.replace("[", "");// #hacky 
+    text = text.replace("]", "");
+    String[] chunks = text.split(",");
+    int len = chunks.length;
+    this.Init(len, SampleRate);// gotta include this
+    for (int cnt = 0; cnt < len; cnt++) {
+      this.wave[cnt] = Double.parseDouble(chunks[len]);
+    }
+  }
 }

@@ -258,10 +258,32 @@ public class OffsetBox extends MonkeyBox { //implements IDrawable.IMoveable, IDe
     super.ShallowLoad(phrase);
   }
   @Override public void Consume(JsonParse.Phrase phrase, CollisionLibrary ExistingInstances) {// ITextable - Fill in all the values of an already-created object, including deep pointers.
-    this.ShallowLoad(phrase);// should never hit this line
+    // should never hit this function - work in progress
+    if (phrase == null) {
+      return;
+    }
+    this.ShallowLoad(phrase);
+    JsonParse.Phrase SongletPhrase = phrase.ChildrenHash.get(OffsetBox.ContentName);// value of songlet field
+    String ContentTxt = SongletPhrase.Literal;
+    ISonglet songlet;
+    if (Globals.IsTxtPtr(ContentTxt)) {// if songlet content is just a pointer into the library
+      CollisionItem ci = ExistingInstances.GetItem(ContentTxt);// look up my songlet in the library
+      if (ci == null) {// then null reference even in file - the json is corrupt
+        throw new RuntimeException("CollisionItem is null in OffsetBox");// + ObjectTypeName);
+      }
+      if ((songlet = (ISonglet) ci.Item) == null) {// another cast!
+        ci.Item = songlet = this.Spawn_And_Attach_Songlet();// if not instantiated, create one and save it
+        songlet.Consume(ci.JsonPhrase, ExistingInstances);
+      } else {// songlet is found in library
+        //this.Attach_Songlet(songlet);// Attach_Songlet would have to be called by inheriting classes after calling super.Consume()
+      }
+    } else {
+      songlet = this.Spawn_And_Attach_Songlet();// songlet is inline, inside this one offsetbox
+      songlet.Consume(SongletPhrase, ExistingInstances);
+    }
   }
   public ISonglet Spawn_And_Attach_Songlet() {// virtual
-    return null;
+    throw new UnsupportedOperationException("Spawn_And_Attach_Songlet not supported in OffseBox base class.");
   }
   /* ********************************************************************************* */
   public static Factory InitFactory() {// for serialization

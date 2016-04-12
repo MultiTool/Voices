@@ -57,6 +57,23 @@ public class SampleVoice extends Voice {
     this.MySample = donor.MySample;// maybe we should clone the sample too? 
   }
   /* ********************************************************************************* */
+  @Override public JsonParse.Phrase Export(CollisionLibrary HitTable) {// ITextable
+    JsonParse.Phrase phrase = super.Export(HitTable);// to do: export my wave too
+    this.MySample.Export();
+    return phrase;
+  }
+  @Override public void ShallowLoad(JsonParse.Phrase phrase) {// ITextable
+    super.ShallowLoad(phrase);
+    HashMap<String, JsonParse.Phrase> Fields = phrase.ChildrenHash;
+  }
+  @Override public void Consume(JsonParse.Phrase phrase, CollisionLibrary ExistingInstances) {// ITextable - Fill in all the values of an already-created object, including deep pointers.
+    if (phrase == null) {// to do: consume my wave too
+      return;
+    }
+    super.Consume(phrase, ExistingInstances);
+    HashMap<String, JsonParse.Phrase> Fields = phrase.ChildrenHash;
+  }
+  /* ********************************************************************************* */
   public static class SampleVoice_OffsetBox extends Voice_OffsetBox {// location box to transpose in pitch, move in time, etc. 
     public SampleVoice SampleVoiceContent;
     public static String ObjectTypeName = "SampleVoice_OffsetBox";
