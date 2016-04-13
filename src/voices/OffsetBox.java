@@ -234,9 +234,6 @@ public class OffsetBox extends MonkeyBox { //implements IDrawable.IMoveable, IDe
     }
   }
   /* ********************************************************************************* */
-  @Override public void Textify(StringBuilder sb) {// ITextable
-    super.Textify(sb);
-  }
   @Override public JsonParse.Phrase Export(CollisionLibrary HitTable) {// ITextable
     JsonParse.Phrase SelfPackage = super.Export(HitTable);// ready for test?
     JsonParse.Phrase ChildPackage;

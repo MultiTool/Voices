@@ -188,8 +188,8 @@ public class AudProject implements IDeletable {
       obox = obox_clone;
     }
     Wrap_For_Graphics(obox);
-    JsonParse.Phrase MainPhrase = this.Textify();
-    String JsonTxt = MainPhrase.ToJson();
+    //JsonParse.Phrase MainPhrase = this.Textify();
+    String JsonTxt =  this.Textify();
     System.out.println(JsonTxt);
     if (true) {
       this.UnTextify(JsonTxt);// this probably does not work yet
@@ -281,7 +281,7 @@ public class AudProject implements IDeletable {
     }
   }
   /* ********************************************************************************* */
-  public JsonParse.Phrase Textify() {// serialize
+  public String Textify() {// serialize
     JsonParse.Phrase MainPhrase = new JsonParse.Phrase();
     MainPhrase.ChildrenHash = new HashMap<String, JsonParse.Phrase>();
     ITextable.CollisionLibrary HitTable = new ITextable.CollisionLibrary();
@@ -289,7 +289,7 @@ public class AudProject implements IDeletable {
     JsonParse.Phrase Library = HitTable.ExportJson();
     MainPhrase.ChildrenHash.put(TreePhraseName, Tree);
     MainPhrase.ChildrenHash.put(LibraryPhraseName, Library);
-    return MainPhrase;
+    return MainPhrase.ToJson();
   }
   /* ********************************************************************************* */
   public void UnTextify(String JsonTxt) {// deserialize

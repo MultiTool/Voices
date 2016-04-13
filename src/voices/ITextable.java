@@ -15,7 +15,7 @@ public interface ITextable {// DIY Json ISerializable - more control
   // hmm if we can't override statics, maybe every object can create a single MeFactory class that makes one of the parent object. 
   //void InhaleMySoul(JsonParse.Phrase phrase);
 
-  void Textify(StringBuilder sb);// to do: pass a collision table parameter
+  //void Textify(StringBuilder sb);// to do: pass a collision table parameter
   JsonParse.Phrase Export(CollisionLibrary HitTable);// to do: pass a collision table parameter
   void ShallowLoad(JsonParse.Phrase phrase);// just fill in primitive fields that belong to this object, don't follow up pointers.
   void Consume(JsonParse.Phrase phrase, CollisionLibrary ExistingInstances);// Fill in all the values of an already-created object, including deep pointers.

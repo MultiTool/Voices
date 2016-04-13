@@ -180,10 +180,6 @@ public class GraphicBox implements IDrawable, ISonglet, IDeletable {//
     return this.RefCount;
   }
   /* ********************************************************************************* */
-  @Override public void Textify(StringBuilder sb) {// ITextable
-    // or maybe we'd rather export to a Phrase tree first? might be easier, less redundant { and } code. 
-    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-  }
   @Override public JsonParse.Phrase Export(CollisionLibrary HitTable) {// ITextable
     JsonParse.Phrase phrase = new JsonParse.Phrase();
     HashMap<String, JsonParse.Phrase> Fields = (phrase.ChildrenHash = new HashMap<String, JsonParse.Phrase>());

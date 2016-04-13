@@ -386,10 +386,6 @@ public class Voice implements ISonglet, IDrawable {
     return this.RefCount;
   }
   /* ********************************************************************************* */
-  @Override public void Textify(StringBuilder sb) {// ITextable
-    // or maybe we'd rather export to a Phrase tree first? might be easier, less redundant { and } code. 
-    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-  }
   @Override public JsonParse.Phrase Export(CollisionLibrary HitTable) {// ITextable
     JsonParse.Phrase phrase = new JsonParse.Phrase();
     phrase.ChildrenHash = this.SerializeMyContents(HitTable);
@@ -501,21 +497,6 @@ public class Voice implements ISonglet, IDrawable {
       JsonParse.Phrase SelfPackage = super.Export(HitTable);// ready for test?
       HashMap<String, JsonParse.Phrase> Fields = SelfPackage.ChildrenHash;
       Fields.put(Globals.ObjectTypeName, IFactory.Utils.PackField(ObjectTypeName));
-      if (false) {
-        JsonParse.Phrase ChildPackage;
-        if (this.VoiceContent.GetRefCount() != 1) {// songlet exists in more than one place, use a pointer to library
-          ChildPackage = new JsonParse.Phrase();// multiple references, use a pointer to library instead
-          CollisionItem ci;// songlet is already in library, just create a child phrase and assign its textptr to that entry key
-          if ((ci = HitTable.GetItem(this.VoiceContent)) == null) {
-            ci = HitTable.InsertUniqueInstance(this.VoiceContent);// songlet is NOT in library, serialize it and add to library
-            ci.JsonPhrase = this.VoiceContent.Export(HitTable);
-          }
-          ChildPackage.Literal = ci.ItemTxtPtr;
-        } else {// songlet only exists in one place, make it inline.
-          ChildPackage = this.VoiceContent.Export(HitTable);
-        }
-        SelfPackage.ChildrenHash.put(OffsetBox.ContentName, ChildPackage);
-      }
       return SelfPackage;
     }
     @Override public void ShallowLoad(JsonParse.Phrase phrase) {// ITextable

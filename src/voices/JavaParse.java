@@ -402,9 +402,8 @@ class JavaParse
     }
     /* ********************************************************************************************************* */
     public static Phrase Chomp_Template(ArrayList<Token> Chunks, int Marker, int RecurDepth){
-      Phrase OnePhrase=null,SubPhrase=null;
+      Phrase OnePhrase=null,SubPhrase=null;// just get through the templates and find the exit
       String Starter="<", Ender=">";
-      int MarkNext=Marker;
       RecurDepth++;
       Token tkn = Chunks.get(Marker);
       if (tkn.Text.equals(Starter)){
@@ -412,23 +411,95 @@ class JavaParse
         OnePhrase.ChunkStart = Marker;
         OnePhrase.ChildrenArray = new ArrayList<Phrase>();
         Marker++;
-        MarkNext=Marker;
         while (Marker<Chunks.size()) {
           tkn = Chunks.get(Marker);
           if (tkn.Text.equals(Ender)){break;}
           if ((SubPhrase = Chomp_Template(Chunks,  Marker, RecurDepth))!=null){// nested templates
-            OnePhrase.ChildrenArray.add(SubPhrase); MarkNext = SubPhrase.ChunkEnd+1; 
-          } else if (tkn.BlockType == TokenType.Word){
-            SubPhrase = MakeLiteral(tkn.Text, Marker, Marker);// inclusive
-            OnePhrase.ChildrenArray.add(SubPhrase);
-            MarkNext++;
-          } else if (tkn.BlockType == TokenType.SingleChar){
-            if (tkn.Text.equals(",")){ }// sloppy: we just ignore commas
-            MarkNext++;
-          } else {/* skip over everything else */ MarkNext++;}// sloppy: no detection of bogus tokens like string literals or reserved words
-          Marker = MarkNext;
+            OnePhrase.ChildrenArray.add(SubPhrase); Marker = SubPhrase.ChunkEnd+1; 
+          } else {/* skip over everything else */ Marker++;}// sloppy: no detection of bogus tokens like string literals or reserved words
         }
         OnePhrase.ChunkEnd = Marker;// inclusive? 
+      }
+      return OnePhrase;
+    }
+    /* ********************************************************************************************************* */
+    public static Phrase Chomp_EmptySquareBrackets(ArrayList<Token> Chunks, int Marker, int RecurDepth){
+      Phrase OnePhrase=null;// just get through the brackets and find the exit
+      String Starter="[", Ender="]";
+      RecurDepth++;
+      Token tkn = Chunks.get(Marker);
+      if (tkn.Text.equals(Starter)){
+        OnePhrase = new Phrase();
+        OnePhrase.ChunkStart = Marker;
+        OnePhrase.ChildrenArray = new ArrayList<Phrase>();
+        Marker++;
+        while (Marker<Chunks.size()) {
+          tkn = Chunks.get(Marker);
+          if (tkn.Text.equals(Ender)){break;}
+          else {/* skip over everything else */ Marker++;}// sloppy: no detection of bogus tokens like string literals or reserved words
+        }
+        OnePhrase.ChunkEnd = Marker;
+      }
+      return OnePhrase;
+    }
+    /* ********************************************************************************************************* */
+    public static Phrase Chomp_VarType(ArrayList<Token> Chunks, int Marker, int RecurDepth){
+      Phrase OnePhrase=null,SubPhrase=null; // Starts with any word, then consumes any array [] or template <> clause and finishes
+      Token tkn = Chunks.get(Marker);
+      if (false){
+        TokenType[] Targets = {TokenType.Word};
+        Marker = Skip_Until(Chunks, Marker, Targets);
+        // then recognize <> or [] or both, in that order 
+        Marker = Skip_Until(Chunks, Marker, Targets);// then skip to next word, which will be the variable name itself
+      }
+      if (tkn.BlockType == TokenType.Word){
+        OnePhrase = new Phrase();
+        OnePhrase.ChunkStart = Marker;
+        OnePhrase.ChildrenArray = new ArrayList<Phrase>();
+        while (Marker<Chunks.size()) {// do not do it this way!  rule is: find 1 word, then any or no modifiers. 
+          tkn = Chunks.get(Marker);
+          //if (tkn.Text.equals(Ender)){break;}
+          if ((SubPhrase = Chomp_Template(Chunks,  Marker, RecurDepth))!=null){// templates
+            OnePhrase.ChildrenArray.add(SubPhrase); Marker = SubPhrase.ChunkEnd+1; 
+          } else if ((SubPhrase = Chomp_EmptySquareBrackets(Chunks,  Marker, RecurDepth))!=null){// array brackets
+            OnePhrase.ChildrenArray.add(SubPhrase); Marker = SubPhrase.ChunkEnd+1; 
+          } else {}// ignore whitespace, brake on what? brake after 1 word, followed by any or no template/array clauses
+          // terminmate not on whitespace, but after we hit the first word terminate on any new word that is not a modifier.
+        }
+        OnePhrase.ChunkEnd = Marker;
+      }
+      return OnePhrase;
+    }
+    /* ********************************************************************************************************* */
+    public static Phrase Chomp_FnParams(ArrayList<Token> Chunks, int Marker, int RecurDepth){
+      Phrase OnePhrase=null;
+      String Starter="(", Ender=")";
+      int MarkNext=Marker;
+      RecurDepth++;
+      Token tkn = Chunks.get(Marker);
+      if (tkn.Text.equals(Starter)){
+        OnePhrase = new Phrase();
+        OnePhrase.ChunkStart = Marker;
+        OnePhrase.ChildrenHash = new HashMap<String,Phrase>();
+        MarkNext = ++Marker;
+        boolean IsType = true;
+        while (Marker<Chunks.size()) {
+          tkn = Chunks.get(Marker);
+          if (tkn.Text.equals(Ender)){break;}
+          else if (tkn.BlockType == TokenType.Word){
+            if (IsType){
+              // parameter data type
+            }else{
+              // parameter variable name
+            }
+            IsType = false;
+          }else if (tkn.BlockType == TokenType.SingleChar && tkn.Text.equals(",")){
+            IsType = true;// reset for next
+          }
+          MarkNext++;
+          Marker = MarkNext;
+        }
+        OnePhrase.ChunkEnd = Marker;
       }
       return OnePhrase;
     }
@@ -445,7 +516,7 @@ class JavaParse
         }
         Marker++;
       }
-      return Marker;
+      return Marker;// cues up the marker to the object we sought, does not go beyond
     }
     /* ********************************************************************************************************* */
     public static Phrase Chomp_VariableDeclaration(ArrayList<Token> Chunks, int Marker, int RecurDepth){// not working yet, just scribbles

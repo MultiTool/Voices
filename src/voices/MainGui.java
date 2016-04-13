@@ -4,6 +4,11 @@ import java.awt.*;
 import java.awt.event.*;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
+import java.io.File;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.OpenOption;
+import java.nio.file.Paths;
 import javax.swing.*;
 import voices.DrawingContext;
 import voices.GroupBox.Group_OffsetBox;
@@ -443,11 +448,52 @@ public class MainGui {
     }, EventMask);
   }
   /* ********************************************************************************* */
+  public void PromptSaveFile() {// gibberish, under construction
+    String JsonTxt = "";
+    JFileChooser FileChooser = new JFileChooser();
+    int ReturnVal = FileChooser.showSaveDialog(this.drawpanel);
+    if (ReturnVal == JFileChooser.APPROVE_OPTION) {
+      File SelectedFile = FileChooser.getSelectedFile();
+      System.out.println("Selected file: " + SelectedFile.getAbsolutePath());
+      String fpath = SelectedFile.getAbsolutePath();
+      byte[] encoded = null;
+      JsonTxt = this.MyProject.Textify();
+      try {
+        JsonTxt = new String(encoded, StandardCharsets.UTF_8);
+        //Path path = Files.write(Paths.get(fpath), JsonTxt, OpenOption);
+      } catch (Exception ex) {
+        boolean nop = true;
+      }
+    }
+  }
+  /* ********************************************************************************* */
+  public void PromptOpenFile() {// ready for test
+    String JsonTxt = "";
+    JFileChooser FileChooser = new JFileChooser();
+    int ReturnVal = FileChooser.showOpenDialog(this.drawpanel);
+    if (ReturnVal == JFileChooser.APPROVE_OPTION) {
+      File SelectedFile = FileChooser.getSelectedFile();
+      System.out.println("Selected file: " + SelectedFile.getAbsolutePath());
+      String fpath = SelectedFile.getAbsolutePath();
+      byte[] encoded = null;
+      try {
+        encoded = Files.readAllBytes(Paths.get(fpath));
+        JsonTxt = new String(encoded, StandardCharsets.UTF_8);
+        this.MyProject.UnTextify(JsonTxt);
+        // to do: force a repaint here
+        this.drawpanel.repaint();
+      } catch (Exception ex) {
+        boolean nop = true;
+      }
+    }
+  }
+  /* ********************************************************************************* */
   public void HandleKeys(KeyEvent ke, DrawingPanel dp) {
     System.out.println("keyPressed:" + ke.getKeyCode() + ":" + ke.getExtendedKeyCode() + ":" + ke.getModifiers() + ":" + ke.getKeyChar() + ":" + ke.getModifiersEx());
     char ch = Character.toLowerCase(ke.getKeyChar());
     int keycode = ke.getKeyCode();
     int mod = ke.getModifiers();
+    String JsonTxt = "";
     boolean CtrlPress = ((mod & KeyEvent.CTRL_MASK) != 0);
     if ((keycode == KeyEvent.VK_C) && CtrlPress) {
       dp.CopyBranch(dp.ScreenMouseX, dp.ScreenMouseY);
@@ -459,6 +505,10 @@ public class MainGui {
       dp.RescaleGroupTimeX();
     } else if ((keycode == KeyEvent.VK_X) && CtrlPress) {
       dp.BreakFromHerd();
+    } else if ((keycode == KeyEvent.VK_S) && CtrlPress) {// ctrl S means save
+      JsonTxt = this.MyProject.Textify();
+    } else if ((keycode == KeyEvent.VK_O) && CtrlPress) {// ctrl O means open
+      this.PromptOpenFile();
     } else if (keycode == KeyEvent.VK_ESCAPE) {
       if (dp.GetFloater() != null) {// to do: delete Floater if not used
         dp.SetFloater(null);

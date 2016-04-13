@@ -123,6 +123,8 @@ public class VoicePoint extends MonkeyBox {
     return true;
   }
   @Override public void Delete_Me() {// IDeletable
+    this.SubTime = Double.NEGATIVE_INFINITY;// wreck everything
+    this.OctavesPerLoudness = Double.NEGATIVE_INFINITY;
     this.MyBounds.Delete_Me();
     this.MyBounds = null;
     this.UpHandle.Delete_Me();
@@ -131,10 +133,6 @@ public class VoicePoint extends MonkeyBox {
     this.DownHandle = null;
   }
   /* ********************************************************************************* */
-  @Override public void Textify(StringBuilder sb) {// ITextable
-    // or maybe we'd rather export to a Phrase tree first? might be easier, less redundant { and } code. 
-    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-  }
   @Override public JsonParse.Phrase Export(CollisionLibrary HitTable) {// ITextable
     JsonParse.Phrase phrase = super.Export(HitTable);
     HashMap<String, JsonParse.Phrase> Fields = phrase.ChildrenHash;
@@ -277,10 +275,6 @@ public class VoicePoint extends MonkeyBox {
       this.IsSelected = false;
     }
     /* ********************************************************************************* */
-    @Override public void Textify(StringBuilder sb) {// ITextable
-      // or maybe we'd rather export to a Phrase tree first? might be easier, less redundant { and } code. 
-      throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
     @Override public JsonParse.Phrase Export(CollisionLibrary HitTable) {// ITextable
       JsonParse.Phrase phrase = new JsonParse.Phrase();
       HashMap<String, JsonParse.Phrase> Fields = (phrase.ChildrenHash = new HashMap<String, JsonParse.Phrase>());
