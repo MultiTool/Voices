@@ -301,6 +301,7 @@ public class AudProject implements IDeletable {
     HitTable.ConsumePhrase(LibraryPhrase);
 
     OffsetBox Tree;
+    this.GraphicRoot.Delete_Me();
     this.GraphicRoot = new GraphicBox.Graphic_OffsetBox();
     this.GraphicRoot.Consume(TreePhrase, HitTable);
     this.AudioRoot = this.GraphicRoot.Content.ContentOBox;

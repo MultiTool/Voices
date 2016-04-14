@@ -449,6 +449,28 @@ class JavaParse
       if (false){
         TokenType[] Targets = {TokenType.Word};
         Marker = Skip_Until(Chunks, Marker, Targets);
+        /*
+        it is:
+        loop until word
+        while not eof {
+        .  if word break;
+        .  else ignore <> and advance
+        .  else ignore [] and advance
+        .  else advance; // whitespace, comments etc. 
+        }
+        now we have our variable type, with or without <> or []
+        ack what about that.thing? 
+        wordmode = false;
+        so Chomp_NameChain(){
+        . if word, {
+        .  if (wordmode){ break; } // we are already in wordmode and we hit a word, namechain is broken. 
+        .  set wordmode=true, advance
+        . }
+        . else if punto . , set NOT wordmode,advance
+        . else if (wordmode){ // if in wordmode and next thing is not a period, break?  not a ' ' either. 
+        . }
+        }
+        */
         // then recognize <> or [] or both, in that order 
         Marker = Skip_Until(Chunks, Marker, Targets);// then skip to next word, which will be the variable name itself
       }
@@ -463,7 +485,7 @@ class JavaParse
             OnePhrase.ChildrenArray.add(SubPhrase); Marker = SubPhrase.ChunkEnd+1; 
           } else if ((SubPhrase = Chomp_EmptySquareBrackets(Chunks,  Marker, RecurDepth))!=null){// array brackets
             OnePhrase.ChildrenArray.add(SubPhrase); Marker = SubPhrase.ChunkEnd+1; 
-          } else {}// ignore whitespace, brake on what? brake after 1 word, followed by any or no template/array clauses
+          } else {Marker++;}// ignore whitespace, brake on what? brake after 1 word, followed by any or no template/array clauses
           // terminmate not on whitespace, but after we hit the first word terminate on any new word that is not a modifier.
         }
         OnePhrase.ChunkEnd = Marker;

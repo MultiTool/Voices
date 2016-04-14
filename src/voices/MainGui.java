@@ -5,10 +5,14 @@ import java.awt.event.*;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.OpenOption;
 import java.nio.file.Paths;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.*;
 import voices.DrawingContext;
 import voices.GroupBox.Group_OffsetBox;
@@ -458,11 +462,10 @@ public class MainGui {
       String fpath = SelectedFile.getAbsolutePath();
       byte[] encoded = null;
       JsonTxt = this.MyProject.Textify();
-      try {
-        JsonTxt = new String(encoded, StandardCharsets.UTF_8);
-        //Path path = Files.write(Paths.get(fpath), JsonTxt, OpenOption);
-      } catch (Exception ex) {
-        boolean nop = true;
+      try (PrintWriter out = new PrintWriter(fpath)) {
+        out.println(JsonTxt);
+      } catch (FileNotFoundException ex) {
+        Logger.getLogger(MainGui.class.getName()).log(Level.SEVERE, null, ex);
       }
     }
   }
@@ -487,6 +490,7 @@ public class MainGui {
       }
     }
   }
+  boolean KeysEnabled = true;
   /* ********************************************************************************* */
   public void HandleKeys(KeyEvent ke, DrawingPanel dp) {
     System.out.println("keyPressed:" + ke.getKeyCode() + ":" + ke.getExtendedKeyCode() + ":" + ke.getModifiers() + ":" + ke.getKeyChar() + ":" + ke.getModifiersEx());
@@ -494,27 +498,31 @@ public class MainGui {
     int keycode = ke.getKeyCode();
     int mod = ke.getModifiers();
     String JsonTxt = "";
-    boolean CtrlPress = ((mod & KeyEvent.CTRL_MASK) != 0);
-    if ((keycode == KeyEvent.VK_C) && CtrlPress) {
-      dp.CopyBranch(dp.ScreenMouseX, dp.ScreenMouseY);
-    } else if (keycode == KeyEvent.VK_DELETE) {
-      dp.DeleteBranch();
-    } else if ((keycode == KeyEvent.VK_Q) && CtrlPress) {
-      System.exit(0);
-    } else if ((keycode == KeyEvent.VK_S)) {
-      dp.RescaleGroupTimeX();
-    } else if ((keycode == KeyEvent.VK_X) && CtrlPress) {
-      dp.BreakFromHerd();
-    } else if ((keycode == KeyEvent.VK_S) && CtrlPress) {// ctrl S means save
-      JsonTxt = this.MyProject.Textify();
-    } else if ((keycode == KeyEvent.VK_O) && CtrlPress) {// ctrl O means open
-      this.PromptOpenFile();
-    } else if (keycode == KeyEvent.VK_ESCAPE) {
-      if (dp.GetFloater() != null) {// to do: delete Floater if not used
-        dp.SetFloater(null);
-        dp.HighlightTarget(false);
-        dp.repaint();
+    if (KeysEnabled) {
+      KeysEnabled = false;// to do: think of a better debouncer
+      boolean CtrlPress = ((mod & KeyEvent.CTRL_MASK) != 0);
+      if ((keycode == KeyEvent.VK_C) && CtrlPress) {
+        dp.CopyBranch(dp.ScreenMouseX, dp.ScreenMouseY);
+      } else if (keycode == KeyEvent.VK_DELETE) {
+        dp.DeleteBranch();
+      } else if ((keycode == KeyEvent.VK_Q) && CtrlPress) {
+        System.exit(0);
+      } else if ((keycode == KeyEvent.VK_S && !CtrlPress)) {
+        dp.RescaleGroupTimeX();
+      } else if ((keycode == KeyEvent.VK_X) && CtrlPress) {
+        dp.BreakFromHerd();
+      } else if ((keycode == KeyEvent.VK_S) && CtrlPress) {// ctrl S means save
+        this.PromptSaveFile();
+      } else if ((keycode == KeyEvent.VK_O) && CtrlPress) {// ctrl O means open
+        this.PromptOpenFile();
+      } else if (keycode == KeyEvent.VK_ESCAPE) {
+        if (dp.GetFloater() != null) {// to do: delete Floater if not used
+          dp.SetFloater(null);
+          dp.HighlightTarget(false);
+          dp.repaint();
+        }
       }
+      KeysEnabled = true;
     }
     System.out.println(ke.getID());
   }

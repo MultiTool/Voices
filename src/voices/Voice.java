@@ -422,7 +422,7 @@ public class Voice implements ISonglet, IDrawable {
     HashMap<String, JsonParse.Phrase> Fields = new HashMap<String, JsonParse.Phrase>();
     Fields.put("BaseFreq", IFactory.Utils.PackField(this.BaseFreq));
     Fields.put("MaxAmplitude", IFactory.Utils.PackField(this.MaxAmplitude));
-    Fields.put("MyBounds", MyBounds.Export(HitTable));
+    // Fields.put("MyBounds", MyBounds.Export(HitTable)); // can be calculated
     JsonParse.Phrase CPointsPhrase = new JsonParse.Phrase();// Save my array of control points.
     CPointsPhrase.ChildrenArray = IFactory.Utils.MakeArray(HitTable, this.CPoints);
     Fields.put(this.CPointsName, CPointsPhrase);
