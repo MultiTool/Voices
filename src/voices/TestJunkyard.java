@@ -33,6 +33,14 @@ public class TestJunkyard {
       fname = flpath + "\\..\\samples\\trombone_C4_15_pianissimo_normal_loop.wav";
       BaseFrequency = Globals.BaseFreqC0 / 263.54581673306772913616450532531;// middle C-ish
       break;
+    case 5:
+      fname = flpath + "\\..\\samples\\whitenoise.wav";
+      BaseFrequency = Globals.BaseFreqC0 / 263.54581673306772913616450532531;// middle C-ish
+      break;//pluck_C4.wav
+    case 6:
+      fname = flpath + "\\..\\samples\\pluck_C4.wav";
+      BaseFrequency = Globals.BaseFreqC0 / 263.54581673306772913616450532531;// middle C-ish
+      break;
     }
     Audio.Read(fname, wav);
     return BaseFrequency;

@@ -453,7 +453,8 @@ public class NoteMaker {
     }
 
     if (false) {// add horn 
-      SampleVoice svoz = NoteMaker.Create_Horn();
+      Voice svoz = NoteMaker.Create_Horn();//SampleVoice
+      svoz = NoteMaker.Generate_Voice(3);// whitenoise
       NoteMaker.Create_Tapered_Voice(svoz, NoteMaker.OffsetTime, TimeStep, 0, 1.0, 3);
       OffsetBox SObox = svoz.Spawn_OffsetBox();
       SObox.OctaveY = NoteMaker.SemitoneFraction;
@@ -503,7 +504,7 @@ public class NoteMaker {
       voice = new Voice();
       break;
     case 3:
-      voice = TestJunkyard.Create_SampleVoice_Stub(3);
+      voice = TestJunkyard.Create_SampleVoice_Stub(6);
       break;
     }
     return voice;

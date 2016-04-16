@@ -191,7 +191,7 @@ public class AudProject implements IDeletable {
     //JsonParse.Phrase MainPhrase = this.Textify();
     String JsonTxt =  this.Textify();
     System.out.println(JsonTxt);
-    if (true) {
+    if (false) {// test serialization
       this.UnTextify(JsonTxt);// this probably does not work yet
     }
     if (false) {

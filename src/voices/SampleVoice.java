@@ -9,12 +9,12 @@ import static voices.Voice.Voice_OffsetBox.ObjectTypeName;
  */
 public class SampleVoice extends Voice {
   public Wave MySample = null;
+  public boolean Looped = true;
+
+  // for serialization
+  public static String LoopedName = "LoopedName";
   /* ********************************************************************************* */
   public SampleVoice() {
-//    this.MySample = new Wave();// a default
-//    this.MySample.Ingest(Horn, Globals.SampleRate);
-//    this.BaseFreq = Globals.BaseFreqC0 / 265.0;//265.663;//264.072;//572.727;//265.663;
-    //Globals.BaseFreqC0 / 263.54581673306772913616450532531;// middle C-ish
   }
   /* ********************************************************************************* */
   public void AttachWaveSample(Wave Sample, double BaseFrequency) {
@@ -31,7 +31,12 @@ public class SampleVoice extends Voice {
   @Override public SampleVoice_Singer Spawn_My_Singer() {// for render time
     // Deliver one of my singers while exposing specific object class. 
     // Handy if my parent's singers know what class I am and want special access to my particular type of singer.
-    SampleVoice_Singer singer = new SampleVoice_Singer();
+    SampleVoice_Singer singer;
+    if (this.Looped) {
+      singer = new SampleVoice_Looped_Singer();
+    } else {
+      singer = new SampleVoice_Singer();
+    }
     singer.MyVoice = singer.MySampleVoice = this;
     singer.MyProject = this.MyProject;// inherit project
     singer.BaseFreq = this.BaseFreq;
@@ -59,12 +64,16 @@ public class SampleVoice extends Voice {
   /* ********************************************************************************* */
   @Override public JsonParse.Phrase Export(CollisionLibrary HitTable) {// ITextable
     JsonParse.Phrase phrase = super.Export(HitTable);// to do: export my wave too
+    phrase.ChildrenHash = this.SerializeMyContents(HitTable);
+    phrase.ChildrenHash.put(LoopedName, IFactory.Utils.PackField(this.Looped));
     this.MySample.Export();
     return phrase;
   }
   @Override public void ShallowLoad(JsonParse.Phrase phrase) {// ITextable
     super.ShallowLoad(phrase);
     HashMap<String, JsonParse.Phrase> Fields = phrase.ChildrenHash;
+    this.Looped = Boolean.parseBoolean(IFactory.Utils.GetField(Fields, LoopedName, "true"));//Boolean.toString(this.Looped)));
+    // Boolean.getBoolean(""); maybe use this instead. simpler, returns false if parse fails. 
   }
   @Override public void Consume(JsonParse.Phrase phrase, CollisionLibrary ExistingInstances) {// ITextable - Fill in all the values of an already-created object, including deep pointers.
     if (phrase == null) {// to do: consume my wave too
@@ -93,10 +102,6 @@ public class SampleVoice extends Voice {
     }
     /* ********************************************************************************* */
     @Override public SampleVoice_Singer Spawn_Singer() {// always always always override this
-      return this.Spawn_My_Singer();
-    }
-    /* ********************************************************************************* */
-    @Override public SampleVoice_Singer Spawn_My_Singer() {// for render time
       SampleVoice_Singer ph = this.SampleVoiceContent.Spawn_My_Singer();
       ph.MyOffsetBox = this;
       return ph;
@@ -174,6 +179,13 @@ public class SampleVoice extends Voice {
   public static class SampleVoice_Singer extends Voice_Singer {
     public SampleVoice MySampleVoice;
     public Wave MySample = null;
+    /* ********************************************************************************* */
+    @Override public double GetWaveForm(double SubTimeAbsolute) {
+      return this.MySample.GetResample(SubTimeAbsolute * BaseFreq);
+    }
+  }
+  /* ********************************************************************************* */
+  public static class SampleVoice_Looped_Singer extends SampleVoice_Singer {
     /* ********************************************************************************* */
     @Override public double GetWaveForm(double SubTimeAbsolute) {
       return this.MySample.GetResampleLooped(SubTimeAbsolute * BaseFreq);

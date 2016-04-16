@@ -449,10 +449,6 @@ public class Voice implements ISonglet, IDrawable {
     }
     /* ********************************************************************************* */
     @Override public Voice_Singer Spawn_Singer() {// for render time.  always always always override this
-      return this.Spawn_My_Singer();
-    }
-    /* ********************************************************************************* */
-    public Voice_Singer Spawn_My_Singer() {// for render time
       Voice_Singer ph = this.VoiceContent.Spawn_My_Singer();
       ph.MyOffsetBox = this;
       return ph;

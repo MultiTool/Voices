@@ -218,6 +218,9 @@ public class Wave implements IDeletable {
     TimeSeconds *= this.SampleRate;
     int Dex0 = (int) Math.floor(TimeSeconds);
     int Dex1 = Dex0 + 1;
+    if (Dex1 >= this.wave.length) {
+      return 0.0;
+    }
     double amp0 = this.wave[Dex0];
     double amp1 = this.wave[Dex1];
     double FullAmpDelta = amp1 - amp0;
