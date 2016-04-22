@@ -326,9 +326,7 @@ class JavaParse
       RecurDepth++;
       Token tkn = Chunks.get(Marker);
       if (tkn.Text.equals(Starter)){
-        OnePhrase = new Phrase();
-        OnePhrase.ChunkStart = Marker;
-        OnePhrase.ChildrenHash = new HashMap<String,Phrase>();
+        OnePhrase = new Phrase(new HashMap<String,Phrase>(), Marker);
         MarkNext = ++Marker;
         while (Marker<Chunks.size()) {
           tkn = Chunks.get(Marker);
@@ -418,7 +416,7 @@ class JavaParse
             OnePhrase.ChildrenArray.add(SubPhrase); Marker = SubPhrase.ChunkEnd+1; 
           } else {/* skip over everything else */ Marker++;}// sloppy: no detection of bogus tokens like string literals or reserved words
         }
-        OnePhrase.ChunkEnd = Marker;// inclusive? 
+        OnePhrase.ChunkEnd = Marker;
       }
       return OnePhrase;
     }
@@ -475,18 +473,16 @@ class JavaParse
         Marker = Skip_Until(Chunks, Marker, Targets);// then skip to next word, which will be the variable name itself
       }
       if (tkn.BlockType == TokenType.Word){
-        OnePhrase = new Phrase();
-        OnePhrase.ChunkStart = Marker;
-        OnePhrase.ChildrenArray = new ArrayList<Phrase>();
+        OnePhrase = new Phrase(new ArrayList<Phrase>() ,Marker);
+        Marker++;
         while (Marker<Chunks.size()) {// do not do it this way!  rule is: find 1 word, then any or no modifiers. 
           tkn = Chunks.get(Marker);
-          //if (tkn.Text.equals(Ender)){break;}
-          if ((SubPhrase = Chomp_Template(Chunks,  Marker, RecurDepth))!=null){// templates
+          if (tkn.BlockType == TokenType.Word){Marker--; break;}// terminate on any new word that is not a modifier.
+          if ((SubPhrase = Chomp_Template(Chunks,  Marker, RecurDepth))!=null){// jump over templates
             OnePhrase.ChildrenArray.add(SubPhrase); Marker = SubPhrase.ChunkEnd+1; 
-          } else if ((SubPhrase = Chomp_EmptySquareBrackets(Chunks,  Marker, RecurDepth))!=null){// array brackets
+          } else if ((SubPhrase = Chomp_EmptySquareBrackets(Chunks,  Marker, RecurDepth))!=null){// jump over array brackets
             OnePhrase.ChildrenArray.add(SubPhrase); Marker = SubPhrase.ChunkEnd+1; 
           } else {Marker++;}// ignore whitespace, brake on what? brake after 1 word, followed by any or no template/array clauses
-          // terminmate not on whitespace, but after we hit the first word terminate on any new word that is not a modifier.
         }
         OnePhrase.ChunkEnd = Marker;
       }
@@ -541,6 +537,31 @@ class JavaParse
       return Marker;// cues up the marker to the object we sought, does not go beyond
     }
     /* ********************************************************************************************************* */
+    public static Phrase Chomp_Preamble(ArrayList<Token> Chunks, int Marker, int RecurDepth){// ready for test?
+      String Preludes[]={"public","private","protected","default","static"};// or none
+      String Staticness = "static";// or none
+      Phrase OnePhrase = new Phrase(new HashMap<String,Phrase>(), Marker);
+      Token tkn=null;
+      int BlockCnt=0;
+      int AccessCnt=0, StaticnessCnt=0;
+      int FinalWord=Marker;
+      int MarkNext = Marker;
+      while (MarkNext<Chunks.size()) {// skip preludes
+        tkn = Chunks.get(MarkNext);
+        if (tkn.BlockType == TokenType.Word){// no whitespace, no comments 
+          if (InList(tkn.Text, Preludes)){
+            AccessCnt++; FinalWord = MarkNext;
+          }else if(tkn.Text.equals(Staticness)){
+            StaticnessCnt++; FinalWord = MarkNext;
+          } else {break;}// sloppy: could lead with "public private private protected static private static" forever
+          BlockCnt++;
+        }
+        MarkNext++;
+      }
+      OnePhrase.ChunkEnd = Marker = FinalWord;
+      return OnePhrase;
+    }
+    /* ********************************************************************************************************* */
     public static Phrase Chomp_VariableDeclaration(ArrayList<Token> Chunks, int Marker, int RecurDepth){// not working yet, just scribbles
       /*
       so variable declarations go:
@@ -550,6 +571,31 @@ class JavaParse
       String Preludes[]={"public","private","protected","default","static"};// or none
       String Staticness = "static";// or none
       Token tkn=null;
+      /*
+      ok so
+      if starter is EITHER Prelude, or Chomp_VarType, then {// proceed
+      . advance Marker++;
+      . loop{
+      .  if (Chomp_VarType()){// then what? move to the next loop? recurse to more tests? tail-end recursion
+      .  } else {
+      .  }
+      . }
+      . 
+      . loop{
+      .  if (Chomp_VarName()){// mainly just a word
+      .   break;// 
+      .  } else {
+      .  }
+      . }
+      .
+      . here if you are a variable, you can end with a ;, or you can end with a = blah blah.  either way just scan to ;
+      . but, if you are a function, scan to a (). 
+      . so I guess once you've cleared the VarName, loop and Chomp_FnParams or == ";", whichever comes first. 
+      .  but what of interfaces?  int HaHaFn(String txt);
+      . so always detect fn with parens first (). 
+      }
+      */
+      // Chomp_VarType(ArrayList<Token> Chunks, int Marker, RecurDepth);
       //CompareStartAny(String txt, Marker, Exposure);
       // or just read until semicolon; and NOT method and NOT class
       Phrase OnePhrase=null,SubPhrase=null;
@@ -557,6 +603,26 @@ class JavaParse
       String Starter="[", Ender="]";
       int MarkNext=Marker;
       RecurDepth++;
+      
+      // ************************* LATEST SCRIBBLE 
+      TokenType[] WordTarget = {TokenType.Word};
+      Marker=Skip_Until(Chunks, Marker, WordTarget);// jump to next word
+      Phrase preamble = Chomp_Preamble(Chunks,  Marker,  RecurDepth);
+      //TokenType[] WordTarget = {TokenType.Word};
+      Marker=Skip_Until(Chunks, Marker, WordTarget);// jump to next word
+      while (Marker<Chunks.size()) {// handle body to which preludes refer
+        tkn = Chunks.get(Marker);
+//        if ((SubPhrase = Chomp_Class(Chunks,  Marker, RecurDepth))!=null){// looks for word "class"
+//          OnePhrase.ChildrenArray.add(SubPhrase); MarkNext = SubPhrase.ChunkEnd+1; 
+//        } else if ((SubPhrase = Chomp_Var(Chunks,  Marker, RecurDepth))!=null){// goes in and out but must find semicolon ; 
+//          OnePhrase.ChildrenArray.add(SubPhrase); MarkNext = SubPhrase.ChunkEnd+1; 
+//        } else if ((SubPhrase = Chomp_Function(Chunks,  Marker, RecurDepth))!=null){// gets serious when it hits parenthesis ()
+//          OnePhrase.ChildrenArray.add(SubPhrase); MarkNext = SubPhrase.ChunkEnd+1; 
+//        } else {Marker++;}
+        //Marker++;// put this in else default
+      }
+      
+      // this could be Chomp_Prelude or Chomp_Preamble
       int BlockCnt=0;
       int AccessCnt=0, StaticnessCnt=0;
       while (Marker<Chunks.size()) {// skip preludes
@@ -571,6 +637,7 @@ class JavaParse
         }
         Marker++;
       }
+      
       Token TypeTkn=null;
       while (Marker<Chunks.size()) {// now look for variable type, can be anything
         tkn = Chunks.get(Marker);
@@ -581,8 +648,10 @@ class JavaParse
         }
         Marker++;
       }
+      
       TokenType[] Targets = {TokenType.Word, TokenType.SingleChar};
-      Marker=Skip_Until( Chunks, Marker, Targets);
+      Marker=Skip_Until(Chunks, Marker, Targets);
+      
       if ((SubPhrase = Chomp_Template(Chunks,  Marker, RecurDepth))!=null){// now look for templates<>, if any. 
         OnePhrase.ChildrenArray.add(SubPhrase); MarkNext = SubPhrase.ChunkEnd+1; 
         BlockCnt++;
@@ -597,9 +666,7 @@ class JavaParse
       if first is 
       */
       if (tkn.Text.equals(Starter)){
-        OnePhrase = new Phrase();
-        OnePhrase.ChunkStart = Marker;
-        OnePhrase.ChildrenArray = new ArrayList<Phrase>();
+        OnePhrase = new Phrase(new ArrayList<Phrase>(), Marker);
         Marker++;
         MarkNext=Marker;
         while (Marker<Chunks.size()) {
@@ -660,6 +727,15 @@ class JavaParse
     public String Literal=null;
     public ArrayList<Phrase> ChildrenArray = null;
     public HashMap<String,Phrase> ChildrenHash = null;
+    public Phrase(){ }
+    public Phrase(ArrayList<Phrase> ChildArray0, int Marker){
+      this.ChunkStart = Marker;
+      this.ChildrenArray = ChildArray0;
+    }
+    public Phrase(HashMap<String,Phrase> ChildHash0, int Marker){
+      this.ChunkStart = Marker;
+      this.ChildrenHash = ChildHash0;
+    }
     public String ToJson(){
       StringBuilder sb = new StringBuilder();
       if (this.ChildrenHash!=null){

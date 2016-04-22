@@ -38,10 +38,6 @@ public class Voice implements ISonglet, IDrawable {
   }
   /* ********************************************************************************* */
   @Override public Voice_Singer Spawn_Singer() {// for render time
-    return this.Spawn_My_Singer();
-  }
-  /* ********************************************************************************* */
-  public Voice_Singer Spawn_My_Singer() {// for render time
     // Deliver one of my singers while exposing specific object class. 
     // Handy if my parent's singers know what class I am and want special access to my particular type of singer.
     Voice_Singer singer = new Voice_Singer();
@@ -449,7 +445,7 @@ public class Voice implements ISonglet, IDrawable {
     }
     /* ********************************************************************************* */
     @Override public Voice_Singer Spawn_Singer() {// for render time.  always always always override this
-      Voice_Singer ph = this.VoiceContent.Spawn_My_Singer();
+      Voice_Singer ph = this.VoiceContent.Spawn_Singer();
       ph.MyOffsetBox = this;
       return ph;
     }

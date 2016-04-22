@@ -28,7 +28,7 @@ public class SampleVoice extends Voice {
     return lbox;
   }
   /* ********************************************************************************* */
-  @Override public SampleVoice_Singer Spawn_My_Singer() {// for render time
+  @Override public SampleVoice_Singer Spawn_Singer() {// for render time
     // Deliver one of my singers while exposing specific object class. 
     // Handy if my parent's singers know what class I am and want special access to my particular type of singer.
     SampleVoice_Singer singer;
@@ -102,7 +102,7 @@ public class SampleVoice extends Voice {
     }
     /* ********************************************************************************* */
     @Override public SampleVoice_Singer Spawn_Singer() {// always always always override this
-      SampleVoice_Singer ph = this.SampleVoiceContent.Spawn_My_Singer();
+      SampleVoice_Singer ph = this.SampleVoiceContent.Spawn_Singer();
       ph.MyOffsetBox = this;
       return ph;
     }
@@ -168,11 +168,16 @@ public class SampleVoice extends Voice {
     }
     /* ********************************************************************************* */
     public static class Factory implements IFactory {// for serialization
-      @Override public SampleVoice_OffsetBox Create(JsonParse.Phrase phrase, CollisionLibrary ExistingInstances) {// under construction, this does not do anything yet
+      @Override public SampleVoice_OffsetBox Create(JsonParse.Phrase phrase, CollisionLibrary ExistingInstances) {
         SampleVoice_OffsetBox obox = new SampleVoice_OffsetBox();
         obox.Consume(phrase, ExistingInstances);
         return obox;
       }
+//      @Override public Voice_OffsetBox Create(JsonParse.Phrase phrase, CollisionLibrary ExistingInstances) {
+//        Voice_OffsetBox obox = new Voice_OffsetBox();// hack to load sample voices as voices
+//        obox.Consume(phrase, ExistingInstances);
+//        return obox;
+//      }
     }
   }
   /* ********************************************************************************* */
