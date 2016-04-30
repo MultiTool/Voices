@@ -562,6 +562,133 @@ class JavaParse
       return OnePhrase;
     }
     /* ********************************************************************************************************* */
+    public static Phrase Chomp_Import(ArrayList<Token> Chunks, int Marker, int RecurDepth){// easy, just jump over imports
+      String Starter="import", Ender = ";";
+      Phrase OnePhrase=null;
+      RecurDepth++;
+      Token tkn = Chunks.get(Marker);
+      if (tkn.Text.equals(Starter)){
+        OnePhrase = new Phrase(new HashMap<String,Phrase>(), Marker);
+        while (Marker<Chunks.size()) {
+         tkn = Chunks.get(Marker);
+         if (tkn.Text.equals(Ender)){break;}
+         Marker++;
+        }
+        OnePhrase.ChunkEnd = Marker;
+      }
+      return OnePhrase;
+    }
+    /* ********************************************************************************************************* */
+    public static Phrase Chomp_DotWord(ArrayList<Token> Chunks, int Marker, int RecurDepth){// look for variable types such as blah.bleh, blah, blah.bleh.bloo etc. 
+      Phrase OnePhrase=null;
+      RecurDepth++;
+      boolean ReadyToQuit = false;
+      int FinalWord = Marker;
+      Token tkn = Chunks.get(Marker);
+      if (tkn.BlockType == TokenType.Word){
+        OnePhrase = new Phrase(new HashMap<String,Phrase>(), Marker);
+        Marker++;
+        while (Marker<Chunks.size()) {
+          tkn = Chunks.get(Marker);
+          if (tkn.BlockType == TokenType.Word){
+            if (ReadyToQuit){ break; }// two words in a row means quit
+            OnePhrase.ChildrenArray.add(Phrase.MakeField(tkn.Text));
+            FinalWord = Marker;
+            ReadyToQuit = true;
+          } else if (tkn.BlockType == TokenType.SingleChar){// look for . 
+            if (tkn.Text.equals(".")){
+              OnePhrase.ChildrenArray.add(Phrase.MakeField(tkn.Text)); // do we really want to save the period? 
+              ReadyToQuit = false; // we hit a dot, keep looking for next word
+            } else { break; }// bail out for any SingleChar that is not a period
+          } else if (tkn.BlockType == TokenType.TextString){// look for . 
+            break;// Quoted text would be an error, but bail out anyway, we got our variable type definition.
+          }
+          Marker++;
+        }
+        OnePhrase.ChunkEnd = FinalWord;
+      }
+      return OnePhrase;
+    }
+    /* ********************************************************************************************************* */
+    public static Phrase Chomp_Class(ArrayList<Token> Chunks, int Marker, int RecurDepth){// this gets the whole class including preamble, right? 
+      String Flag = "class";
+      String Reserved[]={"implements","extends"};// or none
+      Phrase OnePhrase = new Phrase(new HashMap<String,Phrase>(), Marker);
+      Token tkn=null;
+      int MarkNext = Marker;
+      Phrase preamble = Chomp_Preamble(Chunks,  Marker,  RecurDepth);
+      boolean IsClass = false;
+      while (MarkNext<Chunks.size()) {
+        tkn = Chunks.get(MarkNext);
+        if (tkn.BlockType == TokenType.Word){// no whitespace, no comments 
+          if (tkn.Text.equals(Flag)){IsClass = true; } else { IsClass = false; }
+          break;
+        }
+        MarkNext++;
+      }
+      if (!IsClass) {
+        return null;
+      } else {// this does not have to be else
+        // next get class name, then get the implements or extends inheritance (if any) and finally get the brackets {} and dive in 
+        String ClassName="";
+        while (MarkNext<Chunks.size()) {
+          tkn = Chunks.get(MarkNext);
+          if (tkn.BlockType == TokenType.Word){// no whitespace, no comments 
+            OnePhrase.ChildrenArray.add(Phrase.MakeField(ClassName=tkn.Text)); break;
+          }
+          MarkNext++;
+        }
+        
+        // this would be Chomp_Inheritances
+        Phrase SubPhrase = null;
+        int FinalWord = MarkNext;
+        while (MarkNext<Chunks.size()) {// skip through inheritance and get to brackets
+          tkn = Chunks.get(MarkNext);
+          if (tkn.BlockType == TokenType.Word){// no whitespace, no comments 
+            if (InList(tkn.Text, Reserved)){// ignore "implements" and "extends"
+            } else if ((SubPhrase = Chomp_DotWord(Chunks,  Marker, RecurDepth))!=null){ // add to dependency list
+              OnePhrase.ChildrenArray.add(SubPhrase); MarkNext = FinalWord = SubPhrase.ChunkEnd;
+            }
+          } else if (tkn.BlockType == TokenType.SingleChar){
+            if (tkn.Text.equals("{")){ break; }
+          }
+          MarkNext++;
+        }
+        MarkNext = FinalWord;
+        
+        MarkNext++;
+        
+        // these next 3 lines are wrong and need to be redone
+        TokenType[] Targets = {TokenType.SingleChar};
+        MarkNext = Skip_Until(Chunks, MarkNext, Targets);
+        while (MarkNext<Chunks.size()) {// get to brackets and dive in
+          
+          tkn = Chunks.get(MarkNext);
+          if (tkn.Text.equals("{")){// this would be Chomp_ClassBody
+            while (MarkNext<Chunks.size()) {// get to brackets and dive in
+              tkn = Chunks.get(MarkNext);
+              if (tkn.Text.equals("}")){break;}
+              if ((SubPhrase = Chomp_Class(Chunks,  Marker, RecurDepth))!=null){
+                OnePhrase.ChildrenArray.add(SubPhrase); MarkNext = SubPhrase.ChunkEnd;
+              } else if ((SubPhrase = Chomp_Function(Chunks,  Marker, RecurDepth))!=null){
+                OnePhrase.ChildrenArray.add(SubPhrase); MarkNext = SubPhrase.ChunkEnd;
+              } else if ((SubPhrase = Chomp_VariableDeclaration(Chunks,  Marker, RecurDepth))!=null){
+                OnePhrase.ChildrenArray.add(SubPhrase); MarkNext = SubPhrase.ChunkEnd;
+              }
+              MarkNext++;
+            }
+          }
+        }
+        
+      }
+      OnePhrase.ChunkEnd = Marker;
+      return OnePhrase;
+    }
+    /* ********************************************************************************************************* */
+    public static Phrase Chomp_Function(ArrayList<Token> Chunks, int Marker, int RecurDepth){// not working yet, just scribbles
+      return null;
+    }
+    /* ********************************************************************************************************* */
     public static Phrase Chomp_VariableDeclaration(ArrayList<Token> Chunks, int Marker, int RecurDepth){// not working yet, just scribbles
       /*
       so variable declarations go:
@@ -696,15 +823,15 @@ class JavaParse
     }
     // </editor-fold>
     /* ********************************************************************************************************* */
-  public static Phrase Fold(ArrayList<Token> Chunks) {
-    System.out.println("");
-    System.out.println("-----------------------------------------------------");
-    int Marker = 0;
-    Phrase parent;
-    parent = Chomp_HashMap(Chunks, Marker, 0);
-    System.out.println("Done");
-    return parent;
-  }
+    public static Phrase Fold(ArrayList<Token> Chunks) {
+      System.out.println("");
+      System.out.println("-----------------------------------------------------");
+      int Marker = 0;
+      Phrase parent;
+      parent = Chomp_HashMap(Chunks, Marker, 0);
+      System.out.println("Done");
+      return parent;
+    }
   }
   /* ********************************************************************************************************* */
   public static class Token
@@ -798,6 +925,11 @@ class JavaParse
       }
       sb.append("]");
       return sb.toString();
+    }
+    public static Phrase MakeField(String Value) {// probably not very C++ compatible
+      Phrase phrase = new Phrase();
+      phrase.Literal = Value;
+      return phrase;
     }
   }
 }

@@ -63,36 +63,6 @@ public interface ITextable {// DIY Json ISerializable - more control
     public JsonParse.Phrase JsonPhrase = null;// serialization of the ITextable Item
   }
   /* ********************************************************************************* */
-  public class CollisionLibrary_Serialization {// contains list of instances of (usually) songlet/phrase pairs for serialization
-    int ItemIdNum = 0;
-    private HashMap<ITextable, CollisionItem> Instances = new HashMap<ITextable, CollisionItem>();
-    public CollisionItem InsertUniqueInstance(ITextable Key) {
-      CollisionItem ci = new CollisionItem();
-      ci.ItemTxtPtr = Globals.PtrPrefix + ItemIdNum;
-      ci.Item = Key;
-      this.Instances.put(Key, ci);// ITextable
-      ItemIdNum++;
-      return ci;
-    }
-    public CollisionItem GetItem(ITextable KeyObj) {
-      return this.Instances.get(KeyObj);
-    }
-  }
-  /* ********************************************************************************* */
-  public class CollisionLibrary_Deserialization {// contains list of instances of (usually) songlet/phrase pairs for DEserialization
-    private HashMap<String, CollisionItem> Items = new HashMap<String, CollisionItem>();
-    public void InsertUniqueItem(String KeyTxt, ITextable Item) {// for deserialization
-      CollisionItem ci = new CollisionItem();
-      ci.Item = Item;
-      ci.ItemTxtPtr = KeyTxt;
-      ci.JsonPhrase = null;
-      this.Items.put(KeyTxt, ci);// ITextable
-    }
-    public CollisionItem GetItem(String KeyTxt) {
-      return this.Items.get(KeyTxt);
-    }
-  }
-  /* ********************************************************************************* */
   public class CollisionLibrary {// contains twice-indexed list of instances of (usually) songlet/phrase pairs for serialization, DEserialization, and cloning
     int ItemIdNum = 0;
     private HashMap<ITextable, CollisionItem> Instances = new HashMap<ITextable, CollisionItem>();// serialization and cloning
@@ -106,19 +76,6 @@ public interface ITextable {// DIY Json ISerializable - more control
       ItemIdNum++;
       return ci;
     }
-    /*
-     ok for testing:
-     (serialize) intake real songlets, build collision table, indexed by songlet ptr.  also capable of indexing by txtptr, created at the time. 
-     convert each songlet to phrase right after it is inserted? 
-     (for testing) run through and delete the real songlet from each ci.
-     (deserialize) pass phrase to factory of root graphic obox, along with existing library 
-    
-     real life:
-     (deserialize) intake phrases, add to phrase library, indexed by txtptr. NOT indexable by songlet ptr, as songlets are created later. 
-     pass root phrase and library to root factory, etc.  none of this will need an index by songlet ptr. 
-    
-     (serialize) same as in test. 
-     */
     public void InsertTextifiedItem(String KeyTxt, JsonParse.Phrase Item) {// for deserialization, only on load
       CollisionItem ci = new CollisionItem();
       ci.Item = null;
