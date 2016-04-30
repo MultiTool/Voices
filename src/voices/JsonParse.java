@@ -6,8 +6,7 @@ import java.util.Hashtable;
 import java.util.Map;
 import java.util.Set;
 /* ********************************************************************************************************* */
-class JsonParse
-{
+class JsonParse {
   public enum TokenType { None, CommentStar, CommentSlash, Word, Whitespace, SingleChar, TextString }
   public static String Environment_NewLine = "\r\n";
   public static String PhraseEnd=",";
@@ -23,8 +22,7 @@ class JsonParse
     return parent;
   }
   /* ********************************************************************************************************* */
-  public static class Tokenizer
-  {
+  public static class Tokenizer {
     // <editor-fold defaultstate="collapsed" desc="Chunk Finders">
     /* ********************************************************************************************************* */
     public static int Chomp_CommentStar(String txt, int StartPlace, ArrayList<Token> Tokens)// more compact approach
@@ -58,7 +56,7 @@ class JsonParse
         {
           loc = txt.indexOf(ender1, loc1);
           if (loc >= 0) { loc += ender1.length(); } else { loc = txt.length(); }
-          String chunk = txt.substring(StartPlace, loc - StartPlace);
+          String chunk = txt.substring(StartPlace, loc);
           tkn = new Token();// { Text = chunk, BlockType = TokenType.CommentSlash };
           tkn. Text = chunk; tkn.BlockType = TokenType.CommentSlash;
           Tokens.add(tkn);
@@ -414,8 +412,7 @@ class JsonParse
     }
   }
   /* ********************************************************************************************************* */
-  public static class Token
-  {
+  public static class Token {
     public String Text;
     public TokenType BlockType;
     public String SpecificType = "None";
@@ -424,8 +421,7 @@ class JsonParse
     public String DeQuoted() { return Tokenizer.DeQuote(this.Text); }
   }
   /* ********************************************************************************************************* */
-  public static class Phrase
-  {// a value that is a hashtable, an array, a literal, or a pointer to a multiply-used item
+  public static class Phrase {// a value that is a hashtable, an array, a literal, or a pointer to a multiply-used item
     public enum Types { None, Class, Interface, Method, Whatever }// Interface is not used yet.
     public Types MyType = Types.None;
     public String MyPhraseName = "***Nothing***";

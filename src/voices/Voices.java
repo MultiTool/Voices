@@ -4,6 +4,9 @@ import java.awt.geom.Point2D;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 //import voices.VoiceBase.Point;
 
 /**
@@ -20,6 +23,22 @@ public class Voices {
   /* ********************************************************************************* */
   public static void main(String[] args) {
     RegisterFactories();
+    if (false){
+      String fdir = new File("").getAbsolutePath();
+      String fpath;
+      fpath = fdir + "\\src\\voices\\Voices.java";
+      fpath = fdir + "\\src\\voices\\MonkeyBox.java";
+      byte[] encoded = null;
+      String JsonTxt = "";
+      try {
+        encoded = Files.readAllBytes(Paths.get(fpath));
+        JsonTxt = new String(encoded, StandardCharsets.UTF_8);
+      } catch (Exception ex) {
+        boolean nop = true;
+      }
+      JavaParse.Parse(JsonTxt);
+      return;
+    }
     if (false) {
       Wave wav = new Wave();
       String flpath = new File("").getAbsolutePath();
