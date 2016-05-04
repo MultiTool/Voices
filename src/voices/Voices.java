@@ -28,6 +28,8 @@ public class Voices {
       String fpath;
       fpath = fdir + "\\src\\voices\\Voices.java";
       fpath = fdir + "\\src\\voices\\MonkeyBox.java";
+      fpath = fdir + "\\src\\voices\\GroupBox.java";
+      fpath = fdir + "\\src\\voices\\JavaParse.java";
       byte[] encoded = null;
       String JsonTxt = "";
       try {

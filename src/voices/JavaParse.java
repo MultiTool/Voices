@@ -16,8 +16,7 @@ in a method there can be:
 
 */
 /* ********************************************************************************************************* */
-class JavaParse
-{
+class JavaParse {
   public enum TokenType { None, CommentStar, CommentSlash, Word, Whitespace, SingleChar, TextString }
   public static String Environment_NewLine = "\r\n";
   public static String PhraseEnd=",";
@@ -36,8 +35,7 @@ class JavaParse
     return parent;
   }
   /* ********************************************************************************************************* */
-  public static class Tokenizer
-  {
+  public static class Tokenizer {
     // <editor-fold defaultstate="collapsed" desc="Chunk Finders">
     /* ********************************************************************************************************* */
     public static int Chomp_CommentStar(String txt, int StartPlace, ArrayList<Token> Tokens)// more compact approach
@@ -87,8 +85,7 @@ class JavaParse
       Token tkn = null;
       char ch = txt.charAt(StartPlace);
       while (loc < txt.length() && IsWordChar(txt.charAt(loc))) { loc++; }
-      if (StartPlace < loc)
-      {// then we found something
+      if (StartPlace < loc) {// then we found something
         String chunk = txt.substring(StartPlace, loc);
         tkn = new Token();// { Text = chunk, BlockType = TokenType.Word };
         tkn. Text = chunk; tkn.BlockType = TokenType.Word;
@@ -450,37 +447,9 @@ class JavaParse
     /* ********************************************************************************************************* */
     public static Phrase Chomp_VarType(ArrayList<Token> Chunks, int Marker, int RecurDepth){
       Phrase OnePhrase=null,SubPhrase=null; // Starts with any word, then consumes any array [] or template <> clause and finishes
+      int PrevMark = Marker;
       Token tkn = Chunks.get(Marker);
       if (tkn.BlockType != TokenType.Word){ return null; }// must start with a word
-      
-      if (false){
-        Marker = Skip_Until(Chunks, Marker, WordTarget);
-        /*
-        it is:
-        loop until word
-        while not eof {
-        .  if word break;
-        .  else ignore <> and advance
-        .  else ignore [] and advance
-        .  else advance; // whitespace, comments etc. 
-        }
-        now we have our variable type, with or without <> or []
-        ack what about that.thing? 
-        wordmode = false;
-        so Chomp_NameChain(){
-        . if word, {
-        .  if (wordmode){ break; } // we are already in wordmode and we hit a word, namechain is broken. 
-        .  set wordmode=true, advance
-        . }
-        . else if punto . , set NOT wordmode,advance
-        . else if (wordmode){ // if in wordmode and next thing is not a period, break?  not a ' ' either. 
-        . }
-        }
-        */
-        // then recognize <> or [] or both, in that order 
-        Marker = Skip_Until(Chunks, Marker, WordTarget);// then skip to next word, which will be the variable name itself
-      }
-      
       
       OnePhrase = new Phrase(new ArrayList<Phrase>(), Marker);
       int FinalWord = Marker;
@@ -490,6 +459,7 @@ class JavaParse
       
       // next we either encounter a word (variable name) or we encounter puctuation (template or array)
       // so loop while looking for either punctuation or word
+      Marker++;
       
       // determine if this has templates or is an array
       boolean IsPunctuated = false;
@@ -567,7 +537,7 @@ class JavaParse
     }
     /* ********************************************************************************************************* */
     public static Phrase Chomp_Preamble(ArrayList<Token> Chunks, int Marker, int RecurDepth){// ready for test?
-      String Preludes[]={"public","private","protected","default"};// ,"static"  or none 
+      String Preludes[]={"@Override","public","private","protected","default"};// ,"static"  or none 
       String Staticness = "static";// or none
       Phrase OnePhrase = null;
       Token tkn=null;
@@ -636,28 +606,27 @@ class JavaParse
       if (tkn.BlockType != TokenType.Word){ return null; }// must start with a word
       boolean ReadyToQuit = false;
       int FinalWord = Marker;
-      if (tkn.BlockType == TokenType.Word){
-        OnePhrase = new Phrase(new ArrayList<Phrase>(), Marker);
-        Marker++;
-        while (Marker<Chunks.size()) {
-          tkn = Chunks.get(Marker);
-          if (tkn.BlockType == TokenType.Word){
-            if (ReadyToQuit){ break; }// two words in a row means quit
-            OnePhrase.ChildrenArray.add(Phrase.MakeField(tkn.Text));
-            FinalWord = Marker;
-            ReadyToQuit = true;
-          } else if (tkn.BlockType == TokenType.SingleChar){// look for . 
-            if (tkn.Text.equals(".")){
-              OnePhrase.ChildrenArray.add(Phrase.MakeField(tkn.Text)); // do we really want to save the period? 
-              ReadyToQuit = false; // we hit a dot, keep looking for next word
-            } else { break; }// bail out for any SingleChar that is not a period
-          } else if (tkn.BlockType == TokenType.TextString){// look for . 
-            break;// Quoted text would be an error, but bail out anyway, we got our variable type definition.
-          }
-          Marker++;
+      //if (tkn.BlockType == TokenType.Word){
+      OnePhrase = new Phrase(new ArrayList<Phrase>(), Marker);
+      while (Marker<Chunks.size()) {
+        tkn = Chunks.get(Marker);
+        if (tkn.BlockType == TokenType.Word){
+          if (ReadyToQuit){ break; }// two words in a row means quit
+          OnePhrase.ChildrenArray.add(Phrase.MakeField(tkn.Text));
+          FinalWord = Marker;
+          ReadyToQuit = true;
+        } else if (tkn.BlockType == TokenType.SingleChar){// look for . 
+          if (tkn.Text.equals(".")){
+            OnePhrase.ChildrenArray.add(Phrase.MakeField(tkn.Text)); // do we really want to save the period? 
+            ReadyToQuit = false; // we hit a dot, keep looking for next word
+          } else { break; }// bail out for any SingleChar that is not a period
+        } else if (tkn.BlockType == TokenType.TextString){// look for . 
+          break;// Quoted text would be an error, but bail out anyway, we got our variable type definition.
         }
-        OnePhrase.ChunkEnd = FinalWord;
+        Marker++;
       }
+      OnePhrase.ChunkEnd = FinalWord;
+      //}
       return OnePhrase;
     }
     /* ********************************************************************************************************* */
@@ -743,7 +712,7 @@ class JavaParse
       }
       
       // should probably bail out here if we didn't find a {
-      
+      MetaEnum SubEnum = null;// will become MetaEnum
       MetaClass SubClass = null;
       MetaFunction SubFunction = null;
       MetaVar SubVar = null;
@@ -761,6 +730,9 @@ class JavaParse
           } else if ((SubVar = Chomp_VariableDeclaration(Chunks, Marker, RecurDepth))!=null){
             System.out.println("AddMetaVar");
             ClassPhrase.AddMetaVar(SubVar); Marker = SubVar.ChunkEnd;
+          } else if ((SubEnum = Chomp_Enum(Chunks, Marker, RecurDepth))!=null){
+            System.out.println("AddMetaEnum");
+            ClassPhrase.AddMetaEnum(SubEnum); Marker = SubEnum.ChunkEnd;
           }
           Marker++;
         }
@@ -801,6 +773,7 @@ class JavaParse
         }
         Marker++;
       }
+      FnPhrase.IsConstructor = IsConstructor;
       if (Marker>=Chunks.size()) {return null;}
       if (IsConstructor){
         FnPhrase.FnName=FnPhrase.ReturnType;
@@ -837,36 +810,11 @@ class JavaParse
       */
       System.out.println("Chomp_VariableDeclaration");
       Token tkn=null;
-      /*
-      ok so
-      if starter is EITHER Prelude, or Chomp_VarType, then {// proceed
-      . advance Marker++;
-      . loop{
-      .  if (Chomp_VarType()){// then what? move to the next loop? recurse to more tests? tail-end recursion
-      .  } else {
-      .  }
-      . }
-      . 
-      . loop{
-      .  if (Chomp_VarName()){// mainly just a word
-      .   break;// 
-      .  } else {
-      .  }
-      . }
-      .
-      . here if you are a variable, you can end with a ;, or you can end with a = blah blah.  either way just scan to ;
-      . but, if you are a function, scan to a (). 
-      . so I guess once you've cleared the VarName, loop and Chomp_FnParams or == ";", whichever comes first. 
-      .  but what of interfaces?  int HaHaFn(String txt);
-      . so always detect fn with parens first (). 
-      }
-      */
-      // Chomp_VarType(ArrayList<Token> Chunks, int Marker, RecurDepth);
-      //CompareStartAny(String txt, Marker, Exposure);
+
       // or just read until semicolon; and NOT method and NOT class
       MetaVar VarPhrase=null; Phrase SubPhrase=null;
       String StartRay="[", EndRay="]";
-      int MarkNext=Marker;
+      int MarkPrev=Marker;
       RecurDepth++;
       
       // ************************* LATEST SCRIBBLE 
@@ -875,16 +823,16 @@ class JavaParse
       
       VarPhrase = new MetaVar(new ArrayList<Phrase>(), Marker);
       if ((VarPhrase.Preamble = Chomp_Preamble(Chunks,  Marker,  RecurDepth))!=null){
-        Marker = VarPhrase.Preamble.ChunkEnd;
+        Marker = VarPhrase.Preamble.ChunkEnd; Marker++;
       }
 
-      Marker++;
-
-      Marker=Skip_Until(Chunks, Marker, WordTarget);// jump to next word
-
+      //Marker=Skip_Until(Chunks, Marker, WordTarget);// jump to next word
+      
       // then we chomp variable type
       Marker=Skip_Until(Chunks, Marker, WordTarget);// jump to next word, no whitespace, no comments 
       if (Marker>=Chunks.size()) {return null;}
+      tkn = Chunks.get(Marker);// must be on a word to even start
+
       if ((SubPhrase = Chomp_VarType(Chunks,  Marker, RecurDepth))!=null){// now look for templates<>, if any. 
         VarPhrase.AddVarType(SubPhrase); Marker = SubPhrase.ChunkEnd; 
       } else {return null;}
@@ -893,6 +841,29 @@ class JavaParse
       
       if (false){
         return null;// disabled for now
+      }
+      
+      if (false){// Chomp_VarAssign, gets variable names with or without assignments. eg VarName, VarName = blah;
+        // first get var name
+        Marker=Skip_Until(Chunks, Marker, WordTarget);// jump to next word - variable name!
+        if (Marker >= Chunks.size()){return null;}
+        tkn = Chunks.get(Marker);
+        VarPhrase.VarName = tkn.Text;
+        
+        Marker++;// do we need this?
+        
+        int FinalChunk = Marker;
+        while (Marker<Chunks.size()) {
+          tkn = Chunks.get(Marker);
+          if (tkn.Text.equals("=")) { // ignore and jump over for now
+          } else if (tkn.Text.equals(",")){
+             FinalChunk=Marker; break;
+          } else if (tkn.Text.equals(";")){
+             FinalChunk=Marker; break;
+          }
+          Marker++;
+        }
+        // end = FinalChunk
       }
       
       Marker=Skip_Until(Chunks, Marker, WordTarget);// jump to next word - variable name!
@@ -905,14 +876,23 @@ class JavaParse
       Marker=Skip_Until(Chunks, Marker, PunctuationTarget);// jump to next punctuation
       if (Marker >= Chunks.size()){return null;}
       tkn = Chunks.get(Marker);
-      if (tkn.Text.equals("=")){// detected an assignment!  we hate these!
+      
+      if (tkn.Text.equals("=")){ Marker++; }// detected an assignment!  we hate these!
+      
+      while (Marker<Chunks.size()) {
+        tkn = Chunks.get(Marker);
+        if (tkn.Text.equals(";")) {break;}// jump to next punctuation
         Marker++;
-        while (Marker<Chunks.size()) {
-          tkn = Chunks.get(Marker);
-          if (tkn.Text.equals(";")) {break;}// jump to next punctuation
-          Marker++;
-        }
       }
+      
+//      if (tkn.Text.equals("=")){// detected an assignment!  we hate these!
+//        Marker++;
+//        while (Marker<Chunks.size()) {
+//          tkn = Chunks.get(Marker);
+//          if (tkn.Text.equals(";")) {break;}// jump to next punctuation
+//          Marker++;
+//        }
+//      }
       if (Marker >= Chunks.size()){return null;}
       
       // by now tkn.Text MUST be a semicolon ; 
@@ -942,6 +922,11 @@ class JavaParse
       if first is 
       */
       return VarPhrase;
+    }
+    /* ********************************************************************************************************* */
+    public static MetaEnum Chomp_Enum(ArrayList<Token> Chunks, int Marker, int RecurDepth){// to do: make this
+      String Identifier = "enum";
+      return null;
     }
     // </editor-fold>
   }
@@ -1012,9 +997,11 @@ class JavaParse
     private ArrayList<MetaClass> MetaClassList = new ArrayList<MetaClass>();
     private ArrayList<MetaFunction> MetaFunctionList = new ArrayList<MetaFunction>();
     private ArrayList<MetaVar> MetaVarList = new ArrayList<MetaVar>();
+    private ArrayList<MetaEnum> MetaEnumList = new ArrayList<MetaEnum>();
     private ArrayList<Phrase> AncestorList = new ArrayList<Phrase>();
     public String ClassName = "";
-    public MetaClass(){ super(); }
+    public int ClassNameLoc = Integer.MIN_VALUE;
+    public MetaClass(){ super(); MyPhraseName = "MetaClass"; }
     public MetaClass(ArrayList<Phrase> ChildArray0, int Marker){
       super(ChildArray0, Marker);
     }
@@ -1027,16 +1014,25 @@ class JavaParse
     public void AddMetaVar(MetaVar MVar){
       this.MetaVarList.add(MVar); this.AddSubPhrase(MVar); 
     }
+    public void AddMetaEnum(MetaEnum MEnum){
+      this.MetaEnumList.add(MEnum); this.AddSubPhrase(MEnum); 
+    }
+    //
     public void AddInheritance(Phrase Ancestor){
       this.AncestorList.add(Ancestor); this.AddSubPhrase(Ancestor); 
     }
   }
   /* ********************************************************************************************************* */
+  public static class MetaEnum extends Phrase {
+  }
+  /* ********************************************************************************************************* */
   public static class MetaFunction extends Phrase {
     String ReturnType, FnName;
+    public int ReturnTypeLoc = Integer.MIN_VALUE, FnNameLoc = Integer.MIN_VALUE;
     Phrase VarTypePhrase;
+    boolean IsConstructor;
     private Phrase Params, Body;
-    public MetaFunction(){ super(); }
+    public MetaFunction(){ super(); MyPhraseName = "MetaVar"; }
     public MetaFunction(ArrayList<Phrase> ChildArray0, int Marker){ super(ChildArray0, Marker); }
     public void AddVarType(Phrase VarType0){
       this.VarTypePhrase = VarType0; this.AddSubPhrase(VarType0);// and ReturnType? 
@@ -1051,8 +1047,9 @@ class JavaParse
   /* ********************************************************************************************************* */
   public static class MetaVar extends Phrase {
     String VarType, VarName;
+    public int VarTypeLoc = Integer.MIN_VALUE, VarNameLoc = Integer.MIN_VALUE;
     Phrase VarTypePhrase;
-    public MetaVar(){ super(); }
+    public MetaVar(){ super(); MyPhraseName = "MetaVar"; }
     public MetaVar(ArrayList<Phrase> ChildArray0, int Marker){ super(ChildArray0, Marker); }
     public void AddVarType(Phrase VarType0){
       this.VarTypePhrase = VarType0; this.AddSubPhrase(VarType0);
