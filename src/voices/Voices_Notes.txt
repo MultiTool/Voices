@@ -718,6 +718,22 @@ ci.JsonPhrase.ChildrenHash = Fields;
 phrase.Literal = ci.ItemTxtPtr; // assign txt pointer to the new library entry
 }
 
+http://localhost:53681/GeocodeWebService.asmx
+
+http://localhost:53681/GeocodeWebService.asmx
+
+GeocodeSoapClient
+
+GeocodeSoap2RestClient
+
+https://dev.virtualearth.net/REST/v1/Locations/?q=3855%20Persimmon%20Circle%20Fairfax%20Virginia%20USA%2022031%20&key=AlOJLM5ISheaJmLMNIW62bWq1sJmQ-s1ZPABbIsgfJTFcn4vrTFfxDkT-OhJ3uSp
+
+http://dev.virtualearth.net/REST/v1/Locations/?q=3855%20Persimmon%20Circle%20Fairfax%20Virginia%20USA%2022031%20&key=AlOJLM5ISheaJmLMNIW62bWq1sJmQ-s1ZPABbIsgfJTFcn4vrTFfxDkT-OhJ3uSp
+
+V:\geocode_test2\GeocodeSoap
+
+http://egisgeocode.cbp.dhs.gov/GeocodeRest2Soap/GeocodeWebService.asmx 
+
 
 
 

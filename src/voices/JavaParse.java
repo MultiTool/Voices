@@ -122,10 +122,8 @@ class JavaParse {
           //if (CompareStart(txt, loc0, "\\"+QuoteChar+"") >= 0) { loc0++; }// ignore slash-escaped quotes
           if (CompareStart(txt, loc0, "\\") >= 0) { loc0++; }// ignore slash-escaped anything
           else if (CompareStart(txt, loc0, ""+QuoteChar+""+QuoteChar+"") >= 0) { loc0++; }// ignore double-escaped quotes (only legal in some languages)
-          else if (ch == QuoteChar.charAt(0)) {
-            loc0++; break;
-          }
-          //else if (ch == '"') { loc0++; break; }
+          else if (CompareStart(txt, loc0, QuoteChar) >= 0) { loc0++; break; }// we found a closing quote, break.
+          //else if (ch == QuoteChar.charAt(0)) { loc0++; break; }
           loc0++;
         }
         if (StartPlace < loc0)
@@ -228,8 +226,6 @@ class JavaParse {
       return false;
     }
     // </editor-fold>
-    /* ********************************************************************************************************* */
-    public static ArrayList<Token> Nothing_Test(){return null;}
     /* ********************************************************************************************************* */
     public static int CompareStartStay(String txt, int StartPlace, String target)
     {// look for any substring right at the StartPlace of the text
@@ -389,9 +385,6 @@ class JavaParse {
         }
         OnePhrase.ChunkEnd = Marker;// inclusive 
       }
-      if (tkn.Text.equals("Chomp_TextStringSingleQuoted")){
-        boolean nop = true;  
-      }
       return OnePhrase;
     }
     /* ********************************************************************************************************* */
@@ -400,22 +393,6 @@ class JavaParse {
       String Starter="{", Ender="}";
       RecurDepth++;
       OnePhrase = Chomp_NestedWhatever(Chunks,  Marker, RecurDepth, Starter, Ender);
-      if (false){
-        Token tkn = Chunks.get(Marker);
-        if (tkn.Text.equals(Starter)){
-          OnePhrase = new Phrase(new ArrayList<Phrase>(), Marker);
-          Marker++;
-          while (Marker<Chunks.size()) {
-            tkn = Chunks.get(Marker);
-            if (tkn.Text.equals(Ender)){break;}
-            if ((SubPhrase = Chomp_CurlyBraces(Chunks,  Marker, RecurDepth))!=null){
-              OnePhrase.AddSubPhrase(SubPhrase); Marker = SubPhrase.ChunkEnd; 
-            } else {/* skip over everything else */ }
-            Marker++;
-          }
-          OnePhrase.ChunkEnd = Marker;// inclusive 
-        }
-      }
       return OnePhrase;
     }
     /* ********************************************************************************************************* */
@@ -423,20 +400,7 @@ class JavaParse {
       Phrase OnePhrase=null,SubPhrase=null;// just get through the templates and find the exit
       String Starter="<", Ender=">";
       RecurDepth++;
-      Token tkn = Chunks.get(Marker);
-      if (tkn.Text.equals(Starter)){
-        OnePhrase = new Phrase(new ArrayList<Phrase>(), Marker);
-        Marker++;
-        while (Marker<Chunks.size()) {
-          tkn = Chunks.get(Marker);
-          if (tkn.Text.equals(Ender)){break;}
-          if ((SubPhrase = Chomp_Template(Chunks,  Marker, RecurDepth))!=null){// nested templates
-            OnePhrase.ChildrenArray.add(SubPhrase); Marker = SubPhrase.ChunkEnd; 
-          } else {/* skip over everything else */ }// sloppy: no detection of bogus tokens like string literals or reserved words
-          Marker++;
-        }
-        OnePhrase.ChunkEnd = Marker;
-      }
+      OnePhrase = Chomp_NestedWhatever(Chunks,  Marker, RecurDepth, Starter, Ender);
       return OnePhrase;
     }
     /* ********************************************************************************************************* */
@@ -764,16 +728,26 @@ class JavaParse {
       tkn = Chunks.get(Marker);// must be on a word to even start
       if (tkn.BlockType != TokenType.Word){return null;}
       
+      Phrase SubPhrase=null;
       MetaFunction FnPhrase = new MetaFunction(new ArrayList<Phrase>(), Marker);
       if ((FnPhrase.Preamble = Chomp_Preamble(Chunks,  Marker,  RecurDepth))!=null){
         Marker = FnPhrase.Preamble.ChunkEnd + 1;
       }
       
-      String ReturnType;// then we chomp function return type
+//      String ReturnType;// then we chomp function return type
+//      Marker=Skip_Until(Chunks, Marker, WordTarget);// jump to next word, no whitespace, no comments 
+//      if (Marker>=Chunks.size()) {return null;}
+//      tkn = Chunks.get(Marker);// this would be Chomp_ReturnType
+//      FnPhrase.ReturnType=tkn.Text; //OnePhrase.AddSubPhrase(Phrase.MakeField(ClassName));
+      
+      // then we chomp variable type
       Marker=Skip_Until(Chunks, Marker, WordTarget);// jump to next word, no whitespace, no comments 
-      if (Marker>=Chunks.size()) {return null;}
       tkn = Chunks.get(Marker);// this would be Chomp_ReturnType
-      FnPhrase.ReturnType=tkn.Text; //OnePhrase.AddSubPhrase(Phrase.MakeField(ClassName));
+      FnPhrase.ReturnType=tkn.Text;// not really what we should do. snox
+      if (Marker>=Chunks.size()) {return null;}
+      if ((SubPhrase = Chomp_VarType(Chunks,  Marker, RecurDepth))!=null){// now look for templates<>, if any. 
+        FnPhrase.AddVarType(SubPhrase); Marker = SubPhrase.ChunkEnd; 
+      } else {return null;}
       
       Marker++;
       
@@ -850,17 +824,11 @@ class JavaParse {
       // then we chomp variable type
       Marker=Skip_Until(Chunks, Marker, WordTarget);// jump to next word, no whitespace, no comments 
       if (Marker>=Chunks.size()) {return null;}
-      tkn = Chunks.get(Marker);// must be on a word to even start
-
       if ((SubPhrase = Chomp_VarType(Chunks,  Marker, RecurDepth))!=null){// now look for templates<>, if any. 
         VarPhrase.AddVarType(SubPhrase); Marker = SubPhrase.ChunkEnd; 
       } else {return null;}
 
       Marker++;
-      
-      if (false){
-        return null;// disabled for now
-      }
       
       if (false){// Chomp_VarAssign, gets variable names with or without assignments. eg VarName, VarName = blah;
         // first get var name
@@ -1116,7 +1084,9 @@ class JavaParse {
     public MetaFunction(){ super(); MyPhraseName = "MetaVar"; }
     public MetaFunction(ArrayList<Phrase> ChildArray0, int Marker){ super(ChildArray0, Marker); }
     public void AddVarType(Phrase VarType0){
-      this.VarTypePhrase = VarType0; this.AddSubPhrase(VarType0);// and ReturnType? 
+      this.VarTypePhrase = VarType0; 
+      this.AddSubPhrase(VarType0);// and ReturnType? 
+      //this.ReturnType;
     }
     public void AddParams(Phrase Params0){
       this.Params = Params0; this.AddSubPhrase(Params0);

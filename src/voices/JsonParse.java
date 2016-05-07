@@ -106,9 +106,10 @@ class JsonParse {
         while (loc0 < txt.length())// by default String ends where text ends
         {
           char ch = txt.charAt(loc0);
-          if (CompareStart(txt, loc0, "\\"+QuoteChar+"") >= 0) { loc0++; }// ignore slash-escaped quotes
+          if (CompareStart(txt, loc0, "\\") >= 0) { loc0++; }// ignore slash-escaped characters
           else if (CompareStart(txt, loc0, ""+QuoteChar+""+QuoteChar+"") >= 0) { loc0++; }// ignore double-escaped quotes (only legal in some languages)
-          else { if (ch == '"') { loc0++; break; } }
+          else if (CompareStart(txt, loc0, QuoteChar) >= 0) { loc0++; break; }// we found a closing quote, break.
+          //else { if (ch == QuoteChar.charAt(0)) { loc0++; break; } }
           loc0++;
         }
         if (StartPlace < loc0)
