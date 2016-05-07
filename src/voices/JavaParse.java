@@ -119,9 +119,13 @@ class JavaParse {
         while (loc0 < txt.length())// by default String ends where text ends
         {
           char ch = txt.charAt(loc0);
-          if (CompareStart(txt, loc0, "\\"+QuoteChar+"") >= 0) { loc0++; }// ignore slash-escaped quotes
+          //if (CompareStart(txt, loc0, "\\"+QuoteChar+"") >= 0) { loc0++; }// ignore slash-escaped quotes
+          if (CompareStart(txt, loc0, "\\") >= 0) { loc0++; }// ignore slash-escaped anything
           else if (CompareStart(txt, loc0, ""+QuoteChar+""+QuoteChar+"") >= 0) { loc0++; }// ignore double-escaped quotes (only legal in some languages)
-          else { if (ch == '"') { loc0++; break; } }
+          else if (ch == QuoteChar.charAt(0)) {
+            loc0++; break;
+          }
+          //else if (ch == '"') { loc0++; break; }
           loc0++;
         }
         if (StartPlace < loc0)
@@ -130,9 +134,12 @@ class JavaParse {
           tkn = new Token();// { Text = chunk, BlockType = TokenType.TextString };
           tkn. Text = chunk; tkn.BlockType = TokenType.TextString;
           Tokens.add(tkn);
+          if (tkn.Text.contains("escaping!")){
+            boolean nop = true;  
+          }
         }
       }
-      return loc0;
+      return loc0;// escaping!!
     }
     /* ********************************************************************************************************* */
     public static int Chomp_TextStringDoubleQuoted(String txt, int StartPlace, ArrayList<Token> Tokens)// more compact approach
@@ -221,6 +228,8 @@ class JavaParse {
       return false;
     }
     // </editor-fold>
+    /* ********************************************************************************************************* */
+    public static ArrayList<Token> Nothing_Test(){return null;}
     /* ********************************************************************************************************* */
     public static int CompareStartStay(String txt, int StartPlace, String target)
     {// look for any substring right at the StartPlace of the text
@@ -364,6 +373,9 @@ class JavaParse {
       Phrase OnePhrase=null,SubPhrase=null;// recurse nested curly braces and ignore everything else
       RecurDepth++;
       Token tkn = Chunks.get(Marker);
+      if (tkn.Text.contains("escaping!")){
+        boolean nop = true;  
+      }
       if (tkn.Text.equals(Starter)){
         OnePhrase = new Phrase(new ArrayList<Phrase>(), Marker);
         Marker++;
@@ -376,6 +388,9 @@ class JavaParse {
           Marker++;
         }
         OnePhrase.ChunkEnd = Marker;// inclusive 
+      }
+      if (tkn.Text.equals("Chomp_TextStringSingleQuoted")){
+        boolean nop = true;  
       }
       return OnePhrase;
     }
@@ -727,12 +742,12 @@ class JavaParse {
           } else if ((SubFunction = Chomp_Function(Chunks, Marker, RecurDepth, ClassPhrase))!=null){
             System.out.println("AddMetaFunction");
             ClassPhrase.AddMetaFunction(SubFunction); Marker = SubFunction.ChunkEnd;
-          } else if ((SubVar = Chomp_VariableDeclaration(Chunks, Marker, RecurDepth))!=null){
-            System.out.println("AddMetaVar");
-            ClassPhrase.AddMetaVar(SubVar); Marker = SubVar.ChunkEnd;
           } else if ((SubEnum = Chomp_Enum(Chunks, Marker, RecurDepth))!=null){
             System.out.println("AddMetaEnum");
             ClassPhrase.AddMetaEnum(SubEnum); Marker = SubEnum.ChunkEnd;
+          } else if ((SubVar = Chomp_VariableDeclaration(Chunks, Marker, RecurDepth))!=null){
+            System.out.println("AddMetaVar");
+            ClassPhrase.AddMetaVar(SubVar); Marker = SubVar.ChunkEnd;
           }
           Marker++;
         }
@@ -782,7 +797,9 @@ class JavaParse {
         if (InList(FnPhrase.ReturnType, Primitives)){// check if type is in Primitives. 
         }
       }
-      
+      if (FnPhrase.FnName.equals("Chomp_TextString")){
+        boolean nop = true;
+      }
       // next get parameters
       Marker=Skip_Until(Chunks, Marker, PunctuationTarget);// jump to next punctuation, no whitespace, no comments 
       if (Marker>=Chunks.size()) {return null;}
@@ -792,6 +809,8 @@ class JavaParse {
       }else{ return null; }
       
       Marker++;// body begins on {
+      
+      tkn = Chunks.get(Marker);
       
       Marker=Skip_Until(Chunks, Marker, PunctuationTarget);// jump to next punctuation, no whitespace, no comments 
       Phrase Body;// finally dive into brackets
@@ -926,7 +945,64 @@ class JavaParse {
     /* ********************************************************************************************************* */
     public static MetaEnum Chomp_Enum(ArrayList<Token> Chunks, int Marker, int RecurDepth){// to do: make this
       String Identifier = "enum";
-      return null;
+      String Starter = "{", Ender = "}";
+      int FinalChunk = 0;
+      MetaEnum EnumPhrase = null;
+      Token tkn=null;
+      String EnumName="";
+      System.out.println("Chomp_Enum");
+      
+      tkn = Chunks.get(Marker);
+      if (tkn.BlockType != TokenType.Word){ return null; }// must start with a word
+      
+      EnumPhrase = new MetaEnum(new ArrayList<Phrase>(), Marker);
+      
+      if ((EnumPhrase.Preamble = Chomp_Preamble(Chunks,  Marker,  RecurDepth))!=null){
+        Marker = EnumPhrase.Preamble.ChunkEnd + 1;
+      }
+      
+      // race ahead to find "enum" identifier
+      Marker=Skip_Until(Chunks, Marker, WordTarget);// jump to next word, no whitespace, no comments 
+      if (Marker>=Chunks.size()) {return null;}
+      tkn = Chunks.get(Marker);
+      
+      boolean IsEnum = false;// this would be Chomp_ClassIdentifier
+      if (tkn.Text.equals(Identifier)){IsEnum = true; } else { IsEnum = false; }
+      if (!IsEnum) { return null; }     
+
+      Marker++;// start at next token
+      
+      Marker=Skip_Until(Chunks, Marker, WordTarget);// jump to next word, no whitespace, no comments 
+      if (Marker>=Chunks.size()) {return null;}
+      tkn = Chunks.get(Marker);// this would be Chomp_EnumName
+      EnumPhrase.EnumName=(EnumName=tkn.Text); //OnePhrase.AddSubPhrase(Phrase.MakeField(ClassName));
+
+      Marker++;// start at next token. not needed really.
+      
+      Marker=Skip_Until(Chunks, Marker, PunctuationTarget);// jump to next punctuation, no whitespace, no comments 
+      if (Marker>=Chunks.size()) {return null;}
+      tkn = Chunks.get(Marker);// this would be Chomp_EnumName
+      if (!tkn.Text.equals(Starter)){return null;}
+      
+      Marker++;// start at next token
+
+//      Marker=Skip_Until(Chunks, Marker, PunctuationTarget);// jump to next punctuation, no whitespace, no comments 
+//      if (Marker>=Chunks.size()) {return null;}
+//      tkn = Chunks.get(Marker);// this would be Chomp_EnumName
+//      if (!tkn.Text.equals(Ender)){return null;}
+      
+      while (Marker<Chunks.size()) {
+        tkn = Chunks.get(Marker);
+        if (tkn.Text.equals(Ender)){ FinalChunk=Marker; break; }
+        else if (tkn.Text.equals(",")){ }
+        Marker++;
+      }
+      
+      if (Marker>=Chunks.size()) {return null;}
+      
+      EnumPhrase.ChunkEnd = FinalChunk;
+      
+      return EnumPhrase;
     }
     // </editor-fold>
   }
@@ -1024,6 +1100,11 @@ class JavaParse {
   }
   /* ********************************************************************************************************* */
   public static class MetaEnum extends Phrase {
+    public String EnumName;
+    public MetaEnum(){ super(); MyPhraseName = "MetaEnum"; }
+    public MetaEnum(ArrayList<Phrase> ChildArray0, int Marker){
+      super(ChildArray0, Marker);
+    }
   }
   /* ********************************************************************************************************* */
   public static class MetaFunction extends Phrase {
