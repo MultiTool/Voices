@@ -291,7 +291,7 @@ class JsonParse {
       return "\"" + txt + "\"";
     }
     /* ********************************************************************************************************* */
-    public static Phrase Chomp_Number(ArrayList<Token> Chunks, int Marker, int RecurDepth)
+    public static Phrase Chomp_NumberX(ArrayList<Token> Chunks, int Marker, int RecurDepth)
     {// this is wrong. need to re-think it before using. 
       // chunks are a number if: all chunks are all numeric
       // but not if: numeric chunks end, but next chunk is non-whitespace, non-comma, non-semicolon, and what else? just non-delimiter? 
@@ -312,6 +312,34 @@ class JsonParse {
           MarkNext++;
         }
         OnePhrase = new Phrase(); OnePhrase.ChunkStart = Marker; OnePhrase.ChunkEnd = MarkNext-1;
+        OnePhrase.Literal = WholeString;
+      }
+      return OnePhrase;
+    }
+    /* ********************************************************************************************************* */
+    public static Phrase Chomp_Number(ArrayList<Token> Chunks, int Marker, int RecurDepth)
+    {// this is wrong. need to re-think it before using. 
+      // chunks are a number if: all chunks are all numeric
+      // but not if: numeric chunks end, but next chunk is non-whitespace, non-comma, non-semicolon, and what else? just non-delimiter? 
+      // 12.345blah is not a number. maybe let that pass anyway? 123.4f is a number sometimes. 
+      // hmm. valid numberenders: ; , []() etc. any single char thing that's not a .  
+      // how about a number can end with whitespace or any non-numeric punctation. 
+      Phrase OnePhrase = null;
+      int FirstChunk, FinalChunk = Marker;
+      Token tkn = Chunks.get(Marker);
+      char ch = tkn.Text.charAt(0);
+      if (IsNumericPunctuationChar(ch) || IsNumericString(tkn.Text)) {
+        FirstChunk = Marker;
+        String WholeString = "";
+        while (Marker < Chunks.size()) {// to do: fix this. as-is will return true if text is empty.
+          tkn = Chunks.get(Marker);
+          ch = tkn.Text.charAt(0);
+          if (!(IsNumericPunctuationChar(ch) || IsNumericString(tkn.Text) || IsNumericSuffixChar(ch))) { break; }
+          FinalChunk = Marker;
+          WholeString = WholeString + tkn.Text;
+          Marker++;
+        }
+        OnePhrase = new Phrase(); OnePhrase.ChunkStart = FirstChunk; OnePhrase.ChunkEnd = FinalChunk;
         OnePhrase.Literal = WholeString;
       }
       return OnePhrase;
@@ -498,5 +526,90 @@ class JsonParse {
       sb.append("]");
       return sb.toString();
     }
+  }
+  /* ********************************************************************************************************* */
+  public static class PhraseBase {// a value that is a hashtable, an array, a literal, or a pointer to a multiply-used item
+    public enum Types { None, Class, Interface, Method, Whatever }// Interface is not used yet.
+    public Types MyType = Types.None;
+    public String MyPhraseName = "***Nothing***";
+    public PhraseBase Parent = null;
+    public int ChunkStart, ChunkEnd;
+    public String ToJson() { return ""; }// virtual
+  }
+  /* ********************************************************************************************************* */
+  public static class LiteralPhrase extends PhraseBase {// a value that is a literal
+    private String Literal = null;
+    public String Get() { return this.Literal; }
+    @Override public String ToJson() { return Tokenizer.EnQuote(this.Get()); }
+  }
+  /* ********************************************************************************************************* */
+  public static class HashPhrase extends PhraseBase
+  {// a value that is a hashtable, an array, a literal, or a pointer to a multiply-used item
+    private HashMap<String, PhraseBase> ChildrenHash = new HashMap<String, PhraseBase>();
+    public void AddSubPhrase(String Name, PhraseBase ChildPhrase)
+    {
+      this.ChildrenHash.put(Name, ChildPhrase); ChildPhrase.Parent = this;
+    }
+    public PhraseBase Get(String Name)
+    {
+      if (this.ChildrenHash.containsKey(Name)) { return this.ChildrenHash.get(Name); }
+      else { return null; }
+    }
+    public String ToHash()
+    {
+      PhraseBase child;
+      StringBuilder sb = new StringBuilder();
+      sb.append("{");
+      int len = this.ChildrenHash.size();
+      int ultimo = len-1;
+      String key;
+      this.ChildrenHash.keySet().toArray();
+      if (0<len){
+        Set<Map.Entry<String, PhraseBase>> Entries = this.ChildrenHash.entrySet();
+        Object[] objray = Entries.toArray();
+        int cnt=0;
+        while (cnt<ultimo){
+          Map.Entry<String, PhraseBase> entry = (Map.Entry<String, PhraseBase>) objray[cnt];
+          key = entry.getKey(); child = entry.getValue();
+          sb.append(Tokenizer.EnQuote(key)); sb.append(" : "); sb.append(child.ToJson());
+          sb.append(", ");
+          cnt++;
+        }
+        key = ((Map.Entry<String, Phrase>)objray[cnt]).getKey();
+        child = this.ChildrenHash.get(key);
+        sb.append(Tokenizer.EnQuote(key)); sb.append(" : "); sb.append(child.ToJson());
+      }
+      sb.append("}");
+      return sb.toString();
+    }
+    @Override public String ToJson() { return this.ToHash(); }
+  }
+  /* ********************************************************************************************************* */
+  public static class ArrayPhrase extends PhraseBase
+  {// a value that is an array
+    private ArrayList<PhraseBase> ChildrenArray = new ArrayList<PhraseBase>();
+    public void AddSubPhrase(PhraseBase ChildPhrase) {
+        this.ChildrenArray.add(ChildPhrase); ChildPhrase.Parent = this;
+    }
+    public PhraseBase Get(int Dex){ return this.ChildrenArray.get(Dex);}
+    public String ToArray() {
+      PhraseBase child;
+      StringBuilder sb = new StringBuilder();
+      sb.append("[");
+      int len = this.ChildrenArray.size();
+      int ultimo = len - 1;
+      if (0 < len) {
+        int cnt = 0;
+        while (cnt < ultimo) {
+          child = this.ChildrenArray.get(cnt); sb.append(child.ToJson());
+          sb.append(", ");
+          cnt++;
+        }
+        child = this.ChildrenArray.get(ultimo); sb.append(child.ToJson());
+      }
+      sb.append("]");
+      return sb.toString();
+    }
+    @Override public String ToJson() { return this.ToArray(); }
   }
 }

@@ -308,7 +308,7 @@ class JavaParse {
       return Text;
     }
     /* ********************************************************************************************************* */
-    public static Phrase Chomp_Number(ArrayList<Token> Chunks, int Marker, int RecurDepth)
+    public static Phrase Chomp_NumberX(ArrayList<Token> Chunks, int Marker, int RecurDepth)
     {// this is wrong. need to re-think it before using. 
       // chunks are a number if: all chunks are all numeric
       // but not if: numeric chunks end, but next chunk is non-whitespace, non-comma, non-semicolon, and what else? just non-delimiter? 
@@ -329,6 +329,34 @@ class JavaParse {
           MarkNext++;
         }
         OnePhrase = new Phrase(); OnePhrase.ChunkStart = Marker; OnePhrase.ChunkEnd = MarkNext-1;
+        OnePhrase.Literal = WholeString;
+      }
+      return OnePhrase;
+    }
+    /* ********************************************************************************************************* */
+    public static Phrase Chomp_Number(ArrayList<Token> Chunks, int Marker, int RecurDepth)
+    {// this is wrong. need to re-think it before using. 
+      // chunks are a number if: all chunks are all numeric
+      // but not if: numeric chunks end, but next chunk is non-whitespace, non-comma, non-semicolon, and what else? just non-delimiter? 
+      // 12.345blah is not a number. maybe let that pass anyway? 123.4f is a number sometimes. 
+      // hmm. valid numberenders: ; , []() etc. any single char thing that's not a .  
+      // how about a number can end with whitespace or any non-numeric punctation. 
+      Phrase OnePhrase = null;
+      int FirstChunk, FinalChunk = Marker;
+      Token tkn = Chunks.get(Marker);
+      char ch = tkn.Text.charAt(0);
+      if (IsNumericPunctuationChar(ch) || IsNumericString(tkn.Text)) {
+        FirstChunk = Marker;
+        String WholeString = "";
+        while (Marker < Chunks.size()) {// to do: fix this. as-is will return true if text is empty.
+          tkn = Chunks.get(Marker);
+          ch = tkn.Text.charAt(0);
+          if (!(IsNumericPunctuationChar(ch) || IsNumericString(tkn.Text) || IsNumericSuffixChar(ch))) { break; }
+          FinalChunk = Marker;
+          WholeString = WholeString + tkn.Text;
+          Marker++;
+        }
+        OnePhrase = new Phrase(); OnePhrase.ChunkStart = FirstChunk; OnePhrase.ChunkEnd = FinalChunk;
         OnePhrase.Literal = WholeString;
       }
       return OnePhrase;
@@ -794,6 +822,51 @@ class JavaParse {
       FnPhrase.ChunkEnd=Marker;
       return FnPhrase;
     }
+
+    /* ********************************************************************************************************* */
+    public static VarAssignPair Chomp_VarAssign(ArrayList<Token> Chunks, int Marker, int RecurDepth){// not working yet, just scribbles
+      // Chomp_VarAssign, gets variable names with or without assignments. eg VarName, VarName = blah;
+      System.out.println("Chomp_VarAssign");
+      Token tkn=null;
+      VarAssignPair VarPhrase=null;
+      Phrase SubPhrase = null;
+      String VarName;
+      
+      tkn = Chunks.get(Marker);// must be on a word to even start
+      if (tkn.BlockType != TokenType.Word){return null;}
+      
+      VarPhrase = new VarAssignPair(new ArrayList<Phrase>(), Marker);
+      
+      // first get var name
+      VarPhrase.VarName = VarName = tkn.Text;
+      VarPhrase.VarNameLoc = Marker;
+
+      Marker++;// do we need this?
+
+      int FinalChunk = Marker;
+      int cnt = 0;
+      while (Marker<Chunks.size()) {
+        tkn = Chunks.get(Marker);
+        if (tkn.Text.equals("=")) { // ignore and jump over for now
+          // skip to next ; or ,
+        } else if ((SubPhrase = Chomp_Template(Chunks, Marker, RecurDepth))!=null){
+          Marker = SubPhrase.ChunkEnd;
+        } else if ((SubPhrase = Chomp_CurlyBraces(Chunks, Marker, RecurDepth))!=null){
+          Marker = SubPhrase.ChunkEnd;
+        } else if (tkn.Text.equals(",")){
+           FinalChunk=Marker; break;
+        } else if (tkn.Text.equals(";")){
+           FinalChunk=Marker; break;
+        }
+        cnt++;
+        Marker++;
+      }
+      //Chomp_CurlyBraces
+      if (Marker>=Chunks.size()){ return null; }
+      
+      VarPhrase.ChunkEnd = FinalChunk;
+      return VarPhrase;
+    }
     /* ********************************************************************************************************* */
     public static MetaVar Chomp_VariableDeclaration(ArrayList<Token> Chunks, int Marker, int RecurDepth){// not working yet, just scribbles
       /*
@@ -830,6 +903,22 @@ class JavaParse {
 
       Marker++;
       
+      if (true){// After getting vartype, get list of variable names with or without assignments. eg VarName1, VarName2 = blah;
+        VarAssignPair vap;
+        while (Marker<Chunks.size()) {
+          tkn = Chunks.get(Marker);
+//          if (tkn.Text.equals(";")) { // 
+//            break;
+//          } else 
+          if ((vap = Chomp_VarAssign(Chunks, Marker, RecurDepth))!=null){
+            VarPhrase.AddVarAssign(vap); Marker = vap.ChunkEnd;
+            tkn = Chunks.get(Marker);
+            if (tkn.Text.equals(";")) { break; }
+          }
+          Marker++;
+        }
+      }
+      
       if (false){// Chomp_VarAssign, gets variable names with or without assignments. eg VarName, VarName = blah;
         // first get var name
         Marker=Skip_Until(Chunks, Marker, WordTarget);// jump to next word - variable name!
@@ -853,25 +942,26 @@ class JavaParse {
         // end = FinalChunk
       }
       
-      Marker=Skip_Until(Chunks, Marker, WordTarget);// jump to next word - variable name!
-      if (Marker >= Chunks.size()){return null;}
-      tkn = Chunks.get(Marker);
-      VarPhrase.VarName = tkn.Text;
-      
-      Marker++;
-      
-      Marker=Skip_Until(Chunks, Marker, PunctuationTarget);// jump to next punctuation
-      if (Marker >= Chunks.size()){return null;}
-      tkn = Chunks.get(Marker);
-      
-      if (tkn.Text.equals("=")){ Marker++; }// detected an assignment!  we hate these!
-      
-      while (Marker<Chunks.size()) {
+      if (false){
+        Marker=Skip_Until(Chunks, Marker, WordTarget);// jump to next word - variable name!
+        if (Marker >= Chunks.size()){return null;}
         tkn = Chunks.get(Marker);
-        if (tkn.Text.equals(";")) {break;}// jump to next punctuation
+        VarPhrase.VarName = tkn.Text;
+
         Marker++;
+
+        Marker=Skip_Until(Chunks, Marker, PunctuationTarget);// jump to next punctuation
+        if (Marker >= Chunks.size()){return null;}
+        tkn = Chunks.get(Marker);
+
+        if (tkn.Text.equals("=")){ Marker++; }// detected an assignment!  we hate these!
+
+        while (Marker<Chunks.size()) {
+          tkn = Chunks.get(Marker);
+          if (tkn.Text.equals(";")) {break;}// jump to next punctuation
+          Marker++;
+        }
       }
-      
 //      if (tkn.Text.equals("=")){// detected an assignment!  we hate these!
 //        Marker++;
 //        while (Marker<Chunks.size()) {
@@ -1075,6 +1165,15 @@ class JavaParse {
     }
   }
   /* ********************************************************************************************************* */
+  public static class VarAssignPair extends Phrase {
+    public String VarName;
+    public int VarNameLoc;
+    public VarAssignPair(){ super(); MyPhraseName = "VarAssignPair"; }
+    public VarAssignPair(ArrayList<Phrase> ChildArray0, int Marker){
+      super(ChildArray0, Marker);
+    }
+  }
+  /* ********************************************************************************************************* */
   public static class MetaFunction extends Phrase {
     String ReturnType, FnName;
     public int ReturnTypeLoc = Integer.MIN_VALUE, FnNameLoc = Integer.MIN_VALUE;
@@ -1100,11 +1199,15 @@ class JavaParse {
     String VarType, VarName;
     public int VarTypeLoc = Integer.MIN_VALUE, VarNameLoc = Integer.MIN_VALUE;
     Phrase VarTypePhrase;
+    private ArrayList<VarAssignPair> VarAssignList = new ArrayList<VarAssignPair>();
     public MetaVar(){ super(); MyPhraseName = "MetaVar"; }
     public MetaVar(ArrayList<Phrase> ChildArray0, int Marker){ super(ChildArray0, Marker); }
     public void AddVarType(Phrase VarType0){
       this.VarTypePhrase = VarType0; this.AddSubPhrase(VarType0);
       //this.VarType=tkn.Text; 
+    }
+    public void AddVarAssign(VarAssignPair vap){
+      this.VarAssignList.add(vap);  this.AddSubPhrase(vap);
     }
   }
 }
