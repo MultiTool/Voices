@@ -182,9 +182,9 @@ public class GraphicBox implements IDrawable, ISonglet, IDeletable {//
   /* ********************************************************************************* */
   @Override public JsonParse.Phrase Export(CollisionLibrary HitTable) {// ITextable
     JsonParse.Phrase phrase = new JsonParse.Phrase();
-    HashMap<String, JsonParse.Phrase> Fields = (phrase.ChildrenHash = new HashMap<String, JsonParse.Phrase>());
+    phrase.ChildrenHash = new HashMap<String, JsonParse.Phrase>();
     JsonParse.Phrase ContentOBoxPhrase = this.ContentOBox.Export(HitTable);
-    Fields.put(ContentOBoxName, ContentOBoxPhrase);
+    phrase.AddSubPhrase(ContentOBoxName, ContentOBoxPhrase);
     return phrase;
   }
   @Override public void ShallowLoad(JsonParse.Phrase phrase) {// ITextable
@@ -334,10 +334,9 @@ public class GraphicBox implements IDrawable, ISonglet, IDeletable {//
     /* ********************************************************************************* */
     @Override public JsonParse.Phrase Export(CollisionLibrary HitTable) {// ITextable
       JsonParse.Phrase SelfPackage = super.Export(HitTable);// ready for test?
-      SelfPackage.ChildrenHash.put(Globals.ObjectTypeName, IFactory.Utils.PackField(ObjectTypeName));
+      SelfPackage.AddSubPhrase(Globals.ObjectTypeName, IFactory.Utils.PackField(ObjectTypeName));
       if (false) {
-        HashMap<String, JsonParse.Phrase> Fields = SelfPackage.ChildrenHash;
-        Fields.put(Globals.ObjectTypeName, IFactory.Utils.PackField(ObjectTypeName));
+        SelfPackage.AddSubPhrase(Globals.ObjectTypeName, IFactory.Utils.PackField(ObjectTypeName));
         JsonParse.Phrase ChildPackage;
         if (this.Content.GetRefCount() != 1) {// songlet exists in more than one place, use a pointer to library
           ChildPackage = new JsonParse.Phrase();// multiple references, use a pointer to library instead
@@ -350,7 +349,7 @@ public class GraphicBox implements IDrawable, ISonglet, IDeletable {//
         } else {// songlet only exists in one place, make it inline.
           ChildPackage = this.Content.Export(HitTable);
         }
-        Fields.put(OffsetBox.ContentName, ChildPackage);
+        SelfPackage.AddSubPhrase(OffsetBox.ContentName, ChildPackage);
       }
       return SelfPackage;
     }

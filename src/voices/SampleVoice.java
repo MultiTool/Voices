@@ -65,7 +65,7 @@ public class SampleVoice extends Voice {
   @Override public JsonParse.Phrase Export(CollisionLibrary HitTable) {// ITextable
     JsonParse.Phrase phrase = super.Export(HitTable);// to do: export my wave too
     phrase.ChildrenHash = this.SerializeMyContents(HitTable);
-    phrase.ChildrenHash.put(LoopedName, IFactory.Utils.PackField(this.Looped));
+    phrase.AddSubPhrase(LoopedName, IFactory.Utils.PackField(this.Looped));
     this.MySample.Export();
     return phrase;
   }
@@ -131,8 +131,7 @@ public class SampleVoice extends Voice {
     /* ********************************************************************************* */
     @Override public JsonParse.Phrase Export(CollisionLibrary HitTable) {// ITextable
       JsonParse.Phrase SelfPackage = super.Export(HitTable);// tested
-      HashMap<String, JsonParse.Phrase> Fields = SelfPackage.ChildrenHash;
-      Fields.put(Globals.ObjectTypeName, IFactory.Utils.PackField(ObjectTypeName));
+      SelfPackage.AddSubPhrase(Globals.ObjectTypeName, IFactory.Utils.PackField(ObjectTypeName));
       return SelfPackage;
     }
     @Override public void ShallowLoad(JsonParse.Phrase phrase) {// ITextable

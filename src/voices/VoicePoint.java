@@ -135,11 +135,10 @@ public class VoicePoint extends MonkeyBox {
   /* ********************************************************************************* */
   @Override public JsonParse.Phrase Export(CollisionLibrary HitTable) {// ITextable
     JsonParse.Phrase phrase = super.Export(HitTable);
-    HashMap<String, JsonParse.Phrase> Fields = phrase.ChildrenHash;
-    Fields.put("OctavesPerLoudness", IFactory.Utils.PackField(this.OctavesPerLoudness));
-    Fields.put("SubTime", IFactory.Utils.PackField(this.SubTime));// can be calculated
-    Fields.put(VoicePoint.UpHandleName, this.UpHandle.Export(HitTable));
-    Fields.put(VoicePoint.DownHandleName, this.DownHandle.Export(HitTable));
+    phrase.AddSubPhrase("OctavesPerLoudness", IFactory.Utils.PackField(this.OctavesPerLoudness));
+    phrase.AddSubPhrase("SubTime", IFactory.Utils.PackField(this.SubTime));// can be calculated
+    phrase.AddSubPhrase(VoicePoint.UpHandleName, this.UpHandle.Export(HitTable));
+    phrase.AddSubPhrase(VoicePoint.DownHandleName, this.DownHandle.Export(HitTable));
     this.UpHandle.Export(HitTable);
     this.DownHandle.Export(HitTable);
     return phrase;
@@ -277,11 +276,11 @@ public class VoicePoint extends MonkeyBox {
     /* ********************************************************************************* */
     @Override public JsonParse.Phrase Export(CollisionLibrary HitTable) {// ITextable
       JsonParse.Phrase phrase = new JsonParse.Phrase();
-      HashMap<String, JsonParse.Phrase> Fields = (phrase.ChildrenHash = new HashMap<String, JsonParse.Phrase>());
-      Fields.put("OctavesPerRadius", IFactory.Utils.PackField(this.OctavesPerRadius));
+      phrase.ChildrenHash = new HashMap<String, JsonParse.Phrase>();
+      phrase.AddSubPhrase("OctavesPerRadius", IFactory.Utils.PackField(this.OctavesPerRadius));
       if (false) {// can be calculated
-        Fields.put("IsSelected", IFactory.Utils.PackField(this.IsSelected));
-        Fields.put("MyBounds", this.MyBounds.Export(HitTable));
+        phrase.AddSubPhrase("IsSelected", IFactory.Utils.PackField(this.IsSelected));
+        phrase.AddSubPhrase("MyBounds", this.MyBounds.Export(HitTable));
       }
       return phrase;
     }

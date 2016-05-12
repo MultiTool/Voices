@@ -152,8 +152,9 @@ class JavaParse {
     /* ********************************************************************************************************* */
     public static int Chomp_SingleChar(String txt, int StartPlace, ArrayList<Token> Tokens)// more compact approach
     {// for single char such as { or ] or ; etc. 
-      // String singles = "}{][)(*&^%$#@!~+=;:.>,<|\\?/-";
-      String singles = "}{][)(*&^%$#@!~+=;:>,<|\\?/.";
+      // String singles = "}{][)(*&^%$#@!~+=;:>,<|\\?/.-";
+      String singles = "}{][)(*&^%$#@!~+=;:>,<|\\?/";
+      singles+=".-";// snox
       // int loc = StartPlace;
       Token tkn = null;
       if (StartPlace >= txt.length()) { return StartPlace; }
@@ -176,7 +177,7 @@ class JavaParse {
       if ('A' <= ch && ch <= 'Z') { return true; }
       if ('0' <= ch && ch <= '9') { return true; }
       if ('_' == ch || ch == '@') { return true; }
-      if ('-' == ch || ch == '.') { return true; }// for numbers snox must break words on . as well
+      //if ('-' == ch || ch == '.') { return true; }// for numbers snox must break words on . as well
       return false;
     }
     /* ********************************************************************************************************* */
@@ -187,9 +188,21 @@ class JavaParse {
       return false;
     }
     /* ********************************************************************************************************* */
+    public static boolean IsDecimalPointChar(char ch)
+    {// for number punctuation such as '.' - anything else? 
+      if (ch == '.') { return true; }
+      return false;
+    }
+    /* ********************************************************************************************************* */
     public static boolean IsNumericPunctuationChar(char ch)
     {// for number punctuation such as '.' and '-' anything else? 
       if ('-' == ch || ch == '.') { return true; }// currently we are sloppy and let gibberish like ".--99.00.-45..88" go through
+      return false;
+    }
+    /* ********************************************************************************************************* */
+    public static boolean IsNumericPrefixChar(char ch)
+    {
+      if (ch == '-' || ch == '.') { return true; }
       return false;
     }
     /* ********************************************************************************************************* */
@@ -323,25 +336,76 @@ class JavaParse {
       return Text;
     }
     /* ********************************************************************************************************* */
+    public static Phrase Chomp_Number2(ArrayList<Token> Chunks, int Marker, int RecurDepth) {// this is wrong. need to re-think it before using. 
+      // chunks are a number if: all chunks are all numeric
+      // but not if: numeric chunks end, but next chunk is non-whitespace, non-comma, non-semicolon, and what else? just non-delimiter? 
+      // 12.345blah is not a number. maybe let that pass anyway? 123.4f is a number sometimes. 
+      // hmm. valid numberenders: ; , []() etc. any single char thing that's not a .  
+      // how about a number can end with whitespace or any non-numeric punctation. 
+      // well 5-2 is TWO numbers, not one number. we really need to be smarter. 
+      Phrase OnePhrase = null;
+      int FirstChunk = Marker, FinalChunk = Marker;
+      Token tkn = Chunks.get(Marker);
+      String WholeString = "";
+      double number = 0;
+      char ch = tkn.Text.charAt(0);
+      if (IsNumericPrefixChar(ch) || IsNumericString(tkn.Text)) {
+        WholeString = WholeString.concat(tkn.Text);
+        Marker++;
+        while (Marker < Chunks.size()) {//  AAAGH this is junk!  
+          if (IsNumber(WholeString)){
+            FinalChunk = Marker;// Just keep going until it does not parse.
+          }else{
+            break;
+          }
+          try {
+            number = Double.parseDouble(WholeString);
+            FinalChunk = Marker;// Just keep going until it does not parse.
+          }catch(Exception ex){
+            break;
+          }
+          tkn = Chunks.get(Marker);
+          WholeString = WholeString.concat(tkn.Text);
+          Marker++;
+        }
+        OnePhrase = new Phrase(); OnePhrase.ChunkStart = FirstChunk; OnePhrase.ChunkEnd = FinalChunk;
+        OnePhrase.Literal = WholeString;
+      }
+      return OnePhrase;
+    }
+    /* ********************************************************************************************************* */
+    public static boolean IsNumber(String NumTxt){
+      double number;
+      try {
+        number = Double.parseDouble(NumTxt);
+        return true;// Just keep going until it does not parse.
+      }catch(Exception ex){
+        return false;
+      }
+    }
+    /* ********************************************************************************************************* */
     public static Phrase Chomp_Number(ArrayList<Token> Chunks, int Marker, int RecurDepth) {// this is wrong. need to re-think it before using. 
       // chunks are a number if: all chunks are all numeric
       // but not if: numeric chunks end, but next chunk is non-whitespace, non-comma, non-semicolon, and what else? just non-delimiter? 
       // 12.345blah is not a number. maybe let that pass anyway? 123.4f is a number sometimes. 
       // hmm. valid numberenders: ; , []() etc. any single char thing that's not a .  
       // how about a number can end with whitespace or any non-numeric punctation. 
+      // well 5-2 is TWO numbers, not one number. we really need to be smarter. 
       Phrase OnePhrase = null;
       int FirstChunk, FinalChunk = Marker;
       Token tkn = Chunks.get(Marker);
       char ch = tkn.Text.charAt(0);
-      if (IsNumericPunctuationChar(ch) || IsNumericString(tkn.Text)) {
+      if (IsNumericPrefixChar(ch) || IsNumericString(tkn.Text)) {
         FirstChunk = Marker;
+        Marker++;
         String WholeString = "";
         while (Marker < Chunks.size()) {// to do: fix this. as-is will return true if text is empty.
           tkn = Chunks.get(Marker);
           ch = tkn.Text.charAt(0);
-          if (!(IsNumericPunctuationChar(ch) || IsNumericString(tkn.Text) || IsNumericSuffixChar(ch))) { break; }
+          if (!(IsDecimalPointChar(ch) || IsNumericString(tkn.Text) || IsNumericSuffixChar(ch))) { break; }
           FinalChunk = Marker;
-          WholeString = WholeString + tkn.Text;
+          //WholeString = WholeString + tkn.Text;
+          WholeString = WholeString.concat(tkn.Text);
           Marker++;
         }
         OnePhrase = new Phrase(); OnePhrase.ChunkStart = FirstChunk; OnePhrase.ChunkEnd = FinalChunk;
@@ -436,7 +500,7 @@ class JavaParse {
       OnePhrase = new Phrase(new ArrayList<Phrase>(), Marker);
       int FinalWord = Marker;
       if ((SubPhrase = Chomp_DotWord(Chunks,  Marker, RecurDepth))!=null){// first get literal word part of typedef
-        OnePhrase.ChildrenArray.add(SubPhrase); FinalWord = Marker = SubPhrase.ChunkEnd; 
+        OnePhrase.AddSubPhrase(SubPhrase); FinalWord = Marker = SubPhrase.ChunkEnd; 
       } else { return null; }
       
       // next we either encounter a word (variable name) or we encounter puctuation (template or array)
@@ -460,9 +524,9 @@ class JavaParse {
           tkn = Chunks.get(Marker);
           if (tkn.BlockType == TokenType.Word){ break;}// terminate on any new word that is not in a modifier.
           if ((SubPhrase = Chomp_Template(Chunks,  Marker, RecurDepth))!=null){// jump over templates
-            OnePhrase.ChildrenArray.add(SubPhrase); FinalWord = Marker = SubPhrase.ChunkEnd; 
+            OnePhrase.AddSubPhrase(SubPhrase); FinalWord = Marker = SubPhrase.ChunkEnd; 
           } else if ((SubPhrase = Chomp_EmptySquareBrackets(Chunks,  Marker, RecurDepth))!=null){// jump over array brackets
-            OnePhrase.ChildrenArray.add(SubPhrase); FinalWord = Marker = SubPhrase.ChunkEnd; 
+            OnePhrase.AddSubPhrase(SubPhrase); FinalWord = Marker = SubPhrase.ChunkEnd; 
           } else { }// ignore whitespace, brake on what? brake after 1 word, followed by any or no template/array clauses
           Marker++;
         }
@@ -951,7 +1015,7 @@ class JavaParse {
       this.ChildrenArray = ChildArray0;
     }
     public void AddSubPhrase(Phrase ChildPhrase){
-      this.ChildrenArray.add(ChildPhrase);
+      this.ChildrenArray.add(ChildPhrase); ChildPhrase.Parent = this;
     }
     public void ConvertToCpp(ArrayList<Token> Chunks){// virtual
     }

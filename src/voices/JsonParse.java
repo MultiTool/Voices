@@ -362,18 +362,18 @@ class JsonParse {
           tkn = Chunks.get(Marker);
           if (tkn.Text.equals(Ender)){break;}
           else if ((SubPhrase = Chomp_HashMap(Chunks,  Marker, RecurDepth))!=null){
-            OnePhrase.ChildrenHash.put(Key, SubPhrase); Key=null; MarkNext = SubPhrase.ChunkEnd+1; 
+            OnePhrase.AddSubPhrase(Key, SubPhrase); Key=null; MarkNext = SubPhrase.ChunkEnd+1; 
           } else if ((SubPhrase = Chomp_Array(Chunks,  Marker, RecurDepth))!=null){
-            OnePhrase.ChildrenHash.put(Key, SubPhrase); Key=null; MarkNext = SubPhrase.ChunkEnd+1; 
+            OnePhrase.AddSubPhrase(Key, SubPhrase); Key=null; MarkNext = SubPhrase.ChunkEnd+1; 
           } else if ((SubPhrase = Chomp_Number(Chunks, Marker, RecurDepth)) != null) {
-            OnePhrase.ChildrenHash.put(Key, SubPhrase); Key=null; MarkNext = SubPhrase.ChunkEnd+1;
+            OnePhrase.AddSubPhrase(Key, SubPhrase); Key=null; MarkNext = SubPhrase.ChunkEnd+1;
           } else if ((tkn.BlockType == TokenType.TextString) || (tkn.BlockType == TokenType.Word)) {
             if (KeyOrValue == 0) {
               Key = tkn.Text;
               if (tkn.BlockType == TokenType.TextString) { Key = DeQuote(Key); }
             } else {
               SubPhrase = MakeLiteral(DeQuote(tkn.Text), Marker, Marker);// inclusive
-              OnePhrase.ChildrenHash.put(Key, SubPhrase);
+              OnePhrase.AddSubPhrase(Key, SubPhrase);
               Key = null;
             }
             MarkNext++;
@@ -407,14 +407,14 @@ class JsonParse {
           tkn = Chunks.get(Marker);
           if (tkn.Text.equals(Ender)){break;}
           if ((SubPhrase = Chomp_HashMap(Chunks,  Marker, RecurDepth))!=null){
-            OnePhrase.ChildrenArray.add(SubPhrase); MarkNext = SubPhrase.ChunkEnd+1; 
+            OnePhrase.AddSubPhrase(SubPhrase); MarkNext = SubPhrase.ChunkEnd+1; 
           } else if ((SubPhrase = Chomp_Array(Chunks,  Marker, RecurDepth))!=null){
-            OnePhrase.ChildrenArray.add(SubPhrase); MarkNext = SubPhrase.ChunkEnd+1; 
+            OnePhrase.AddSubPhrase(SubPhrase); MarkNext = SubPhrase.ChunkEnd+1; 
           } else if ((SubPhrase = Chomp_Number(Chunks, Marker, RecurDepth)) != null) {
-            OnePhrase.ChildrenArray.add(SubPhrase); MarkNext = SubPhrase.ChunkEnd+1;
+            OnePhrase.AddSubPhrase(SubPhrase); MarkNext = SubPhrase.ChunkEnd+1;
           } else if ((tkn.BlockType == TokenType.TextString) || (tkn.BlockType == TokenType.Word)){
             SubPhrase = MakeLiteral(DeQuote(tkn.Text), Marker, Marker);// inclusive
-            OnePhrase.ChildrenArray.add(SubPhrase);
+            OnePhrase.AddSubPhrase(SubPhrase);
             MarkNext++;
           } else if (tkn.BlockType == TokenType.SingleChar){
             if (tkn.Text.equals(",")){ }
@@ -460,6 +460,13 @@ class JsonParse {
     public String Literal=null;
     public ArrayList<Phrase> ChildrenArray = null;
     public HashMap<String,Phrase> ChildrenHash = null;
+    public void AddSubPhrase(Phrase ChildPhrase){
+      this.ChildrenArray.add(ChildPhrase); ChildPhrase.Parent = this;
+    }
+    public void AddSubPhrase(String Name, Phrase ChildPhrase)
+    {
+      this.ChildrenHash.put(Name, ChildPhrase); ChildPhrase.Parent = this;
+    }
     public String ToJson(){
       StringBuilder sb = new StringBuilder();
       if (this.ChildrenHash!=null){

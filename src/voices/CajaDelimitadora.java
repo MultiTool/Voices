@@ -179,9 +179,8 @@ public class CajaDelimitadora implements IDeletable, ITextable {// DIY BoundingB
   @Override public JsonParse.Phrase Export(CollisionLibrary HitTable) {// ITextable
     JsonParse.Phrase phrase = new JsonParse.Phrase();
     phrase.ChildrenHash = new HashMap<String, JsonParse.Phrase>();
-    HashMap<String, JsonParse.Phrase> Fields = phrase.ChildrenHash;
-    Fields.put("Min", IFactory.Utils.PackField(this.Min.toString()));
-    Fields.put("Max", IFactory.Utils.PackField(this.Max.toString()));
+    phrase.AddSubPhrase("Min", IFactory.Utils.PackField(this.Min.toString()));
+    phrase.AddSubPhrase("Max", IFactory.Utils.PackField(this.Max.toString()));
     return phrase;
   }
   @Override public void ShallowLoad(JsonParse.Phrase phrase) {// ITextable

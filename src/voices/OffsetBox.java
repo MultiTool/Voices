@@ -248,7 +248,7 @@ public class OffsetBox extends MonkeyBox { //implements IDrawable.IMoveable, IDe
     } else {// songlet only exists in one place, make it inline.
       ChildPackage = this.GetContent().Export(HitTable);
     }
-    SelfPackage.ChildrenHash.put(OffsetBox.ContentName, ChildPackage);
+    SelfPackage.AddSubPhrase(OffsetBox.ContentName, ChildPackage);
     return SelfPackage;
   }
   @Override public void ShallowLoad(JsonParse.Phrase phrase) {// ITextable

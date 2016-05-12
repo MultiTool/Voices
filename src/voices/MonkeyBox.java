@@ -237,13 +237,13 @@ public class MonkeyBox implements IDrawable.IMoveable, IDeletable, ITextable {//
     JsonParse.Phrase phrase = new JsonParse.Phrase();// in the MonkeyBox base class, we export only shallow values, no songlet children
     HashMap<String, JsonParse.Phrase> Fields = new HashMap<String, JsonParse.Phrase>();
     phrase.ChildrenHash = Fields;
-    Fields.put(MonkeyBox.TimeXName, IFactory.Utils.PackField(this.TimeX));
-    Fields.put(MonkeyBox.OctaveYName, IFactory.Utils.PackField(this.OctaveY));
-    Fields.put(MonkeyBox.LoudnessFactorName, IFactory.Utils.PackField(this.LoudnessFactor));
-    Fields.put(MonkeyBox.ScaleXName, IFactory.Utils.PackField(this.ScaleX));
-    Fields.put(MonkeyBox.ScaleYName, IFactory.Utils.PackField(this.ScaleY));
+    phrase.AddSubPhrase(MonkeyBox.TimeXName, IFactory.Utils.PackField(this.TimeX));
+    phrase.AddSubPhrase(MonkeyBox.OctaveYName, IFactory.Utils.PackField(this.OctaveY));
+    phrase.AddSubPhrase(MonkeyBox.LoudnessFactorName, IFactory.Utils.PackField(this.LoudnessFactor));
+    phrase.AddSubPhrase(MonkeyBox.ScaleXName, IFactory.Utils.PackField(this.ScaleX));
+    phrase.AddSubPhrase(MonkeyBox.ScaleYName, IFactory.Utils.PackField(this.ScaleY));
     if (false) {
-      Fields.put("OctavesPerRadius", IFactory.Utils.PackField(this.OctavesPerRadius));
+      phrase.AddSubPhrase("OctavesPerRadius", IFactory.Utils.PackField(this.OctavesPerRadius));
     }
     return phrase;
   }

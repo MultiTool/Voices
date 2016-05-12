@@ -5,6 +5,7 @@ import java.util.Map;
 import voices.GraphicBox.Graphic_OffsetBox;
 import voices.ISonglet.MetricsPacket;
 import voices.ISonglet.Singer;
+import voices.ITextable.IFactory;
 import static voices.Voices.SaveWave;
 
 /**
@@ -18,6 +19,8 @@ public class AudProject implements IDeletable {
   public int SampleRate = Globals.SampleRate;
   public int UpdateCounter = 1;
   public static String TreePhraseName = "Tree", LibraryPhraseName = "Library";// for serialization
+  public double VersionNum = 0.1;// song file version
+  public static String VersionNumName = "Version";// for serialization
   /* ********************************************************************************* */
   public AudProject() {
     this.GBox = new GraphicBox();
@@ -287,13 +290,19 @@ public class AudProject implements IDeletable {
     ITextable.CollisionLibrary HitTable = new ITextable.CollisionLibrary();
     JsonParse.Phrase Tree = this.GraphicRoot.Export(HitTable);
     JsonParse.Phrase Library = HitTable.ExportJson();
-    MainPhrase.ChildrenHash.put(TreePhraseName, Tree);
-    MainPhrase.ChildrenHash.put(LibraryPhraseName, Library);
+    MainPhrase.AddSubPhrase(VersionNumName, IFactory.Utils.PackField(this.VersionNum));
+    MainPhrase.AddSubPhrase(TreePhraseName, Tree);
+    MainPhrase.AddSubPhrase(LibraryPhraseName, Library);
     return MainPhrase.ToJson();
   }
   /* ********************************************************************************* */
   public void UnTextify(String JsonTxt) {// deserialize
     JsonParse.Phrase MainPhrase = JsonParse.Parse(JsonTxt);
+    
+    //JsonParse.Phrase VersionPhrase = MainPhrase.ChildrenHash.get(VersionNumName);
+    HashMap<String, JsonParse.Phrase> Fields = MainPhrase.ChildrenHash;
+    this.VersionNum = Double.parseDouble(IFactory.Utils.GetField(Fields, VersionNumName, String.format("%f%n", this.VersionNum)));
+    
     JsonParse.Phrase TreePhrase = MainPhrase.ChildrenHash.get(TreePhraseName);
     JsonParse.Phrase LibraryPhrase = MainPhrase.ChildrenHash.get(LibraryPhraseName);
 

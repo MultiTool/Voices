@@ -487,8 +487,7 @@ public class Voice implements ISonglet, IDrawable {
     /* ********************************************************************************* */
     @Override public JsonParse.Phrase Export(CollisionLibrary HitTable) {// ITextable
       JsonParse.Phrase SelfPackage = super.Export(HitTable);// ready for test?
-      HashMap<String, JsonParse.Phrase> Fields = SelfPackage.ChildrenHash;
-      Fields.put(Globals.ObjectTypeName, IFactory.Utils.PackField(ObjectTypeName));
+      SelfPackage.AddSubPhrase(Globals.ObjectTypeName, IFactory.Utils.PackField(ObjectTypeName));
       return SelfPackage;
     }
     @Override public void ShallowLoad(JsonParse.Phrase phrase) {// ITextable

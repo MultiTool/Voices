@@ -31,7 +31,7 @@ public class Voices {
       fpath = fdir + "\\src\\voices\\GroupBox.java";
       fpath = fdir + "\\src\\voices\\JavaParse.java";
 //      fpath = fdir + "\\src\\voices\\MainGui.java";
-//      fpath = fdir + "\\src\\voices\\Voice.java";
+      fpath = fdir + "\\src\\voices\\Voice.java";
       
       byte[] encoded = null;
       String JavaTxt = "";

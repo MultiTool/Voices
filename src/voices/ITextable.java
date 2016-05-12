@@ -99,7 +99,7 @@ public interface ITextable {// DIY Json ISerializable - more control
         ci = entry.getValue();
         if (ci.JsonPhrase != null) {
           //ChildPhrase = new JsonParse.Phrase();// should we clone the child phrase? 
-          MainPhrase.ChildrenHash.put(ci.ItemTxtPtr, ci.JsonPhrase);
+          MainPhrase.AddSubPhrase(ci.ItemTxtPtr, ci.JsonPhrase);
         }
       }
       return MainPhrase;

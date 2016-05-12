@@ -413,18 +413,18 @@ public class GroupBox implements ISonglet, IDrawable {
   /* ********************************************************************************* */
   @Override public JsonParse.Phrase Export(CollisionLibrary HitTable) {// ITextable
     JsonParse.Phrase phrase = new JsonParse.Phrase();
-    HashMap<String, JsonParse.Phrase> Fields = (phrase.ChildrenHash = new HashMap<String, JsonParse.Phrase>());
-    Fields.put("MyName", IFactory.Utils.PackField(this.MyName));
+    phrase.ChildrenHash = new HashMap<String, JsonParse.Phrase>();
+    phrase.AddSubPhrase("MyName", IFactory.Utils.PackField(this.MyName));
 
     if (false) {
-      Fields.put("MaxAmplitude", IFactory.Utils.PackField(this.MaxAmplitude));// can be calculated
-      Fields.put("MyBounds", MyBounds.Export(HitTable));// can be calculated
+      phrase.AddSubPhrase("MaxAmplitude", IFactory.Utils.PackField(this.MaxAmplitude));// can be calculated
+      phrase.AddSubPhrase("MyBounds", MyBounds.Export(HitTable));// can be calculated
     }
 
     // Save my array of songlets.
     JsonParse.Phrase CPointsPhrase = new JsonParse.Phrase();
     CPointsPhrase.ChildrenArray = IFactory.Utils.MakeArray(HitTable, this.SubSongs);
-    Fields.put(this.SubSongsName, CPointsPhrase);
+    phrase.AddSubPhrase(this.SubSongsName, CPointsPhrase);
 
     return phrase;
   }
@@ -695,6 +695,7 @@ public class GroupBox implements ISonglet, IDrawable {
   public static class Group_OffsetBox extends OffsetBox {// location box to transpose in pitch, move in time, etc. 
     public GroupBox Content = null;
     public double GroupScaleX = 1.0;
+    public static String GroupScaleXName = "GroupScaleX";// for serialization
     public static String ObjectTypeName = "Group_OffsetBox";
     /* ********************************************************************************* */
     public Group_OffsetBox() {
@@ -768,14 +769,12 @@ public class GroupBox implements ISonglet, IDrawable {
         }
       }
     }
-    // Fields.put(Globals.ObjectTypeName, IFactory.Utils.PackField(ObjectTypeName));
-    // ack, need an export and Consume
     /* ********************************************************************************* */
     @Override public JsonParse.Phrase Export(CollisionLibrary HitTable) {// ITextable
       JsonParse.Phrase SelfPackage = super.Export(HitTable);// ready for test?
-      HashMap<String, JsonParse.Phrase> Fields = SelfPackage.ChildrenHash;
-      Fields.put(Globals.ObjectTypeName, IFactory.Utils.PackField(ObjectTypeName));
-      Fields.put("GroupScaleX", IFactory.Utils.PackField(this.GroupScaleX));
+      //HashMap<String, JsonParse.Phrase> Fields = SelfPackage.ChildrenHash;
+      SelfPackage.AddSubPhrase(Globals.ObjectTypeName, IFactory.Utils.PackField(ObjectTypeName));
+      SelfPackage.AddSubPhrase(GroupScaleXName, IFactory.Utils.PackField(this.GroupScaleX));
       if (false) {
         JsonParse.Phrase ChildPackage;
         if (this.Content.GetRefCount() != 1) {// songlet exists in more than one place, use a pointer to library
@@ -789,7 +788,7 @@ public class GroupBox implements ISonglet, IDrawable {
         } else {// songlet only exists in one place, make it inline.
           ChildPackage = this.Content.Export(HitTable);
         }
-        Fields.put(OffsetBox.ContentName, ChildPackage);
+        SelfPackage.AddSubPhrase(OffsetBox.ContentName, ChildPackage);
       }
       return SelfPackage;
     }
