@@ -30,15 +30,18 @@ public class Voices {
       fpath = fdir + "\\src\\voices\\MonkeyBox.java";
       fpath = fdir + "\\src\\voices\\GroupBox.java";
       fpath = fdir + "\\src\\voices\\JavaParse.java";
+//      fpath = fdir + "\\src\\voices\\MainGui.java";
+//      fpath = fdir + "\\src\\voices\\Voice.java";
+      
       byte[] encoded = null;
-      String JsonTxt = "";
+      String JavaTxt = "";
       try {
         encoded = Files.readAllBytes(Paths.get(fpath));
-        JsonTxt = new String(encoded, StandardCharsets.UTF_8);
+        JavaTxt = new String(encoded, StandardCharsets.UTF_8);
       } catch (Exception ex) {
         boolean nop = true;
       }
-      JavaParse.Parse(JsonTxt);
+      JavaParse.Parse(JavaTxt);
       return;
     }
     if (false) {
