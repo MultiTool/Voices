@@ -23,7 +23,7 @@ public class Voices {
   /* ********************************************************************************* */
   public static void main(String[] args) {
     RegisterFactories();
-    if (false){
+    if (false) {
       String fdir = new File("").getAbsolutePath();
       String fpath;
       fpath = fdir + "\\src\\voices\\Voices.java";
@@ -32,7 +32,7 @@ public class Voices {
       fpath = fdir + "\\src\\voices\\JavaParse.java";
 //      fpath = fdir + "\\src\\voices\\MainGui.java";
       fpath = fdir + "\\src\\voices\\Voice.java";
-      
+
       byte[] encoded = null;
       String JavaTxt = "";
       try {
