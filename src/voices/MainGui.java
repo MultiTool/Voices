@@ -14,6 +14,7 @@ import java.nio.file.Paths;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.*;
+import javax.swing.filechooser.FileNameExtensionFilter;
 import voices.DrawingContext;
 import voices.GroupBox.Group_OffsetBox;
 // From http://www.tutorialspoint.com/javaexamples/gui_polygon.htm
@@ -455,6 +456,9 @@ public class MainGui {
   public void PromptSaveFile() {// gibberish, under construction
     String JsonTxt = "";
     JFileChooser FileChooser = new JFileChooser();
+    FileChooser.setPreferredSize(new Dimension(800, 600));
+    FileNameExtensionFilter filter = new FileNameExtensionFilter("JSong files", "jsong");
+    FileChooser.setFileFilter(filter);
     int ReturnVal = FileChooser.showSaveDialog(this.drawpanel);
     if (ReturnVal == JFileChooser.APPROVE_OPTION) {
       File SelectedFile = FileChooser.getSelectedFile();
@@ -473,6 +477,9 @@ public class MainGui {
   public void PromptOpenFile() {// ready for test
     String JsonTxt = "";
     JFileChooser FileChooser = new JFileChooser();
+    FileChooser.setPreferredSize(new Dimension(800, 600));
+    FileNameExtensionFilter filter = new FileNameExtensionFilter("JSong files", "jsong");
+    FileChooser.setFileFilter(filter);
     int ReturnVal = FileChooser.showOpenDialog(this.drawpanel);
     if (ReturnVal == JFileChooser.APPROVE_OPTION) {
       File SelectedFile = FileChooser.getSelectedFile();

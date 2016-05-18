@@ -3,9 +3,12 @@ package voices;
 import java.awt.geom.Point2D;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 //import voices.VoiceBase.Point;
 
@@ -41,7 +44,20 @@ public class Voices {
       } catch (Exception ex) {
         boolean nop = true;
       }
-      JavaParse.Parse(JavaTxt);
+      String CppTxt;
+      Path p = Paths.get(fpath);
+      String FName = p.getFileName().toString();
+      FName = FName.replace(".java", "");// remove extension
+      CppTxt = JavaParse.Parse(JavaTxt, FName);
+      try {
+        File file = new File(fdir + "\\src\\voices\\test1.hpp");
+        FileWriter fileWriter = new FileWriter(file);
+        fileWriter.write(CppTxt);
+        fileWriter.flush();
+        fileWriter.close();
+      } catch (IOException e) {
+        boolean nop = true;
+      }
       return;
     }
     if (false) {

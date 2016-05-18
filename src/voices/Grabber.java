@@ -4,7 +4,7 @@ import java.awt.List;
 import java.awt.Point;
 import java.awt.geom.Point2D;
 import java.util.ArrayList;
-import javafx.scene.effect.Light;
+//import javafx.scene.effect.Light;
 
 /**
  *
