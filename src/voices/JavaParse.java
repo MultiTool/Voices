@@ -1,5 +1,10 @@
 package voices;
 
+import java.io.File;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Hashtable;
@@ -26,6 +31,25 @@ class JavaParse {
   public static String[] Primitives = {"void", "byte", "short", "int", "long", "float", "double", "boolean", "char"};// String? 
   public static String InheritanceFlags[]={"implements", "extends"};// or none
   /* ********************************************************************************************************* */
+  public static MetaFile Parse(String FullPath) {
+    byte[] encoded = null; String JavaTxt = "";
+    try {
+      encoded = Files.readAllBytes(Paths.get(FullPath));
+      JavaTxt = new String(encoded, StandardCharsets.UTF_8);
+    } catch (Exception ex) {
+      boolean nop = true;
+    }
+    String SimpleName;
+    //Path p = Paths.get(FullPath); SimpleName = p.getFileName().toString().replace(".java", "");// remove extension
+    SimpleName = Paths.get(FullPath).getFileName().toString().replace(".java", "");// remove extension
+    ArrayList<Token> Chunks = Tokenizer.Tokenize(0, JavaTxt);
+    MetaFile JavaObj = TreeMaker.Chomp_File(Chunks, 0, 0);
+    JavaObj.FileName = SimpleName;
+    CppLuggage Luggage = new CppLuggage(); Luggage.Chunks = Chunks;
+    JavaObj.ConvertToCpp(Luggage);
+    return JavaObj;
+  }
+  /* ********************************************************************************************************* */
   public static String Parse(String JavaText, String FileName) {
     ArrayList<Token> Chunks = Tokenizer.Tokenize(0, JavaText);
     System.out.println("");
@@ -34,7 +58,8 @@ class JavaParse {
     int Marker = 0;
     parent = TreeMaker.Chomp_File(Chunks, Marker, 0);
     parent.FileName = FileName;
-    parent.ConvertToCpp(Chunks);
+    CppLuggage Luggage = new CppLuggage(); Luggage.Chunks = Chunks;
+    parent.ConvertToCpp(Luggage);
     String txt = Tokenizer.Chunks2String(Chunks);
     System.out.println("Done");
     return txt;
@@ -635,7 +660,7 @@ class JavaParse {
     }
     /* ********************************************************************************************************* */
     public static Node Chomp_Preamble(ArrayList<Token> Chunks, int Marker, int RecurDepth){// ready for test?
-      String Preludes[]={"@Override","public","private","protected","default"};// ,"static"  or none 
+      String Preludes[]={"@Override","public","private","protected","default","const"};// ,"static"  or none 
       String Staticness = "static";// or none
       Node OnePhrase = null;
       Token tkn=null;
@@ -765,6 +790,7 @@ class JavaParse {
       // should probably bail out here if we didn't find a {
       MetaEnum SubEnum = null;// will become MetaEnum
       MetaClass SubClass = null;
+      MetaInterface SubInterface = null;
       MetaFunction SubFunction = null;
       MetaVar SubVar = null;
       if (tkn.Text.equals(Starter)){// this would be Chomp_ClassBody
@@ -776,6 +802,9 @@ class JavaParse {
           if ((SubClass = Chomp_Class(Chunks, Marker, RecurDepth, ClassNode))!=null){
             System.out.println("AddMetaClass");
             ClassNode.AddMetaClass(SubClass); Marker = SubClass.ChunkEnd;
+          } else if ((SubInterface = Chomp_Interface(Chunks, Marker, RecurDepth, ClassNode))!=null){
+            System.out.println("AddMetaInterface");
+            ClassNode.AddMetaInterface(SubInterface); Marker = SubInterface.ChunkEnd;
           } else if ((SubFunction = Chomp_Function(Chunks, Marker, RecurDepth, ClassNode))!=null){
             System.out.println("AddMetaFunction");
             ClassNode.AddMetaFunction(SubFunction); Marker = SubFunction.ChunkEnd;
@@ -792,6 +821,13 @@ class JavaParse {
 
       ClassNode.ChunkEnd = Marker;
       return ClassNode;
+    }
+    /* ********************************************************************************************************* */
+    public static MetaInterface Chomp_Interface(ArrayList<Token> Chunks, int Marker, int RecurDepth, MetaClass Parent){
+      String Identifier = "interface";
+      String Starter = "{", Ender = "}";
+      MetaClass ClassNode = null;
+      return null;// to do: fill this in
     }
     /* ********************************************************************************************************* */
     public static MetaFunction Chomp_Function(ArrayList<Token> Chunks, int Marker, int RecurDepth, MetaClass Parent){// not working yet, just scribbles
@@ -1033,6 +1069,7 @@ class JavaParse {
       Node Package, Import;
       MetaFile MFile = null;
       MetaClass MClass = null;
+      MetaInterface MInterface = null;
       Token tkn;
       RecurDepth++;
       
@@ -1040,6 +1077,7 @@ class JavaParse {
       if (Marker>=Chunks.size()) {return null;}
             
       MFile = new MetaFile();
+      MFile.Chunks = Chunks;
       
       if ((Package = Chomp_Package(Chunks,  Marker,  RecurDepth))!=null){// first skip over package
         MFile.AddImport(Package); Marker = Package.ChunkEnd;
@@ -1056,11 +1094,14 @@ class JavaParse {
           MFile.AddImport(Import); Marker = Import.ChunkEnd;
         } else if ((MClass = Chomp_Class(Chunks,  Marker,  RecurDepth, null))!=null){// then dive into class and quit
           System.out.println("Class Found");
-          Marker = MClass.ChunkEnd; break;
+          Marker = MClass.ChunkEnd; MFile.AddMetaClass(MClass); break;
+        } else if ((MInterface = Chomp_Interface(Chunks,  Marker,  RecurDepth, null))!=null){// then dive into interface and quit
+          System.out.println("Interface Found");
+          Marker = MInterface.ChunkEnd; MFile.AddMetaInterface(MInterface); break;
         }
         Marker++;
       }
-      MFile.AddMetaClass(MClass);
+      
       return MFile;
     }
     // </editor-fold>
@@ -1074,6 +1115,10 @@ class JavaParse {
     public void ToHpp(StringBuilder sb) { sb.append(this.Text); }
   }
   /* ********************************************************************************************************* */
+  public static class CppLuggage{
+    public ArrayList<MetaFile> Files;
+    public ArrayList<Token> Chunks;
+  }
   public static class Node {// a value that is a hashtable, an array, a literal, or a pointer to a multiply-used item
     public enum Types { None, Class, Interface, Method, Whatever }// Interface is not used yet.
     public Types MyType = Types.None;
@@ -1090,9 +1135,13 @@ class JavaParse {
       this.ChildrenArray = ChildArray0;
     }
     public void AddSubNode(Node ChildPhrase){
-      this.ChildrenArray.add(ChildPhrase); ChildPhrase.Parent = this;
+      if (ChildPhrase==null){
+        boolean nop = true;
+      }
+      this.ChildrenArray.add(ChildPhrase); 
+      ChildPhrase.Parent = this;
     }
-    public void ConvertToCpp(ArrayList<Token> Chunks){// virtual
+    public void ConvertToCpp(CppLuggage Luggage){// virtual
     }
     public static Node MakeField(String Value) {
       Node phrase = new Node();
@@ -1106,11 +1155,27 @@ class JavaParse {
       }
     }
   }
-/* ********************************************************************************************************* */
+  /* ********************************************************************************************************* */
+  public static class MetaProject extends Node {
+    private ArrayList<MetaFile> MetaFileList = new ArrayList<MetaFile>();
+    public void AddMetaFile(MetaFile MFile){
+      this.MetaFileList.add(MFile); this.AddSubNode(MFile);
+    }
+    @Override public void ConvertToCpp(CppLuggage Luggage){
+      MetaFile MFile; Token tkn;
+      ArrayList<Token> Chunks = Luggage.Chunks;
+      for (int cnt=0; cnt < this.MetaFileList.size(); cnt++){
+        MFile = this.MetaFileList.get(cnt); MFile.ConvertToCpp(Luggage);
+      }
+    }
+  }
+  /* ********************************************************************************************************* */
   public static class MetaFile extends Node {
     public String FileName = "";
     private ArrayList<Node> ImportList = new ArrayList<Node>();
     private ArrayList<MetaClass> MetaClassList = new ArrayList<MetaClass>();// really a Java file has only one base class, so a list is overkill
+    private ArrayList<MetaInterface> MetaInterfaceList = new ArrayList<MetaInterface>();// really a Java file has only one base class, so a list is overkill
+    private ArrayList<Token> Chunks;
     public MetaFile(){ super(); MyPhraseName = "MetaClass"; }
     public MetaFile(ArrayList<Node> ChildArray0, int Marker){
       super(ChildArray0, Marker);
@@ -1121,9 +1186,15 @@ class JavaParse {
     public void AddMetaClass(MetaClass MClass){
       this.MetaClassList.add(MClass); this.AddSubNode(MClass);
     }
-    @Override public void ConvertToCpp(ArrayList<Token> Chunks){
+    private void AddMetaInterface(MetaInterface MInterface) {
+      this.MetaInterfaceList.add(MInterface); this.AddSubNode(MInterface);
+    }
+    @Override public void ConvertToCpp(CppLuggage Luggage){
       Node nd; Token tkn;
-      if (this.Preamble!=null){ this.Preamble.BlankMyText(Chunks); } 
+      
+      Luggage.Chunks = this.Chunks;  //ArrayList<Token> Chunks = Luggage.Chunks;
+      
+      if (this.Preamble!=null){ this.Preamble.BlankMyText(this.Chunks); } 
 //      for (int icnt=0; icnt < this.ImportList.size(); icnt++){
 //        nd = this.ImportList.get(icnt); nd.BlankMyText(Chunks);
 //      }
@@ -1131,7 +1202,7 @@ class JavaParse {
         int Start = this.ImportList.get(0).ChunkStart;
         int End = this.ImportList.get(this.ImportList.size()-1).ChunkEnd;
         for (int ccnt=Start; ccnt <= End; ccnt++){
-          tkn = Chunks.get(ccnt); tkn.Text = "";
+          tkn = this.Chunks.get(ccnt); tkn.Text = "";
         }
       }
       StringBuilder sb = new StringBuilder();
@@ -1153,9 +1224,11 @@ class JavaParse {
       tkn = Chunks.get(0); tkn.Text = sb.toString() + tkn.Text;
 
       for (int cnt=0; cnt < this.MetaClassList.size(); cnt++){
-        nd = this.MetaClassList.get(cnt); nd.ConvertToCpp(Chunks);
+        nd = this.MetaClassList.get(cnt); nd.ConvertToCpp(Luggage);
       }
-      
+      for (int cnt=0; cnt < this.MetaInterfaceList.size(); cnt++){
+        nd = this.MetaInterfaceList.get(cnt); nd.ConvertToCpp(Luggage);
+      }
       tkn = Chunks.get(Chunks.size()-1); 
       tkn.Text = tkn.Text + "\n\n#endif\n";
     }
@@ -1163,6 +1236,7 @@ class JavaParse {
   /* ********************************************************************************************************* */
   public static class MetaClass extends Node {
     private ArrayList<MetaClass> MetaClassList = new ArrayList<MetaClass>();
+    private ArrayList<MetaInterface> MetaInterfaceList = new ArrayList<MetaInterface>();
     private ArrayList<MetaFunction> MetaFunctionList = new ArrayList<MetaFunction>();
     private ArrayList<MetaVar> MetaVarList = new ArrayList<MetaVar>();
     private ArrayList<MetaEnum> MetaEnumList = new ArrayList<MetaEnum>();
@@ -1177,6 +1251,9 @@ class JavaParse {
     public void AddMetaClass(MetaClass MClass){
       this.MetaClassList.add(MClass); this.AddSubNode(MClass); 
     }
+    public void AddMetaInterface(MetaInterface MInterface){
+      this.MetaInterfaceList.add(MInterface); this.AddSubNode(MInterface); 
+    }
     public void AddMetaFunction(MetaFunction MFun){
       this.MetaFunctionList.add(MFun); this.AddSubNode(MFun); 
     }
@@ -1189,8 +1266,9 @@ class JavaParse {
     public void AddInheritance(Node Ancestor){
       this.AncestorList.add(Ancestor); this.AddSubNode(Ancestor); 
     }
-    @Override public void ConvertToCpp(ArrayList<Token> Chunks){
+    @Override public void ConvertToCpp(CppLuggage Luggage){
       Token tkn;
+      ArrayList<Token> Chunks = Luggage.Chunks;
       if (this.Preamble!=null){ this.Preamble.BlankMyText(Chunks); }
       if (this.AncestorList.size()>0){
         int StartDex = this.ClassNameLoc+1;// first token right after the class name
@@ -1217,19 +1295,23 @@ class JavaParse {
       
       // now convert all children
       for (int cnt=0; cnt<this.MetaClassList.size();cnt++){
-        this.MetaClassList.get(cnt).ConvertToCpp(Chunks);
+        this.MetaClassList.get(cnt).ConvertToCpp(Luggage);
       }
       for (int cnt=0; cnt<this.MetaFunctionList.size();cnt++){
-        this.MetaFunctionList.get(cnt).ConvertToCpp(Chunks);
+        this.MetaFunctionList.get(cnt).ConvertToCpp(Luggage);
       }
       for (int cnt=0; cnt<this.MetaVarList.size();cnt++){
-        this.MetaVarList.get(cnt).ConvertToCpp(Chunks);
+        this.MetaVarList.get(cnt).ConvertToCpp(Luggage);
       }
       for (int cnt=0; cnt<this.MetaEnumList.size();cnt++){
-        this.MetaEnumList.get(cnt).ConvertToCpp(Chunks);
+        this.MetaEnumList.get(cnt).ConvertToCpp(Luggage);
       }
       
     }
+  }
+  /* ********************************************************************************************************* */
+  public static class MetaInterface extends MetaClass {
+    // to do: fill this in
   }
   /* ********************************************************************************************************* */
   public static class MetaEnum extends Node {
@@ -1239,8 +1321,9 @@ class JavaParse {
     public MetaEnum(ArrayList<Node> ChildArray0, int Marker){
       super(ChildArray0, Marker);
     }
-    @Override public void ConvertToCpp(ArrayList<Token> Chunks){
-       if (this.Preamble!=null){ this.Preamble.BlankMyText(Chunks); } 
+    @Override public void ConvertToCpp(CppLuggage Luggage){
+      ArrayList<Token> Chunks = Luggage.Chunks;
+      if (this.Preamble!=null){ this.Preamble.BlankMyText(Chunks); } 
     }
   }
   /* ********************************************************************************************************* */
@@ -1304,9 +1387,11 @@ class JavaParse {
     public void AddBody(Node Body0){
       this.Body = Body0; this.AddSubNode(Body0);
     }
-    @Override public void ConvertToCpp(ArrayList<Token> Chunks){
+    @Override public void ConvertToCpp(CppLuggage Luggage){
       Token tkn;
       int Start, End;
+      ArrayList<Token> Chunks = Luggage.Chunks;
+      
       if (this.Preamble!=null){ this.Preamble.BlankMyText(Chunks); } 
       
       if (this.IsConstructor || this.VarTypeNode.IsVoid){ ReturnsVal = false; }
@@ -1318,8 +1403,10 @@ class JavaParse {
         tkn = Chunks.get(End); tkn.Text = tkn.Text + "*";
       }
       
-      this.Params.ConvertToCpp(Chunks);
-            
+      this.Params.ConvertToCpp(Luggage);
+      if (this.Body == null){
+        boolean nop = true;
+      }
       Start = this.Body.ChunkStart+1; End = this.Body.ChunkEnd-1;
       for (int cnt=Start; cnt<=End; cnt++){// clear all body content to make this 'virtual'
         tkn = Chunks.get(cnt); tkn.Text = "";
@@ -1338,7 +1425,8 @@ class JavaParse {
     public VarAssignPair(ArrayList<Node> ChildArray0, int Marker){
       super(ChildArray0, Marker);
     }
-    @Override public void ConvertToCpp(ArrayList<Token> Chunks){
+    @Override public void ConvertToCpp(CppLuggage Luggage){
+      ArrayList<Token> Chunks = Luggage.Chunks;
       Token tkn = Chunks.get(this.VarNameLoc);
     }
   }
@@ -1348,7 +1436,8 @@ class JavaParse {
     public DotWord(ArrayList<Node> ChildArray0, int Marker){
       super(ChildArray0, Marker);
     }
-    @Override public void ConvertToCpp(ArrayList<Token> Chunks){
+    @Override public void ConvertToCpp(CppLuggage Luggage){
+      ArrayList<Token> Chunks = Luggage.Chunks;
       Token tkn = Chunks.get(this.ChunkStart);
     }
   }
@@ -1365,7 +1454,8 @@ class JavaParse {
     public void AddVarAssign(VarAssignPair vap){
       this.VarAssignList.add(vap);  this.AddSubNode(vap);
     }
-    @Override public void ConvertToCpp(ArrayList<Token> Chunks){
+    @Override public void ConvertToCpp(CppLuggage Luggage){
+      ArrayList<Token> Chunks = Luggage.Chunks;
       if (this.Preamble!=null){ this.Preamble.BlankMyText(Chunks); } 
       Token tkn = Chunks.get(this.VarTypeNode.ChunkStart);
       if (TreeMaker.InList(tkn.Text, Primitives)){// check if type is in Primitives. 
@@ -1389,7 +1479,8 @@ class JavaParse {
       Node vap = Node.MakeField(VarNameTxt);
       this.VarNameNode = vap;  this.AddSubNode(vap);
     }
-    @Override public void ConvertToCpp(ArrayList<Token> Chunks){
+    @Override public void ConvertToCpp(CppLuggage Luggage){
+      ArrayList<Token> Chunks = Luggage.Chunks;
       this.VarTypeNode.ReplaceDot(Chunks);
       this.VarTypeNode.MakeRefParam(Chunks);
     }
@@ -1402,11 +1493,11 @@ class JavaParse {
     public void AddVairPair(VarPairNode VairPair){
       this.VarPairList.add(VairPair); this.AddSubNode(VairPair);
     }
-    @Override public void ConvertToCpp(ArrayList<Token> Chunks){
+    @Override public void ConvertToCpp(CppLuggage Luggage){
       VarPairNode vpn;
       int len = this.VarPairList.size();
       for (int cnt=0;cnt<len;cnt++){
-        vpn = this.VarPairList.get(cnt); vpn.ConvertToCpp(Chunks);
+        vpn = this.VarPairList.get(cnt); vpn.ConvertToCpp(Luggage);
       }
     }
   }

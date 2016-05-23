@@ -4,12 +4,15 @@ import java.awt.geom.Point2D;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileWriter;
+import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import javax.swing.filechooser.FileNameExtensionFilter;
 //import voices.VoiceBase.Point;
 
 /**
@@ -27,37 +30,7 @@ public class Voices {
   public static void main(String[] args) {
     RegisterFactories();
     if (false) {
-      String fdir = new File("").getAbsolutePath();
-      String fpath;
-      fpath = fdir + "\\src\\voices\\Voices.java";
-      fpath = fdir + "\\src\\voices\\MonkeyBox.java";
-      fpath = fdir + "\\src\\voices\\GroupBox.java";
-      fpath = fdir + "\\src\\voices\\JavaParse.java";
-//      fpath = fdir + "\\src\\voices\\MainGui.java";
-      fpath = fdir + "\\src\\voices\\Voice.java";
-
-      byte[] encoded = null;
-      String JavaTxt = "";
-      try {
-        encoded = Files.readAllBytes(Paths.get(fpath));
-        JavaTxt = new String(encoded, StandardCharsets.UTF_8);
-      } catch (Exception ex) {
-        boolean nop = true;
-      }
-      String CppTxt;
-      Path p = Paths.get(fpath);
-      String FName = p.getFileName().toString();
-      FName = FName.replace(".java", "");// remove extension
-      CppTxt = JavaParse.Parse(JavaTxt, FName);
-      try {
-        File file = new File(fdir + "\\src\\voices\\test1.hpp");
-        FileWriter fileWriter = new FileWriter(file);
-        fileWriter.write(CppTxt);
-        fileWriter.flush();
-        fileWriter.close();
-      } catch (IOException e) {
-        boolean nop = true;
-      }
+      PortAll();
       return;
     }
     if (false) {
@@ -126,6 +99,93 @@ public class Voices {
       }
       out.close();
     } catch (FileNotFoundException ex) {
+    }
+  }
+  /* ********************************************************************************* */
+  public static void PortAll() {
+    String fdir = new File("").getAbsolutePath();
+    String fpath;
+    fpath = fdir + "\\src\\voices\\Voices.java";
+    fpath = fdir + "\\src\\voices\\MonkeyBox.java";
+    fpath = fdir + "\\src\\voices\\GroupBox.java";
+    fpath = fdir + "\\src\\voices\\JavaParse.java";
+//      fpath = fdir + "\\src\\voices\\MainGui.java";
+    fpath = fdir + "\\src\\voices\\Voice.java";
+
+    String inpath = fdir + "\\src\\voices\\";
+    String outpath = fdir + "\\..\\VM\\";
+
+    {
+      /*
+       so the rules are:
+       get all inheritances in a file.
+       for each inheritance, see if there is another file by that name.
+       if so, add an include ""
+       better to look up inheritance in a global list of classes - then get the file name, and use that.
+       for all other classes referenced in a file, use forward declarations at the top.
+       */
+      File fl;
+      ArrayList<String> FullPath = new ArrayList<String>();
+      String OnePath = "";
+      // read in all file info in the directory
+      File dir = new File(inpath);
+      File[] FileList = dir.listFiles(new FilenameFilter() {
+        public boolean accept(File dir, String filename) {
+          return filename.endsWith(".java");
+        }
+      });
+      // reduce to a list of just the file names
+      int len = FileList.length;
+      for (int fcnt = 0; fcnt < len; fcnt++) {
+        fl = FileList[fcnt];
+        try {
+          OnePath = fl.getCanonicalPath();
+          FullPath.add(OnePath);
+        } catch (Exception ex) {
+          boolean nop = true;
+        }
+      }
+      // parse and create the meta file objects
+      ArrayList<JavaParse.MetaFile> MetaFileList = new ArrayList<JavaParse.MetaFile>();
+      for (int fcnt = 0; fcnt < len; fcnt++) {
+        OnePath = FullPath.get(fcnt);
+        JavaParse.MetaFile JavaFile = JavaParse.Parse(OnePath);
+        MetaFileList.add(JavaFile);
+      }
+      // convert to cpp/hpp
+      JavaParse.CppLuggage Luggage = new JavaParse.CppLuggage();
+      Luggage.Files = MetaFileList;
+      // Luggage.Chunks = Chunks; // to do: preserve chunks and pass it here.
+      for (int fcnt = 0; fcnt < len; fcnt++) {
+        JavaParse.MetaFile JavaFile = MetaFileList.get(fcnt);
+        JavaFile.ConvertToCpp(Luggage);
+      }
+      boolean nop = true;
+    }
+    if (false) {
+      byte[] encoded = null;
+      String JavaTxt = "";
+      try {
+        encoded = Files.readAllBytes(Paths.get(fpath));
+        JavaTxt = new String(encoded, StandardCharsets.UTF_8);
+      } catch (Exception ex) {
+        boolean nop = true;
+      }
+      String CppTxt;
+      Path p = Paths.get(fpath);
+      String FName = p.getFileName().toString();
+      FName = FName.replace(".java", "");// remove extension
+      CppTxt = JavaParse.Parse(JavaTxt, FName);
+      try {
+        File file = new File(fdir + "\\src\\voices\\test1.hpp");
+        //"\\..\\VM"
+        FileWriter fileWriter = new FileWriter(file);
+        fileWriter.write(CppTxt);
+        fileWriter.flush();
+        fileWriter.close();
+      } catch (IOException e) {
+        boolean nop = true;
+      }
     }
   }
 }
