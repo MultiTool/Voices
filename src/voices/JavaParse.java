@@ -1,6 +1,9 @@
 package voices;
 
 import java.io.File;
+import java.io.FileWriter;
+import java.io.FilenameFilter;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -31,7 +34,7 @@ class JavaParse {
   public static String[] Primitives = {"void", "byte", "short", "int", "long", "float", "double", "boolean", "char"};// String? 
   public static String InheritanceFlags[]={"implements", "extends"};// or none
   /* ********************************************************************************************************* */
-  public static MetaFile Parse(String FullPath) {
+  public static MetaFile ParseFile(String FullPath) {
     byte[] encoded = null; String JavaTxt = "";
     try {
       encoded = Files.readAllBytes(Paths.get(FullPath));
@@ -45,8 +48,8 @@ class JavaParse {
     ArrayList<Token> Chunks = Tokenizer.Tokenize(0, JavaTxt);
     MetaFile JavaObj = TreeMaker.Chomp_File(Chunks, 0, 0);
     JavaObj.FileName = SimpleName;
-    CppLuggage Luggage = new CppLuggage(); Luggage.Chunks = Chunks;
-    JavaObj.ConvertToCpp(Luggage);
+//    CppLuggage Luggage = new CppLuggage(); Luggage.Chunks = Chunks;
+//    JavaObj.ConvertToCpp(Luggage);
     return JavaObj;
   }
   /* ********************************************************************************************************* */
@@ -660,7 +663,7 @@ class JavaParse {
     }
     /* ********************************************************************************************************* */
     public static Node Chomp_Preamble(ArrayList<Token> Chunks, int Marker, int RecurDepth){// ready for test?
-      String Preludes[]={"@Override","public","private","protected","default","const"};// ,"static"  or none 
+      String Preludes[]={"@Override","public","private","protected","default","const","abstract"};// ,"static"  or none 
       String Staticness = "static";// or none
       Node OnePhrase = null;
       Token tkn=null;
@@ -735,6 +738,77 @@ class JavaParse {
       OnePhrase.ChunkEnd = FinalWord;
       //}
       return OnePhrase;
+    }
+    /* ********************************************************************************************************* */
+    public static MetaFunction Chomp_Function(ArrayList<Token> Chunks, int Marker, int RecurDepth, MetaClass Parent){// not working yet, just scribbles
+      String Starter = "{", Ender = "}";
+      System.out.println("Chomp_Function");
+      Token tkn;
+      tkn = Chunks.get(Marker);// must be on a word to even start
+      if (tkn.BlockType != TokenType.Word){return null;}
+      
+      Node SubPhrase=null;
+      MetaFunction FnPhrase = new MetaFunction(new ArrayList<Node>(), Marker);
+      if ((FnPhrase.Preamble = Chomp_Preamble(Chunks,  Marker,  RecurDepth))!=null){
+        Marker = FnPhrase.Preamble.ChunkEnd + 1;
+      }
+      
+      MetaVarType VarTypeNode;
+      // then we chomp variable type
+      Marker=Skip_Until(Chunks, Marker, WordTarget);// jump to next word, no whitespace, no comments 
+      tkn = Chunks.get(Marker);// this would be Chomp_ReturnType
+      FnPhrase.ReturnType=tkn.Text;// not really what we should do. snox
+      FnPhrase.ReturnTypeLoc = Marker;
+      if (Marker>=Chunks.size()) {return null;}
+      if ((VarTypeNode = Chomp_VarType(Chunks,  Marker, RecurDepth))!=null){// now look for templates<>, if any. 
+        FnPhrase.AddVarType(VarTypeNode); Marker = VarTypeNode.ChunkEnd; 
+      } else {return null;}
+      
+      Marker++;
+      
+      // determine if this is a constructor
+      boolean IsConstructor = false;
+      while (Marker<Chunks.size()) {
+        tkn = Chunks.get(Marker);
+        if (tkn.BlockType.equals(TokenType.Word)){
+          IsConstructor = false; break;
+        } else if (tkn.Text.equals("(")) {
+          IsConstructor = true; break;
+        }
+        Marker++;
+      }
+      FnPhrase.IsConstructor = IsConstructor;
+      if (Marker>=Chunks.size()) {return null;}
+      if (IsConstructor){
+        FnPhrase.FnName=FnPhrase.ReturnType;
+      }else{
+        FnPhrase.FnName = tkn.Text;// this would be Chomp_FnName
+        if (TreeMaker.InList(FnPhrase.ReturnType, Primitives)){// check if type is in Primitives. 
+        }
+      }
+      FnPhrase.FnNameLoc = Marker; 
+      
+      // next get parameters
+      Marker=Skip_Until(Chunks, Marker, PunctuationTarget);// jump to next punctuation, no whitespace, no comments 
+      if (Marker>=Chunks.size()) {return null;}
+      ParamListNode Params;
+      if ((Params = Chomp_FnParams(Chunks, Marker, RecurDepth))!=null){
+        FnPhrase.AddParams(Params); Marker = Params.ChunkEnd;// ends on ) 
+      }else{ return null; }
+      
+      Marker++;// body begins on {
+      
+      tkn = Chunks.get(Marker);
+      
+      Marker=Skip_Until(Chunks, Marker, PunctuationTarget);// jump to next punctuation, no whitespace, no comments 
+      Node Body;// finally dive into brackets
+      if (tkn.Text.equals(";")) {
+        FnPhrase.Body = null; FnPhrase.IsStub = true;// function stub
+      }else if ((Body = Chomp_CurlyBraces(Chunks, Marker, RecurDepth))!=null){
+        FnPhrase.AddBody(Body); Marker = Body.ChunkEnd;
+      }
+      FnPhrase.ChunkEnd=Marker;
+      return FnPhrase;
     }
     /* ********************************************************************************************************* */
     public static MetaClass Chomp_Class(ArrayList<Token> Chunks, int Marker, int RecurDepth, MetaClass Parent){// this gets the whole class including preamble, right? 
@@ -826,83 +900,87 @@ class JavaParse {
     public static MetaInterface Chomp_Interface(ArrayList<Token> Chunks, int Marker, int RecurDepth, MetaClass Parent){
       String Identifier = "interface";
       String Starter = "{", Ender = "}";
-      MetaClass ClassNode = null;
-      return null;// to do: fill this in
-    }
-    /* ********************************************************************************************************* */
-    public static MetaFunction Chomp_Function(ArrayList<Token> Chunks, int Marker, int RecurDepth, MetaClass Parent){// not working yet, just scribbles
-      String Starter = "{", Ender = "}";
-      System.out.println("Chomp_Function");
-      Token tkn;
-      tkn = Chunks.get(Marker);// must be on a word to even start
-      if (tkn.BlockType != TokenType.Word){return null;}
+      MetaInterface InterfaceNode = null;
+      Token tkn=null;
+      String InterfaceName="";
+      System.out.println("Chomp_Interface");
+      tkn = Chunks.get(Marker);
+      if (tkn.BlockType != TokenType.Word){ return null; }// must start with a word
       
-      Node SubPhrase=null;
-      MetaFunction FnPhrase = new MetaFunction(new ArrayList<Node>(), Marker);
-      if ((FnPhrase.Preamble = Chomp_Preamble(Chunks,  Marker,  RecurDepth))!=null){
-        Marker = FnPhrase.Preamble.ChunkEnd + 1;
+      InterfaceNode = new MetaInterface(new ArrayList<Node>(), Marker);
+      
+      if ((InterfaceNode.Preamble = Chomp_Preamble(Chunks,  Marker,  RecurDepth))!=null){
+        Marker = InterfaceNode.Preamble.ChunkEnd + 1;
       }
       
-//      String ReturnType;// then we chomp function return type
-//      Marker=Skip_Until(Chunks, Marker, WordTarget);// jump to next word, no whitespace, no comments 
-//      if (Marker>=Chunks.size()) {return null;}
-//      tkn = Chunks.get(Marker);// this would be Chomp_ReturnType
-//      FnPhrase.ReturnType=tkn.Text; //OnePhrase.AddSubNode(Node.MakeField(ClassName));
-      
-      MetaVarType VarTypeNode;
-      // then we chomp variable type
+      // race ahead to find "class" identifier
       Marker=Skip_Until(Chunks, Marker, WordTarget);// jump to next word, no whitespace, no comments 
-      tkn = Chunks.get(Marker);// this would be Chomp_ReturnType
-      FnPhrase.ReturnType=tkn.Text;// not really what we should do. snox
-      FnPhrase.ReturnTypeLoc = Marker;
       if (Marker>=Chunks.size()) {return null;}
-      if ((VarTypeNode = Chomp_VarType(Chunks,  Marker, RecurDepth))!=null){// now look for templates<>, if any. 
-        FnPhrase.AddVarType(VarTypeNode); Marker = VarTypeNode.ChunkEnd; 
-      } else {return null;}
+      tkn = Chunks.get(Marker);
+      boolean IsClass = false;// this would be Chomp_ClassIdentifier
+      if (tkn.Text.equals(Identifier)){IsClass = true; } else { IsClass = false; }
+      if (!IsClass) { return null; }     
+
+      Marker++;// start at next token
       
-      Marker++;
+      Marker=Skip_Until(Chunks, Marker, WordTarget);// jump to next word, no whitespace, no comments 
+      if (Marker>=Chunks.size()) {return null;}
+      tkn = Chunks.get(Marker);// this would be Chomp_ClassName
+      InterfaceNode.ClassName=(InterfaceName=tkn.Text); //OnePhrase.AddSubNode(Node.MakeField(ClassName));
+      InterfaceNode.ClassNameLoc = Marker;
+
+      Marker++;// start at next token
       
-      // determine if this is a constructor
-      boolean IsConstructor = false;
-      while (Marker<Chunks.size()) {
+      // this would be Chomp_Inheritances - seems ready
+      Node SubPhrase = null;
+      int FinalWord = Marker;
+      while (Marker<Chunks.size()) {// skip through inheritance and get to brackets
         tkn = Chunks.get(Marker);
-        if (tkn.BlockType.equals(TokenType.Word)){
-          IsConstructor = false; break;
-        } else if (tkn.Text.equals("(")) {
-          IsConstructor = true; break;
+        if (tkn.BlockType == TokenType.Word){// no whitespace, no comments 
+          if (TreeMaker.InList(tkn.Text, InheritanceFlags)){// ignore "implements" and "extends"
+          } else if ((SubPhrase = Chomp_DotWord(Chunks,  Marker, RecurDepth))!=null){ // add to dependency list
+            InterfaceNode.AddInheritance(SubPhrase); Marker = FinalWord = SubPhrase.ChunkEnd;
+          }
+        } else if (tkn.BlockType == TokenType.SingleChar){
+          if (tkn.Text.equals(Starter)){ break; }// break if starting { 
         }
         Marker++;
       }
-      FnPhrase.IsConstructor = IsConstructor;
-      if (Marker>=Chunks.size()) {return null;}
-      if (IsConstructor){
-        FnPhrase.FnName=FnPhrase.ReturnType;
-      }else{
-        FnPhrase.FnName = tkn.Text;// this would be Chomp_FnName
-        if (TreeMaker.InList(FnPhrase.ReturnType, Primitives)){// check if type is in Primitives. 
+      
+      // should probably bail out here if we didn't find a {
+      MetaEnum SubEnum = null;// will become MetaEnum
+      MetaClass SubClass = null;
+      MetaInterface SubInterface = null;
+      MetaFunction SubFunction = null;
+      MetaVar SubVar = null;
+      if (tkn.Text.equals(Starter)){// this would be Chomp_ClassBody
+        InterfaceNode.BodyStartLoc = Marker;
+        Marker++;
+        while (Marker<Chunks.size()) {// get to brackets and dive in
+          tkn = Chunks.get(Marker);
+          if (tkn.Text.equals(Ender)){break;}
+          if ((SubClass = Chomp_Class(Chunks, Marker, RecurDepth, InterfaceNode))!=null){
+            System.out.println("AddMetaClass");
+            InterfaceNode.AddMetaClass(SubClass); Marker = SubClass.ChunkEnd;
+          } else if ((SubInterface = Chomp_Interface(Chunks, Marker, RecurDepth, InterfaceNode))!=null){
+            System.out.println("AddMetaInterface");
+            InterfaceNode.AddMetaInterface(SubInterface); Marker = SubInterface.ChunkEnd;
+          } else if ((SubFunction = Chomp_Function(Chunks, Marker, RecurDepth, InterfaceNode))!=null){
+            System.out.println("AddMetaFunction");
+            InterfaceNode.AddMetaFunction(SubFunction); Marker = SubFunction.ChunkEnd;
+          } else if ((SubEnum = Chomp_Enum(Chunks, Marker, RecurDepth))!=null){
+            System.out.println("AddMetaEnum");
+            InterfaceNode.AddMetaEnum(SubEnum); Marker = SubEnum.ChunkEnd;
+          } else if ((SubVar = Chomp_VariableDeclaration(Chunks, Marker, RecurDepth))!=null){
+            System.out.println("AddMetaVar");
+            InterfaceNode.AddMetaVar(SubVar); Marker = SubVar.ChunkEnd;
+          }
+          Marker++;
         }
-      }
-      FnPhrase.FnNameLoc = Marker; 
-      
-      // next get parameters
-      Marker=Skip_Until(Chunks, Marker, PunctuationTarget);// jump to next punctuation, no whitespace, no comments 
-      if (Marker>=Chunks.size()) {return null;}
-      ParamListNode Params;
-      if ((Params = Chomp_FnParams(Chunks, Marker, RecurDepth))!=null){
-        FnPhrase.AddParams(Params); Marker = Params.ChunkEnd;// ends on ) 
-      }else{ return null; }
-      
-      Marker++;// body begins on {
-      
-      tkn = Chunks.get(Marker);
-      
-      Marker=Skip_Until(Chunks, Marker, PunctuationTarget);// jump to next punctuation, no whitespace, no comments 
-      Node Body;// finally dive into brackets
-      if ((Body = Chomp_CurlyBraces(Chunks, Marker, RecurDepth))!=null){
-        FnPhrase.AddBody(Body); Marker = Body.ChunkEnd;
-      }
-      FnPhrase.ChunkEnd=Marker;
-      return FnPhrase;
+      } else {return null;}// no open bracket found
+
+      InterfaceNode.ChunkEnd = Marker;
+      return InterfaceNode;
     }
     /* ********************************************************************************************************* */
     public static VarAssignPair Chomp_VarAssign(ArrayList<Token> Chunks, int Marker, int RecurDepth){// not working yet, just scribbles
@@ -1158,6 +1236,59 @@ class JavaParse {
   /* ********************************************************************************************************* */
   public static class MetaProject extends Node {
     private ArrayList<MetaFile> MetaFileList = new ArrayList<MetaFile>();
+    /* ********************************************************************************* */
+    public void PortAll() {
+      String fdir = new File("").getAbsolutePath();
+      String inpath = fdir + "\\src\\voices\\";
+      String outpath = fdir + "\\..\\VM\\";
+
+      File fl;
+      ArrayList<String> FullPath = new ArrayList<String>();
+      String OnePath = "";
+      // read in all file info in the directory
+      File dir = new File(inpath);
+      File[] FileList = dir.listFiles(new FilenameFilter() {
+        public boolean accept(File dir, String filename) {
+          return filename.endsWith(".java");
+        }
+      });
+      // reduce to a list of just the file names
+      int len = FileList.length;
+      for (int fcnt = 0; fcnt < len; fcnt++) {
+        fl = FileList[fcnt];
+        try {
+          OnePath = fl.getCanonicalPath();
+          FullPath.add(OnePath);
+        } catch (Exception ex) {
+          boolean nop = true;
+        }
+      }
+      // parse and create the meta file objects
+      for (int fcnt = 0; fcnt < len; fcnt++) {
+        OnePath = FullPath.get(fcnt);
+        JavaParse.MetaFile JavaFile = JavaParse.ParseFile(OnePath);
+        MetaFileList.add(JavaFile);
+      }
+      // convert to cpp/hpp
+      JavaParse.CppLuggage Luggage = new JavaParse.CppLuggage();
+      Luggage.Files = MetaFileList;
+      // Luggage.Chunks = Chunks; // to do: preserve chunks and pass it here.
+      for (int fcnt = 0; fcnt < len; fcnt++) {
+        JavaParse.MetaFile JavaFile = MetaFileList.get(fcnt);
+        JavaFile.ConvertToCpp(Luggage);
+        String CppTxt = Tokenizer.Chunks2String(Luggage.Chunks);
+        File file = new File(outpath + JavaFile.FileName + ".hpp");
+        try {
+         FileWriter fileWriter = new FileWriter(file);
+         fileWriter.write(CppTxt);
+         fileWriter.flush();
+         fileWriter.close();
+       } catch (IOException e) {
+         boolean nop = true;
+       }
+      }
+      boolean nop = true;
+    }
     public void AddMetaFile(MetaFile MFile){
       this.MetaFileList.add(MFile); this.AddSubNode(MFile);
     }
@@ -1220,7 +1351,19 @@ class JavaParse {
       //sb.append("#define String std::string\\n");
       //#define ArrayList std::vector
       // #define HashMap std::map
-      
+      /*
+class Phrase;
+class String;
+class JsonParse;
+class Token;
+class StringBuilder;
+
+template <class T>
+class ArrayList;
+
+template <class A, class B>
+class HashMap;
+      */
       tkn = Chunks.get(0); tkn.Text = sb.toString() + tkn.Text;
 
       for (int cnt=0; cnt < this.MetaClassList.size(); cnt++){
@@ -1268,10 +1411,11 @@ class JavaParse {
     }
     @Override public void ConvertToCpp(CppLuggage Luggage){
       Token tkn;
+      int StartDex;
       ArrayList<Token> Chunks = Luggage.Chunks;
       if (this.Preamble!=null){ this.Preamble.BlankMyText(Chunks); }
       if (this.AncestorList.size()>0){
-        int StartDex = this.ClassNameLoc+1;// first token right after the class name
+        StartDex = this.ClassNameLoc+1;// first token right after the class name
         
         // to do: we need to re-comma between different ancestors
         int ultimo = this.AncestorList.size()-1;
@@ -1282,8 +1426,11 @@ class JavaParse {
           tkn = Chunks.get(cnt);// remove all "implements" and "extends"
           if (TreeMaker.InList(tkn.Text, InheritanceFlags)){ tkn.Text = ""; }
         }
+        if (this.ClassName.equals("Audio")){
+          boolean nop = true;
+        }
         tkn = Chunks.get(StartDex);
-        tkn.Text = ":" + tkn.Text; // precede with just a colon 
+        tkn.Text = ": public" + tkn.Text; // precede with just a colon and 'public'
       }
       // to do: insert public: inside top of brackets
       tkn = Chunks.get(this.ChunkStart);
@@ -1296,6 +1443,9 @@ class JavaParse {
       // now convert all children
       for (int cnt=0; cnt<this.MetaClassList.size();cnt++){
         this.MetaClassList.get(cnt).ConvertToCpp(Luggage);
+      }
+      for (int cnt=0; cnt<this.MetaInterfaceList.size();cnt++){
+        this.MetaInterfaceList.get(cnt).ConvertToCpp(Luggage);
       }
       for (int cnt=0; cnt<this.MetaFunctionList.size();cnt++){
         this.MetaFunctionList.get(cnt).ConvertToCpp(Luggage);
@@ -1312,6 +1462,10 @@ class JavaParse {
   /* ********************************************************************************************************* */
   public static class MetaInterface extends MetaClass {
     // to do: fill this in
+    public MetaInterface(){ super(); MyPhraseName = "MetaClass"; }
+    public MetaInterface(ArrayList<Node> ChildArray0, int Marker){
+      super(ChildArray0, Marker);
+    }
   }
   /* ********************************************************************************************************* */
   public static class MetaEnum extends Node {
@@ -1324,6 +1478,8 @@ class JavaParse {
     @Override public void ConvertToCpp(CppLuggage Luggage){
       ArrayList<Token> Chunks = Luggage.Chunks;
       if (this.Preamble!=null){ this.Preamble.BlankMyText(Chunks); } 
+      Token tkn = Chunks.get(this.ChunkEnd);
+      tkn.Text = tkn.Text + ";";// all classes end with ; 
     }
   }
   /* ********************************************************************************************************* */
@@ -1372,6 +1528,7 @@ class JavaParse {
     MetaVarType VarTypeNode;
     boolean IsConstructor;
     boolean ReturnsVal;
+    boolean IsStub;
     private ParamListNode Params; 
     private Node Body;
     public MetaFunction(){ super(); MyPhraseName = "MetaVar"; }
@@ -1385,7 +1542,7 @@ class JavaParse {
       this.Params = Params0; this.AddSubNode(Params0);
     }
     public void AddBody(Node Body0){
-      this.Body = Body0; this.AddSubNode(Body0);
+      this.Body = Body0; this.AddSubNode(Body0); this.IsStub = false;
     }
     @Override public void ConvertToCpp(CppLuggage Luggage){
       Token tkn;
@@ -1404,16 +1561,17 @@ class JavaParse {
       }
       
       this.Params.ConvertToCpp(Luggage);
-      if (this.Body == null){
+      if (this.Body == null){// IsStub
         boolean nop = true;
-      }
-      Start = this.Body.ChunkStart+1; End = this.Body.ChunkEnd-1;
-      for (int cnt=Start; cnt<=End; cnt++){// clear all body content to make this 'virtual'
-        tkn = Chunks.get(cnt); tkn.Text = "";
-      }
-      tkn = Chunks.get(this.Body.ChunkStart);
-      if (ReturnsVal){  
-        tkn.Text = tkn.Text + " return "+this.VarTypeNode.DefaultVal+"; ";// nullptr
+      } else {
+        Start = this.Body.ChunkStart+1; End = this.Body.ChunkEnd-1;
+        for (int cnt=Start; cnt<=End; cnt++){// clear all body content to make this 'virtual'
+          tkn = Chunks.get(cnt); tkn.Text = "";
+        }
+        tkn = Chunks.get(this.Body.ChunkStart);
+        if (ReturnsVal){  
+          tkn.Text = tkn.Text + " return "+this.VarTypeNode.DefaultVal+"; ";// nullptr
+        }
       }
     }
   }
@@ -1518,6 +1676,30 @@ all type[] MyArray  become  type* MyArray
 all type MyArray[] become  type* MyArray
 change dotwords to ::
 enclose whole file with #ifndef FileName_hpp #define FileName_hpp  #endif
+
+enums should not be pointers
+change interface to class
+blah::bleh* x = new blah::bleh(); // make the 'new' part have ::  but for now remove all initializations!!!
+
+make interface functions go: virtual myfunction() = 0;
+
+namespace JsonParse {class Phrase;} // forwards like this
+
+ArrayList<JsonParse::Phrase*>  // use :: and * in templates now
+
+replace null with nullptr
+
+forward declare ALL class parameters
+error: expected ';' at end of member declaration *** MEANS PARAMETERS ARE UNDEFINED!!!!!
+
+for now, remove all inheritances
+
+put public before first declaration in classes
+
+deal with weird MakeArray syntax in ITextable
+ArrayList<JsonParse::Phrase*> MakeArray(CollisionLibrary& HitTable, ArrayList<ITextable*>& Things) { return nullptr; };
+
+
 
 */
 

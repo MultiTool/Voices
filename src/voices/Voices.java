@@ -115,7 +115,9 @@ public class Voices {
     String inpath = fdir + "\\src\\voices\\";
     String outpath = fdir + "\\..\\VM\\";
 
-    {
+    JavaParse.MetaProject mp = new JavaParse.MetaProject();
+    mp.PortAll();
+    if (false) {
       /*
        so the rules are:
        get all inheritances in a file.
@@ -149,7 +151,7 @@ public class Voices {
       ArrayList<JavaParse.MetaFile> MetaFileList = new ArrayList<JavaParse.MetaFile>();
       for (int fcnt = 0; fcnt < len; fcnt++) {
         OnePath = FullPath.get(fcnt);
-        JavaParse.MetaFile JavaFile = JavaParse.Parse(OnePath);
+        JavaParse.MetaFile JavaFile = JavaParse.ParseFile(OnePath);
         MetaFileList.add(JavaFile);
       }
       // convert to cpp/hpp
