@@ -12,7 +12,7 @@ public class SampleVoice extends Voice {
   public boolean Looped = true;
 
   // for serialization
-  public static String LoopedName = "LoopedName";
+  public static String LoopedName = "Looped";
   /* ********************************************************************************* */
   public SampleVoice() {
   }

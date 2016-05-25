@@ -33,6 +33,7 @@ class JavaParse {
   public static TokenType[] WordOrPunctuationTarget = {TokenType.SingleChar, TokenType.Word};
   public static String[] Primitives = {"void", "byte", "short", "int", "long", "float", "double", "boolean", "char"};// String? 
   public static String InheritanceFlags[]={"implements", "extends"};// or none
+  public static boolean UseNestedInheritances = false;
   /* ********************************************************************************************************* */
   public static MetaFile ParseFile(String FullPath) {
     byte[] encoded = null; String JavaTxt = "";
@@ -811,6 +812,31 @@ class JavaParse {
       return FnPhrase;
     }
     /* ********************************************************************************************************* */
+    public static MetaInheritance Chomp_Inheritances(ArrayList<Token> Chunks, int Marker, int RecurDepth){
+      MetaInheritance WholeInheritance = null; DotWord SubPhrase = null;
+      Token tkn;
+      tkn = Chunks.get(Marker);
+      int FinalWord = Marker;
+      if (TreeMaker.InList(tkn.Text, InheritanceFlags)){// "implements" or "extends" triggers inheritance search
+        WholeInheritance = new MetaInheritance(Marker);
+        Marker++;
+        while (Marker<Chunks.size()) {// skip through inheritance and get to brackets
+          tkn = Chunks.get(Marker);
+          if (tkn.BlockType == TokenType.Word){// no whitespace, no comments 
+            if (TreeMaker.InList(tkn.Text, InheritanceFlags)){// ignore "implements" and "extends"
+            } else if ((SubPhrase = Chomp_DotWord(Chunks,  Marker, RecurDepth))!=null){ // add to dependency list
+              WholeInheritance.AddInheritance(SubPhrase); Marker = FinalWord = SubPhrase.ChunkEnd;
+            }
+          } else if (tkn.BlockType == TokenType.SingleChar){
+            if (!tkn.Text.equals(",")){ break; }// break if not a var type or a comma
+          }
+          Marker++;
+        }
+        WholeInheritance.ChunkEnd = FinalWord;
+      }
+      return WholeInheritance;
+    }
+    /* ********************************************************************************************************* */
     public static MetaClass Chomp_Class(ArrayList<Token> Chunks, int Marker, int RecurDepth, MetaClass Parent){// this gets the whole class including preamble, right? 
       String Identifier = "class";
       String Starter = "{", Ender = "}";
@@ -845,28 +871,37 @@ class JavaParse {
 
       Marker++;// start at next token
       
-      // this would be Chomp_Inheritances - seems ready
-      Node SubPhrase = null;
-      int FinalWord = Marker;
-      while (Marker<Chunks.size()) {// skip through inheritance and get to brackets
-        tkn = Chunks.get(Marker);
-        if (tkn.BlockType == TokenType.Word){// no whitespace, no comments 
-          if (TreeMaker.InList(tkn.Text, InheritanceFlags)){// ignore "implements" and "extends"
-          } else if ((SubPhrase = Chomp_DotWord(Chunks,  Marker, RecurDepth))!=null){ // add to dependency list
-            ClassNode.AddInheritance(SubPhrase); Marker = FinalWord = SubPhrase.ChunkEnd;
-          }
-        } else if (tkn.BlockType == TokenType.SingleChar){
-          if (tkn.Text.equals(Starter)){ break; }// break if starting { 
+      if (UseNestedInheritances){
+        Marker=Skip_Until(Chunks, Marker, WordOrPunctuationTarget);
+        MetaInheritance Inherits;
+        if ((Inherits = Chomp_Inheritances(Chunks,  Marker, RecurDepth))!=null){ // add to dependency list
+          ClassNode.AddInheritanceNode(Inherits); Marker = Inherits.ChunkEnd; Marker++;
         }
-        Marker++;
+        tkn = Chunks.get(Marker);
+      } else {
+        // this would be Chomp_Inheritances - seems ready
+        Node SubPhrase = null;
+        int FinalWord = Marker;
+        while (Marker<Chunks.size()) {// skip through inheritance and get to brackets
+          tkn = Chunks.get(Marker);
+          if (tkn.BlockType == TokenType.Word){// no whitespace, no comments 
+            if (TreeMaker.InList(tkn.Text, InheritanceFlags)){// ignore "implements" and "extends"
+            } else if ((SubPhrase = Chomp_DotWord(Chunks,  Marker, RecurDepth))!=null){ // add to dependency list
+              ClassNode.AddInheritance(SubPhrase); Marker = FinalWord = SubPhrase.ChunkEnd;
+            }
+          } else if (tkn.BlockType == TokenType.SingleChar){
+            if (tkn.Text.equals(Starter)){ break; }// break if starting { 
+          }
+          Marker++;
+        }
       }
-      
       // should probably bail out here if we didn't find a {
       MetaEnum SubEnum = null;// will become MetaEnum
       MetaClass SubClass = null;
       MetaInterface SubInterface = null;
       MetaFunction SubFunction = null;
       MetaVar SubVar = null;
+      int FirstSubNodeLoc = 0; // to do: remember FirstSubNodeLoc
       if (tkn.Text.equals(Starter)){// this would be Chomp_ClassBody
         ClassNode.BodyStartLoc = Marker;
         Marker++;
@@ -874,25 +909,25 @@ class JavaParse {
           tkn = Chunks.get(Marker);
           if (tkn.Text.equals(Ender)){break;}
           if ((SubClass = Chomp_Class(Chunks, Marker, RecurDepth, ClassNode))!=null){
-            System.out.println("AddMetaClass");
+            System.out.println("AddMetaClass"); if (FirstSubNodeLoc==0){FirstSubNodeLoc=SubClass.ChunkStart;}
             ClassNode.AddMetaClass(SubClass); Marker = SubClass.ChunkEnd;
           } else if ((SubInterface = Chomp_Interface(Chunks, Marker, RecurDepth, ClassNode))!=null){
-            System.out.println("AddMetaInterface");
+            System.out.println("AddMetaInterface");if (FirstSubNodeLoc==0){FirstSubNodeLoc=SubInterface.ChunkStart;}
             ClassNode.AddMetaInterface(SubInterface); Marker = SubInterface.ChunkEnd;
           } else if ((SubFunction = Chomp_Function(Chunks, Marker, RecurDepth, ClassNode))!=null){
-            System.out.println("AddMetaFunction");
+            System.out.println("AddMetaFunction");if (FirstSubNodeLoc==0){FirstSubNodeLoc=SubFunction.ChunkStart;}
             ClassNode.AddMetaFunction(SubFunction); Marker = SubFunction.ChunkEnd;
           } else if ((SubEnum = Chomp_Enum(Chunks, Marker, RecurDepth))!=null){
-            System.out.println("AddMetaEnum");
+            System.out.println("AddMetaEnum");if (FirstSubNodeLoc==0){FirstSubNodeLoc=SubEnum.ChunkStart;}
             ClassNode.AddMetaEnum(SubEnum); Marker = SubEnum.ChunkEnd;
           } else if ((SubVar = Chomp_VariableDeclaration(Chunks, Marker, RecurDepth))!=null){
-            System.out.println("AddMetaVar");
+            System.out.println("AddMetaVar");if (FirstSubNodeLoc==0){FirstSubNodeLoc=SubVar.ChunkStart;}
             ClassNode.AddMetaVar(SubVar); Marker = SubVar.ChunkEnd;
           }
           Marker++;
         }
       } else {return null;}// no open bracket found
-
+      ClassNode.FirstSubNodeLoc = FirstSubNodeLoc;
       ClassNode.ChunkEnd = Marker;
       return ClassNode;
     }
@@ -931,22 +966,30 @@ class JavaParse {
 
       Marker++;// start at next token
       
-      // this would be Chomp_Inheritances - seems ready
-      Node SubPhrase = null;
-      int FinalWord = Marker;
-      while (Marker<Chunks.size()) {// skip through inheritance and get to brackets
-        tkn = Chunks.get(Marker);
-        if (tkn.BlockType == TokenType.Word){// no whitespace, no comments 
-          if (TreeMaker.InList(tkn.Text, InheritanceFlags)){// ignore "implements" and "extends"
-          } else if ((SubPhrase = Chomp_DotWord(Chunks,  Marker, RecurDepth))!=null){ // add to dependency list
-            InterfaceNode.AddInheritance(SubPhrase); Marker = FinalWord = SubPhrase.ChunkEnd;
-          }
-        } else if (tkn.BlockType == TokenType.SingleChar){
-          if (tkn.Text.equals(Starter)){ break; }// break if starting { 
+      if (UseNestedInheritances){
+        Marker=Skip_Until(Chunks, Marker, WordOrPunctuationTarget);
+        MetaInheritance Inherits;
+        if ((Inherits = Chomp_Inheritances(Chunks,  Marker, RecurDepth))!=null){ // add to dependency list
+          InterfaceNode.AddInheritanceNode(Inherits); Marker = Inherits.ChunkEnd; Marker++;
         }
-        Marker++;
-      }
-      
+        tkn = Chunks.get(Marker);
+      } else {
+        // this would be Chomp_Inheritances - seems ready
+        Node SubPhrase = null;
+        int FinalWord = Marker;
+        while (Marker<Chunks.size()) {// skip through inheritance and get to brackets
+          tkn = Chunks.get(Marker);
+          if (tkn.BlockType == TokenType.Word){// no whitespace, no comments 
+            if (TreeMaker.InList(tkn.Text, InheritanceFlags)){// ignore "implements" and "extends"
+            } else if ((SubPhrase = Chomp_DotWord(Chunks,  Marker, RecurDepth))!=null){ // add to dependency list
+              InterfaceNode.AddInheritance(SubPhrase); Marker = FinalWord = SubPhrase.ChunkEnd;
+            }
+          } else if (tkn.BlockType == TokenType.SingleChar){
+            if (tkn.Text.equals(Starter)){ break; }// break if starting { 
+          }
+          Marker++;
+        }
+     }
       // should probably bail out here if we didn't find a {
       MetaEnum SubEnum = null;// will become MetaEnum
       MetaClass SubClass = null;
@@ -1378,15 +1421,17 @@ class HashMap;
   }
   /* ********************************************************************************************************* */
   public static class MetaClass extends Node {
+    public static String Identifier = "class";
     private ArrayList<MetaClass> MetaClassList = new ArrayList<MetaClass>();
     private ArrayList<MetaInterface> MetaInterfaceList = new ArrayList<MetaInterface>();
     private ArrayList<MetaFunction> MetaFunctionList = new ArrayList<MetaFunction>();
     private ArrayList<MetaVar> MetaVarList = new ArrayList<MetaVar>();
     private ArrayList<MetaEnum> MetaEnumList = new ArrayList<MetaEnum>();
     private ArrayList<Node> AncestorList = new ArrayList<Node>();
+    private MetaInheritance Inheritance = null;
     public String ClassName = "";
     public int ClassNameLoc = Integer.MIN_VALUE;
-    public int BodyStartLoc;
+    public int BodyStartLoc, FirstSubNodeLoc = Integer.MIN_VALUE;
     public MetaClass(){ super(); MyPhraseName = "MetaClass"; }
     public MetaClass(ArrayList<Node> ChildArray0, int Marker){
       super(ChildArray0, Marker);
@@ -1406,6 +1451,12 @@ class HashMap;
     public void AddMetaEnum(MetaEnum MEnum){
       this.MetaEnumList.add(MEnum); this.AddSubNode(MEnum); 
     }
+    public void AddInheritanceNode(MetaInheritance MInheritance){
+      this.Inheritance=MInheritance; this.AddSubNode(MInheritance);
+      if (this.Inheritance==null){
+        boolean nop = true;
+      }
+    }
     public void AddInheritance(Node Ancestor){
       this.AncestorList.add(Ancestor); this.AddSubNode(Ancestor); 
     }
@@ -1414,29 +1465,37 @@ class HashMap;
       int StartDex;
       ArrayList<Token> Chunks = Luggage.Chunks;
       if (this.Preamble!=null){ this.Preamble.BlankMyText(Chunks); }
-      if (this.AncestorList.size()>0){
-        StartDex = this.ClassNameLoc+1;// first token right after the class name
-        
-        // to do: we need to re-comma between different ancestors
-        int ultimo = this.AncestorList.size()-1;
-        Node FinalParent = this.AncestorList.get(ultimo);
-        int EndDex = FinalParent.ChunkEnd;
-        
-        for (int cnt = StartDex; cnt<=EndDex; cnt++){
-          tkn = Chunks.get(cnt);// remove all "implements" and "extends"
-          if (TreeMaker.InList(tkn.Text, InheritanceFlags)){ tkn.Text = ""; }
+      
+      if (UseNestedInheritances){
+        if (this.Inheritance != null){
+          this.Inheritance.ConvertToCpp(Luggage);
         }
-        if (this.ClassName.equals("Audio")){
-          boolean nop = true;
+      }else{
+        if (this.AncestorList.size()>0){
+          StartDex = this.ClassNameLoc+1;// first token right after the class name
+
+          // to do: we need to re-comma between different ancestors
+          int ultimo = this.AncestorList.size()-1;
+          Node FinalParent = this.AncestorList.get(ultimo);
+          int EndDex = FinalParent.ChunkEnd;
+
+          for (int cnt = StartDex; cnt<=EndDex; cnt++){
+            tkn = Chunks.get(cnt);// remove all "implements" and "extends"
+            if (TreeMaker.InList(tkn.Text, InheritanceFlags)){ tkn.Text = ""; }
+          }
+          tkn = Chunks.get(StartDex);
+          tkn.Text = ": public" + tkn.Text; // precede with just a colon and 'public'
         }
-        tkn = Chunks.get(StartDex);
-        tkn.Text = ": public" + tkn.Text; // precede with just a colon and 'public'
       }
+      
       // to do: insert public: inside top of brackets
       tkn = Chunks.get(this.ChunkStart);
-      tkn = Chunks.get(this.BodyStartLoc);
-      tkn.Text = tkn.Text + "\n public:\n";// make everything public for now
-        
+      
+      if (this.FirstSubNodeLoc>0){
+        tkn = Chunks.get(this.FirstSubNodeLoc-1);
+        //if (tkn.BlockType==TokenType.CommentSlash){tkn.Text =  tkn.Text+"\n";}
+        tkn.Text =  tkn.Text+"public:\n";// make everything public for now
+      }
       tkn = Chunks.get(this.ChunkEnd);
       tkn.Text = tkn.Text + ";";// all classes end with ; 
       
@@ -1462,9 +1521,47 @@ class HashMap;
   /* ********************************************************************************************************* */
   public static class MetaInterface extends MetaClass {
     // to do: fill this in
-    public MetaInterface(){ super(); MyPhraseName = "MetaClass"; }
+    public MetaInterface(){ super(); MyPhraseName = "MetaInterface"; }
     public MetaInterface(ArrayList<Node> ChildArray0, int Marker){
       super(ChildArray0, Marker);
+    }
+  }
+  /* ********************************************************************************************************* */
+  public static class MetaInheritance extends Node {
+    private ArrayList<Node> AncestorList = new ArrayList<Node>();
+    public MetaInheritance(){ super(); MyPhraseName = "MetaInheritance"; }
+    public MetaInheritance(int Marker){
+      this.ChunkStart = Marker;
+    }
+    public MetaInheritance(ArrayList<Node> ChildArray0, int Marker){
+      super(ChildArray0, Marker);
+    }
+    public void AddInheritance(Node Ancestor){
+      this.AncestorList.add(Ancestor); this.AddSubNode(Ancestor); 
+    }
+    @Override public void ConvertToCpp(CppLuggage Luggage){
+      ArrayList<Token> Chunks = Luggage.Chunks;
+      Token tkn;
+      if (true){
+        for (int cnt=this.ChunkStart;cnt<=this.ChunkEnd;cnt++){// for now, wipe all inheritances
+          tkn = Chunks.get(cnt); tkn.Text = "";
+        }
+      }else{
+        int StartDex;
+        if (this.AncestorList.size()>0){
+          StartDex = this.ChunkStart;// first token right after the class name
+          tkn = Chunks.get(StartDex);
+          tkn.Text = ": public"; // replace first 'extends' or 'implements' with just a colon and 'public'
+          StartDex++;
+          // to do: we need to re-comma between different ancestors
+          //int ultimo = this.AncestorList.size()-1; Node FinalParent = this.AncestorList.get(ultimo);
+          int EndDex = this.ChunkEnd;
+          for (int cnt = StartDex; cnt<=EndDex; cnt++){
+            tkn = Chunks.get(cnt);// replace all following "implements" and "extends" with commas
+            if (TreeMaker.InList(tkn.Text, InheritanceFlags)){ tkn.Text = ","; }
+          }
+        }
+      }
     }
   }
   /* ********************************************************************************************************* */
@@ -1499,7 +1596,7 @@ class HashMap;
         if (TreeMaker.InList(tkn.Text, Primitives)){
           IsPrimitive = true; DefaultVal = "0";
         }else{
-          IsPrimitive = false; DefaultVal = "null";
+          IsPrimitive = false; DefaultVal = "nullptr";
         }
       }
     }
@@ -1563,6 +1660,8 @@ class HashMap;
       this.Params.ConvertToCpp(Luggage);
       if (this.Body == null){// IsStub
         boolean nop = true;
+        tkn = Chunks.get(this.ChunkStart); tkn.Text = "virtual "+tkn.Text;
+        tkn = Chunks.get(this.ChunkEnd); tkn.Text = " = 0"+tkn.Text;
       } else {
         Start = this.Body.ChunkStart+1; End = this.Body.ChunkEnd-1;
         for (int cnt=Start; cnt<=End; cnt++){// clear all body content to make this 'virtual'
@@ -1668,10 +1767,12 @@ end classes with }; - done
 strip out all public, private modifiers - done
 strip out @Override for now - done
 strip out all function guts. if fn returns class then return null. if fn returns primitive num then return 0. boolean returns false;  - done
+all classes start with public: - done
+put public before first declaration in classes - done
+make interface functions go: virtual myfunction() = 0; - done
 
 this. becomes this->
 paramtype becomes paramtype& for classes
-all classes start with public:
 all type[] MyArray  become  type* MyArray
 all type MyArray[] become  type* MyArray
 change dotwords to ::
@@ -1681,23 +1782,21 @@ enums should not be pointers
 change interface to class
 blah::bleh* x = new blah::bleh(); // make the 'new' part have ::  but for now remove all initializations!!!
 
-make interface functions go: virtual myfunction() = 0;
-
 namespace JsonParse {class Phrase;} // forwards like this
 
 ArrayList<JsonParse::Phrase*>  // use :: and * in templates now
 
 replace null with nullptr
 
-forward declare ALL class parameters
+forward declare ALL class parameters and other references
 error: expected ';' at end of member declaration *** MEANS PARAMETERS ARE UNDEFINED!!!!!
 
 for now, remove all inheritances
-
-put public before first declaration in classes
+add chomp_inheritances to class and interface
 
 deal with weird MakeArray syntax in ITextable
 ArrayList<JsonParse::Phrase*> MakeArray(CollisionLibrary& HitTable, ArrayList<ITextable*>& Things) { return nullptr; };
+
 
 
 
