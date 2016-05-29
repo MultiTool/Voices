@@ -37,7 +37,7 @@ public class GroupBox implements ISonglet, IDrawable {
       if (obox instanceof Voice.Voice_OffsetBox) {
         Voice.Voice_OffsetBox vobx = (Voice.Voice_OffsetBox) obox;// another cast!
         ITextable.CollisionLibrary HitTable = new ITextable.CollisionLibrary();
-        JsonParse.Phrase phrase = vobx.Export(HitTable);
+        JsonParse.Node phrase = vobx.Export(HitTable);
         HitTable.Wipe_Songlets();
         vobx.VoiceContent = null;
         obox = vobx = new Voice.Voice_OffsetBox();// #hacky: stupid non-factory way to regenerate obox
@@ -411,9 +411,9 @@ public class GroupBox implements ISonglet, IDrawable {
     return this.RefCount;
   }
   /* ********************************************************************************* */
-  @Override public JsonParse.Phrase Export(CollisionLibrary HitTable) {// ITextable
-    JsonParse.Phrase phrase = new JsonParse.Phrase();
-    phrase.ChildrenHash = new HashMap<String, JsonParse.Phrase>();
+  @Override public JsonParse.Node Export(CollisionLibrary HitTable) {// ITextable
+    JsonParse.Node phrase = new JsonParse.Node();
+    phrase.ChildrenHash = new HashMap<String, JsonParse.Node>();
     phrase.AddSubPhrase("MyName", IFactory.Utils.PackField(this.MyName));
 
     if (false) {
@@ -422,27 +422,27 @@ public class GroupBox implements ISonglet, IDrawable {
     }
 
     // Save my array of songlets.
-    JsonParse.Phrase CPointsPhrase = new JsonParse.Phrase();
+    JsonParse.Node CPointsPhrase = new JsonParse.Node();
     CPointsPhrase.ChildrenArray = IFactory.Utils.MakeArray(HitTable, this.SubSongs);
     phrase.AddSubPhrase(this.SubSongsName, CPointsPhrase);
 
     return phrase;
   }
-  @Override public void ShallowLoad(JsonParse.Phrase phrase) {// ITextable
-    HashMap<String, JsonParse.Phrase> Fields = phrase.ChildrenHash;
+  @Override public void ShallowLoad(JsonParse.Node phrase) {// ITextable
+    HashMap<String, JsonParse.Node> Fields = phrase.ChildrenHash;
     this.MyName = IFactory.Utils.GetField(Fields, "MyName", "GroupBoxName");
     // this.MaxAmplitude = Double.parseDouble(IFactory.Utils.GetField(Fields, "MaxAmplitude", "0.125")); can be calculated
   }
-  @Override public void Consume(JsonParse.Phrase phrase, CollisionLibrary ExistingInstances) {// ITextable - Fill in all the values of an already-created object, including deep pointers.
+  @Override public void Consume(JsonParse.Node phrase, CollisionLibrary ExistingInstances) {// ITextable - Fill in all the values of an already-created object, including deep pointers.
     if (phrase == null) {// ready for test
       return;
     }
     this.ShallowLoad(phrase);
-    JsonParse.Phrase ChildPhraseList = IFactory.Utils.LookUpField(phrase.ChildrenHash, this.SubSongsName);// array of subsongs object
+    JsonParse.Node ChildPhraseList = IFactory.Utils.LookUpField(phrase.ChildrenHash, this.SubSongsName);// array of subsongs object
     if (ChildPhraseList != null && ChildPhraseList.ChildrenArray != null) {
       this.Wipe_SubSongs();
       OffsetBox obox;
-      JsonParse.Phrase ChildPhrase;
+      JsonParse.Node ChildPhrase;
       int len = ChildPhraseList.ChildrenArray.size();
       for (int pcnt = 0; pcnt < len; pcnt++) {// iterate through the array
         ChildPhrase = ChildPhraseList.ChildrenArray.get(pcnt);
@@ -728,9 +728,9 @@ public class GroupBox implements ISonglet, IDrawable {
     }
     /* ********************************************************************************* */
     public Group_Singer Spawn_My_Singer() {// for render time
-      Group_Singer ph = this.Content.Spawn_My_Singer();
-      ph.MyOffsetBox = this;// Transfer all of this box's offsets to singer. 
-      return ph;
+      Group_Singer Singer = this.Content.Spawn_My_Singer();
+      Singer.MyOffsetBox = this;// Transfer all of this box's offsets to singer. 
+      return Singer;
     }
     /* ********************************************************************************* */
     @Override public Group_OffsetBox Clone_Me() {// always override this thusly
@@ -770,15 +770,15 @@ public class GroupBox implements ISonglet, IDrawable {
       }
     }
     /* ********************************************************************************* */
-    @Override public JsonParse.Phrase Export(CollisionLibrary HitTable) {// ITextable
-      JsonParse.Phrase SelfPackage = super.Export(HitTable);// ready for test?
-      //HashMap<String, JsonParse.Phrase> Fields = SelfPackage.ChildrenHash;
+    @Override public JsonParse.Node Export(CollisionLibrary HitTable) {// ITextable
+      JsonParse.Node SelfPackage = super.Export(HitTable);// ready for test?
+      //HashMap<String, JsonParse.Node> Fields = SelfPackage.ChildrenHash;
       SelfPackage.AddSubPhrase(Globals.ObjectTypeName, IFactory.Utils.PackField(ObjectTypeName));
       SelfPackage.AddSubPhrase(GroupScaleXName, IFactory.Utils.PackField(this.GroupScaleX));
       if (false) {
-        JsonParse.Phrase ChildPackage;
+        JsonParse.Node ChildPackage;
         if (this.Content.GetRefCount() != 1) {// songlet exists in more than one place, use a pointer to library
-          ChildPackage = new JsonParse.Phrase();// multiple references, use a pointer to library instead
+          ChildPackage = new JsonParse.Node();// multiple references, use a pointer to library instead
           CollisionItem ci;// songlet is already in library, just create a child phrase and assign its textptr to that entry key
           if ((ci = HitTable.GetItem(this.Content)) == null) {
             ci = HitTable.InsertUniqueInstance(this.Content);// songlet is NOT in library, serialize it and add to library
@@ -792,16 +792,16 @@ public class GroupBox implements ISonglet, IDrawable {
       }
       return SelfPackage;
     }
-    @Override public void ShallowLoad(JsonParse.Phrase phrase) {// ITextable
+    @Override public void ShallowLoad(JsonParse.Node phrase) {// ITextable
       super.ShallowLoad(phrase);
       this.GroupScaleX = Double.parseDouble(IFactory.Utils.GetField(phrase.ChildrenHash, "GroupScaleX", "1.0"));
     }
-    @Override public void Consume(JsonParse.Phrase phrase, CollisionLibrary ExistingInstances) {// ITextable - Fill in all the values of an already-created object, including deep pointers.
+    @Override public void Consume(JsonParse.Node phrase, CollisionLibrary ExistingInstances) {// ITextable - Fill in all the values of an already-created object, including deep pointers.
       if (phrase == null) {// ready for test?
         return;
       }
       this.ShallowLoad(phrase);
-      JsonParse.Phrase SongletPhrase = phrase.ChildrenHash.get(OffsetBox.ContentName);// value of songlet field
+      JsonParse.Node SongletPhrase = phrase.ChildrenHash.get(OffsetBox.ContentName);// value of songlet field
       String ContentTxt = SongletPhrase.Literal;
       GroupBox songlet;
       if (Globals.IsTxtPtr(ContentTxt)) {// if songlet content is just a pointer into the library
@@ -832,7 +832,7 @@ public class GroupBox implements ISonglet, IDrawable {
     }
     /* ********************************************************************************* */
     public static class Factory implements IFactory {// for serialization
-      @Override public Group_OffsetBox Create(JsonParse.Phrase phrase, CollisionLibrary ExistingInstances) {// under construction, this does not do anything yet
+      @Override public Group_OffsetBox Create(JsonParse.Node phrase, CollisionLibrary ExistingInstances) {// under construction, this does not do anything yet
         Group_OffsetBox obox = new Group_OffsetBox();
         obox.Consume(phrase, ExistingInstances);
         return obox;

@@ -255,19 +255,19 @@ public class LoopBox implements ISonglet, IDrawable {
     return this.RefCount;
   }
   /* ********************************************************************************* */
-  @Override public JsonParse.Phrase Export(CollisionLibrary HitTable) {// ITextable
-    JsonParse.Phrase phrase = new JsonParse.Phrase();
+  @Override public JsonParse.Node Export(CollisionLibrary HitTable) {// ITextable
+    JsonParse.Node phrase = new JsonParse.Node();
     return phrase;
   }
-  @Override public void ShallowLoad(JsonParse.Phrase phrase) {// ITextable
-    HashMap<String, JsonParse.Phrase> Fields = phrase.ChildrenHash;
+  @Override public void ShallowLoad(JsonParse.Node phrase) {// ITextable
+    HashMap<String, JsonParse.Node> Fields = phrase.ChildrenHash;
   }
-  @Override public void Consume(JsonParse.Phrase phrase, CollisionLibrary ExistingInstances) {// ITextable - Fill in all the values of an already-created object, including deep pointers.
+  @Override public void Consume(JsonParse.Node phrase, CollisionLibrary ExistingInstances) {// ITextable - Fill in all the values of an already-created object, including deep pointers.
     if (phrase == null) {
       return;
     }
     this.ShallowLoad(phrase);
-    HashMap<String, JsonParse.Phrase> Fields = phrase.ChildrenHash;
+    HashMap<String, JsonParse.Node> Fields = phrase.ChildrenHash;
   }
   /* ********************************************************************************* */
   public static class Loop_Singer extends Singer {
@@ -420,9 +420,9 @@ public class LoopBox implements ISonglet, IDrawable {
     }
     /* ********************************************************************************* */
     public Loop_Singer Spawn_My_Singer() {// for render time
-      Loop_Singer ph = this.Content.Spawn_My_Singer();
-      ph.MyOffsetBox = this;// to do: also transfer all of this box's offsets to player head. 
-      return ph;
+      Loop_Singer Singer = this.Content.Spawn_My_Singer();
+      Singer.MyOffsetBox = this;// to do: also transfer all of this box's offsets to player head. 
+      return Singer;
     }
     /* ********************************************************************************* */
     @Override public Loop_OffsetBox Clone_Me() {// ICloneable always override this thusly
@@ -492,7 +492,7 @@ public class LoopBox implements ISonglet, IDrawable {
     }
     /* ********************************************************************************* */
     public static class Factory implements IFactory {// for serialization
-      @Override public Loop_OffsetBox Create(JsonParse.Phrase phrase, CollisionLibrary ExistingInstances) {// under construction, this does not do anything yet
+      @Override public Loop_OffsetBox Create(JsonParse.Node phrase, CollisionLibrary ExistingInstances) {// under construction, this does not do anything yet
         Loop_OffsetBox obox = new Loop_OffsetBox();
         obox.Consume(phrase, ExistingInstances);
         return obox;
@@ -608,7 +608,7 @@ public class LoopBox implements ISonglet, IDrawable {
     }
     /* ********************************************************************************* */
     public static class Factory implements IFactory {// for serialization
-      @Override public Ghost_OffsetBox Create(JsonParse.Phrase phrase, CollisionLibrary ExistingInstances) {// under construction, this does not do anything yet
+      @Override public Ghost_OffsetBox Create(JsonParse.Node phrase, CollisionLibrary ExistingInstances) {// under construction, this does not do anything yet
         return null;
       }
     }

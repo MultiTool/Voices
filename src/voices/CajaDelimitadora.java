@@ -176,18 +176,18 @@ public class CajaDelimitadora implements IDeletable, ITextable {// DIY BoundingB
     return false;
   }
   /* ********************************************************************************* */
-  @Override public JsonParse.Phrase Export(CollisionLibrary HitTable) {// ITextable
-    JsonParse.Phrase phrase = new JsonParse.Phrase();
-    phrase.ChildrenHash = new HashMap<String, JsonParse.Phrase>();
+  @Override public JsonParse.Node Export(CollisionLibrary HitTable) {// ITextable
+    JsonParse.Node phrase = new JsonParse.Node();
+    phrase.ChildrenHash = new HashMap<String, JsonParse.Node>();
     phrase.AddSubPhrase("Min", IFactory.Utils.PackField(this.Min.toString()));
     phrase.AddSubPhrase("Max", IFactory.Utils.PackField(this.Max.toString()));
     return phrase;
   }
-  @Override public void ShallowLoad(JsonParse.Phrase phrase) {// ITextable
-    HashMap<String, JsonParse.Phrase> Fields = phrase.ChildrenHash;
+  @Override public void ShallowLoad(JsonParse.Node phrase) {// ITextable
+    HashMap<String, JsonParse.Node> Fields = phrase.ChildrenHash;
     throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
   }
-  @Override public void Consume(JsonParse.Phrase phrase, CollisionLibrary ExistingInstances) {// ITextable - Fill in all the values of an already-created object, including deep pointers.
+  @Override public void Consume(JsonParse.Node phrase, CollisionLibrary ExistingInstances) {// ITextable - Fill in all the values of an already-created object, including deep pointers.
     throw new UnsupportedOperationException("Not supported yet.");
   }
 }

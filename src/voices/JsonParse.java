@@ -11,12 +11,12 @@ class JsonParse {
   public static String Environment_NewLine = "\r\n";
   public static String PhraseEnd=",";
   /* ********************************************************************************************************* */
-  public static Phrase Parse(String JsonText) {
+  public static Node Parse(String JsonText) {
     ArrayList<Token> Chunks = Tokenizer.Tokenize(0, JsonText);
     System.out.println("");
     System.out.println("-----------------------------------------------------");
     int Marker = 0;
-    Phrase parent;
+    Node parent;
     parent = Tokenizer.Chomp_HashMap(Chunks, Marker, 0);
     System.out.println("Done");
     return parent;
@@ -264,8 +264,8 @@ class JsonParse {
     }
     // <editor-fold defaultstate="collapsed" desc="Tree Creation">
     /* ********************************************************************************************************* */
-    public static Phrase MakeLiteral(String Text, int ChunkStart, int ChunkEnd){
-      Phrase OnePhrase = new Phrase();
+    public static Node MakeLiteral(String Text, int ChunkStart, int ChunkEnd){
+      Node OnePhrase = new Node();
       OnePhrase.Literal = Text; OnePhrase.ChunkStart=ChunkStart; OnePhrase.ChunkEnd=ChunkEnd;
       return OnePhrase;
     }
@@ -291,14 +291,14 @@ class JsonParse {
       return "\"" + txt + "\"";
     }
     /* ********************************************************************************************************* */
-    public static Phrase Chomp_NumberX(ArrayList<Token> Chunks, int Marker, int RecurDepth)
+    public static Node Chomp_NumberX(ArrayList<Token> Chunks, int Marker, int RecurDepth)
     {// this is wrong. need to re-think it before using. 
       // chunks are a number if: all chunks are all numeric
       // but not if: numeric chunks end, but next chunk is non-whitespace, non-comma, non-semicolon, and what else? just non-delimiter? 
       // 12.345blah is not a number. maybe let that pass anyway? 123.4f is a number sometimes. 
       // hmm. valid numberenders: ; , []() etc. any single char thing that's not a .  
       // how about a number can end with whitespace or any non-numeric punctation. 
-      Phrase OnePhrase=null;
+      Node OnePhrase=null;
       Token tkn = Chunks.get(Marker);
       char ch = tkn.Text.charAt(0);
       if (IsNumericPunctuationChar(ch) || IsNumericString(tkn.Text)){
@@ -311,20 +311,20 @@ class JsonParse {
           WholeString = WholeString.concat(tkn.Text);
           MarkNext++;
         }
-        OnePhrase = new Phrase(); OnePhrase.ChunkStart = Marker; OnePhrase.ChunkEnd = MarkNext-1;
+        OnePhrase = new Node(); OnePhrase.ChunkStart = Marker; OnePhrase.ChunkEnd = MarkNext-1;
         OnePhrase.Literal = WholeString;
       }
       return OnePhrase;
     }
     /* ********************************************************************************************************* */
-    public static Phrase Chomp_Number(ArrayList<Token> Chunks, int Marker, int RecurDepth)
+    public static Node Chomp_Number(ArrayList<Token> Chunks, int Marker, int RecurDepth)
     {// this is wrong. need to re-think it before using. 
       // chunks are a number if: all chunks are all numeric
       // but not if: numeric chunks end, but next chunk is non-whitespace, non-comma, non-semicolon, and what else? just non-delimiter? 
       // 12.345blah is not a number. maybe let that pass anyway? 123.4f is a number sometimes. 
       // hmm. valid numberenders: ; , []() etc. any single char thing that's not a .  
       // how about a number can end with whitespace or any non-numeric punctation. 
-      Phrase OnePhrase = null;
+      Node OnePhrase = null;
       int FirstChunk, FinalChunk = Marker;
       Token tkn = Chunks.get(Marker);
       char ch = tkn.Text.charAt(0);
@@ -339,14 +339,15 @@ class JsonParse {
           WholeString = WholeString + tkn.Text;
           Marker++;
         }
-        OnePhrase = new Phrase(); OnePhrase.ChunkStart = FirstChunk; OnePhrase.ChunkEnd = FinalChunk;
+        OnePhrase = new Node(); OnePhrase.ChunkStart = FirstChunk; OnePhrase.ChunkEnd = FinalChunk;
         OnePhrase.Literal = WholeString;
       }
       return OnePhrase;
     }
     /* ********************************************************************************************************* */
-    public static Phrase Chomp_HashMap(ArrayList<Token> Chunks, int Marker, int RecurDepth){
-      Phrase OnePhrase=null,SubPhrase=null;
+    public static Node Chomp_HashMap(ArrayList<Token> Chunks, int Marker, int RecurDepth){
+      Node OnePhrase = null;
+      Node SubPhrase = null;
       String Starter="{", Ender="}";
       int MarkNext=Marker;
       int KeyOrValue=0;
@@ -354,9 +355,9 @@ class JsonParse {
       RecurDepth++;
       Token tkn = Chunks.get(Marker);
       if (tkn.Text.equals(Starter)){
-        OnePhrase = new Phrase();
+        OnePhrase = new Node();
         OnePhrase.ChunkStart = Marker;
-        OnePhrase.ChildrenHash = new HashMap<String,Phrase>();
+        OnePhrase.ChildrenHash = new HashMap<String,Node>();
         MarkNext = ++Marker;
         while (Marker<Chunks.size()) {
           tkn = Chunks.get(Marker);
@@ -391,16 +392,17 @@ class JsonParse {
       return OnePhrase;
     }
     /* ********************************************************************************************************* */
-    public static Phrase Chomp_Array(ArrayList<Token> Chunks, int Marker, int RecurDepth){
-      Phrase OnePhrase=null,SubPhrase=null;
+    public static Node Chomp_Array(ArrayList<Token> Chunks, int Marker, int RecurDepth){
+      Node OnePhrase = null;
+      Node SubPhrase = null;
       String Starter="[", Ender="]";
       int MarkNext=Marker;
       RecurDepth++;
       Token tkn = Chunks.get(Marker);
       if (tkn.Text.equals(Starter)){
-        OnePhrase = new Phrase();
+        OnePhrase = new Node();
         OnePhrase.ChunkStart = Marker;
-        OnePhrase.ChildrenArray = new ArrayList<Phrase>();
+        OnePhrase.ChildrenArray = new ArrayList<Node>();
         Marker++;
         MarkNext=Marker;
         while (Marker<Chunks.size()) {
@@ -430,11 +432,11 @@ class JsonParse {
     }
     // </editor-fold>
     /* ********************************************************************************************************* */
-    public static Phrase Fold(ArrayList<Token> Chunks) {
+    public static Node Fold(ArrayList<Token> Chunks) {
       System.out.println("");
       System.out.println("-----------------------------------------------------");
       int Marker = 0;
-      Phrase parent;
+      Node parent;
       parent = Chomp_HashMap(Chunks, Marker, 0);
       System.out.println("Done");
       return parent;
@@ -450,20 +452,20 @@ class JsonParse {
     public String DeQuoted() { return Tokenizer.DeQuote(this.Text); }
   }
   /* ********************************************************************************************************* */
-  public static class Phrase {// a value that is a hashtable, an array, a literal, or a pointer to a multiply-used item
+  public static class Node {// a value that is a hashtable, an array, a literal, or a pointer to a multiply-used item
     public enum Types { None, Class, Interface, Method, Whatever }// Interface is not used yet.
     public Types MyType = Types.None;
     public String MyPhraseName = "***Nothing***";
-    public Phrase Parent = null;
+    public Node Parent = null;
     public int ChunkStart,ChunkEnd;
     public String ItemPtr=null;
     public String Literal=null;
-    public ArrayList<Phrase> ChildrenArray = null;
-    public HashMap<String,Phrase> ChildrenHash = null;
-    public void AddSubPhrase(Phrase ChildPhrase){
+    public ArrayList<Node> ChildrenArray = null;
+    public HashMap<String,Node> ChildrenHash = null;
+    public void AddSubPhrase(Node ChildPhrase){
       this.ChildrenArray.add(ChildPhrase); ChildPhrase.Parent = this;
     }
-    public void AddSubPhrase(String Name, Phrase ChildPhrase)
+    public void AddSubPhrase(String Name, Node ChildPhrase)
     {
       this.ChildrenHash.put(Name, ChildPhrase); ChildPhrase.Parent = this;
     }
@@ -482,7 +484,7 @@ class JsonParse {
       return sb.toString();
     }
     public String ToHash(){
-      Phrase child;
+      Node child;
       StringBuilder sb = new StringBuilder();
       sb.append("{");
       int len = this.ChildrenHash.size();
@@ -490,12 +492,12 @@ class JsonParse {
       String key;
       this.ChildrenHash.keySet().toArray();
       if (0<len){
-        Set<Map.Entry<String, Phrase>> Entries = this.ChildrenHash.entrySet();
+        Set<Map.Entry<String, Node>> Entries = this.ChildrenHash.entrySet();
         Object[] objray = Entries.toArray();
-        //Map.Entry<String, Phrase>[] EntRay = (Map.Entry<String, Phrase>[]) Entries.toArray();
+        //Map.Entry<String, Node>[] EntRay = (Map.Entry<String, Node>[]) Entries.toArray();
         int cnt=0;
         while (cnt<ultimo){
-          Map.Entry<String, Phrase> entry = (Map.Entry<String, Phrase>) objray[cnt];
+          Map.Entry<String, Node> entry = (Map.Entry<String, Node>) objray[cnt];
           key = entry.getKey();
           child = entry.getValue();
           sb.append(Tokenizer.EnQuote(key));
@@ -504,7 +506,7 @@ class JsonParse {
           sb.append(", ");
           cnt++;
         }
-        key = ((Map.Entry<String, Phrase>)objray[cnt]).getKey();
+        key = ((Map.Entry<String, Node>)objray[cnt]).getKey();
         child = this.ChildrenHash.get(key);
         sb.append(Tokenizer.EnQuote(key));
         sb.append(" : ");
@@ -514,7 +516,7 @@ class JsonParse {
       return sb.toString();
     }
     public String ToArray(){
-      Phrase child;
+      Node child;
       StringBuilder sb = new StringBuilder();
       sb.append("[");
       int len = this.ChildrenArray.size();
@@ -582,7 +584,7 @@ class JsonParse {
           sb.append(", ");
           cnt++;
         }
-        key = ((Map.Entry<String, Phrase>)objray[cnt]).getKey();
+        key = ((Map.Entry<String, Node>)objray[cnt]).getKey();
         child = this.ChildrenHash.get(key);
         sb.append(Tokenizer.EnQuote(key)); sb.append(" : "); sb.append(child.ToJson());
       }

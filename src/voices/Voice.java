@@ -382,28 +382,28 @@ public class Voice implements ISonglet, IDrawable {
     return this.RefCount;
   }
   /* ********************************************************************************* */
-  @Override public JsonParse.Phrase Export(CollisionLibrary HitTable) {// ITextable
-    JsonParse.Phrase phrase = new JsonParse.Phrase();
+  @Override public JsonParse.Node Export(CollisionLibrary HitTable) {// ITextable
+    JsonParse.Node phrase = new JsonParse.Node();
     phrase.ChildrenHash = this.SerializeMyContents(HitTable);
     return phrase;
   }
-  @Override public void ShallowLoad(JsonParse.Phrase phrase) {// ITextable
-    HashMap<String, JsonParse.Phrase> Fields = phrase.ChildrenHash;
+  @Override public void ShallowLoad(JsonParse.Node phrase) {// ITextable
+    HashMap<String, JsonParse.Node> Fields = phrase.ChildrenHash;
     this.BaseFreq = Double.parseDouble(IFactory.Utils.GetField(Fields, "BaseFreq", Double.toString(Globals.BaseFreqC0)));
     // this.MaxAmplitude = Double.parseDouble(IFactory.Utils.GetField(Fields, "MaxAmplitude", "0.125")); can be calculated
   }
-  @Override public void Consume(JsonParse.Phrase phrase, CollisionLibrary ExistingInstances) {// ITextable - Fill in all the values of an already-created object, including deep pointers.
+  @Override public void Consume(JsonParse.Node phrase, CollisionLibrary ExistingInstances) {// ITextable - Fill in all the values of an already-created object, including deep pointers.
     if (phrase == null) {// this function is tested and works
       return;
     }
     // to do: before we even enter this function, first determine if phrase just has a txt pointer instead of a ChildrenHash. 
     this.ShallowLoad(phrase);
-    HashMap<String, JsonParse.Phrase> Fields = phrase.ChildrenHash;
-    JsonParse.Phrase PhrasePointList = IFactory.Utils.LookUpField(Fields, this.CPointsName);
+    HashMap<String, JsonParse.Node> Fields = phrase.ChildrenHash;
+    JsonParse.Node PhrasePointList = IFactory.Utils.LookUpField(Fields, this.CPointsName);
     if (PhrasePointList != null && PhrasePointList.ChildrenArray != null) {
       this.Wipe_CPoints();
       VoicePoint vp;
-      JsonParse.Phrase PhrasePoint;
+      JsonParse.Node PhrasePoint;
       int len = PhrasePointList.ChildrenArray.size();
       for (int pcnt = 0; pcnt < len; pcnt++) {
         PhrasePoint = PhrasePointList.ChildrenArray.get(pcnt);
@@ -414,12 +414,12 @@ public class Voice implements ISonglet, IDrawable {
     }
   }
   /* ********************************************************************************* */
-  public HashMap<String, JsonParse.Phrase> SerializeMyContents(CollisionLibrary HitTable) {// sort of the counterpart to ShallowLoad
-    HashMap<String, JsonParse.Phrase> Fields = new HashMap<String, JsonParse.Phrase>();
+  public HashMap<String, JsonParse.Node> SerializeMyContents(CollisionLibrary HitTable) {// sort of the counterpart to ShallowLoad
+    HashMap<String, JsonParse.Node> Fields = new HashMap<String, JsonParse.Node>();
     Fields.put("BaseFreq", IFactory.Utils.PackField(this.BaseFreq));
     Fields.put("MaxAmplitude", IFactory.Utils.PackField(this.MaxAmplitude));
     // Fields.put("MyBounds", MyBounds.Export(HitTable)); // can be calculated
-    JsonParse.Phrase CPointsPhrase = new JsonParse.Phrase();// Save my array of control points.
+    JsonParse.Node CPointsPhrase = new JsonParse.Node();// Save my array of control points.
     CPointsPhrase.ChildrenArray = IFactory.Utils.MakeArray(HitTable, this.CPoints);
     Fields.put(this.CPointsName, CPointsPhrase);
     return Fields;
@@ -445,9 +445,9 @@ public class Voice implements ISonglet, IDrawable {
     }
     /* ********************************************************************************* */
     @Override public Voice_Singer Spawn_Singer() {// for render time.  always always always override this
-      Voice_Singer ph = this.VoiceContent.Spawn_Singer();
-      ph.MyOffsetBox = this;
-      return ph;
+      Voice_Singer Singer = this.VoiceContent.Spawn_Singer();
+      Singer.MyOffsetBox = this;
+      return Singer;
     }
     /* ********************************************************************************* */
     @Override public Voice_OffsetBox Clone_Me() {// always override this thusly
@@ -485,20 +485,20 @@ public class Voice implements ISonglet, IDrawable {
       }
     }
     /* ********************************************************************************* */
-    @Override public JsonParse.Phrase Export(CollisionLibrary HitTable) {// ITextable
-      JsonParse.Phrase SelfPackage = super.Export(HitTable);// ready for test?
+    @Override public JsonParse.Node Export(CollisionLibrary HitTable) {// ITextable
+      JsonParse.Node SelfPackage = super.Export(HitTable);// ready for test?
       SelfPackage.AddSubPhrase(Globals.ObjectTypeName, IFactory.Utils.PackField(ObjectTypeName));
       return SelfPackage;
     }
-    @Override public void ShallowLoad(JsonParse.Phrase phrase) {// ITextable
+    @Override public void ShallowLoad(JsonParse.Node phrase) {// ITextable
       super.ShallowLoad(phrase);
     }
-    @Override public void Consume(JsonParse.Phrase phrase, CollisionLibrary ExistingInstances) {// ITextable - Fill in all the values of an already-created object, including deep pointers.
+    @Override public void Consume(JsonParse.Node phrase, CollisionLibrary ExistingInstances) {// ITextable - Fill in all the values of an already-created object, including deep pointers.
       if (phrase == null) {// ready for test?
         return;
       }
       this.ShallowLoad(phrase);
-      JsonParse.Phrase SongletPhrase = phrase.ChildrenHash.get(OffsetBox.ContentName);// value of songlet field
+      JsonParse.Node SongletPhrase = phrase.ChildrenHash.get(OffsetBox.ContentName);// value of songlet field
       String ContentTxt = SongletPhrase.Literal;
       Voice songlet;
       if (Globals.IsTxtPtr(ContentTxt)) {// if songlet content is just a pointer into the library
@@ -523,7 +523,7 @@ public class Voice implements ISonglet, IDrawable {
     }
     /* ********************************************************************************* */
     public static class Factory implements IFactory {// for serialization
-      @Override public Voice_OffsetBox Create(JsonParse.Phrase phrase, CollisionLibrary ExistingInstances) {// under construction, this does not do anything yet
+      @Override public Voice_OffsetBox Create(JsonParse.Node phrase, CollisionLibrary ExistingInstances) {// under construction, this does not do anything yet
         Voice_OffsetBox obox = new Voice_OffsetBox();
         obox.Consume(phrase, ExistingInstances);
         return obox;

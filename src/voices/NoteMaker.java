@@ -65,6 +65,11 @@ public class NoteMaker {
     return sv;
   }
   /* ********************************************************************************* */
+  public static PluckVoice Create_PluckVoice() {
+    PluckVoice pv = new PluckVoice();
+    return pv;
+  }
+  /* ********************************************************************************* */
   public static void Wave_Test() {
     double BaseFreq = Globals.MiddleC4Freq / 4;
     double Duration = 2.0;
@@ -427,7 +432,7 @@ public class NoteMaker {
     }
     if (false) {// test serialization
       ITextable.CollisionLibrary HitTable = new ITextable.CollisionLibrary();
-      JsonParse.Phrase phrase = voz.Export(HitTable);
+      JsonParse.Node phrase = voz.Export(HitTable);
       voz.Delete_Me();
       voz = new Voice();
       voz.Consume(phrase, null);
@@ -436,10 +441,10 @@ public class NoteMaker {
     ChildGbx.MyName = "ChildGbx";
 
     String txt = null, txt2 = null;
-    JsonParse.Phrase phrase2;
+    JsonParse.Node phrase2;
     if (false) {// test serialization
       ITextable.CollisionLibrary HitTable = new ITextable.CollisionLibrary();
-      JsonParse.Phrase phrase = ChildGbx.Export(HitTable);
+      JsonParse.Node phrase = ChildGbx.Export(HitTable);
       txt = phrase.ToJson();
       if (true) {
         phrase2 = JsonParse.Parse(txt);// works!
@@ -454,7 +459,8 @@ public class NoteMaker {
 
     if (false) {// add horn 
       Voice svoz = NoteMaker.Create_Horn();//SampleVoice
-      svoz = NoteMaker.Generate_Voice(3);// whitenoise
+      //svoz = NoteMaker.Generate_Voice(3);// whitenoise
+      svoz = NoteMaker.Create_PluckVoice();//PluckVoice
       NoteMaker.Create_Tapered_Voice(svoz, NoteMaker.OffsetTime, TimeStep, 0, 1.0, 3);
       OffsetBox SObox = svoz.Spawn_OffsetBox();
       SObox.OctaveY = NoteMaker.SemitoneFraction;

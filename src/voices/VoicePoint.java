@@ -133,8 +133,8 @@ public class VoicePoint extends MonkeyBox {
     this.DownHandle = null;
   }
   /* ********************************************************************************* */
-  @Override public JsonParse.Phrase Export(CollisionLibrary HitTable) {// ITextable
-    JsonParse.Phrase phrase = super.Export(HitTable);
+  @Override public JsonParse.Node Export(CollisionLibrary HitTable) {// ITextable
+    JsonParse.Node phrase = super.Export(HitTable);
     phrase.AddSubPhrase("OctavesPerLoudness", IFactory.Utils.PackField(this.OctavesPerLoudness));
     phrase.AddSubPhrase("SubTime", IFactory.Utils.PackField(this.SubTime));// can be calculated
     phrase.AddSubPhrase(VoicePoint.UpHandleName, this.UpHandle.Export(HitTable));
@@ -143,20 +143,20 @@ public class VoicePoint extends MonkeyBox {
     this.DownHandle.Export(HitTable);
     return phrase;
   }
-  @Override public void ShallowLoad(JsonParse.Phrase phrase) {// ITextable
+  @Override public void ShallowLoad(JsonParse.Node phrase) {// ITextable
     super.ShallowLoad(phrase);
-    HashMap<String, JsonParse.Phrase> Fields = phrase.ChildrenHash;
+    HashMap<String, JsonParse.Node> Fields = phrase.ChildrenHash;
     this.OctavesPerLoudness = Double.parseDouble(IFactory.Utils.GetField(Fields, "OctavesPerLoudness", "0.125"));
     if (false) {
       this.SubTime = Double.parseDouble(IFactory.Utils.GetField(Fields, "SubTime", "0"));// can be calculated
     }
   }
-  @Override public void Consume(JsonParse.Phrase phrase, CollisionLibrary ExistingInstances) {// ITextable - Fill in all the values of an already-created object, including deep pointers.
+  @Override public void Consume(JsonParse.Node phrase, CollisionLibrary ExistingInstances) {// ITextable - Fill in all the values of an already-created object, including deep pointers.
     if (phrase == null) {
       return;
     }
     this.ShallowLoad(phrase);
-    HashMap<String, JsonParse.Phrase> Fields = phrase.ChildrenHash;
+    HashMap<String, JsonParse.Node> Fields = phrase.ChildrenHash;
     this.UpHandle.Consume(IFactory.Utils.LookUpField(Fields, VoicePoint.UpHandleName), ExistingInstances);
     this.DownHandle.Consume(IFactory.Utils.LookUpField(Fields, VoicePoint.DownHandleName), ExistingInstances);
   }
@@ -274,9 +274,9 @@ public class VoicePoint extends MonkeyBox {
       this.IsSelected = false;
     }
     /* ********************************************************************************* */
-    @Override public JsonParse.Phrase Export(CollisionLibrary HitTable) {// ITextable
-      JsonParse.Phrase phrase = new JsonParse.Phrase();
-      phrase.ChildrenHash = new HashMap<String, JsonParse.Phrase>();
+    @Override public JsonParse.Node Export(CollisionLibrary HitTable) {// ITextable
+      JsonParse.Node phrase = new JsonParse.Node();
+      phrase.ChildrenHash = new HashMap<String, JsonParse.Node>();
       phrase.AddSubPhrase("OctavesPerRadius", IFactory.Utils.PackField(this.OctavesPerRadius));
       if (false) {// can be calculated
         phrase.AddSubPhrase("IsSelected", IFactory.Utils.PackField(this.IsSelected));
@@ -284,11 +284,11 @@ public class VoicePoint extends MonkeyBox {
       }
       return phrase;
     }
-    @Override public void ShallowLoad(JsonParse.Phrase phrase) {// ITextable
-      HashMap<String, JsonParse.Phrase> Fields = phrase.ChildrenHash;
+    @Override public void ShallowLoad(JsonParse.Node phrase) {// ITextable
+      HashMap<String, JsonParse.Node> Fields = phrase.ChildrenHash;
       this.OctavesPerRadius = Double.parseDouble(IFactory.Utils.GetField(Fields, "OctavesPerRadius", "0.007"));
     }
-    @Override public void Consume(JsonParse.Phrase phrase, CollisionLibrary ExistingInstances) {// ITextable - Fill in all the values of an already-created object, including deep pointers.
+    @Override public void Consume(JsonParse.Node phrase, CollisionLibrary ExistingInstances) {// ITextable - Fill in all the values of an already-created object, including deep pointers.
       if (phrase == null) {
         return;
       }

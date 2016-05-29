@@ -234,11 +234,11 @@ public class OffsetBox extends MonkeyBox { //implements IDrawable.IMoveable, IDe
     }
   }
   /* ********************************************************************************* */
-  @Override public JsonParse.Phrase Export(CollisionLibrary HitTable) {// ITextable
-    JsonParse.Phrase SelfPackage = super.Export(HitTable);// ready for test?
-    JsonParse.Phrase ChildPackage;
+  @Override public JsonParse.Node Export(CollisionLibrary HitTable) {// ITextable
+    JsonParse.Node SelfPackage = super.Export(HitTable);// ready for test?
+    JsonParse.Node ChildPackage;
     if (this.GetContent().GetRefCount() != 1) {// songlet exists in more than one place, use a pointer to library
-      ChildPackage = new JsonParse.Phrase();// multiple references, use a pointer to library instead
+      ChildPackage = new JsonParse.Node();// multiple references, use a pointer to library instead
       CollisionItem ci;// songlet is already in library, just create a child phrase and assign its textptr to that entry key
       if ((ci = HitTable.GetItem(this.GetContent())) == null) {
         ci = HitTable.InsertUniqueInstance(this.GetContent());// songlet is NOT in library, serialize it and add to library
@@ -251,16 +251,16 @@ public class OffsetBox extends MonkeyBox { //implements IDrawable.IMoveable, IDe
     SelfPackage.AddSubPhrase(OffsetBox.ContentName, ChildPackage);
     return SelfPackage;
   }
-  @Override public void ShallowLoad(JsonParse.Phrase phrase) {// ITextable
+  @Override public void ShallowLoad(JsonParse.Node phrase) {// ITextable
     super.ShallowLoad(phrase);
   }
-  @Override public void Consume(JsonParse.Phrase phrase, CollisionLibrary ExistingInstances) {// ITextable - Fill in all the values of an already-created object, including deep pointers.
+  @Override public void Consume(JsonParse.Node phrase, CollisionLibrary ExistingInstances) {// ITextable - Fill in all the values of an already-created object, including deep pointers.
     // should never hit this function - work in progress
     if (phrase == null) {
       return;
     }
     this.ShallowLoad(phrase);
-    JsonParse.Phrase SongletPhrase = phrase.ChildrenHash.get(OffsetBox.ContentName);// value of songlet field
+    JsonParse.Node SongletPhrase = phrase.ChildrenHash.get(OffsetBox.ContentName);// value of songlet field
     String ContentTxt = SongletPhrase.Literal;
     ISonglet songlet;
     if (Globals.IsTxtPtr(ContentTxt)) {// if songlet content is just a pointer into the library
@@ -291,7 +291,7 @@ public class OffsetBox extends MonkeyBox { //implements IDrawable.IMoveable, IDe
   }
   /* ********************************************************************************* */
   public static class Factory implements IFactory {// for serialization
-    @Override public OffsetBox Create(JsonParse.Phrase phrase, CollisionLibrary ExistingInstances) {// under construction, this does not do anything yet
+    @Override public OffsetBox Create(JsonParse.Node phrase, CollisionLibrary ExistingInstances) {// under construction, this does not do anything yet
       return null;
     }
   }

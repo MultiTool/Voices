@@ -233,9 +233,9 @@ public class MonkeyBox implements IDrawable.IMoveable, IDeletable, ITextable {//
     this.IsSelected = false;
   }
   /* ********************************************************************************* */
-  @Override public JsonParse.Phrase Export(CollisionLibrary HitTable) {// ITextable
-    JsonParse.Phrase phrase = new JsonParse.Phrase();// in the MonkeyBox base class, we export only shallow values, no songlet children
-    HashMap<String, JsonParse.Phrase> Fields = new HashMap<String, JsonParse.Phrase>();
+  @Override public JsonParse.Node Export(CollisionLibrary HitTable) {// ITextable
+    JsonParse.Node phrase = new JsonParse.Node();// in the MonkeyBox base class, we export only shallow values, no songlet children
+    HashMap<String, JsonParse.Node> Fields = new HashMap<String, JsonParse.Node>();
     phrase.ChildrenHash = Fields;
     phrase.AddSubPhrase(MonkeyBox.TimeXName, IFactory.Utils.PackField(this.TimeX));
     phrase.AddSubPhrase(MonkeyBox.OctaveYName, IFactory.Utils.PackField(this.OctaveY));
@@ -247,11 +247,11 @@ public class MonkeyBox implements IDrawable.IMoveable, IDeletable, ITextable {//
     }
     return phrase;
   }
-  @Override public void ShallowLoad(JsonParse.Phrase phrase) {// ITextable
-    HashMap<String, JsonParse.Phrase> Fields = phrase.ChildrenHash;
+  @Override public void ShallowLoad(JsonParse.Node phrase) {// ITextable
+    HashMap<String, JsonParse.Node> Fields = phrase.ChildrenHash;
     this.TimeX = Double.parseDouble(IFactory.Utils.GetField(Fields, MonkeyBox.TimeXName, "0"));
     this.OctaveY = Double.parseDouble(IFactory.Utils.GetField(Fields, MonkeyBox.OctaveYName, "0"));
-    JsonParse.Phrase ph = Fields.get( MonkeyBox.OctaveYName);
+    JsonParse.Node ph = Fields.get( MonkeyBox.OctaveYName);
     this.LoudnessFactor = Double.parseDouble(IFactory.Utils.GetField(Fields, MonkeyBox.LoudnessFactorName, "1.0"));
     this.ScaleX = Double.parseDouble(IFactory.Utils.GetField(Fields, MonkeyBox.ScaleXName, "1.0"));
     this.ScaleY = Double.parseDouble(IFactory.Utils.GetField(Fields, MonkeyBox.ScaleYName, "1.0"));
@@ -259,7 +259,7 @@ public class MonkeyBox implements IDrawable.IMoveable, IDeletable, ITextable {//
       this.OctavesPerRadius = Double.parseDouble(IFactory.Utils.GetField(Fields, "OctavesPerRadius", "0.01"));
     }
   }
-  @Override public void Consume(JsonParse.Phrase phrase, CollisionLibrary ExistingInstances) {// ITextable - Fill in all the values of an already-created object, including deep pointers.
+  @Override public void Consume(JsonParse.Node phrase, CollisionLibrary ExistingInstances) {// ITextable - Fill in all the values of an already-created object, including deep pointers.
     if (phrase == null) {
       return;
     }

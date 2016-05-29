@@ -191,7 +191,7 @@ public class AudProject implements IDeletable {
       obox = obox_clone;
     }
     Wrap_For_Graphics(obox);
-    //JsonParse.Phrase MainPhrase = this.Textify();
+    //JsonParse.Node MainPhrase = this.Textify();
     String JsonTxt =  this.Textify();
     System.out.println(JsonTxt);
     if (false) {// test serialization
@@ -285,11 +285,11 @@ public class AudProject implements IDeletable {
   }
   /* ********************************************************************************* */
   public String Textify() {// serialize
-    JsonParse.Phrase MainPhrase = new JsonParse.Phrase();
-    MainPhrase.ChildrenHash = new HashMap<String, JsonParse.Phrase>();
+    JsonParse.Node MainPhrase = new JsonParse.Node();
+    MainPhrase.ChildrenHash = new HashMap<String, JsonParse.Node>();
     ITextable.CollisionLibrary HitTable = new ITextable.CollisionLibrary();
-    JsonParse.Phrase Tree = this.GraphicRoot.Export(HitTable);
-    JsonParse.Phrase Library = HitTable.ExportJson();
+    JsonParse.Node Tree = this.GraphicRoot.Export(HitTable);
+    JsonParse.Node Library = HitTable.ExportJson();
     MainPhrase.AddSubPhrase(VersionNumName, IFactory.Utils.PackField(this.VersionNum));
     MainPhrase.AddSubPhrase(TreePhraseName, Tree);
     MainPhrase.AddSubPhrase(LibraryPhraseName, Library);
@@ -297,14 +297,14 @@ public class AudProject implements IDeletable {
   }
   /* ********************************************************************************* */
   public void UnTextify(String JsonTxt) {// deserialize
-    JsonParse.Phrase MainPhrase = JsonParse.Parse(JsonTxt);
+    JsonParse.Node MainPhrase = JsonParse.Parse(JsonTxt);
     
-    //JsonParse.Phrase VersionPhrase = MainPhrase.ChildrenHash.get(VersionNumName);
-    HashMap<String, JsonParse.Phrase> Fields = MainPhrase.ChildrenHash;
+    //JsonParse.Node VersionPhrase = MainPhrase.ChildrenHash.get(VersionNumName);
+    HashMap<String, JsonParse.Node> Fields = MainPhrase.ChildrenHash;
     this.VersionNum = Double.parseDouble(IFactory.Utils.GetField(Fields, VersionNumName, String.format("%f%n", this.VersionNum)));
     
-    JsonParse.Phrase TreePhrase = MainPhrase.ChildrenHash.get(TreePhraseName);
-    JsonParse.Phrase LibraryPhrase = MainPhrase.ChildrenHash.get(LibraryPhraseName);
+    JsonParse.Node TreePhrase = MainPhrase.ChildrenHash.get(TreePhraseName);
+    JsonParse.Node LibraryPhrase = MainPhrase.ChildrenHash.get(LibraryPhraseName);
 
     ITextable.CollisionLibrary HitTable = new ITextable.CollisionLibrary();
     HitTable.ConsumePhrase(LibraryPhrase);
