@@ -52,6 +52,8 @@ public class Wave implements IDeletable {
     this.StartTime = 0.0;
     this.StartDex = 0;
     this.Current_Index = 0;
+    this.StartTime = 0;// defaults
+    this.EndTime = StartTime + (((double)this.NumSamples)/(double)this.SampleRate);
     if (Debugging && this.wave.length > 0) {
       this.wave[0] = Debug_Start_Mark;
       //this.wave[this.wave.length - 1] = Debug_End_Mark;

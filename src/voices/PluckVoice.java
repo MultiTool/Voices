@@ -6,7 +6,7 @@ import java.util.HashMap;
  *
  * @author MultiTool
 
-Experimental - THIS SOUNDS TERRIBLE
+ Experimental - THIS SOUNDS TERRIBLE
 
  Plan is:
  generate a time unit (wavelength of BaseFreqC0) of white noise.
@@ -20,12 +20,24 @@ public class PluckVoice extends Voice {
     this.GenerateSample();
   }
   public void GenerateSample() {
-    MySample = new Wave();
     int SizeInit = 0, SampleRate = Globals.SampleRate;
-    double WaveLen = (1.0 / Globals.BaseFreqC0);
-    SizeInit = (int) (WaveLen * SampleRate);
-    MySample.Init(SizeInit, SampleRate);
-    MySample.WhiteNoise_Fill();
+    double WaveLen, Freq;
+    MySample = new Wave();
+
+    if (false) {
+      SizeInit = NoteMaker.Horn.length;
+      MySample.Ingest(NoteMaker.Horn, SampleRate);
+      WaveLen = (((double) SizeInit) / (double) SampleRate);
+      this.BaseFreq = 1.0 / WaveLen;
+    } else {
+      Freq = Globals.BaseFreqC0;
+      //this.BaseFreq = Globals.BaseFreqC0 * Math.pow(2.0, 8.0);
+      this.BaseFreq = Globals.BaseFreqC0 / Freq;
+      WaveLen = (1.0 / Freq);
+      SizeInit = (int) (WaveLen * SampleRate);
+      MySample.Init(SizeInit, SampleRate);
+      MySample.WhiteNoise_Fill();
+    }
   }
   /* ********************************************************************************* */
   @Override public PluckVoice_OffsetBox Spawn_OffsetBox() {// for compose time
