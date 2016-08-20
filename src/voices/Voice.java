@@ -21,6 +21,7 @@ public class Voice implements ISonglet, IDrawable {
   protected double BaseFreq = Globals.BaseFreqC0;
   double ReverbDelay = 0.125 / 4.0;// delay in seconds
   private int RefCount = 0;
+  Voice_Editor MyEditor = null;
   // graphics support
   CajaDelimitadora MyBounds = new CajaDelimitadora();
   Color FillColor;
@@ -45,6 +46,11 @@ public class Voice implements ISonglet, IDrawable {
     singer.MyProject = this.MyProject;// inherit project
     singer.BaseFreq = this.BaseFreq;
     return singer;
+  }
+  /* ********************************************************************************* */
+  public void Attach_Editor(Voice_Editor editor) {// If a GUI forms editor has been designed, attach it using this.
+    this.MyEditor = editor;
+    editor.MyVoice = this;
   }
   /* ********************************************************************************* */
   public void Add_Note(VoicePoint pnt) {
@@ -845,6 +851,12 @@ public class Voice implements ISonglet, IDrawable {
       this.BaseFreq = Double.NEGATIVE_INFINITY;
       this.Prev_Point_Dex = this.Next_Point_Dex = Integer.MIN_VALUE;
       this.Render_Sample_Count = this.Bone_Sample_Mark = Integer.MIN_VALUE;
+    }
+  }
+  /* ********************************************************************************* */
+  public static class Voice_Editor {// Form editor API, should probably be an interface
+    public Voice MyVoice = null;// an editor has access to any variables in its songlet, but a songlet must call an editor's update function to propagate changes the other way.
+    public void UpdateWhatever() {// override this. voice will force its editor to check for voice changes. we can write other more specific functions later. 
     }
   }
 }

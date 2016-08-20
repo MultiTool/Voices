@@ -19,25 +19,70 @@ public class PluckVoice extends Voice {
   public PluckVoice() {
     this.GenerateSample();
   }
+  /* ********************************************************************************* */
   public void GenerateSample() {
     int SizeInit = 0, SampleRate = Globals.SampleRate;
     double WaveLen, Freq;
-    MySample = new Wave();
-
-    if (false) {
+    //MySample = new Wave();
+    switch (2) {
+    case 0: {
       SizeInit = NoteMaker.Horn.length;
       MySample.Ingest(NoteMaker.Horn, SampleRate);
       WaveLen = (((double) SizeInit) / (double) SampleRate);
       this.BaseFreq = 1.0 / WaveLen;
-    } else {
+      break;
+    }
+    case 1: {
       Freq = Globals.BaseFreqC0;
       //this.BaseFreq = Globals.BaseFreqC0 * Math.pow(2.0, 8.0);
       this.BaseFreq = Globals.BaseFreqC0 / Freq;
       WaveLen = (1.0 / Freq);
       SizeInit = (int) (WaveLen * SampleRate);
       MySample.Init(SizeInit, SampleRate);
-      MySample.WhiteNoise_Fill();
+      //MySample.WhiteNoise_Fill();
+      MySample.Sawtooth_Fill();
+      break;
     }
+    case 2:
+      MySample = GeneratePluck();
+      break;
+    }
+  }
+  /* ********************************************************************************* */
+  public Wave GeneratePluck() {
+    double BaseFreq = Globals.MiddleC4Freq;
+    //BaseFreq = Globals.MiddleC4Freq / 4;
+    //BaseFreq = Globals.MiddleC4Freq * 8;
+    //BaseFreq = Globals.MiddleC4Freq * 4;
+    //BaseFreq = Globals.MiddleC4Freq * 2;
+    
+    this.BaseFreq = Globals.BaseFreqC0 / BaseFreq;// ??? 
+    double Duration = 6.0;
+    Wave wave0 = new Wave();
+    int SamplesPerCycle = (int) ((1.0 / BaseFreq) * Globals.SampleRate);
+    Wave pattern = new Wave();
+    pattern.Init(SamplesPerCycle, Globals.SampleRate);
+    NoteMaker.Generate_WhiteNoise(pattern, SamplesPerCycle, Globals.SampleRate);
+    NoteMaker.Synth_Pluck_Decay(wave0, pattern, Duration);
+    wave0.Normalize();
+    return wave0;
+  }
+  /* ********************************************************************************* */
+  public void PluckLab() {
+    double BaseFreq = Globals.MiddleC4Freq / 4;
+    double Duration = 6.0;
+    Wave wave0 = new Wave();
+    Audio aud = new Audio();
+    int SamplesPerCycle = (int) ((1.0 / BaseFreq) * Globals.SampleRate);
+    //NoteMaker.Synth_Pluck(wave0, BaseFreq, Duration, Globals.SampleRate);
+    //NoteMaker.Generate_StackedSines(wave0, 200, Globals.SampleRate);
+    Wave pattern = new Wave();
+    pattern.Init(SamplesPerCycle, Globals.SampleRate);
+    //pattern.Sawtooth_Fill();
+    NoteMaker.Generate_WhiteNoise(pattern, SamplesPerCycle, Globals.SampleRate);
+    //Generate_StackedSines(pattern, SamplesPerCycle, Globals.SampleRate);
+    NoteMaker.Synth_Pluck_Decay(wave0, pattern, Duration);
+    wave0.Normalize();
   }
   /* ********************************************************************************* */
   @Override public PluckVoice_OffsetBox Spawn_OffsetBox() {// for compose time
@@ -46,9 +91,9 @@ public class PluckVoice extends Voice {
     return lbox;
   }
   /* ********************************************************************************* */
-  @Override public PluckVoice_Looped_Singer Spawn_Singer() {// for render time
-    PluckVoice_Looped_Singer singer;
-    singer = new PluckVoice_Looped_Singer();
+  @Override public PluckVoice_Singer Spawn_Singer() {// for render time
+    PluckVoice_Singer singer;
+    singer = new PluckVoice_Singer();
     singer.MyVoice = singer.MyPluckVoice = this;
     singer.MyProject = this.MyProject;// inherit project
     singer.BaseFreq = this.BaseFreq;
@@ -111,17 +156,16 @@ public class PluckVoice extends Voice {
     }
     /* ********************************************************************************* */
     @Override public Voice GetContent() {
-      return VoiceContent;
+      return PluckVoiceContent;
     }
     /* ********************************************************************************* */
     public void Attach_Songlet(PluckVoice songlet) {// for serialization
-      this.PluckVoiceContent = songlet;
       this.VoiceContent = this.PluckVoiceContent = songlet;
       songlet.Ref_Songlet();
     }
     /* ********************************************************************************* */
-    @Override public PluckVoice_Looped_Singer Spawn_Singer() {// always always always override this
-      PluckVoice_Looped_Singer Singer = this.PluckVoiceContent.Spawn_Singer();
+    @Override public PluckVoice_Singer Spawn_Singer() {// always always always override this
+      PluckVoice_Singer Singer = this.PluckVoiceContent.Spawn_Singer();
       Singer.MyOffsetBox = this;
       return Singer;
     }
@@ -144,7 +188,7 @@ public class PluckVoice extends Voice {
       if (this.PluckVoiceContent.UnRef_Songlet() <= 0) {
         this.PluckVoiceContent.Delete_Me();
       }
-      this.PluckVoiceContent = clone;
+      this.VoiceContent = this.PluckVoiceContent = clone;
       this.PluckVoiceContent.Ref_Songlet();
     }
     /* ********************************************************************************* */
@@ -191,6 +235,15 @@ public class PluckVoice extends Voice {
         obox.Consume(phrase, ExistingInstances);
         return obox;
       }
+    }
+  }
+  /* ********************************************************************************* */
+  public static class PluckVoice_Singer extends Voice_Singer {
+    public PluckVoice MyPluckVoice;
+    public Wave MySample = null;
+    /* ********************************************************************************* */
+    @Override public double GetWaveForm(double SubTimeAbsolute) {
+      return this.MySample.GetResample(SubTimeAbsolute * BaseFreq);
     }
   }
   /* ********************************************************************************* */

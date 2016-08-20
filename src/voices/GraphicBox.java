@@ -73,6 +73,7 @@ public class GraphicBox implements IDrawable, ISonglet, IDeletable {//
     // this.ContentOBox = null;
     this.FreshnessTimeStamp = 0;
     this.MyBounds.Copy_From(donor.MyBounds);
+    //this.ContentOBox = donor.ContentOBox.GetContent().Spawn_OffsetBox();
   }
   /* ********************************************************************************* */
   public void Draw_Grid(DrawingContext ParentDC) {

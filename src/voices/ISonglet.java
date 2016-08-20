@@ -96,8 +96,7 @@ public interface ISonglet extends IDrawable, IDeletable, ITextable {// Cancionit
   public int FreshnessTimeStamp_g();
   public void FreshnessTimeStamp_s(int TimeStampNew);
   /* ********************************************************************************* */
-  @Override
-  ISonglet Deep_Clone_Me(ITextable.CollisionLibrary HitTable);
+  @Override ISonglet Deep_Clone_Me(ITextable.CollisionLibrary HitTable);
   /* ********************************************************************************* */
   int Ref_Songlet();// Reference Counting: increment ref counter and return new value just for kicks
   int UnRef_Songlet();// Reference Counting: decrement ref counter and return new value just for kicks

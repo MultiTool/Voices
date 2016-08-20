@@ -29,33 +29,37 @@ public class Voices {
   /* ********************************************************************************* */
   public static void main(String[] args) {
     RegisterFactories();
-    if (false) {
+    switch (4) {
+    case 0: {
       JavaParse.MetaProject mp = new JavaParse.MetaProject();
       mp.PortAll();
-      return;
+      break;
     }
-    if (false) {
+    case 1: {
       Wave wav = new Wave();
       String flpath = new File("").getAbsolutePath();
       Audio.Read(flpath + "\\..\\samples\\trombone_C4_15_pianissimo_normal_shortloop.wav", wav);
       wav.Normalize();
       Wave.SaveWaveToCsv("horn.csv", wav);
-      return;
+      break;
     }
-    if (false) {
+    case 2: {
       NoteMaker.Wave_Test();
-      return;
+      break;
     }
-    Point2D.Double pnt = new Point2D.Double(12.3, 45.6);
-    String txt = pnt.toString();
-    if (false) {
+    case 3: {
       String fname = "ahh_looped.wav";
       Audio.Load(fname, null);
+      break;
     }
-    MainGui mg = new MainGui();
-    mg.Init();
-    if (false) {
+    case 4:
+      MainGui mg = new MainGui();
+      mg.Init();
+      break;
+    case 5: {
       Test_Synthesis();
+      break;
+    }
     }
   }
   /* ********************************************************************************* */

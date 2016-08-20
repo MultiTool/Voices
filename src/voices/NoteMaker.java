@@ -71,25 +71,42 @@ public class NoteMaker {
   }
   /* ********************************************************************************* */
   public static void Wave_Test() {
-    double BaseFreq = Globals.MiddleC4Freq / 4;
-    double Duration = 2.0;
+    double BaseFreq = Globals.MiddleC4Freq;
+    double Duration = 6.0;
     Wave wave0 = new Wave();
     Wave wave1 = new Wave();
     Audio aud = new Audio();
-    NoteMaker.Synth_Pluck(wave0, BaseFreq, Duration, Globals.SampleRate);
-    //NoteMaker.Generate_StackedSines(wave0, 200, Globals.SampleRate);
+    int SamplesPerCycle = (int) ((1.0 / BaseFreq) * Globals.SampleRate);
+    Wave pattern = new Wave();
+    pattern.Init(SamplesPerCycle, Globals.SampleRate);
+    String FName = "Synth_Pluck_WhiteNoise6.wav";
+    //NoteMaker.Synth_Pluck(wave0, BaseFreq, Duration, Globals.SampleRate);
+    //NoteMaker.Generate_StackedSines(pattern, SamplesPerCycle, Globals.SampleRate);FName = "Synth_Pluck_StackedSines.wav";
+    //pattern.Sawtooth_Fill();FName = "Synth_Pluck_Sawtooth.wav";
+    NoteMaker.Generate_WhiteNoise(pattern, SamplesPerCycle, Globals.SampleRate);
+    FName = "Synth_Pluck_WhiteNoise6.wav";
+    //Generate_StackedSines(pattern, SamplesPerCycle, Globals.SampleRate);
+    //NoteMaker.Synth_Pluck_Decay(wave0, pattern, Duration);
+    NoteMaker.Repeat_Pattern(wave0, pattern, Duration);
+    FName = "Repeat_WhiteNoise.wav";
+
     wave0.Normalize();
 
-    int SamplesPerCycle = (int) ((1.0 / BaseFreq) * Globals.SampleRate);
+    if (true) {
+      wave0.DownSampleDecimated(Math.PI, wave1);
+      wave0.Copy_From(wave1);
+    }
     ArrayList<Wave> results = new ArrayList<Wave>();
     Extract_Periodic_Samples(wave0, 32, SamplesPerCycle, results);
 
     aud.Start();
     aud.Feed(wave0);
-    //aud.Save("Synth_Pluck_WhiteNoise.wav", wave0.GetWave());
+    aud.Save(FName, wave0.GetWave());
+    //aud.Save("Synth_Pluck_Sawtooth.wav", wave0.GetWave());
+    //aud.Save("Synth_Pluck_WhiteNoise6.wav", wave0.GetWave());
     //aud.Save("Synth_Pluck_Chirp_Middle.wav", wave0.GetWave());
     //aud.Save("StackedSines.wav", wave0.GetWave());
-    aud.Save("Synth_Pluck_StackedSines.wav", wave0.GetWave());
+    //aud.Save("Synth_Pluck_StackedSines.wav", wave0.GetWave());
     aud.Stop();
 
     NoteMaker.Synth_Pluck_Flywheel(wave1, BaseFreq, Duration, Globals.SampleRate);
@@ -170,12 +187,13 @@ public class NoteMaker {
   public static void Generate_StackedSines(Wave pattern, int SampleSize, int SampleRate) {
     pattern.Init(SampleSize, SampleRate);
     double val;
-    double FractAlong, subtime, timerate;
+    double FractAlong, subtime, Frequency;// frequency is cycles per whole length of pattern
+    int NumHarmonics = 34;
     for (int SampCnt = 0; SampCnt < SampleSize; SampCnt++) {
       FractAlong = ((double) SampCnt) / ((double) SampleSize);
       val = 0.0;
-      for (timerate = 4.0; timerate < 34; timerate++) {
-        subtime = FractAlong * timerate;
+      for (Frequency = 2.0; Frequency < NumHarmonics; Frequency++) {// once for each harmonic
+        subtime = FractAlong * Frequency;
         val += Math.sin(subtime * Globals.TwoPi);
       }
       pattern.Set(SampCnt, val);
@@ -227,26 +245,33 @@ public class NoteMaker {
     }
   }
   /* ********************************************************************************* */
-  public static void Synth_Pluck(Wave wave, double BaseFreq, double Duration, int SampleRate) {
-    int SamplesPerCycle = (int) ((1.0 / BaseFreq) * SampleRate);
-    int MegaSamples = (int) (Duration * (double) SampleRate);
-    wave.Init(MegaSamples, SampleRate);
-    Wave pattern = new Wave();
-    double val, avg = 0.0;
-    if (false) {
-      NoteMaker.Generate_StackedSines(pattern, SamplesPerCycle, SampleRate);
-    } else if (true) {
-      Generate_WhiteNoise(pattern, SamplesPerCycle, SampleRate);
-    } else {
-      Generate_Chirp(pattern, SamplesPerCycle, SampleRate);
+  public static void Repeat_Pattern(Wave ResultWave, Wave pattern, double Duration) {
+    int SamplesPerCycle = pattern.NumSamples;
+    int ResultSize = (int) (Duration * (double) pattern.SampleRate);
+    ResultWave.Init(ResultSize, pattern.SampleRate);
+    double val;
+    int DexNow;
+    for (int SampCnt = 0; SampCnt < ResultSize; SampCnt++) {
+      DexNow = SampCnt % SamplesPerCycle;
+      val = pattern.Get(DexNow);
+      ResultWave.Set(SampCnt, val);
     }
+  }
+  /* ********************************************************************************* */
+  public static void Synth_Pluck_Decay(Wave ResultWave, Wave pattern, double Duration) {
+    int SamplesPerCycle = pattern.NumSamples;
+    double WaveLength = ((double) pattern.NumSamples) / (double) pattern.SampleRate;
+    double BaseFreq = 1.0 / WaveLength;
+    int ResultSize = (int) (Duration * (double) pattern.SampleRate);
+    ResultWave.Init(ResultSize, pattern.SampleRate);
+    double val;
     int DexNow;
     double ValAvg;
     double ValPrev = 0;
-    for (int SampCnt = 0; SampCnt < MegaSamples; SampCnt++) {
+    for (int SampCnt = 0; SampCnt < ResultSize; SampCnt++) {
       DexNow = SampCnt % SamplesPerCycle;
       val = pattern.Get(DexNow);
-      wave.Set(SampCnt, val);
+      ResultWave.Set(SampCnt, val);
       ValAvg = (ValPrev + val) / 2.0;
       pattern.Set(DexNow, ValAvg);
       ValPrev = val;
@@ -424,38 +449,26 @@ public class NoteMaker {
     int NumBeats = 8;
     double Duration = 30;
 
-    Voice voz = new Voice();
+    Voice voz;
     if (false) {
-      NoteMaker.Create_Block_Voice(voz, TimeStep, 3);
-    } else {
-      NoteMaker.Create_Tapered_Voice(voz, NoteMaker.OffsetTime, TimeStep, 0, 1.0, 3);
-    }
-    if (false) {// test serialization
-      ITextable.CollisionLibrary HitTable = new ITextable.CollisionLibrary();
-      JsonParse.Node phrase = voz.Export(HitTable);
-      voz.Delete_Me();
       voz = new Voice();
-      voz.Consume(phrase, null);
+    } else {
+      voz = NoteMaker.Create_PluckVoice();//PluckVoice
     }
+    switch (1) {
+    case 0:
+      NoteMaker.Create_Block_Voice(voz, TimeStep, 3);
+      break;
+    case 1:
+      NoteMaker.Create_Tapered_Voice(voz, NoteMaker.OffsetTime, TimeStep, 0, 1.0, 3);
+      break;
+    }
+
     GroupBox ChildGbx = NoteMaker.Create_Note_Chain(voz, NumBeats, TimeStep);
     ChildGbx.MyName = "ChildGbx";
 
     String txt = null, txt2 = null;
     JsonParse.Node phrase2;
-    if (false) {// test serialization
-      ITextable.CollisionLibrary HitTable = new ITextable.CollisionLibrary();
-      JsonParse.Node phrase = ChildGbx.Export(HitTable);
-      txt = phrase.ToJson();
-      if (true) {
-        phrase2 = JsonParse.Parse(txt);// works!
-        phrase = phrase2;
-        txt2 = phrase2.ToJson();
-      }
-      HitTable.Wipe_Songlets();
-      ChildGbx.Delete_Me();
-      ChildGbx = new GroupBox();
-      ChildGbx.Consume(phrase, HitTable);
-    }
 
     if (false) {// add horn 
       Voice svoz = NoteMaker.Create_Horn();//SampleVoice

@@ -53,7 +53,7 @@ public class Wave implements IDeletable {
     this.StartDex = 0;
     this.Current_Index = 0;
     this.StartTime = 0;// defaults
-    this.EndTime = StartTime + (((double)this.NumSamples)/(double)this.SampleRate);
+    this.EndTime = StartTime + (((double) this.NumSamples) / (double) this.SampleRate);
     if (Debugging && this.wave.length > 0) {
       this.wave[0] = Debug_Start_Mark;
       //this.wave[this.wave.length - 1] = Debug_End_Mark;
@@ -202,7 +202,11 @@ public class Wave implements IDeletable {
   }
   /* ********************************************************************************* */
   public double Get(int dex) {
-    return this.wave[dex];
+    try {
+      return this.wave[dex];
+    } catch (Exception ex) {
+      return 0;
+    }
   }
   public void Set(double value) {
     this.wave[Current_Index] = value;
@@ -216,8 +220,46 @@ public class Wave implements IDeletable {
 //    }
   }
   /* ******************************************************************* */
-  public double GetResample(double TimeSeconds) { // linear interpolation between points. FlexDex is fractional index is in seconds, not samples
-    TimeSeconds *= this.SampleRate;
+  public double GetDownSampleDecimated(double PrevTimeSeconds, double CtrTimeSeconds, double NextTimeSeconds) {// not ready for test or even fully thought out yet.
+    PrevTimeSeconds *= this.SampleRate;// convert to fractional sample index
+    CtrTimeSeconds *= this.SampleRate;
+    NextTimeSeconds *= this.SampleRate;
+    if (PrevTimeSeconds >= this.wave.length || CtrTimeSeconds >= this.wave.length || NextTimeSeconds >= this.wave.length) {
+      return 0.0;
+    }
+    double Range = CtrTimeSeconds - PrevTimeSeconds;
+    double amp, dist, weight;
+    double Sum = 0.0, SumWgt = 0.0;
+    int SampDex = (int) Math.ceil(PrevTimeSeconds);
+    while (SampDex < NextTimeSeconds) {
+      dist = Math.max(Globals.Fudge, Math.abs(SampDex - CtrTimeSeconds) / Range);
+      weight = 1.0 / dist;
+      SumWgt += weight;
+      amp = this.wave[SampDex];
+      Sum += amp * weight;
+      SampDex++;
+    }
+    return Sum / SumWgt;
+  }
+  /* ******************************************************************* */
+  public void DownSampleDecimated(double Ratio, Wave result) {// not ready for test or even fully thought out yet.
+    int len = this.NumSamples;
+    int cnt = 0;
+    result.Init(len, this.SampleRate);
+    double amp;
+    double PrevTimeSeconds = cnt++ * Ratio, CtrTimeSeconds = cnt++ * Ratio, NextTimeSeconds = cnt++ * Ratio;
+    while (cnt < len) {
+      amp = GetDownSampleDecimated(PrevTimeSeconds / this.SampleRate, CtrTimeSeconds / this.SampleRate, NextTimeSeconds / this.SampleRate);
+      result.Set(amp);
+      PrevTimeSeconds = CtrTimeSeconds;
+      CtrTimeSeconds = NextTimeSeconds;
+      NextTimeSeconds = cnt * Ratio;
+      cnt++;
+    }
+  }
+  /* ******************************************************************* */
+  public double GetResample(double TimeSeconds) { // linear interpolation between points. TimeSeconds is fractional index is in seconds, not samples
+    TimeSeconds *= this.SampleRate;// convert to fractional sample index
     int Dex0 = (int) Math.floor(TimeSeconds);
     int Dex1 = Dex0 + 1;
     if (Dex1 >= this.wave.length) {
@@ -230,7 +272,7 @@ public class Wave implements IDeletable {
     return amp0 + (Fraction * FullAmpDelta);
   }
   /* ******************************************************************* */
-  public double GetResampleLooped(double TimeSeconds) { // linear interpolation between points. FlexDex is fractional index is in seconds, not samples
+  public double GetResampleLooped(double TimeSeconds) { // linear interpolation between points. TimeSeconds is fractional index is in seconds, not samples
     double SampleDex = TimeSeconds * this.SampleRate;
     double SampleDexFlat = Math.floor(SampleDex);
     int Dex0 = ((int) SampleDexFlat) % this.NumSamples;
@@ -274,6 +316,17 @@ public class Wave implements IDeletable {
     double val;
     for (int SampCnt = 0; SampCnt < this.NumSamples; SampCnt++) {
       val = Globals.RandomGenerator.nextDouble() * 2.0 - 1.0;// white noise
+      this.wave[SampCnt] = val;
+    }
+    this.Center();
+  }
+  /* ********************************************************************************* */
+  public void Sawtooth_Fill() {
+    double val;
+    double FractAlong = 0;
+    for (int SampCnt = 0; SampCnt < this.NumSamples; SampCnt++) {
+      FractAlong = ((double) SampCnt) / (double) this.NumSamples;
+      val = 1.0 - (FractAlong * 2.0);
       this.wave[SampCnt] = val;
     }
     this.Center();

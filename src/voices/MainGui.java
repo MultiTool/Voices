@@ -444,11 +444,11 @@ public class MainGui {
   public void Bleh() {// https://tips4java.wordpress.com/2009/08/30/global-event-listeners/
     long EventMask = AWTEvent.MOUSE_MOTION_EVENT_MASK + AWTEvent.MOUSE_EVENT_MASK + AWTEvent.KEY_EVENT_MASK;
     EventMask = AWTEvent.KEY_EVENT_MASK;
-    final DrawingPanel dp = this.drawpanel;
+    //final DrawingPanel dp = this.drawpanel;
     Toolkit.getDefaultToolkit().addAWTEventListener(new AWTEventListener() {
       @Override public void eventDispatched(AWTEvent Event) {
         KeyEvent ke = (KeyEvent) Event;
-        HandleKeys(ke, dp);
+        HandleKeys(ke);
       }
     }, EventMask);
   }
@@ -499,7 +499,8 @@ public class MainGui {
   }
   boolean KeysEnabled = true;
   /* ********************************************************************************* */
-  public void HandleKeys(KeyEvent ke, DrawingPanel dp) {
+  public void HandleKeys(KeyEvent ke) {
+    DrawingPanel dpnl = this.drawpanel;
     System.out.println("keyPressed:" + ke.getKeyCode() + ":" + ke.getExtendedKeyCode() + ":" + ke.getModifiers() + ":" + ke.getKeyChar() + ":" + ke.getModifiersEx());
     char ch = Character.toLowerCase(ke.getKeyChar());
     int keycode = ke.getKeyCode();
@@ -509,24 +510,24 @@ public class MainGui {
       KeysEnabled = false;// to do: think of a better debouncer
       boolean CtrlPress = ((mod & KeyEvent.CTRL_MASK) != 0);
       if ((keycode == KeyEvent.VK_C) && CtrlPress) {
-        dp.CopyBranch(dp.ScreenMouseX, dp.ScreenMouseY);
+        dpnl.CopyBranch(dpnl.ScreenMouseX, dpnl.ScreenMouseY);
       } else if (keycode == KeyEvent.VK_DELETE) {
-        dp.DeleteBranch();
+        dpnl.DeleteBranch();
       } else if ((keycode == KeyEvent.VK_Q) && CtrlPress) {
         System.exit(0);
       } else if ((keycode == KeyEvent.VK_S && !CtrlPress)) {
-        dp.RescaleGroupTimeX();
+        dpnl.RescaleGroupTimeX();
       } else if ((keycode == KeyEvent.VK_X) && CtrlPress) {
-        dp.BreakFromHerd();
+        dpnl.BreakFromHerd();
       } else if ((keycode == KeyEvent.VK_S) && CtrlPress) {// ctrl S means save
         this.PromptSaveFile();
       } else if ((keycode == KeyEvent.VK_O) && CtrlPress) {// ctrl O means open
         this.PromptOpenFile();
       } else if (keycode == KeyEvent.VK_ESCAPE) {
-        if (dp.GetFloater() != null) {// to do: delete Floater if not used
-          dp.SetFloater(null);
-          dp.HighlightTarget(false);
-          dp.repaint();
+        if (dpnl.GetFloater() != null) {// to do: delete Floater if not used
+          dpnl.SetFloater(null);
+          dpnl.HighlightTarget(false);
+          dpnl.repaint();
         }
       }
       KeysEnabled = true;
