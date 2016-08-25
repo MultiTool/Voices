@@ -264,6 +264,8 @@ public class MainGui {
       if (this.Query.Leaf != null) {
         IDrawable.IMoveable Leaf = this.Query.Leaf;
         if (Leaf instanceof OffsetBox) {
+          System.out.println("MainGui BreakFromHerd");
+          this.Query.Leaf = null;
           OffsetBox obx = (OffsetBox) Leaf;// another cast! 
           BigApp.MyThread.PleaseStop();
           ITextable.CollisionLibrary HitTable = new ITextable.CollisionLibrary();

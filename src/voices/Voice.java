@@ -152,6 +152,9 @@ public class Voice implements ISonglet, IDrawable {
     this.MyProject = project;
   }
   /* ********************************************************************************* */
+  @Override public void SetMute(boolean Mute) {
+  }
+  /* ********************************************************************************* */
   @Override public int FreshnessTimeStamp_g() {// ISonglet
     return this.FreshnessTimeStamp;
   }
@@ -324,9 +327,21 @@ public class Voice implements ISonglet, IDrawable {
   }
   /* ********************************************************************************* */
   @Override public Voice Deep_Clone_Me(ITextable.CollisionLibrary HitTable) {// ICloneable
-    Voice child = new Voice();
-    child.Copy_From(this);
-    child.Copy_Children(this, HitTable);
+    Voice child;
+    /*
+     the idea is for hit table to be keyed by my actual identity (me), while the value
+     is my first and only clone. 
+     */
+    CollisionItem ci = HitTable.GetItem(this);
+    if (ci == null) {
+      child = new Voice();
+      ci = HitTable.InsertUniqueInstance(this);
+      ci.Item = child;
+      child.Copy_From(this);
+      child.Copy_Children(this, HitTable);
+    } else {// pre exists
+      child = (Voice) ci.Item;// another cast! 
+    }
     return child;
   }
   /* ********************************************************************************* */
@@ -465,7 +480,7 @@ public class Voice implements ISonglet, IDrawable {
     /* ********************************************************************************* */
     @Override public Voice_OffsetBox Deep_Clone_Me(ITextable.CollisionLibrary HitTable) {// ICloneable
       Voice_OffsetBox child = this.Clone_Me();
-      child.VoiceContent = this.VoiceContent.Deep_Clone_Me(HitTable);
+      child.Attach_Songlet(this.VoiceContent.Deep_Clone_Me(HitTable));
       return child;
     }
     /* ********************************************************************************* */
@@ -486,8 +501,8 @@ public class Voice implements ISonglet, IDrawable {
       if (this.VoiceContent != null) {
         if (this.VoiceContent.UnRef_Songlet() <= 0) {
           this.VoiceContent.Delete_Me();
-          this.VoiceContent = null;
         }
+        this.VoiceContent = null;
       }
     }
     /* ********************************************************************************* */

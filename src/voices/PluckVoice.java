@@ -55,7 +55,7 @@ public class PluckVoice extends Voice {
     //BaseFreq = Globals.MiddleC4Freq * 8;
     //BaseFreq = Globals.MiddleC4Freq * 4;
     //BaseFreq = Globals.MiddleC4Freq * 2;
-    
+
     this.BaseFreq = Globals.BaseFreqC0 / BaseFreq;// ??? 
     double Duration = 6.0;
     Wave wave0 = new Wave();
@@ -108,9 +108,17 @@ public class PluckVoice extends Voice {
   }
   /* ********************************************************************************* */
   @Override public PluckVoice Deep_Clone_Me(ITextable.CollisionLibrary HitTable) {// ICloneable
-    PluckVoice child = new PluckVoice();
-    child.Copy_From(this);
-    child.Copy_Children(this, HitTable);
+    PluckVoice child;
+    CollisionItem ci = HitTable.GetItem(this);
+    if (ci == null) {
+      child = new PluckVoice();
+      ci = HitTable.InsertUniqueInstance(this);
+      ci.Item = child;
+      child.Copy_From(this);
+      child.Copy_Children(this, HitTable);
+    } else {// pre exists
+      child = (PluckVoice) ci.Item;// another cast! 
+    }
     return child;
   }
   /* ********************************************************************************* */
@@ -179,7 +187,7 @@ public class PluckVoice extends Voice {
     /* ********************************************************************************* */
     @Override public PluckVoice_OffsetBox Deep_Clone_Me(ITextable.CollisionLibrary HitTable) {// ICloneable
       PluckVoice_OffsetBox child = this.Clone_Me();
-      child.VoiceContent = child.PluckVoiceContent = this.PluckVoiceContent.Deep_Clone_Me(HitTable);
+      child.Attach_Songlet(this.PluckVoiceContent.Deep_Clone_Me(HitTable));
       return child;
     }
     /* ********************************************************************************* */

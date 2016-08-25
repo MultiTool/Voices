@@ -59,7 +59,7 @@ public interface ITextable {// DIY Json ISerializable - more control
   /* ********************************************************************************* */
   public class CollisionItem {// do we really need this? 
     public String ItemTxtPtr;// Key, usually
-    public ITextable Item = null, ClonedItem = null;
+    public ITextable Item = null;//, ClonedItem = null;
     public JsonParse.Node JsonPhrase = null;// serialization of the ITextable Item
   }
   /* ********************************************************************************* */

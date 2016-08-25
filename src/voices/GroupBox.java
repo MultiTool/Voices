@@ -178,6 +178,9 @@ public class GroupBox implements ISonglet, IDrawable {
     this.MyProject = project;
   }
   /* ********************************************************************************* */
+  @Override public void SetMute(boolean Mute) {
+  }
+  /* ********************************************************************************* */
   @Override public int FreshnessTimeStamp_g() {// ISonglet
     return this.FreshnessTimeStamp;
   }
@@ -288,14 +291,23 @@ public class GroupBox implements ISonglet, IDrawable {
   }
   /* ********************************************************************************* */
   @Override public GroupBox Deep_Clone_Me(ITextable.CollisionLibrary HitTable) {// ICloneable
-    GroupBox child = new GroupBox();
-    child.TraceText = "I am a clone";
-    child.Copy_From(this);
-    OffsetBox SubSongHandle;
-    int len = this.SubSongs.size();
-    for (int cnt = 0; cnt < len; cnt++) {
-      SubSongHandle = this.SubSongs.get(cnt);
-      child.Add_SubSong(SubSongHandle.Deep_Clone_Me(HitTable));
+    GroupBox child;
+    CollisionItem ci = HitTable.GetItem(this);
+    if (ci == null) {
+      child = new GroupBox();
+      ci = HitTable.InsertUniqueInstance(this);
+      ci.Item = child;
+      child.TraceText = "I am a clone";
+      child.Copy_From(this);
+      OffsetBox SubSongHandle;
+      int len = this.SubSongs.size();
+      for (int cnt = 0; cnt < len; cnt++) {
+        SubSongHandle = this.SubSongs.get(cnt);
+        OffsetBox obox = SubSongHandle.Deep_Clone_Me(HitTable);
+        child.Add_SubSong(obox);
+      }
+    } else {// pre exists
+      child = (GroupBox) ci.Item;// another cast! 
     }
     return child;
   }
@@ -743,7 +755,7 @@ public class GroupBox implements ISonglet, IDrawable {
     @Override public Group_OffsetBox Deep_Clone_Me(ITextable.CollisionLibrary HitTable) {// ICloneable
       Group_OffsetBox child = new Group_OffsetBox();
       child.Copy_From(this);
-      child.Content = this.Content.Deep_Clone_Me(HitTable);
+      child.Attach_Songlet(this.Content.Deep_Clone_Me(HitTable));
       return child;
     }
     /* ********************************************************************************* */
@@ -816,7 +828,7 @@ public class GroupBox implements ISonglet, IDrawable {
             boolean nop = true;
           }
           songlet.Consume(ci.JsonPhrase, ExistingInstances);
-        }else{
+        } else {
           boolean nop = true;
         }
       } else {

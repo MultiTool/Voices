@@ -96,6 +96,8 @@ public class LoopBox implements ISonglet, IDrawable {
     this.MyProject = project;
   }
   /* ********************************************************************************* */
+  @Override public void SetMute(boolean Mute){}
+  /* ********************************************************************************* */
   @Override public int FreshnessTimeStamp_g() {// ISonglet
     return this.FreshnessTimeStamp;
   }
@@ -434,7 +436,7 @@ public class LoopBox implements ISonglet, IDrawable {
     /* ********************************************************************************* */
     @Override public Loop_OffsetBox Deep_Clone_Me(ITextable.CollisionLibrary HitTable) {// ICloneable
       Loop_OffsetBox child = this.Clone_Me();
-      child.Content = this.Content.Deep_Clone_Me(HitTable);
+      child.Attach_Songlet(this.Content.Deep_Clone_Me(HitTable));
       return child;
     }
     /* ********************************************************************************* */

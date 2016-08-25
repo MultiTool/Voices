@@ -95,7 +95,6 @@ public class SampleVoice extends Voice {
     }
     /* ********************************************************************************* */
     public void Attach_Songlet(SampleVoice songlet) {// for serialization
-      this.SampleVoiceContent = songlet;
       this.VoiceContent = this.SampleVoiceContent = songlet;
       songlet.Ref_Songlet();
     }
@@ -115,7 +114,7 @@ public class SampleVoice extends Voice {
     /* ********************************************************************************* */
     @Override public SampleVoice_OffsetBox Deep_Clone_Me(ITextable.CollisionLibrary HitTable) {// ICloneable
       SampleVoice_OffsetBox child = this.Clone_Me();
-      child.VoiceContent = child.SampleVoiceContent = this.SampleVoiceContent.Deep_Clone_Me(HitTable);
+      child.Attach_Songlet(this.SampleVoiceContent.Deep_Clone_Me(HitTable));
       return child;
     }
     /* ********************************************************************************* */
