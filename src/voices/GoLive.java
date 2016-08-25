@@ -15,13 +15,15 @@ public class GoLive implements Runnable, IDeletable {
   Audio audio;
   ISonglet.Singer RootPlayer;
 //  double TimeIncrement = (20.0 / 1000.0);// milliseconds
-  double TimeIncrement = (250.0 / 1000.0);// milliseconds
+  //double TimeIncrement = (250.0 / 1000.0);// milliseconds
+  double TimeIncrement = (20 / 1000.0);// milliseconds
   double CurrentTime = 0, FinalTime;
   Wave wave_render = new Wave();
   boolean KeepGoing;
   /* ********************************************************************************* */
   //public boolean IsRunning = false;
   public int NumRunning = 0;
+  private LivePlayerCallbacks MyCallback = null;
 //  {
 //    return !this.KeepGoing;// do not use this it is broken
 //  }
@@ -118,6 +120,9 @@ public class GoLive implements Runnable, IDeletable {
       this.RootPlayer.Render_To(CurrentTime, this.wave_render);
       this.wave_render.Amplify(0.2);
       audio.Feed(this.wave_render);
+      if (this.MyCallback != null) {
+        this.MyCallback.LivePlayerUpdate(this.CurrentTime, this.CurrentTime + this.TimeIncrement);
+      }
       this.CurrentTime += this.TimeIncrement;
       //this.CurrentTime = Math.min(this.CurrentTime, FinalTime - Globals.Fudge);// #kludgey
       if (this.RootPlayer.IsFinished) {
@@ -130,6 +135,7 @@ public class GoLive implements Runnable, IDeletable {
       audio.Feed(this.wave_render);
     }
     this.stop();
+    this.MyCallback.LivePlayerFinished();
     this.NumRunning--;
   }
   /* ********************************************************************************* */
@@ -166,5 +172,13 @@ public class GoLive implements Runnable, IDeletable {
       this.wave_render = null;
     }
     this.KeepGoing = false;
+  }
+  /* ********************************************************************************* */
+  public void AttachCallback(LivePlayerCallbacks cb) {
+    this.MyCallback = cb;
+  }
+  public interface LivePlayerCallbacks {
+    public void LivePlayerUpdate(double Time, double NextTime);
+    public void LivePlayerFinished();
   }
 }

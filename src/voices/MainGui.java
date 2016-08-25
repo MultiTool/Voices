@@ -4,18 +4,23 @@ import java.awt.*;
 import java.awt.event.*;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.OpenOption;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.imageio.ImageIO;
 import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import voices.DrawingContext;
+import voices.GoLive.LivePlayerCallbacks;
 import voices.GroupBox.Group_OffsetBox;
 // From http://www.tutorialspoint.com/javaexamples/gui_polygon.htm
 
@@ -47,6 +52,7 @@ public class MainGui {
     MyProject.Compose_Test();
     this.drawpanel.BigApp = this;
     this.drawpanel.MyProject = this.MyProject;
+    this.MyThread.AttachCallback(drawpanel);
     MakeButtons();
 //    KeyBindings(this.drawpanel);
     Bleh();
@@ -100,7 +106,7 @@ public class MainGui {
     aud.SaveAudio("sample.wav", this.drawpanel.MyProject.AudioRoot);
   }
   /* ********************************************************************************* */
-  public static class DrawingPanel extends JPanel implements MouseMotionListener, MouseListener, MouseWheelListener, ComponentListener, KeyListener {
+  public static class DrawingPanel extends JPanel implements MouseMotionListener, MouseListener, MouseWheelListener, ComponentListener, KeyListener, LivePlayerCallbacks {
     AudProject MyProject = null;
     MainGui BigApp;
     Grabber Query;
@@ -129,6 +135,9 @@ public class MainGui {
       DrawingContext dc = new DrawingContext();
       dc.gr = g2d;
       int wdt, hgt;
+
+      this.ResetPlaybackCursor();
+
 //      wdt = this.getWidth() * 7 / 8; hgt = this.getHeight() * 7 / 8;
       wdt = this.getWidth();
       hgt = this.getHeight();
@@ -279,6 +288,9 @@ public class MainGui {
       if (this.Query.Leaf != null) {
         IDrawable.IMoveable Leaf = this.Query.Leaf;
         OffsetBox PlayHandle;
+
+        this.ResetPlaybackCursor();
+
         if (Leaf instanceof OffsetBox) {// if we moved a whole songlet, play the whole thing
           OffsetBox obx = (OffsetBox) Leaf;// another cast! 
           PlayHandle = obx.GetContent().Spawn_OffsetBox();
@@ -441,6 +453,42 @@ public class MainGui {
     @Override public void keyReleased(KeyEvent ke) {
       //System.out.println("keyReleased:" + ke.getKeyCode());
     }
+    /* ********************************************************************************* */
+    // Playback cursor
+    int PrevTime0 = 0, PrevTime1 = 0;
+    int TimeInt0 = 0, TimeInt1 = 0;
+    /* ********************************************************************************* */
+    public void ResetPlaybackCursor() {
+      this.PrevTime0 = 0;
+      this.PrevTime1 = 0;
+      this.TimeInt0 = 0;
+      this.TimeInt1 = 0;
+    }
+    /* ********************************************************************************* */
+    public void DrawPlaybackCursor() {
+      Graphics2D gr = (Graphics2D) this.getGraphics();
+      gr.setXORMode(Color.white);
+      gr.fillRect(TimeInt0, 0, TimeInt1 - TimeInt0, this.getHeight());// draw new
+    }
+    /* ********************************************************************************* */
+    @Override public void LivePlayerUpdate(double Time0, double Time1) {// LivePlayerCallbacks
+      System.out.println("LiveCall:" + Time0 + " to " + Time1);// to do: draw moving cursor here
+      Graphics2D gr = (Graphics2D) this.getGraphics();
+
+      PrevTime0 = TimeInt0;
+      PrevTime1 = TimeInt1;
+      TimeInt0 = (int) this.MyProject.GraphicRoot.UnMapTime(Time0);
+      TimeInt1 = (int) this.MyProject.GraphicRoot.UnMapTime(Time1);
+
+      gr.setXORMode(Color.white);//gr.setColor(Color.red);
+      gr.fillRect(PrevTime0, 0, PrevTime1 - PrevTime0, this.getHeight());// clear old
+      this.DrawPlaybackCursor();// draw new
+    }
+    /* ********************************************************************************* */
+    @Override public void LivePlayerFinished() {// LivePlayerCallbacks
+      this.DrawPlaybackCursor();
+      this.ResetPlaybackCursor();
+    }
   }
   /* ********************************************************************************* */
   public void Bleh() {// https://tips4java.wordpress.com/2009/08/30/global-event-listeners/
@@ -542,6 +590,20 @@ public class MainGui {
     InMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_DOWN, 0, false), "Next");
     ActionMap ActMap = panel.getActionMap();
     ActMap.put("Next", new NextAction());
+  }
+  /* ********************************************************************************* */
+  public void savefile() {// http://stackoverflow.com/questions/19621105/save-image-from-jpanel-after-draw
+    BufferedImage image2 = new BufferedImage(drawpanel.WIDTH, drawpanel.HEIGHT, BufferedImage.TYPE_INT_RGB);
+    JFileChooser jFile = new JFileChooser();
+    jFile.showSaveDialog(null);
+    Path pth = jFile.getSelectedFile().toPath();
+    JOptionPane.showMessageDialog(null, pth.toString());
+    Graphics2D graphics2D = image2.createGraphics();// BufferedImage getSubimage(int i, int i1, int i2, int i3)
+    try {
+      ImageIO.write(image2, "", new File(pth.toString()));
+    } catch (IOException ox) {
+      ox.printStackTrace();
+    }
   }
   class NextAction extends AbstractAction {
     public void actionPerformed(ActionEvent actionEvent) {

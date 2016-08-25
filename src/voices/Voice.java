@@ -209,7 +209,12 @@ public class Voice implements ISonglet, IDrawable {
   @Override public void Draw_Me(DrawingContext ParentDC) {// IDrawable
     CajaDelimitadora ChildrenBounds = ParentDC.ClipBounds;// parent is already transformed by my offsetbox
     VoicePoint pnt;
-    int len = this.CPoints.size();
+    int len = 0;
+    try {
+      len = this.CPoints.size();
+    } catch (Exception ex) {
+      boolean nop = true;
+    }
     Path2D.Double pgon = new Path2D.Double();
     double Xloc, Yloc, YlocLow, YlocHigh;
 
