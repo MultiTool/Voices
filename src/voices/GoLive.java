@@ -15,8 +15,9 @@ public class GoLive implements Runnable, IDeletable {
   Audio audio;
   ISonglet.Singer RootPlayer;
 //  double TimeIncrement = (20.0 / 1000.0);// milliseconds
+  double TimeIncrement = (50 / 1000.0);// milliseconds
   //double TimeIncrement = (250.0 / 1000.0);// milliseconds
-  double TimeIncrement = (20 / 1000.0);// milliseconds
+  //double TimeIncrement = (500.0 / 1000.0);// milliseconds
   double CurrentTime = 0, FinalTime;
   Wave wave_render = new Wave();
   boolean KeepGoing;

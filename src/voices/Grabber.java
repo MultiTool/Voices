@@ -244,19 +244,15 @@ public class Grabber { // to do: rename this class to Grabber
     }
     /* ********************************************************************************* */
     @Override public void ConsiderLeaf(IDrawable.IMoveable CandidateLeaf) {
-      if (CandidateLeaf instanceof LoopBox.Ghost_OffsetBox) {
-        boolean nop = true;
-      }
       //this.PossibleDestination = null;
       if (CandidateLeaf instanceof OffsetBox) {// only one that works so far
-        OffsetBox obx = (OffsetBox) CandidateLeaf;// other cast!
+        OffsetBox obx = (OffsetBox) CandidateLeaf;// another cast!
         ISonglet songlet = obx.GetContent();
         if (songlet instanceof GroupBox) {
           GroupBox gbx = (GroupBox) songlet;// other cast!
           Point.Double results = new Point.Double();
           obx.MapTo(this.CurrentContext.Loc.x, this.CurrentContext.Loc.y, results);// we're hitting the songlet, not its offsetbox, so we have to map to obox child coordinates.
-          double FoundDistance = gbx.HitsMyVine(results.x, results.y);// WIP, does not work yet
-          //FoundDistance = true;
+          double FoundDistance = gbx.HitsMyVine(results.x, results.y);// WIP
 //          if ((FoundDistance < this.ClosestDistance) && this.Stack_Depth_Best <= this.Stack_Depth) {// prefer the most distal
           //if ((FoundDistance < this.ClosestDistance) || ((FoundDistance == this.ClosestDistance) && this.Stack_Depth_Best <= this.Stack_Depth)) {// prefer the most distal
           if (FoundDistance < this.ClosestDistance) {// prefer the closest
@@ -269,7 +265,7 @@ public class Grabber { // to do: rename this class to Grabber
         }
       }
       if (false && CandidateLeaf instanceof GroupBox.Group_OffsetBox) {
-        GroupBox.Group_OffsetBox gobx = (GroupBox.Group_OffsetBox) CandidateLeaf;// other cast!
+        GroupBox.Group_OffsetBox gobx = (GroupBox.Group_OffsetBox) CandidateLeaf;// another cast!
         GroupBox gbx = gobx.GetContent();//.Content;
         double FoundDistance = gbx.HitsMyVine(this.CurrentContext.Loc.x, this.CurrentContext.Loc.y);// WIP, does not do anything yet
         if ((FoundDistance < this.ClosestDistance) && this.Stack_Depth_Best <= this.Stack_Depth) {// prefer the most distal
@@ -283,7 +279,7 @@ public class Grabber { // to do: rename this class to Grabber
     /* ********************************************************************************* */
     @Override public boolean KeepDigging(IDrawable.IMoveable Candidate) {// Determine whether we should look into the children of Candidate for a place to paste our songlet.
       if (Candidate instanceof OffsetBox) {
-        OffsetBox obx = (OffsetBox) Candidate;// other cast!
+        OffsetBox obx = (OffsetBox) Candidate;// another cast!
         ISonglet songlet = obx.GetContent();
         if (this.Floater.GetContent() == songlet) {// Never drop a songlet inside of itself or you will get a stack overflow.
           return false;

@@ -388,27 +388,11 @@ public class NoteMaker {
       midfrac = ((double) cnt) / (double) numsteps;
       voice.Add_Note((Duration * midfrac), 0, 1.0);
     }
-    //return voice;
   }
   /* ********************************************************************************* */
   public static void Create_Tapered_Voice(Voice voice, double TimeOffset, double Duration, double OctaveOffset, double LoudnessOffset, int numsteps) {
     double AttackTime = 0.01;
     Duration -= AttackTime;
-//    if (true) {
-//      Wave wave = new Wave();
-//      if (false) {
-//        NoteMaker.Synth_Vibe_Spectrum(wave, 2699, Globals.SampleRate);//  44100 / 16.3516 = 2696.9837814036546882262286259449
-//        voice = TestJunkyard.Create_SampleVoice_Stub(wave, 1);// 16.3516);
-//      } else {
-//        //NoteMaker.Synth_Pluck(wave, Globals.MiddleC4Freq, 1.0, Globals.SampleRate);
-//        NoteMaker.Synth_Pluck_Flywheel(wave, Globals.MiddleC4Freq, 1.0, Globals.SampleRate);
-//        voice = TestJunkyard.Create_SampleVoice_Stub(wave, 1.0 / Globals.BaseFreqC0);// 16.3516);
-//      }
-//    } else if (false) {
-//      voice = new Voice();
-//    } else {
-//      voice = TestJunkyard.Create_SampleVoice_Stub(2);
-//    }
     double midfrac;
     voice.Add_Note(TimeOffset, OctaveOffset, 0);
     for (int cnt = 0; cnt <= numsteps; cnt++) {
@@ -446,26 +430,20 @@ public class NoteMaker {
   }
   /* ********************************************************************************* */
   public static GroupBox.Group_OffsetBox Create_Group_Loop(double TimeStep) {
-    int NumBeats = 8;
+    int NumBeats = 6;
     double Duration = 30;
 
-    Voice voz;
-    if (false) {
-      voz = new Voice();
-    } else {
-      voz = NoteMaker.Create_PluckVoice();//PluckVoice
-    }
-    switch (1) {
-    case 0:
-      NoteMaker.Create_Block_Voice(voz, TimeStep, 3);
-      break;
-    case 1:
-      NoteMaker.Create_Tapered_Voice(voz, NoteMaker.OffsetTime, TimeStep, 0, 1.0, 3);
-      break;
-    }
+    Voice voz, pvoz;
+    voz = new Voice();
+    pvoz = NoteMaker.Create_PluckVoice();//PluckVoice
 
-    GroupBox ChildGbx = NoteMaker.Create_Note_Chain(voz, NumBeats, TimeStep);
+    NoteMaker.Create_Tapered_Voice(voz, NoteMaker.OffsetTime, TimeStep, 0, 1.0, 3);
+    NoteMaker.Create_Tapered_Voice(pvoz, NoteMaker.OffsetTime, TimeStep, 0, 1.0, 3);
+
+    GroupBox ChildGbx = NoteMaker.Create_Note_Chain(pvoz, NumBeats, TimeStep);
     ChildGbx.MyName = "ChildGbx";
+    
+    ChildGbx.Add_SubSong(voz, TimeStep + OffsetTime, 0.0, 1.0);
 
     String txt = null, txt2 = null;
     JsonParse.Node phrase2;

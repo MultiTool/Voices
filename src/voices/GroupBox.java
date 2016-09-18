@@ -2,12 +2,14 @@ package voices;
 
 import java.awt.BasicStroke;
 import java.awt.Color;
+import java.awt.Point;
 import java.awt.Stroke;
 import java.awt.geom.Point2D;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  *
@@ -159,8 +161,9 @@ public class GroupBox implements ISonglet, IDrawable {
       medloc = (minloc + maxloc) >> 1; // >>1 is same as div 2, only faster.
       if (Time <= this.SubSongs.get(medloc).TimeX) {
         maxloc = medloc;
-      }/* has to go through here to be found. */ else {
-        minloc = medloc + 1;
+      } else {
+        minloc = medloc + 1;/* has to go through here to be found. */
+
       }
     }
     return minloc;
@@ -329,8 +332,50 @@ public class GroupBox implements ISonglet, IDrawable {
     }
   }
   /* ********************************************************************************* */
+  public void swap(AtomicInteger a, AtomicInteger b) {// http://stackoverflow.com/questions/3624525/how-to-write-a-basic-swap-function-in-java
+    a.set(b.getAndSet(a.get()));// look mom, no tmp variables needed
+  }
+  /* ********************************************************************************* */
   public double DotProduct(double X0, double Y0, double X1, double Y1) {
     return X0 * X1 + Y0 * Y1;// length of projection from one vector onto another
+  }
+  /* ********************************************************************************* */
+  public void LineClosestPoint(double LineX0, double LineY0, double LineX1, double LineY1, double XPnt, double YPnt, Point.Double Intersection) {// Find dnd destination using dot product on line segments.
+    double Temp;
+    if (LineX1 < LineX0 || (LineX1 == LineX0 && LineY1 < LineY0)) {// sort endpoints
+      Temp = LineX0;// swap X
+      LineX0 = LineX1;
+      LineX1 = Temp;
+
+      Temp = LineY0;// swap Y
+      LineY0 = LineY1;
+      LineY1 = Temp;
+    }
+    double XDif = LineX1 - LineX0, YDif = LineY1 - LineY0;
+    double Shrink = Globals.Fudge;// shrink is a cheat so consecutive lines have slightly separate endpoints. this makes mouse distance from their endpoints unequal. 
+    double ShrinkX = XDif * Shrink, ShrinkY = YDif * Shrink;
+    LineX0 += ShrinkX;
+    LineY0 += ShrinkY;
+    LineX1 -= ShrinkX;
+    LineY1 -= ShrinkY;
+    XDif -= ShrinkX * 2;
+    YDif -= ShrinkY * 2;
+    double Magnitude = Math.hypot(XDif, YDif);
+
+    double DotProd = this.DotProduct(XPnt - LineX0, YPnt - LineY0, XDif, YDif);
+    DotProd /= Magnitude;// now dotprod is the full length of the projection
+    double XLoc = ((XDif / Magnitude) * DotProd);// scale separate dimensions to length of shadow
+    double YLoc = ((YDif / Magnitude) * DotProd);
+    if (XLoc > XDif) {// Test if the intersection is between the line's endpoints and cap them.
+      //System.out.println("XLoc:" + XLoc + ", YLoc:" + YLoc);
+      XLoc = XDif;
+      YLoc = YDif;
+    } else if (XLoc < 0) {
+      XLoc = YLoc = 0;
+    }
+    XLoc += LineX0 + ShrinkX;
+    YLoc += LineY0 + ShrinkY;
+    Intersection.setLocation(XLoc, YLoc);
   }
   /* ********************************************************************************* */
   public double DistanceFromLine(double LineX0, double LineY0, double LineX1, double LineY1, double XPnt, double YPnt) {// work in progress for drag and drop support
@@ -370,9 +415,11 @@ public class GroupBox implements ISonglet, IDrawable {
     double Limit = 0.1;// octaves
     int len = this.SubSongs.size();
     OffsetBox OBox, ClosestPoint = null;
-    double XPrev = 0, YPrev = 0, YCross, YDist;
+    double XPrev = 0, YPrev = 0, YCross, YDist, Dist;
     OffsetBox LastBox = this.SubSongs.get(len - 1);
+    Point.Double Intersection = new Point.Double();
     if (0.0 <= XPnt && XPnt <= LastBox.TimeX) {// or this.MyBounds.Max.x) {
+//      int FoundDex = Tree_Search(XPnt - Limit, 0, len);
       int FoundDex = Tree_Search(XPnt, 0, len);
       if (FoundDex == 0) {
         XPrev = YPrev = 0;
@@ -383,11 +430,22 @@ public class GroupBox implements ISonglet, IDrawable {
       }
       // to do: need condition if FoundDex is greater than len. beyond-end insertion would be nice.
       OBox = this.SubSongs.get(FoundDex);
-      YCross = LineYCross(XPrev, YPrev, OBox.TimeX, OBox.OctaveY, XPnt);
-      YDist = Math.abs(YPnt - YCross);
-      if (YDist < Limit) {// then we found one
-        ClosestPoint = this.SubSongs.get(FoundDex);
-        return YDist;
+
+      if (true) {
+        LineClosestPoint(XPrev, YPrev, OBox.TimeX, OBox.OctaveY, XPnt, YPnt, Intersection);
+        Dist = Math.hypot(XPnt - Intersection.x, YPnt - Intersection.y);
+        System.out.println("Dist:" + Dist + ", Intersection.x:" + Intersection.x + ", Intersection.y:" + Intersection.y);
+        if (Dist < Limit) {// then we found one
+          ClosestPoint = this.SubSongs.get(FoundDex);
+          return Dist;
+        }
+      } else {
+        YCross = LineYCross(XPrev, YPrev, OBox.TimeX, OBox.OctaveY, XPnt);
+        YDist = Math.abs(YPnt - YCross);
+        if (YDist < Limit) {// then we found one
+          ClosestPoint = this.SubSongs.get(FoundDex);
+          return YDist;
+        }
       }
     }
     return Double.POSITIVE_INFINITY;// infinite if not found

@@ -22,6 +22,11 @@ in a class there can be:
 in a method there can be:
  variables
 
+to do:
+scan every file for all class/interface declarations, 
+create a global hashmap that maps class/interface name -> file object. 
+every time a file references a weird new object, look it up in the hashmap and add the file name to its #include list at the top.
+
 */
 /* ********************************************************************************************************* */
 class JavaParse {
@@ -908,10 +913,10 @@ class JavaParse {
         while (Marker<Chunks.size()) {// get to brackets and dive in
           tkn = Chunks.get(Marker);
           if (tkn.Text.equals(Ender)){break;}
-          if ((SubClass = Chomp_Class(Chunks, Marker, RecurDepth, ClassNode))!=null){
+          if ((SubClass = MetaClass.Chomp(Chunks, Marker, RecurDepth, ClassNode))!=null){
             System.out.println("AddMetaClass"); if (FirstSubNodeLoc==0){FirstSubNodeLoc=SubClass.ChunkStart;}
             ClassNode.AddMetaClass(SubClass); Marker = SubClass.ChunkEnd;
-          } else if ((SubInterface = Chomp_Interface(Chunks, Marker, RecurDepth, ClassNode))!=null){
+          } else if ((SubInterface = MetaInterface.Chomp(Chunks, Marker, RecurDepth, ClassNode))!=null){
             System.out.println("AddMetaInterface");if (FirstSubNodeLoc==0){FirstSubNodeLoc=SubInterface.ChunkStart;}
             ClassNode.AddMetaInterface(SubInterface); Marker = SubInterface.ChunkEnd;
           } else if ((SubFunction = Chomp_Function(Chunks, Marker, RecurDepth, ClassNode))!=null){
@@ -948,14 +953,15 @@ class JavaParse {
         Marker = InterfaceNode.Preamble.ChunkEnd + 1;
       }
       
-      // race ahead to find "class" identifier
+      // race ahead to find "interface" identifier
       Marker=Skip_Until(Chunks, Marker, WordTarget);// jump to next word, no whitespace, no comments 
       if (Marker>=Chunks.size()) {return null;}
       tkn = Chunks.get(Marker);
       boolean IsClass = false;// this would be Chomp_ClassIdentifier
       if (tkn.Text.equals(Identifier)){IsClass = true; } else { IsClass = false; }
       if (!IsClass) { return null; }     
-
+      InterfaceNode.IdentifierToken = tkn;
+        
       Marker++;// start at next token
       
       Marker=Skip_Until(Chunks, Marker, WordTarget);// jump to next word, no whitespace, no comments 
@@ -1002,7 +1008,7 @@ class JavaParse {
         while (Marker<Chunks.size()) {// get to brackets and dive in
           tkn = Chunks.get(Marker);
           if (tkn.Text.equals(Ender)){break;}
-          if ((SubClass = Chomp_Class(Chunks, Marker, RecurDepth, InterfaceNode))!=null){
+          if ((SubClass = MetaClass.Chomp(Chunks, Marker, RecurDepth, InterfaceNode))!=null){
             System.out.println("AddMetaClass");
             InterfaceNode.AddMetaClass(SubClass); Marker = SubClass.ChunkEnd;
           } else if ((SubInterface = Chomp_Interface(Chunks, Marker, RecurDepth, InterfaceNode))!=null){
@@ -1201,7 +1207,8 @@ class JavaParse {
       MFile.Chunks = Chunks;
       
       if ((Package = Chomp_Package(Chunks,  Marker,  RecurDepth))!=null){// first skip over package
-        MFile.AddImport(Package); Marker = Package.ChunkEnd;
+        //MFile.AddImport(Package); Marker = Package.ChunkEnd;
+        MFile.AssignPackage(Package); Marker = Package.ChunkEnd;
       }
       
       Marker++;
@@ -1213,7 +1220,7 @@ class JavaParse {
         if ((Import = Chomp_Import(Chunks, Marker, RecurDepth))!=null){// first skip over imports
           System.out.println("Import Found");
           MFile.AddImport(Import); Marker = Import.ChunkEnd;
-        } else if ((MClass = Chomp_Class(Chunks,  Marker,  RecurDepth, null))!=null){// then dive into class and quit
+        } else if ((MClass = MetaClass.Chomp(Chunks,  Marker,  RecurDepth, null))!=null){// then dive into class and quit
           System.out.println("Class Found");
           Marker = MClass.ChunkEnd; MFile.AddMetaClass(MClass); break;
         } else if ((MInterface = Chomp_Interface(Chunks,  Marker,  RecurDepth, null))!=null){// then dive into interface and quit
@@ -1239,16 +1246,19 @@ class JavaParse {
   public static class CppLuggage{
     public ArrayList<MetaFile> Files;
     public ArrayList<Token> Chunks;
+    public HashMap<String,MetaFile> ClassMap;
   }
+  /* ********************************************************************************************************* */
   public static class Node {// a value that is a hashtable, an array, a literal, or a pointer to a multiply-used item
     public enum Types { None, Class, Interface, Method, Whatever }// Interface is not used yet.
     public Types MyType = Types.None;
     public String MyPhraseName = "***Nothing***";
     public Node Parent = null;
+    public MetaFile MyFile=null;
     public int ChunkStart,ChunkEnd;
     public String Literal=null;
     public Node Preamble;
-    private ArrayList<Node> ChildrenArray = new ArrayList<Node>();// new ArrayList<Phrase>();
+    private ArrayList<Node> ChildrenArray = new ArrayList<Node>();
     public Node(){ }
     //public Node(int Marker){ this.ChunkStart = Marker; }
     public Node(ArrayList<Node> ChildArray0, int Marker){
@@ -1260,7 +1270,7 @@ class JavaParse {
         boolean nop = true;
       }
       this.ChildrenArray.add(ChildPhrase); 
-      ChildPhrase.Parent = this;
+      ChildPhrase.Parent = this; ChildPhrase.MyFile = this.MyFile; // aagh, this won't work. we have to assign up-pointers when *entering* recursion
     }
     public void ConvertToCpp(CppLuggage Luggage){// virtual
     }
@@ -1279,6 +1289,7 @@ class JavaParse {
   /* ********************************************************************************************************* */
   public static class MetaProject extends Node {
     private ArrayList<MetaFile> MetaFileList = new ArrayList<MetaFile>();
+    HashMap<String,MetaFile> ClassMap;
     /* ********************************************************************************* */
     public void PortAll() {
       String fdir = new File("").getAbsolutePath();
@@ -1310,11 +1321,24 @@ class JavaParse {
       for (int fcnt = 0; fcnt < len; fcnt++) {
         OnePath = FullPath.get(fcnt);
         JavaParse.MetaFile JavaFile = JavaParse.ParseFile(OnePath);
-        MetaFileList.add(JavaFile);
+        this.AddMetaFile(JavaFile);
       }
+      
+      this.BuildClassMap();
+      
+      /* 
+      to do: here figure out file dependencies to create #include clauses
+      every class now has its fully qualified name. 
+      next we need to look at all parameters and local variables referenced in functions and declarations.
+      do not need to know their context, just their names, cows.chicken or just cows, etc. 
+      take the first part of any dot name, append package. to the beginning, and look it up in the classmap. 
+      if not found, append to each of the imports and then look up in classmap again. 
+      
+      */
+      
       // convert to cpp/hpp
       JavaParse.CppLuggage Luggage = new JavaParse.CppLuggage();
-      Luggage.Files = MetaFileList;
+      Luggage.Files = MetaFileList; Luggage.ClassMap = this.ClassMap;
       // Luggage.Chunks = Chunks; // to do: preserve chunks and pass it here.
       for (int fcnt = 0; fcnt < len; fcnt++) {
         JavaParse.MetaFile JavaFile = MetaFileList.get(fcnt);
@@ -1327,13 +1351,21 @@ class JavaParse {
          fileWriter.flush();
          fileWriter.close();
        } catch (IOException e) {
+         System.out.println("Error writing file:" + JavaFile.FileName);
          boolean nop = true;
        }
       }
       boolean nop = true;
     }
     public void AddMetaFile(MetaFile MFile){
-      this.MetaFileList.add(MFile); this.AddSubNode(MFile);
+      this.MetaFileList.add(MFile); this.AddSubNode(MFile); MFile.MyFile = MFile; MFile.MyProject = this;// aagh, this won't work. we have to assign up-pointers when *entering* recursion
+    }
+    public void BuildClassMap() {
+      this.ClassMap = new HashMap<String,MetaFile>();
+      MetaFile mc;
+      for (int cnt=0; cnt < this.MetaFileList.size(); cnt++){
+        mc = this.MetaFileList.get(cnt); mc.BuildClassMap(ClassMap);
+      }
     }
     @Override public void ConvertToCpp(CppLuggage Luggage){
       MetaFile MFile; Token tkn;
@@ -1346,13 +1378,18 @@ class JavaParse {
   /* ********************************************************************************************************* */
   public static class MetaFile extends Node {
     public String FileName = "";
+    private Node PackageNode;
     private ArrayList<Node> ImportList = new ArrayList<Node>();
     private ArrayList<MetaClass> MetaClassList = new ArrayList<MetaClass>();// really a Java file has only one base class, so a list is overkill
     private ArrayList<MetaInterface> MetaInterfaceList = new ArrayList<MetaInterface>();// really a Java file has only one base class, so a list is overkill
     private ArrayList<Token> Chunks;
+    private MetaProject MyProject=null;
     public MetaFile(){ super(); MyPhraseName = "MetaClass"; }
     public MetaFile(ArrayList<Node> ChildArray0, int Marker){
       super(ChildArray0, Marker);
+    }
+    public void AssignPackage(Node Package){
+      this.PackageNode = Package; this.AddSubNode(Package);
     }
     public void AddImport(Node Import){
       this.ImportList.add(Import); this.AddSubNode(Import);
@@ -1362,6 +1399,32 @@ class JavaParse {
     }
     private void AddMetaInterface(MetaInterface MInterface) {
       this.MetaInterfaceList.add(MInterface); this.AddSubNode(MInterface);
+    }
+    public void BuildClassMap(HashMap<String,MetaFile> ClassMap){
+      String NameSpace;
+      NameSpace = this.PackageNode.Literal;
+      MetaClass mc;
+      for (int cnt=0; cnt < this.MetaClassList.size(); cnt++){
+        mc = this.MetaClassList.get(cnt); mc.BuildClassMap(NameSpace, ClassMap);
+      }
+      MetaInterface mi;
+      for (int cnt=0; cnt < this.MetaInterfaceList.size(); cnt++){
+        mi = this.MetaInterfaceList.get(cnt); mi.BuildClassMap(NameSpace, ClassMap);
+      }
+      /*
+       to do: get a list of all classes/interfaces in this file, including subclasses 
+       we need to make a hash map from class name -> hpp file name
+       easy to do with dotwords even, just use the first class word  MajorClass.MinorClass only needs MajorClass
+       but what about namespace imports?  look them all up in the class to file hash. 
+	   how to tell if a given import is actually used?  all local imports start with voices., our package name.
+	   . well we have a list of all classes referenced in the file. first look for those classes in the raw list, root level. 
+	   . if not found, then go through all voices.* imports in this file, and see if any end with this class name.  if found, look up the whole import string in the big hashmap.
+	   . also, go through all voices.* imports in this file that end with *, append this class name, and look for that string in the big hashmap. 
+	   . also, for all classes in the big hashmap, start them with voices. package name.
+      so when we find a class name, first assume it is root to the package, and look it up in the classmap.
+      if not found, concatenate to each of the imports (by *, or by literal match, e.g. pkg.stuff.nonsense.haha  matches  haha.hoho.what) 
+      . THEN look up each concatenation in the global classmap. if not found, quit looking. 
+      */
     }
     @Override public void ConvertToCpp(CppLuggage Luggage){
       Node nd; Token tkn;
@@ -1422,8 +1485,9 @@ class HashMap;
   /* ********************************************************************************************************* */
   public static class MetaClass extends Node {
     public static String Identifier = "class";
-    private ArrayList<MetaClass> MetaClassList = new ArrayList<MetaClass>();
-    private ArrayList<MetaInterface> MetaInterfaceList = new ArrayList<MetaInterface>();
+    public MetaClass MyParentClass=null;
+    protected ArrayList<MetaClass> MetaClassList = new ArrayList<MetaClass>();
+    protected ArrayList<MetaInterface> MetaInterfaceList = new ArrayList<MetaInterface>();
     private ArrayList<MetaFunction> MetaFunctionList = new ArrayList<MetaFunction>();
     private ArrayList<MetaVar> MetaVarList = new ArrayList<MetaVar>();
     private ArrayList<MetaEnum> MetaEnumList = new ArrayList<MetaEnum>();
@@ -1432,15 +1496,19 @@ class HashMap;
     public String ClassName = "";
     public int ClassNameLoc = Integer.MIN_VALUE;
     public int BodyStartLoc, FirstSubNodeLoc = Integer.MIN_VALUE;
+    public String FqName;// Fully Qualified Name, e.g.  "voices.Voice.Voice_OffsetBox"
     public MetaClass(){ super(); MyPhraseName = "MetaClass"; }
     public MetaClass(ArrayList<Node> ChildArray0, int Marker){
       super(ChildArray0, Marker);
     }
+    public void AssignParent(MetaClass Parent){
+      this.MyParentClass=Parent; this.MyFile = Parent.MyFile;
+    }
     public void AddMetaClass(MetaClass MClass){
-      this.MetaClassList.add(MClass); this.AddSubNode(MClass); 
+      this.MetaClassList.add(MClass); this.AddSubNode(MClass); MClass.AssignParent(this);
     }
     public void AddMetaInterface(MetaInterface MInterface){
-      this.MetaInterfaceList.add(MInterface); this.AddSubNode(MInterface); 
+      this.MetaInterfaceList.add(MInterface); this.AddSubNode(MInterface); MInterface.AssignParent(this);
     }
     public void AddMetaFunction(MetaFunction MFun){
       this.MetaFunctionList.add(MFun); this.AddSubNode(MFun); 
@@ -1459,6 +1527,19 @@ class HashMap;
     }
     public void AddInheritance(Node Ancestor){
       this.AncestorList.add(Ancestor); this.AddSubNode(Ancestor); 
+    }
+    public void BuildClassMap(String NameSpace, HashMap<String,MetaFile> ClassMap){
+      NameSpace += "." + this.ClassName; // to do: go through subclasses and interfaces
+      this.FqName = NameSpace;
+      ClassMap.put(this.FqName, this.MyFile);
+      MetaClass mc;
+      for (int cnt=0; cnt < this.MetaClassList.size(); cnt++){
+        mc = this.MetaClassList.get(cnt); mc.BuildClassMap(NameSpace, ClassMap);
+      }
+      MetaInterface mi;
+      for (int cnt=0; cnt < this.MetaInterfaceList.size(); cnt++){
+        mi = this.MetaInterfaceList.get(cnt); mi.BuildClassMap(NameSpace, ClassMap);
+      }
     }
     @Override public void ConvertToCpp(CppLuggage Luggage){
       Token tkn;
@@ -1517,13 +1598,37 @@ class HashMap;
       }
       
     }
+    public static MetaClass Chomp(ArrayList<Token> Chunks, int Marker, int RecurDepth, MetaClass Parent){
+      return TreeMaker.Chomp_Class(Chunks, Marker, RecurDepth, Parent);
+    }
   }
   /* ********************************************************************************************************* */
   public static class MetaInterface extends MetaClass {
     // to do: fill this in
+    private Token IdentifierToken=null;
     public MetaInterface(){ super(); MyPhraseName = "MetaInterface"; }
     public MetaInterface(ArrayList<Node> ChildArray0, int Marker){
       super(ChildArray0, Marker);
+    }
+    @Override public void BuildClassMap(String NameSpace, HashMap<String,MetaFile> ClassMap){
+      NameSpace += "." + this.ClassName; // to do: go through subclasses and interfaces
+      this.FqName = NameSpace;
+      ClassMap.put(this.FqName, this.MyFile);
+      MetaClass mc;
+      for (int cnt=0; cnt < this.MetaClassList.size(); cnt++){
+        mc = this.MetaClassList.get(cnt); mc.BuildClassMap(NameSpace, ClassMap);
+      }
+      MetaInterface mi;
+      for (int cnt=0; cnt < this.MetaInterfaceList.size(); cnt++){
+        mi = this.MetaInterfaceList.get(cnt); mi.BuildClassMap(NameSpace, ClassMap);
+      }
+    }
+    @Override public void ConvertToCpp(CppLuggage Luggage){
+      super.ConvertToCpp(Luggage);
+      this.IdentifierToken.Text = "class";
+    }
+    public static MetaInterface Chomp(ArrayList<Token> Chunks, int Marker, int RecurDepth, MetaClass Parent){
+      return TreeMaker.Chomp_Interface(Chunks, Marker, RecurDepth, Parent);
     }
   }
   /* ********************************************************************************************************* */

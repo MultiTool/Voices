@@ -609,7 +609,7 @@ double DotProduct(double X0, double Y0, double X1, double Y1){
     }
     public void ConsiderLeaf(IDrawable.IMoveable CandidateLeaf) {
       if (CandidateLeaf instanceof GroupBox) {
-        GroupBox gbx = (GroupBox) CandidateLeaf;// other cast!
+        GroupBox gbx = (GroupBox) CandidateLeaf;// another cast!
 //        if (gbx.ScanForDropLoc(XHit, YHit))
         if (CandidateLeaf.HitsMe(grabber.CurrentContext.Loc.x, grabber.CurrentContext.Loc.y)) {
           System.out.print(" Was Hit, ");

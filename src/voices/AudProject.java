@@ -164,7 +164,7 @@ public class AudProject implements IDeletable {
       obox.OctaveY = (4);
       break;
     case 11:
-      TimeStep = 0.125;
+      TimeStep = 0.33333 / 2.0;//0.125;
       obox = NoteMaker.Create_Group_Loop(TimeStep);
       //obox.ScaleX = 0.5;
       obox.OctaveY = (4);
@@ -192,7 +192,7 @@ public class AudProject implements IDeletable {
     }
     Wrap_For_Graphics(obox);
     //JsonParse.Node MainPhrase = this.Textify();
-    String JsonTxt =  this.Textify();
+    String JsonTxt = this.Textify();
     System.out.println(JsonTxt);
     if (false) {// test serialization
       this.UnTextify(JsonTxt);// this probably does not work yet
@@ -298,11 +298,11 @@ public class AudProject implements IDeletable {
   /* ********************************************************************************* */
   public void UnTextify(String JsonTxt) {// deserialize
     JsonParse.Node MainPhrase = JsonParse.Parse(JsonTxt);
-    
+
     //JsonParse.Node VersionPhrase = MainPhrase.ChildrenHash.get(VersionNumName);
     HashMap<String, JsonParse.Node> Fields = MainPhrase.ChildrenHash;
     this.VersionNum = Double.parseDouble(IFactory.Utils.GetField(Fields, VersionNumName, String.format("%f%n", this.VersionNum)));
-    
+
     JsonParse.Node TreePhrase = MainPhrase.ChildrenHash.get(TreePhraseName);
     JsonParse.Node LibraryPhrase = MainPhrase.ChildrenHash.get(LibraryPhraseName);
 
