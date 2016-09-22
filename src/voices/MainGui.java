@@ -329,6 +329,14 @@ public class MainGui {
           this.SetFloater(FloatHandle);// only deep clone handles to songlets. do not clone loudness handles. clone voicepoints? 
           this.DestQuery.Floater = obx;
           MoveFloater(XDisp, YDisp);
+        } else if (Leaf instanceof VoicePoint) {// copy Voice control point
+          VoicePoint vpnt = (VoicePoint) Leaf;// another cast! 
+          this.Query.MapThroughStack(XDisp, YDisp, results);
+          vpnt.MyParentVoice.Add_Note(results.x, results.y, 1.0);
+          vpnt.MyParentVoice.Sort_Me();
+          this.MyProject.GraphicRoot.UpdateBoundingBox();
+          this.repaint();
+          System.out.println("VoicePoint create");
         }
 //        if (Leaf.getClass().isMemberClass() == OffsetBox.class) {
 //        }

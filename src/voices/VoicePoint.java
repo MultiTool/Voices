@@ -16,7 +16,7 @@ public class VoicePoint extends MonkeyBox {
   double OctavesPerLoudness = 0.125;// to do: loudness will have to be mapped to screen. not a pixel value right?
   public LoudnessHandle UpHandle, DownHandle;
   public static String UpHandleName = "UpHandle", DownHandleName = "DownHandle";
-  //public Voice MyParentVoice = null;
+  public Voice MyParentVoice = null;
   /* ********************************************************************************* */
   public VoicePoint() {
     this.Create_Me();
@@ -25,6 +25,9 @@ public class VoicePoint extends MonkeyBox {
     this.DownHandle = new LoudnessHandle();
     this.DownHandle.ParentPoint = this;
     this.MyBounds = new CajaDelimitadora();
+  }
+  public void RefParent(Voice Parent) {
+    this.MyParentSong = this.MyParentVoice = Parent;
   }
   /* ********************************************************************************* */
   public void CopyFrom(VoicePoint source) {

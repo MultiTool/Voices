@@ -54,18 +54,17 @@ public class Voice implements ISonglet, IDrawable {
   }
   /* ********************************************************************************* */
   public void Add_Note(VoicePoint pnt) {
-    pnt.MyParentSong = this;
+    pnt.RefParent(this);
     this.CPoints.add(pnt);
   }
   /* ********************************************************************************* */
   public VoicePoint Add_Note(double RealTime, double Octave, double Loudness) {
     VoicePoint pnt = new VoicePoint();
-    pnt.MyParentSong = this;
     pnt.OctaveY = Octave;
     pnt.TimeX = RealTime;
     pnt.SubTime = 0.0;
     pnt.LoudnessFactor = Loudness;
-    this.CPoints.add(pnt);
+    this.Add_Note(pnt);
     return pnt;
   }
   /* ********************************************************************************* */
@@ -162,7 +161,7 @@ public class Voice implements ISonglet, IDrawable {
     this.FreshnessTimeStamp = TimeStampNew;
   }
   /* ********************************************************************************* */
-  public void Recalc_Line_SubTime() {// ready for test
+  public void Recalc_Line_SubTime() {
     double SubTimeLocal;// run this function whenever this voice instance is modified, e.g. control points moved, added, or removed. 
     int len = this.CPoints.size();
     if (len < 1) {
