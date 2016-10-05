@@ -10,15 +10,24 @@ import static voices.Voice.Voice_OffsetBox.ObjectTypeName;
 public class SampleVoice extends Voice {
   private Wave MySample = null;
   public boolean Looped = true;
+  public String SamplePreset = "Horn";
 
+  public static String HornSampleName = "Horn";
+  public static String SamplePresetName = "SamplePreset";
   public static String LoopedName = "Looped";// for serialization
   /* ********************************************************************************* */
   public SampleVoice() {
+    super();
   }
   /* ********************************************************************************* */
   public void AttachWaveSample(Wave Sample, double BaseFrequency) {
     MySample = Sample;
     this.BaseFreq = BaseFrequency;
+  }
+  /* ********************************************************************************* */
+  public void Preset_Horn() {
+    this.SamplePreset = HornSampleName;
+    this.AttachWaveSample(NoteMaker.Create_Horn_Sample(), Globals.BaseFreqC0 / 265.0);
   }
   /* ********************************************************************************* */
   @Override public SampleVoice_OffsetBox Spawn_OffsetBox() {// for compose time
@@ -50,9 +59,17 @@ public class SampleVoice extends Voice {
   }
   /* ********************************************************************************* */
   @Override public SampleVoice Deep_Clone_Me(ITextable.CollisionLibrary HitTable) {// ICloneable
-    SampleVoice child = new SampleVoice();
-    child.Copy_From(this);
-    child.Copy_Children(this, HitTable);
+    SampleVoice child;
+    CollisionItem ci = HitTable.GetItem(this);
+    if (ci == null) {
+      child = new SampleVoice();
+      ci = HitTable.InsertUniqueInstance(this);
+      ci.Item = child;
+      child.Copy_From(this);
+      child.Copy_Children(this, HitTable);
+    } else {// pre exists
+      child = (SampleVoice) ci.Item;// another cast! 
+    }
     return child;
   }
   /* ********************************************************************************* */
@@ -65,6 +82,9 @@ public class SampleVoice extends Voice {
     JsonParse.Node phrase = super.Export(HitTable);// to do: export my wave too
     phrase.ChildrenHash = this.SerializeMyContents(HitTable);
     phrase.AddSubPhrase(LoopedName, IFactory.Utils.PackField(this.Looped));
+    if (!this.SamplePreset.trim().equals("")) {
+      phrase.AddSubPhrase(SamplePresetName, IFactory.Utils.PackField(this.SamplePreset));
+    }
     //this.MySample.Export();
     return phrase;
   }
@@ -73,6 +93,10 @@ public class SampleVoice extends Voice {
     HashMap<String, JsonParse.Node> Fields = phrase.ChildrenHash;
     this.Looped = Boolean.parseBoolean(IFactory.Utils.GetField(Fields, LoopedName, "true"));//Boolean.toString(this.Looped)));
     // Boolean.getBoolean(""); maybe use this instead. simpler, returns false if parse fails. 
+    this.SamplePreset = IFactory.Utils.GetField(Fields, SamplePresetName, "");
+    if (this.SamplePreset.equals(HornSampleName)) {
+      this.Preset_Horn();
+    }
   }
   @Override public void Consume(JsonParse.Node phrase, CollisionLibrary ExistingInstances) {// ITextable - Fill in all the values of an already-created object, including deep pointers.
     if (phrase == null) {// to do: consume my wave too
@@ -123,8 +147,7 @@ public class SampleVoice extends Voice {
       if (this.SampleVoiceContent.UnRef_Songlet() <= 0) {
         this.SampleVoiceContent.Delete_Me();
       }
-      this.SampleVoiceContent = clone;
-      this.SampleVoiceContent.Ref_Songlet();
+      this.Attach_Songlet(clone);
     }
     /* ********************************************************************************* */
     @Override public JsonParse.Node Export(CollisionLibrary HitTable) {// ITextable
@@ -136,7 +159,7 @@ public class SampleVoice extends Voice {
       super.ShallowLoad(phrase);
     }
     @Override public void Consume(JsonParse.Node phrase, CollisionLibrary ExistingInstances) {// ITextable - Fill in all the values of an already-created object, including deep pointers.
-      if (phrase == null) {// ready for test?
+      if (phrase == null) {
         return;
       }
       this.ShallowLoad(phrase);

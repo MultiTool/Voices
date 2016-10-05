@@ -196,8 +196,7 @@ public class PluckVoice extends Voice {
       if (this.PluckVoiceContent.UnRef_Songlet() <= 0) {
         this.PluckVoiceContent.Delete_Me();
       }
-      this.VoiceContent = this.PluckVoiceContent = clone;
-      this.PluckVoiceContent.Ref_Songlet();
+      this.Attach_Songlet(clone);
     }
     /* ********************************************************************************* */
     @Override public JsonParse.Node Export(CollisionLibrary HitTable) {// ITextable

@@ -317,8 +317,7 @@ public class GraphicBox implements IDrawable, ISonglet, IDeletable {//
       if (this.Content.UnRef_Songlet() <= 0) {
         this.Content.Delete_Me();
       }
-      this.Content = clone;
-      this.Content.Ref_Songlet();
+      this.Attach_Songlet(clone);
     }
     /* ********************************************************************************* */
     @Override public boolean Create_Me() {// IDeletable

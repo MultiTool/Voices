@@ -493,8 +493,7 @@ public class Voice implements ISonglet, IDrawable {
       if (this.VoiceContent.UnRef_Songlet() <= 0) {
         this.VoiceContent.Delete_Me();
       }
-      this.VoiceContent = clone;
-      this.VoiceContent.Ref_Songlet();
+      this.Attach_Songlet(clone);
     }
     /* ********************************************************************************* */
     @Override public boolean Create_Me() {// IDeletable

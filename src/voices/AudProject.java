@@ -164,12 +164,18 @@ public class AudProject implements IDeletable {
       obox.OctaveY = (4);
       break;
     case 11:
-      TimeStep = 0.33333 / 2.0;//0.125;
-      obox = NoteMaker.Create_Group_Loop(TimeStep);
-      //obox.ScaleX = 0.5;
-      obox.OctaveY = (4);
       GroupBox trunk = new GroupBox();
+      
+      GroupBox.Group_OffsetBox dummy = NoteMaker.Create_Dummy_Group(3);// create dummy branch to help manual nesting of groups
+      trunk.Add_SubSong(dummy, 0, 3, 1.0);
+      
+      TimeStep = 0.33333 / 2.0;//0.125;
+//      obox = NoteMaker.Create_Group_Loop(TimeStep);
+      obox = NoteMaker.Create_Palette();
+      //obox.ScaleX = 0.5;
+      obox.OctaveY = 4;
       trunk.Add_SubSong(obox);
+
       obox = trunk.Spawn_OffsetBox();
       break;
     case 12:

@@ -27,28 +27,16 @@ public class GroupBox implements ISonglet, IDrawable {
   public String TraceText = "";// for debugging
   private int RefCount = 0;
   private boolean HighlightSpine = false;
+  Color LineColor;
   /* ********************************************************************************* */
   public GroupBox() {
     MyBounds = new CajaDelimitadora();
     RefCount = 0;
+    this.LineColor = Globals.ToColorWheel(Globals.RandomGenerator.nextDouble());
   }
   /* ********************************************************************************* */
   public OffsetBox Add_SubSong(ISonglet songlet, double TimeOffset, double OctaveOffset, double LoudnessFactor) {
     OffsetBox obox = songlet.Spawn_OffsetBox();
-    if (false) {// test serialization - gibberish right now, not expected to work
-      if (obox instanceof Voice.Voice_OffsetBox) {
-        Voice.Voice_OffsetBox vobx = (Voice.Voice_OffsetBox) obox;// another cast!
-        ITextable.CollisionLibrary HitTable = new ITextable.CollisionLibrary();
-        JsonParse.Node phrase = vobx.Export(HitTable);
-        HitTable.Wipe_Songlets();
-        vobx.VoiceContent = null;
-        obox = vobx = new Voice.Voice_OffsetBox();// #hacky: stupid non-factory way to regenerate obox
-        //obox.Delete_Me();// should be enough unrefs, right?
-        //obox = new WHAT??();// hmm need the right factory here
-        obox.Clear();
-        obox.Consume(phrase, HitTable);
-      }
-    }
     this.Add_SubSong(obox, TimeOffset, OctaveOffset, LoudnessFactor);
     return obox;
   }
@@ -199,33 +187,28 @@ public class GroupBox implements ISonglet, IDrawable {
     OffsetBox ChildOffsetBox;
     int len = this.SubSongs.size();
 
-    int StartDex = 0;// not sure how to get the first within clip box without just iterating from 0. 
-    int EndDex = len;
+    int StartDex = 0;// not sure how to get the first within clip box without just iterating from 0. treesearch?
+    int EndDex = len - 1;// inclusive
 
     // Draw Group spine
     Point2D.Double pntprev, pnt;
     Stroke oldStroke = ParentDC.gr.getStroke();
-    BasicStroke bs;
+    BasicStroke OutlineStroke, FillStroke;
+    float LineThickness = 10.0f, OutlineSwell = 1.5f;
+    float InnerLineThickness = (1.0f / ParentDC.RecurseDepth) * LineThickness; // thinner lines for more distal sub-branches
+    FillStroke = new BasicStroke(InnerLineThickness, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND);
     if (this.HighlightSpine) {
       ParentDC.gr.setColor(Color.yellow);
-      // thinner lines for more distal sub-branches
-      //BasicStroke bs = new BasicStroke((1.0f / ParentDC.RecurseDepth) * 40.0f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND);
-      bs = new BasicStroke((1.0f / ParentDC.RecurseDepth) * 20.0f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND);
+      OutlineStroke = new BasicStroke(InnerLineThickness * OutlineSwell * 2.0f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND);
     } else {
       ParentDC.gr.setColor(Color.darkGray);
-      // thinner lines for more distal sub-branches
-      //BasicStroke bs = new BasicStroke((1.0f / ParentDC.RecurseDepth) * 40.0f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND);
-      bs = new BasicStroke((1.0f / ParentDC.RecurseDepth) * 10.0f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND);
+      OutlineStroke = new BasicStroke(InnerLineThickness * OutlineSwell, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND);
     }
-    ParentDC.gr.setStroke(bs);
+    //-----------
+    ParentDC.gr.setStroke(OutlineStroke);// draw outline or glow of spine
+    pntprev = ParentDC.To_Screen(0, 0);
     int pcnt = StartDex;
-    if (false) {// #cleanme
-      ChildOffsetBox = this.SubSongs.get(pcnt++);
-      pntprev = ParentDC.To_Screen(ChildOffsetBox.TimeX, ChildOffsetBox.OctaveY);
-    } else {
-      pntprev = ParentDC.To_Screen(0, 0);
-    }
-    while (pcnt < EndDex) {//for (int pcnt = StartDex; pcnt < EndDex; pcnt++) {
+    while (pcnt <= EndDex) {
       ChildOffsetBox = this.SubSongs.get(pcnt);
       pnt = ParentDC.To_Screen(ChildOffsetBox.TimeX, ChildOffsetBox.OctaveY);
       ParentDC.gr.drawLine((int) pntprev.x, (int) pntprev.y, (int) pnt.x, (int) pnt.y);
@@ -236,10 +219,23 @@ public class GroupBox implements ISonglet, IDrawable {
       }
       pcnt++;
     }
+    //-----------
+    ParentDC.gr.setColor(this.LineColor);
+    ParentDC.gr.setStroke(FillStroke);// draw inner color of spine
+    pntprev = ParentDC.To_Screen(0, 0);
+    pcnt = StartDex;
+    while (pcnt <= EndDex) {
+      ChildOffsetBox = this.SubSongs.get(pcnt);
+      pnt = ParentDC.To_Screen(ChildOffsetBox.TimeX, ChildOffsetBox.OctaveY);
+      ParentDC.gr.drawLine((int) pntprev.x, (int) pntprev.y, (int) pnt.x, (int) pnt.y);
+      pntprev = pnt;
+      pcnt++;
+    }
+    //-----------
     ParentDC.gr.setStroke(oldStroke);// restore line stroke
 
     // Draw children
-    for (pcnt = StartDex; pcnt < EndDex; pcnt++) {
+    for (pcnt = StartDex; pcnt <= EndDex; pcnt++) {
       ChildOffsetBox = this.SubSongs.get(pcnt);
       ChildOffsetBox.Draw_Me(ParentDC);
     }
@@ -311,6 +307,28 @@ public class GroupBox implements ISonglet, IDrawable {
       }
     } else {// pre exists
       child = (GroupBox) ci.Item;// another cast! 
+    }
+    return child;
+  }
+  /* ********************************************************************************* */
+//  @Override 
+  public GroupBox Shallow_Clone_Me() {
+    /*
+     clone-me clones myself, clones all my children oboxes, but does NOT clone their songlets. 
+     */
+    GroupBox child;
+    child = new GroupBox();
+    child.TraceText = "I am a shallow clone";
+    child.Copy_From(this);
+    OffsetBox SubSongHandle, ChildSubSongHandle;
+    ISonglet songlet;
+    int len = this.SubSongs.size();
+    for (int cnt = 0; cnt < len; cnt++) {
+      SubSongHandle = this.SubSongs.get(cnt);
+      songlet = SubSongHandle.GetContent();
+      ChildSubSongHandle = songlet.Spawn_OffsetBox();
+      ChildSubSongHandle.Copy_From(SubSongHandle);
+      child.Add_SubSong(ChildSubSongHandle);
     }
     return child;
   }
@@ -817,8 +835,21 @@ public class GroupBox implements ISonglet, IDrawable {
       return child;
     }
     /* ********************************************************************************* */
+    //@Override 
+    public Group_OffsetBox Shallow_Clone_Me() {
+      return null;
+    }
+    /* ********************************************************************************* */
     @Override public void BreakFromHerd(ITextable.CollisionLibrary HitTable) {// for compose time. detach from my songlet and attach to an identical but unlinked songlet
       GroupBox clone = this.Content.Deep_Clone_Me(HitTable);
+      if (this.Content.UnRef_Songlet() <= 0) {
+        this.Content.Delete_Me();
+      }
+      this.Attach_Songlet(clone);
+    }
+    /* ********************************************************************************* */
+    public void BreakFromHerd_Shallow() {// for compose time. detach from my songlet and attach to an identical but unlinked songlet
+      GroupBox clone = this.Content.Shallow_Clone_Me();
       if (this.Content.UnRef_Songlet() <= 0) {
         this.Content.Delete_Me();
       }

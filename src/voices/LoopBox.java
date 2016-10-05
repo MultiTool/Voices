@@ -445,8 +445,7 @@ public class LoopBox implements ISonglet, IDrawable {
       if (this.Content.UnRef_Songlet() <= 0) {
         this.Content.Delete_Me();
       }
-      this.Content = clone;
-      this.Content.Ref_Songlet();
+      this.Attach_Songlet(clone);
     }
     /* ********************************************************************************* */
     @Override public void Draw_Me(DrawingContext ParentDC) {

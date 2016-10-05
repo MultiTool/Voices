@@ -279,6 +279,21 @@ public class MainGui {
           BigApp.MyThread.PleaseStop();
           ITextable.CollisionLibrary HitTable = new ITextable.CollisionLibrary();
           obx.BreakFromHerd(HitTable);
+          //BreakFromHerd_Shallow
+          this.repaint();
+        }
+      }
+    }
+    /* ********************************************************************************* */
+    public void BreakFromHerd_Shallow() {// Shallow cuts
+      if (this.Query.Leaf != null) {
+        IDrawable.IMoveable Leaf = this.Query.Leaf;
+        if (Leaf instanceof Group_OffsetBox) {
+          System.out.println("MainGui BreakFromHerd_Shallow");
+          this.Query.Leaf = null;
+          Group_OffsetBox obx = (Group_OffsetBox) Leaf;// another cast! 
+          BigApp.MyThread.PleaseStop();
+          obx.BreakFromHerd_Shallow();
           this.repaint();
         }
       }
@@ -577,6 +592,8 @@ public class MainGui {
         dpnl.RescaleGroupTimeX();
       } else if ((keycode == KeyEvent.VK_X) && CtrlPress) {
         dpnl.BreakFromHerd();
+      } else if ((keycode == KeyEvent.VK_T) && CtrlPress) {
+        dpnl.BreakFromHerd_Shallow();
       } else if ((keycode == KeyEvent.VK_S) && CtrlPress) {// ctrl S means save
         this.PromptSaveFile();
       } else if ((keycode == KeyEvent.VK_O) && CtrlPress) {// ctrl O means open

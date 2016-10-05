@@ -56,12 +56,18 @@ public class NoteMaker {
     }
   }
   /* ********************************************************************************* */
-  public static SampleVoice Create_Horn() {
-    SampleVoice sv = new SampleVoice();
+  public static Wave Create_Horn_Sample() {
     Wave MySample = new Wave();// a default
     MySample.Ingest(Horn, Globals.SampleRate);
+    return MySample;
+  }
+  /* ********************************************************************************* */
+  public static SampleVoice Create_Horn() {
+    SampleVoice sv = new SampleVoice();
+    sv.Preset_Horn();
+    //Wave MySample = Create_Horn_Sample();
     //Globals.BaseFreqC0 / 263.54581673306772913616450532531;// middle C-ish
-    sv.AttachWaveSample(MySample, Globals.BaseFreqC0 / 265.0);//265.663;//264.072;//572.727;//265.663;
+    //sv.AttachWaveSample(MySample, Globals.BaseFreqC0 / 265.0);//265.663;//264.072;//572.727;//265.663;
     return sv;
   }
   /* ********************************************************************************* */
@@ -89,16 +95,16 @@ public class NoteMaker {
     //NoteMaker.Synth_Pluck_Decay(wave0, pattern, Duration);
     NoteMaker.Repeat_Pattern(wave0, pattern, Duration);
     FName = "Repeat_WhiteNoise.wav";
-
+    
     wave0.Normalize();
-
+    
     if (true) {
       wave0.DownSampleDecimated(Math.PI, wave1);
       wave0.Copy_From(wave1);
     }
     ArrayList<Wave> results = new ArrayList<Wave>();
     Extract_Periodic_Samples(wave0, 32, SamplesPerCycle, results);
-
+    
     aud.Start();
     aud.Feed(wave0);
     aud.Save(FName, wave0.GetWave());
@@ -108,14 +114,14 @@ public class NoteMaker {
     //aud.Save("StackedSines.wav", wave0.GetWave());
     //aud.Save("Synth_Pluck_StackedSines.wav", wave0.GetWave());
     aud.Stop();
-
+    
     NoteMaker.Synth_Pluck_Flywheel(wave1, BaseFreq, Duration, Globals.SampleRate);
     wave1.Normalize();
     aud.Start();
     aud.Feed(wave1);
     aud.Save("Synth_Pluck_Flywheel.wav", wave1.GetWave());
     aud.Stop();
-
+    
     aud.Delete_Me();
   }
   /* ********************************************************************************* */
@@ -346,7 +352,7 @@ public class NoteMaker {
     GroupBox gbx;
     NoteMaker nm;
     LoopBox song;
-
+    
     double offx = NoteMaker.OffsetTime;
     gbx = new GroupBox();
     nm = new NoteMaker();
@@ -359,7 +365,7 @@ public class NoteMaker {
     gbx.Add_SubSong(DMajor, Delay * 2 + offx, 2.0 * NoteMaker.SemitoneFraction, 1.0);
     DMinor = nm.MakeMinor();// D minor
     gbx.Add_SubSong(DMinor, Delay * 3 + offx, 2.0 * NoteMaker.SemitoneFraction, 1.0);
-
+    
     song.Add_Content(gbx);
     song.Set_Delay(Delay * 4);
     song.Set_Duration(30);
@@ -399,7 +405,20 @@ public class NoteMaker {
       midfrac = ((double) cnt) / (double) numsteps;
       voice.Add_Note(TimeOffset + AttackTime + (Duration * midfrac), OctaveOffset, LoudnessOffset * (1.0 - midfrac));
     }
-    //return voice;
+  }
+  /* ********************************************************************************* */
+  public static void Create_Dummy_Voice(Voice voice) {// silent empty stub just for marking a place
+    voice.Add_Note(NoteMaker.OffsetTime, 0.0, 0.0);
+    voice.Add_Note(NoteMaker.OffsetTime * 2, 0.0, 0.0);
+  }
+  /* ********************************************************************************* */
+  public static GroupBox.Group_OffsetBox Create_Dummy_Group(double TimeLength) {// silent empty stub just for marking a place
+    GroupBox gbx = new GroupBox();
+    Voice voice = new Voice();
+    gbx.Add_SubSong(voice, TimeLength, 0.0, 1.0);
+    voice.Add_Note(NoteMaker.OffsetTime, 0.0, 0.0);
+    voice.Add_Note(NoteMaker.OffsetTime * 2, 0.0, 0.0);
+    return gbx.Spawn_OffsetBox();
   }
   /* ********************************************************************************* */
   public static GroupBox Create_Note_Chain(int TotalNotes, double TimeStep) {
@@ -429,25 +448,61 @@ public class NoteMaker {
     return gbx;
   }
   /* ********************************************************************************* */
-  public static GroupBox.Group_OffsetBox Create_Group_Loop(double TimeStep) {
-    int NumBeats = 6;
-    double Duration = 30;
+  public static GroupBox.Group_OffsetBox Create_Palette() {
+    double TimeStep;
+    TimeStep = 0.33333 / 2.0;//0.125;
 
+    int NumBeats = 6;
     Voice voz, pvoz;
     voz = new Voice();
     pvoz = NoteMaker.Create_PluckVoice();//PluckVoice
+    SampleVoice svoz = NoteMaker.Create_Horn();//SampleVoice
 
     NoteMaker.Create_Tapered_Voice(voz, NoteMaker.OffsetTime, TimeStep, 0, 1.0, 3);
     NoteMaker.Create_Tapered_Voice(pvoz, NoteMaker.OffsetTime, TimeStep, 0, 1.0, 3);
-
+    NoteMaker.Create_Tapered_Voice(svoz, NoteMaker.OffsetTime, TimeStep, 0, 1.0, 3);
+    
+    GroupBox ChildGbx = new GroupBox();
+    ChildGbx.MyName = "ChildGbx";
+    int cnt = 0;
+    for (int iter = 0; iter < 2; iter++) {
+      ChildGbx.Add_SubSong(voz, (TimeStep * (double) cnt++) + NoteMaker.OffsetTime, 0, 1.0);
+      ChildGbx.Add_SubSong(pvoz, (TimeStep * (double) cnt++) + NoteMaker.OffsetTime, 0, 1.0);
+      ChildGbx.Add_SubSong(svoz, (TimeStep * (double) cnt++) + NoteMaker.OffsetTime, 0, 1.0);
+    }
+    
+    GroupBox MainGbx;
+    double MetaTimeStep = TimeStep * ((double) NumBeats);
+    MainGbx = Create_Group_Loop(ChildGbx, 3, MetaTimeStep);// was 6
+    MainGbx.MyName = "MainGbx";
+    GroupBox.Group_OffsetBox MainGobx;
+    MainGobx = MainGbx.Spawn_OffsetBox();
+    return MainGobx;
+  }
+  /* ********************************************************************************* */
+  public static GroupBox.Group_OffsetBox Create_Group_Loop(double TimeStep) {
+    int NumBeats = 6;
+    double Duration = 30;
+    
+    Voice voz, pvoz;
+    voz = new Voice();
+    pvoz = NoteMaker.Create_PluckVoice();//PluckVoice
+    if (true) {
+      Voice svoz0 = NoteMaker.Create_Horn();//SampleVoice
+      pvoz = svoz0;
+    }
+    
+    NoteMaker.Create_Tapered_Voice(voz, NoteMaker.OffsetTime, TimeStep, 0, 1.0, 3);
+    NoteMaker.Create_Tapered_Voice(pvoz, NoteMaker.OffsetTime, TimeStep, 0, 1.0, 3);
+    
     GroupBox ChildGbx = NoteMaker.Create_Note_Chain(pvoz, NumBeats, TimeStep);
     ChildGbx.MyName = "ChildGbx";
     
     ChildGbx.Add_SubSong(voz, TimeStep + OffsetTime, 0.0, 1.0);
-
+    
     String txt = null, txt2 = null;
     JsonParse.Node phrase2;
-
+    
     if (false) {// add horn 
       Voice svoz = NoteMaker.Create_Horn();//SampleVoice
       //svoz = NoteMaker.Generate_Voice(3);// whitenoise
@@ -540,18 +595,18 @@ public class NoteMaker {
     ISonglet note;
     OffsetBox obox;
     GroupBox grpbx = new GroupBox();
-
+    
     note = Create_Bent_Note(0, Duration, 0, Loudness);
-
+    
     obox = note.Spawn_OffsetBox();
     grpbx.Add_SubSong(obox, 0, 0, Loudness);// key note, needs no offset
 
     obox = note.Spawn_OffsetBox();
     grpbx.Add_SubSong(obox, 0, SemitoneFraction * KeyOffset0, Loudness);
-
+    
     obox = note.Spawn_OffsetBox();
     grpbx.Add_SubSong(obox, 0, SemitoneFraction * KeyOffset1, Loudness);
-
+    
     obox = grpbx.Spawn_OffsetBox();
     //obox.OctaveY = SemitoneFraction * Key;
     return obox;
