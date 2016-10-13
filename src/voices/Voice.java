@@ -626,6 +626,9 @@ public class Voice implements ISonglet, IDrawable {
     }
     /* ********************************************************************************* */
     @Override public void Render_To(double EndTime, Wave wave) {      // ready for test
+      if (this.InheritedMap.LoudnessFactor == 0.0) {// muted, so don't waste time rendering
+        return;
+      }
       VoicePoint Prev_Point = null;
       VoicePoint Next_Point = null;
       EndTime = this.MyOffsetBox.MapTime(EndTime);// EndTime is now time internal to voice's own coordinate system

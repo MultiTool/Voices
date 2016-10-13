@@ -20,6 +20,7 @@ public class GoLive implements Runnable, IDeletable {
   //double TimeIncrement = (500.0 / 1000.0);// milliseconds
   double CurrentTime = 0, FinalTime;
   Wave wave_render = new Wave();
+  double Current_Amp_Factor = 0.2;
   boolean KeepGoing;
   /* ********************************************************************************* */
   //public boolean IsRunning = false;
@@ -78,6 +79,7 @@ public class GoLive implements Runnable, IDeletable {
     RootPlayer.Compound(obx);
     RootPlayer.Start();
     RootPlayer.Skip_To(StartTime);
+    this.Current_Amp_Factor = 0.2;
 
     this.audio.Start();
     thread = new Thread(this, ThreadName + Globals.RandomGenerator.nextDouble());
@@ -111,6 +113,14 @@ public class GoLive implements Runnable, IDeletable {
     FinalTime = Math.max(this.CurrentTime, Time);
   }
   /* ********************************************************************************* */
+  void CheckMax() {// quiet the sound to keep it from clipping during live playback
+    double Amplitude = this.wave_render.GetMaxAmp();// to do: make this transition smoothly to each new de-amplification
+    if (this.Current_Amp_Factor * Amplitude > 1.0) {
+      this.Current_Amp_Factor = 1.0 / Amplitude;
+    }
+    this.wave_render.Amplify(this.Current_Amp_Factor);
+  }
+  /* ********************************************************************************* */
   @Override public void run() {
     while (this.NumRunning > 0) {// block until existing threads have finished
       System.out.println("Blocking on threads:" + this.NumRunning);
@@ -119,7 +129,7 @@ public class GoLive implements Runnable, IDeletable {
     while (this.CurrentTime < this.FinalTime && this.KeepGoing) {
       System.out.println("CurrentTime:" + CurrentTime + " KeepGoing:" + this.KeepGoing);
       this.RootPlayer.Render_To(CurrentTime, this.wave_render);
-      this.wave_render.Amplify(0.2);
+      this.CheckMax();
       audio.Feed(this.wave_render);
       if (this.MyCallback != null) {
         this.MyCallback.LivePlayerUpdate(this.CurrentTime, this.CurrentTime + this.TimeIncrement);
@@ -132,7 +142,7 @@ public class GoLive implements Runnable, IDeletable {
     }
     if (this.KeepGoing) {
       this.RootPlayer.Render_To(this.FinalTime, this.wave_render);// play last little bit, if any
-      this.wave_render.Amplify(0.2);
+      this.CheckMax();
       audio.Feed(this.wave_render);
     }
     this.stop();

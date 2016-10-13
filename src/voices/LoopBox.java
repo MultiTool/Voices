@@ -96,7 +96,8 @@ public class LoopBox implements ISonglet, IDrawable {
     this.MyProject = project;
   }
   /* ********************************************************************************* */
-  @Override public void SetMute(boolean Mute){}
+  @Override public void SetMute(boolean Mute) {
+  }
   /* ********************************************************************************* */
   @Override public int FreshnessTimeStamp_g() {// ISonglet
     return this.FreshnessTimeStamp;
@@ -316,6 +317,9 @@ public class LoopBox implements ISonglet, IDrawable {
     }
     /* ********************************************************************************* */
     @Override public void Render_To(double EndTime, Wave wave) {
+      if (this.InheritedMap.LoudnessFactor == 0.0) {// muted, so don't waste time rendering
+        return;
+      }
       EndTime = this.MyOffsetBox.MapTime(EndTime);// EndTime is now time internal to LoopBox's own coordinate system
       double UnMapped_Prev_Time = this.MyOffsetBox.UnMapTime(this.Prev_Time);// get start time in parent coordinates
       if (this.MySonglet.Content == null) {

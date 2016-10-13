@@ -142,20 +142,6 @@ public class GroupBox implements ISonglet, IDrawable {
     GroupPlayer.MyProject = this.MyProject;// inherit project
     return GroupPlayer;
   }
-  /* ************************************************************************************************************************ */
-  public int Tree_Search(double Time, int minloc, int maxloc) {// finds place where time would be inserted or replaced
-    int medloc;
-    while (minloc < maxloc) {
-      medloc = (minloc + maxloc) >> 1; // >>1 is same as div 2, only faster.
-      if (Time <= this.SubSongs.get(medloc).TimeX) {
-        maxloc = medloc;
-      } else {
-        minloc = medloc + 1;/* has to go through here to be found. */
-
-      }
-    }
-    return minloc;
-  }
   /* ********************************************************************************* */
   @Override public int Get_Sample_Count(int SampleRate) {
     return SampleRate * (int) this.Get_Duration();
@@ -468,6 +454,37 @@ public class GroupBox implements ISonglet, IDrawable {
     }
     return Double.POSITIVE_INFINITY;// infinite if not found
   }
+  /* ************************************************************************************************************************ */
+  public int Tree_Search(double Time, int minloc, int maxloc) {// finds place where time would be inserted or replaced
+    int medloc;
+    while (minloc < maxloc) {
+      medloc = (minloc + maxloc) >> 1; // >>1 is same as div 2, only faster.
+      if (Time <= this.SubSongs.get(medloc).TimeX) {
+        maxloc = medloc;
+      } else {
+        minloc = medloc + 1;/* has to go through here to be found. */
+
+      }
+    }
+    return minloc;
+  }
+  /* ********************************************************************************* */
+  public void Space_Evenly() {
+    int NumKids = this.SubSongs.size();
+    if (NumKids == 0) {
+      return;
+    }
+    int FinalKid = NumKids - 1;
+    OffsetBox obox = this.SubSongs.get(FinalKid);
+    double XLimit = obox.TimeX;
+    double Spacing = XLimit / NumKids;
+    double FractAlong;
+    for (int cnt = 0; cnt <= FinalKid; cnt++) {// do we want it to be  ---.---.---.  or  .---.---.  or  .---.---.---  ?
+      obox = this.SubSongs.get(cnt);
+      FractAlong = (((double) cnt) / (double) FinalKid);//  .---.---.  spacing
+      obox.TimeX = XLimit * FractAlong;
+    }
+  }
   /* ********************************************************************************* */
   @Override public boolean Create_Me() {// IDeletable
     return true;
@@ -594,6 +611,9 @@ public class GroupBox implements ISonglet, IDrawable {
     /* ********************************************************************************* */
     @Override public void Render_To(double EndTime, Wave wave) {
       if (this.IsFinished) {
+        return;
+      }
+      if (this.InheritedMap.LoudnessFactor == 0.0) {// muted, so don't waste time rendering
         return;
       }
       EndTime = this.MyOffsetBox.MapTime(EndTime);// EndTime is now time internal to GroupBox's own coordinate system

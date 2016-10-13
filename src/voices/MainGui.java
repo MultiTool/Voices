@@ -299,6 +299,21 @@ public class MainGui {
       }
     }
     /* ********************************************************************************* */
+    public void Space_Evenly() {
+      if (this.Query.Leaf != null) {
+        IDrawable.IMoveable Leaf = this.Query.Leaf;
+        if (Leaf instanceof Group_OffsetBox) {
+          System.out.println("MainGui Space_Evenly");
+          this.Query.Leaf = null;
+          Group_OffsetBox obx = (Group_OffsetBox) Leaf;// another cast! 
+          BigApp.MyThread.PleaseStop();
+          obx.Content.Space_Evenly();
+          this.repaint();
+        }
+      }
+    }
+    //()
+    /* ********************************************************************************* */
     public void InstantPlayback(double XLoc) {
       if (this.Query.Leaf != null) {
         IDrawable.IMoveable Leaf = this.Query.Leaf;
@@ -594,6 +609,8 @@ public class MainGui {
         dpnl.BreakFromHerd();
       } else if ((keycode == KeyEvent.VK_T) && CtrlPress) {
         dpnl.BreakFromHerd_Shallow();
+      } else if ((keycode == KeyEvent.VK_E) && CtrlPress) {
+        dpnl.Space_Evenly();
       } else if ((keycode == KeyEvent.VK_S) && CtrlPress) {// ctrl S means save
         this.PromptSaveFile();
       } else if ((keycode == KeyEvent.VK_O) && CtrlPress) {// ctrl O means open
