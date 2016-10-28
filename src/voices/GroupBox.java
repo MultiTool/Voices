@@ -185,10 +185,10 @@ public class GroupBox implements ISonglet, IDrawable {
     FillStroke = new BasicStroke(InnerLineThickness, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND);
     if (this.HighlightSpine) {
       ParentDC.gr.setColor(Color.yellow);
-      OutlineStroke = new BasicStroke(InnerLineThickness * OutlineSwell * 2.0f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND);
+      OutlineStroke = new BasicStroke(InnerLineThickness * 3.0f + OutlineSwell, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND);
     } else {
-      ParentDC.gr.setColor(Color.darkGray);
-      OutlineStroke = new BasicStroke(InnerLineThickness * OutlineSwell, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND);
+      ParentDC.gr.setColor(Color.black);
+      OutlineStroke = new BasicStroke(InnerLineThickness + OutlineSwell, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND);
     }
     //-----------
     ParentDC.gr.setStroke(OutlineStroke);// draw outline or glow of spine

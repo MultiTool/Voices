@@ -85,6 +85,65 @@ public class PluckVoice extends Voice {
     wave0.Normalize();
   }
   /* ********************************************************************************* */
+  public static double Normal_Curve(double XVal) {// create mask for low-pass filter
+    double result = 0;//e^(-((x^2)/2)) / sqrt(2*pi)
+    result = Math.pow(Math.E, (-((XVal * XVal) / 2.0)));
+    result /= Math.sqrt(2 * Math.PI);
+    return result;
+  }
+  /*
+   Do we do this by seconds or by samples?  pluck averages samples, which is arbitrary. 
+   seconds are huge, though. 
+   */
+  /* ********************************************************************************* */
+  public static double Normal_Curve_Shrink(double XVal, double ShrinkFactor) {// create scaled mask for low-pass filter
+    ShrinkFactor = ShrinkFactor / Math.sqrt(2 * Math.PI);// if ShrinkFactor parameter is 1, then curve is 1 unit.
+    return Normal_Curve(XVal * ShrinkFactor) * ShrinkFactor;
+  }
+  /* ********************************************************************************* */
+  public static double Normal_Curve_Grow(double XVal, double GrowthFactor) {// create scaled mask for low-pass filter
+    GrowthFactor = GrowthFactor * Math.sqrt(2 * Math.PI);// if GrowthFactor parameter is 1, then curve is 1 unit.
+    return Normal_Curve(XVal / GrowthFactor) / GrowthFactor;
+  }
+  /* ********************************************************************************* */
+  public static void Generate_Damper(double Width, double GrowthFactor, Wave result) {// create scaled mask for low-pass filter
+    int WidthInt = (int) Width;// under construction, not even thought out yet
+    /*
+     how much time is '1'? 
+     */
+    int Start = -WidthInt, Finish = WidthInt;
+    double XVal, Amp;
+    for (int cnt = Start; cnt < Finish; cnt++) {
+      XVal = cnt;
+      Amp = Normal_Curve_Grow(XVal, GrowthFactor);
+      result.Set(cnt, Amp);
+    }
+  }
+  /* ********************************************************************************* */
+  public static void Apply_Damper(Wave mask, int AudCenter, Wave audio) {// Apply normal curve low-pass damper.  Not ready or even fully thought out yet.
+    int AudLen = audio.NumSamples;// don't really do this line. The mask and the apply range have to be the same anyway.
+    int Radius = AudLen / 2;
+    int Start = AudCenter - Radius;
+    Start = Start < 0 ? Start + AudLen : Start;// if (Start < 0) { Start += len; }
+    int AudDex = Start;
+    int MaskDex = 0;
+    double Val, Sum = 0;
+    while (AudDex < AudLen) {
+      Val = mask.Get(MaskDex);
+      Sum += Val * audio.Get(AudDex);// weighted average
+      MaskDex++;
+      AudDex++;
+    }
+    AudDex = 0;// wrap around and start from beginning
+    while (AudDex < Start) {
+      Val = mask.Get(MaskDex);
+      Sum += Val * audio.Get(AudDex);// weighted average
+      MaskDex++;
+      AudDex++;
+    }
+    audio.Set(AudCenter, Sum);
+  }
+  /* ********************************************************************************* */
   @Override public PluckVoice_OffsetBox Spawn_OffsetBox() {// for compose time
     PluckVoice_OffsetBox lbox = new PluckVoice_OffsetBox();// Deliver an OffsetBox specific to this type of phrase.
     lbox.Attach_Songlet(this);
@@ -263,3 +322,33 @@ public class PluckVoice extends Voice {
     }
   }
 }
+/*
+
+ use normal curve for low pass filter 
+
+ e^(-((x^2)/2))/sqrt(2*pi)
+ max at 1.0/sqrt(2*pi)  =  0.3989422804
+ 1.0/2.506628274631000502415765284811  =  0.39894228040143267793994605993439 is middle max for this normal curve
+
+ integral is:
+ erf(25*2^(3/2)*sqrt(log(e)))/sqrt(log(e))
+ which approaches 1.000000000000000000000000000000000000000000000000000000000
+
+ the normal curve we need is e^(-((x^2)/2))/sqrt(2*pi)  it can be a weighted average. 
+ now we need to scale it for blur.  
+ multiply the height up to 1.0, while dividing the width by the same amount, to make the averging more local and less dampening of high freq.
+ so mult height by sqrt(2*pi) to normalize, div wdth by same. (rather mult X on input to shrink it, then mult Y by same after output.)
+ at a factor of sqrt(2*pi), lowpass is effectively disabled. 
+
+ http://introcs.cs.princeton.edu/java/21function/ErrorFunction.java.html
+
+ is sigmoid the erf? 
+ x / (1 + (x ^ 2.0) ^ (1.0 / 2.0))
+ apparently not, deriv of sigmoid is 1/(abs(x) + 1)^2
+
+ the ideal approach is to multiply each point by the integral (area) just under that point.
+ a cheat is to multiply each point by the height at just that point, times the timewidth of that sample. 
+ either way, then add all of the points together to get the weighted average.
+
+ so which is the 'default' dampening range?  1 sample?  1 second? 
+ */
