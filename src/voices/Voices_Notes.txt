@@ -665,19 +665,19 @@ SubRange: Let user draw box on screen to trigger play within range. - IMPORTANT
 CopyPaste: Highlight selected, add selected flag to all IMoveables (maybe ISonglets too?) - done
 CopyPaste: Prevent self-inclusion - done
 CopyPaste: Copy and paste - IMPORTANT - done?
-CopyPaste: Make Deep_Clone_Me use a hashtable and refcounts to preserve directed graph nodes. 
+CopyPaste: Make Deep_Clone_Me use a hashtable and refcounts to preserve directed graph nodes. - done
 CopyPaste: Vine spine click to select draggable? 
 MemLeaks: All IDeleteable have a global creation counter and a global deletion counter. 
 MemLeaks: Add refcounting for eventual serialization, IDeleteable, and C++ port. 
 LoopBox graphics - mayabe an arc, Ellipse2D.Double?  Or a very rounded rectangle behind each unit cell? Put handles on the rectangle and change Delay. 
 On load, zoom to object bounds. 
-SweepAnimation: Add moving cursor during play.  - IMPORTANT 
+(Someday) create a sample_voice type. http://soundbible.com/37-Chain-Saw.html - done
+Add ISerializable for saving and loading! - done
+SweepAnimation: Add moving cursor during play.  - IMPORTANT - doing
 SweepAnimation: Add 'excitement' double to drawing context, and animate drawings as we play. 
 SweepAnimation: Draw to buffer and draw buffer as a strip to main image, for cursor animation. 
 Customize colors for each songlet! 
 Widgets! SFGUI? 
-(Someday) create a sample_voice type. http://soundbible.com/37-Chain-Saw.html 
-Add ISerializable for saving and loading! 
 Undo/Redo?  probably need IClonable and or ICopyable, like ISerializable.  Clone invokes Copy, and copy just copies all guts. 
 Optimize voice polygon graphic clipping. 
 Control points of a songlet should only show up when the songlet is selected. 
@@ -686,7 +686,7 @@ FX box, with sigmoid clipping, reverb etc.
 Shallow ScaleX just for groups.
 AlignX too?
 Maybe a button menu for each selection.
-GoodSynth: Pluck for prettier sound.
+GoodSynth: Pluck for prettier sound. - done
 GoodSynth: Wave table.
 ScaleX: fix grab handle problem with scaled objects.
 Bug: Fix grabbing on scaled objects. 
