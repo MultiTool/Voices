@@ -26,8 +26,13 @@ public class GroupBox implements ISonglet, IDrawable {
   private int FreshnessTimeStamp;
   public String TraceText = "";// for debugging
   private int RefCount = 0;
+
+  // to do: These will belong to the Artist object after we code for that separation
   private boolean HighlightSpine = false;
   Color LineColor;
+  public static boolean UsingSplines = false;
+  int NumSubLines = 10;
+  Splines.PointX[] SplinePoints = new Splines.PointX[0];
   /* ********************************************************************************* */
   public GroupBox() {
     MyBounds = new CajaDelimitadora();
@@ -52,6 +57,15 @@ public class GroupBox implements ISonglet, IDrawable {
     obox.GetContent().Set_Project(this.MyProject);// child inherits project from me
     obox.MyParentSong = this;
     SubSongs.add(obox);
+
+    if (UsingSplines) {
+      int SplineSize = (this.SubSongs.size()) * NumSubLines + 1;
+      this.SplinePoints = new Splines.PointX[SplineSize];
+      for (int pcnt = 0; pcnt < this.SplinePoints.length; pcnt++) {
+        this.SplinePoints[pcnt] = new Splines.PointX();
+      }
+      Splines.Cubic_Spline_Boxes(this.SubSongs, NumSubLines, SplinePoints);
+    }
   }
   /* ********************************************************************************* */
   public void Remove_SubSong(OffsetBox obox) {// Remove a songlet from my list.
@@ -118,6 +132,13 @@ public class GroupBox implements ISonglet, IDrawable {
     metrics.MaxDuration = this.Duration;
   }
   /* ********************************************************************************* */
+  @Override public void Refresh_From_Beneath() {
+    System.out.println("Refresh_From_Beneath");
+    if (UsingSplines) {
+      Splines.Cubic_Spline_Boxes(this.SubSongs, NumSubLines, SplinePoints);
+    }
+  }
+  /* ********************************************************************************* */
   @Override public void Sort_Me() {// sorting by RealTime
     Collections.sort(this.SubSongs, new Comparator<OffsetBox>() {
       @Override public int compare(OffsetBox voice0, OffsetBox voice1) {
@@ -169,16 +190,14 @@ public class GroupBox implements ISonglet, IDrawable {
     this.HighlightSpine = Highlight;
   }
   /* ********************************************************************************* */
-  @Override public void Draw_Me(DrawingContext ParentDC) {// IDrawable
-    OffsetBox ChildOffsetBox;
-    int len = this.SubSongs.size();
-
-    int StartDex = 0;// not sure how to get the first within clip box without just iterating from 0. treesearch?
-    int EndDex = len - 1;// inclusive
-
+  public void Draw_Lines(DrawingContext ParentDC, int StartDex, int EndDex) {
     // Draw Group spine
+    if (this.SplinePoints == null) {
+      return;
+    }
+    EndDex = this.SplinePoints.length - 1;// inclusive
     Point2D.Double pntprev, pnt;
-    Stroke oldStroke = ParentDC.gr.getStroke();
+    Stroke OldStroke = ParentDC.gr.getStroke();
     BasicStroke OutlineStroke, FillStroke;
     float LineThickness = 10.0f, OutlineSwell = 1.5f;
     float InnerLineThickness = (1.0f / ParentDC.RecurseDepth) * LineThickness; // thinner lines for more distal sub-branches
@@ -190,16 +209,17 @@ public class GroupBox implements ISonglet, IDrawable {
       ParentDC.gr.setColor(Color.black);
       OutlineStroke = new BasicStroke(InnerLineThickness + OutlineSwell, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND);
     }
+    Splines.PointX SplinePoint;
     //-----------
     ParentDC.gr.setStroke(OutlineStroke);// draw outline or glow of spine
     pntprev = ParentDC.To_Screen(0, 0);
     int pcnt = StartDex;
     while (pcnt <= EndDex) {
-      ChildOffsetBox = this.SubSongs.get(pcnt);
-      pnt = ParentDC.To_Screen(ChildOffsetBox.TimeX, ChildOffsetBox.OctaveY);
+      SplinePoint = this.SplinePoints[pcnt];
+      pnt = ParentDC.To_Screen(SplinePoint.x, SplinePoint.y);
       ParentDC.gr.drawLine((int) pntprev.x, (int) pntprev.y, (int) pnt.x, (int) pnt.y);
       pntprev = pnt;
-      if (ParentDC.ClipBounds.Max.x < ChildOffsetBox.TimeX) {// break from loop if subsong starts after MaxX. 
+      if (ParentDC.ClipBounds.Max.x < SplinePoint.x) {// break from loop if subsong starts after MaxX. 
         EndDex = pcnt;
         break;
       }
@@ -211,15 +231,70 @@ public class GroupBox implements ISonglet, IDrawable {
     pntprev = ParentDC.To_Screen(0, 0);
     pcnt = StartDex;
     while (pcnt <= EndDex) {
-      ChildOffsetBox = this.SubSongs.get(pcnt);
-      pnt = ParentDC.To_Screen(ChildOffsetBox.TimeX, ChildOffsetBox.OctaveY);
+      SplinePoint = this.SplinePoints[pcnt];
+      pnt = ParentDC.To_Screen(SplinePoint.x, SplinePoint.y);
       ParentDC.gr.drawLine((int) pntprev.x, (int) pntprev.y, (int) pnt.x, (int) pnt.y);
       pntprev = pnt;
       pcnt++;
     }
     //-----------
-    ParentDC.gr.setStroke(oldStroke);// restore line stroke
+    ParentDC.gr.setStroke(OldStroke);// restore line stroke
+  }
+  /* ********************************************************************************* */
+  @Override public void Draw_Me(DrawingContext ParentDC) {// IDrawable
+    OffsetBox ChildOffsetBox;
+    int len = this.SubSongs.size();
 
+    int StartDex = 0;// not sure how to get the first within clip box without just iterating from 0. treesearch?
+    int EndDex = len - 1;// inclusive
+    int pcnt;
+    if (UsingSplines) {
+      Draw_Lines(ParentDC, StartDex, EndDex);
+    } else {
+      // Draw Group spine
+      Point2D.Double pntprev, pnt;
+      Stroke OldStroke = ParentDC.gr.getStroke();
+      BasicStroke OutlineStroke, FillStroke;
+      float LineThickness = 10.0f, OutlineSwell = 1.5f;
+      float InnerLineThickness = (1.0f / ParentDC.RecurseDepth) * LineThickness; // thinner lines for more distal sub-branches
+      FillStroke = new BasicStroke(InnerLineThickness, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND);
+      if (this.HighlightSpine) {
+        ParentDC.gr.setColor(Color.yellow);
+        OutlineStroke = new BasicStroke(InnerLineThickness * 3.0f + OutlineSwell, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND);
+      } else {
+        ParentDC.gr.setColor(Color.black);
+        OutlineStroke = new BasicStroke(InnerLineThickness + OutlineSwell, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND);
+      }
+      //-----------
+      ParentDC.gr.setStroke(OutlineStroke);// draw outline or glow of spine
+      pntprev = ParentDC.To_Screen(0, 0);
+      pcnt = StartDex;
+      while (pcnt <= EndDex) {
+        ChildOffsetBox = this.SubSongs.get(pcnt);
+        pnt = ParentDC.To_Screen(ChildOffsetBox.TimeX, ChildOffsetBox.OctaveY);
+        ParentDC.gr.drawLine((int) pntprev.x, (int) pntprev.y, (int) pnt.x, (int) pnt.y);
+        pntprev = pnt;
+        if (ParentDC.ClipBounds.Max.x < ChildOffsetBox.TimeX) {// break from loop if subsong starts after MaxX. 
+          EndDex = pcnt;
+          break;
+        }
+        pcnt++;
+      }
+      //-----------
+      ParentDC.gr.setColor(this.LineColor);
+      ParentDC.gr.setStroke(FillStroke);// draw inner color of spine
+      pntprev = ParentDC.To_Screen(0, 0);
+      pcnt = StartDex;
+      while (pcnt <= EndDex) {
+        ChildOffsetBox = this.SubSongs.get(pcnt);
+        pnt = ParentDC.To_Screen(ChildOffsetBox.TimeX, ChildOffsetBox.OctaveY);
+        ParentDC.gr.drawLine((int) pntprev.x, (int) pntprev.y, (int) pnt.x, (int) pnt.y);
+        pntprev = pnt;
+        pcnt++;
+      }
+      //-----------
+      ParentDC.gr.setStroke(OldStroke);// restore line stroke
+    }
     // Draw children
     for (pcnt = StartDex; pcnt <= EndDex; pcnt++) {
       ChildOffsetBox = this.SubSongs.get(pcnt);
@@ -413,6 +488,36 @@ public class GroupBox implements ISonglet, IDrawable {
       YCross = LineY0 + (PointXOffset * Slope);
     }
     return YCross;
+  }
+  /* ********************************************************************************* */
+  public double HitsMyVineSpline(double XPnt, double YPnt) {// work in progress for drag and drop support
+    double Limit = 0.1;// octaves
+    int len = this.SplinePoints.length;
+    Splines.PointX OBox, ClosestPoint = null;
+    double XPrev = 0, YPrev = 0, YCross, YDist, Dist;
+    Splines.PointX LastBox = this.SplinePoints[len - 1];
+    Point.Double Intersection = new Point.Double();
+    if (0.0 <= XPnt && XPnt <= LastBox.x) {// or this.MyBounds.Max.x) {
+//      int FoundDex = Tree_Search(XPnt - Limit, 0, len);
+      int FoundDex = Tree_Search(XPnt, 0, len);
+      if (FoundDex == 0) {
+        XPrev = YPrev = 0;
+      } else {
+        Splines.PointX PrevBox = this.SplinePoints[FoundDex - 1];
+        XPrev = PrevBox.x;
+        YPrev = PrevBox.y;
+      }
+      // to do: need condition if FoundDex is greater than len. beyond-end insertion would be nice.
+      OBox = this.SplinePoints[FoundDex];
+      LineClosestPoint(XPrev, YPrev, OBox.x, OBox.y, XPnt, YPnt, Intersection);
+      Dist = Math.hypot(XPnt - Intersection.x, YPnt - Intersection.y);
+      System.out.println("Dist:" + Dist + ", Intersection.x:" + Intersection.x + ", Intersection.y:" + Intersection.y);
+      if (Dist < Limit) {// then we found one
+        ClosestPoint = this.SplinePoints[FoundDex];
+        return Dist;
+      }
+    }
+    return Double.POSITIVE_INFINITY;// infinite if not found
   }
   /* ********************************************************************************* */
   public double HitsMyVine(double XPnt, double YPnt) {// work in progress for drag and drop support
@@ -719,6 +824,7 @@ public class GroupBox implements ISonglet, IDrawable {
         this.ParentPoint.ScaleX = XLoc / GetUnitX();
       }
       // ignore YLoc for now
+      this.ParentPoint.MyParentSong.Refresh_From_Beneath();
     }
     @Override public boolean HitsMe(double XLoc, double YLoc) {// IDrawable.IMoveable
       System.out.print("** ScaleXHandle HitsMe:");

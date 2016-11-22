@@ -12,6 +12,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 import javax.swing.filechooser.FileNameExtensionFilter;
 //import voices.VoiceBase.Point;
 
@@ -28,6 +30,7 @@ public class Voices {
    */
   /* ********************************************************************************* */
   public static void main(String[] args) {
+
     RegisterFactories();
     switch (4) {
     case 0: {
@@ -60,6 +63,9 @@ public class Voices {
       Test_Synthesis();
       break;
     }
+    case 6:
+      BenchTest();
+      break;
     }
   }
   /* ********************************************************************************* */
@@ -72,6 +78,26 @@ public class Voices {
     Globals.FactoryLUT.put(GroupBox.Group_OffsetBox.ObjectTypeName, new GroupBox.Group_OffsetBox.Factory());
     Globals.FactoryLUT.put(LoopBox.Loop_OffsetBox.ObjectTypeName, new LoopBox.Loop_OffsetBox.Factory());
     //Globals.FactoryLUT.put("OffsetBox", new OffsetBox.Factory());
+  }
+  /* ********************************************************************************* */
+  public static void BenchTest() {
+    Date dt = new Date();
+    Calendar cal = Calendar.getInstance();
+    int iter = 100000000;
+    double res = 0;
+    long start, finish;
+    start = System.currentTimeMillis();
+    for (double cnt = 0; cnt < iter; cnt++) {
+      res = Math.pow(cnt, 2);
+    }
+    finish = System.currentTimeMillis();
+    System.out.println(res + " time:" + (finish - start));
+    start = System.currentTimeMillis();
+    for (double cnt = 0; cnt < iter; cnt++) {
+      res = cnt * cnt;
+    }
+    finish = System.currentTimeMillis();
+    System.out.println(res + " time:" + (finish - start));
   }
   /* ********************************************************************************* */
   public static AudProject Test_Synthesis() {

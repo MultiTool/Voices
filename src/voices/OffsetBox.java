@@ -203,6 +203,7 @@ public class OffsetBox extends MonkeyBox { //implements IDrawable.IMoveable, IDe
       this.TimeX = XLoc;
     }
     this.OctaveY = YLoc;
+    this.MyParentSong.Refresh_From_Beneath();
   }
   @Override public boolean HitsMe(double XLoc, double YLoc) {// IDrawable.IMoveable
     System.out.print("HitsMe:");

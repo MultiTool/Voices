@@ -63,7 +63,11 @@ public class PluckVoice extends Voice {
     Wave pattern = new Wave();
     pattern.Init(SamplesPerCycle, Globals.SampleRate);
     NoteMaker.Generate_WhiteNoise(pattern, SamplesPerCycle, Globals.SampleRate);
-    NoteMaker.Synth_Pluck_Decay(wave0, pattern, Duration);
+    if (true) {
+      NoteMaker.Synth_Pluck_Decay(wave0, pattern, Duration);
+    } else {
+      NoteMaker.Repeat_Pattern(wave0, pattern, Duration);
+    }
     wave0.Normalize();
     return wave0;
   }

@@ -84,6 +84,9 @@ public class LoopBox implements ISonglet, IDrawable {
     metrics.MaxDuration = this.MyDuration;
   }
   /* ********************************************************************************* */
+  @Override public void Refresh_From_Beneath() {
+  }
+  /* ********************************************************************************* */
   @Override public void Sort_Me() {
     this.Content.Sort_Me();// not really the plan, but LoopBox doesn't have anything else to sort so why not
   }
@@ -596,6 +599,7 @@ public class LoopBox implements ISonglet, IDrawable {
       if (false) {// maybe we don't really need to save Delay as part of our child's obox. 
         this.ContentLayer.MoveTo(TempDelay, YLoc);
       }
+      this.MyParentSong.Refresh_From_Beneath();
     }
     /* ********************************************************************************* */
     @Override public Ghost_OffsetBox Clone_Me() {// ICloneable always override this thusly

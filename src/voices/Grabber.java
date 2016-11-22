@@ -134,6 +134,20 @@ public class Grabber { // to do: rename this class to Grabber
     }
   }
   /* ********************************************************************************* */
+  public void UnMapThroughStack(double XLoc, double YLoc, Point2D.Double results) {
+    int FinalLoc = this.Best_Stack.size() - 1;
+    Point2D.Double pntfrom = new Point2D.Double(), pntto = new Point2D.Double();
+    pntfrom.setLocation(XLoc, YLoc);
+    pntto.setLocation(pntfrom);// in case of no mapping at all, default to original coordinates
+    StackItem si;
+    for (int cnt = FinalLoc; cnt >= 0; cnt--) {
+      si = this.Best_Stack.get(cnt);
+      si.OBox.UnMap(pntfrom, pntto);
+      pntfrom.setLocation(pntto);
+    }
+    results.setLocation(pntto);
+  }
+  /* ********************************************************************************* */
   public void MapThroughStack(double XLoc, double YLoc, Point2D.Double results) {
     int len = this.Best_Stack.size();
     if (false) {// less code but maybe less efficient too
@@ -252,7 +266,12 @@ public class Grabber { // to do: rename this class to Grabber
           GroupBox gbx = (GroupBox) songlet;// other cast!
           Point.Double results = new Point.Double();
           obx.MapTo(this.CurrentContext.Loc.x, this.CurrentContext.Loc.y, results);// we're hitting the songlet, not its offsetbox, so we have to map to obox child coordinates.
-          double FoundDistance = gbx.HitsMyVine(results.x, results.y);// WIP
+          double FoundDistance;
+          if (false && GroupBox.UsingSplines) {
+            FoundDistance = gbx.HitsMyVineSpline(results.x, results.y);// WIP 
+          } else {
+            FoundDistance = gbx.HitsMyVine(results.x, results.y);// WIP
+          }
 //          if ((FoundDistance < this.ClosestDistance) && this.Stack_Depth_Best <= this.Stack_Depth) {// prefer the most distal
           //if ((FoundDistance < this.ClosestDistance) || ((FoundDistance == this.ClosestDistance) && this.Stack_Depth_Best <= this.Stack_Depth)) {// prefer the most distal
           if (FoundDistance < this.ClosestDistance) {// prefer the closest

@@ -20,6 +20,8 @@ public interface ISonglet extends IDrawable, IDeletable, ITextable {// Cancionit
   /* ********************************************************************************* */
   public void Update_Guts(MetricsPacket metrics);
   /* ********************************************************************************* */
+  public void Refresh_From_Beneath();
+  /* ********************************************************************************* */
   public void Sort_Me();
   /* ********************************************************************************* */
   public AudProject Get_Project();

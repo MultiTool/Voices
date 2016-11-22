@@ -135,6 +135,8 @@ public class Voice implements ISonglet, IDrawable {
     metrics.MaxDuration = this.Get_Duration();
   }
   /* ********************************************************************************* */
+  @Override public void Refresh_From_Beneath(){}
+  /* ********************************************************************************* */
   @Override public void Sort_Me() {// sorting by TimeX
     Collections.sort(this.CPoints, new Comparator<VoicePoint>() {
       @Override public int compare(VoicePoint note0, VoicePoint note1) {

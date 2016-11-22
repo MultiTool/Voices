@@ -68,6 +68,11 @@ public class MonkeyBox implements IDrawable.IMoveable, IDeletable, ITextable {//
     ScaleX = ScaleY = 1.0;
   }
   /* ********************************************************************************* */
+  public Splines.PointX Spawn_PointX() {// #kludgey, this is a bad hack
+    Splines.PointX pnt = new Splines.PointX(TimeX, OctaveY);
+    return pnt;
+  }
+  /* ********************************************************************************* */
   public double Get_Max_Amplitude() {
     return this.LoudnessFactor;
   }
@@ -205,6 +210,7 @@ public class MonkeyBox implements IDrawable.IMoveable, IDeletable, ITextable {//
       this.TimeX = XLoc;
     }
     this.OctaveY = YLoc;
+    this.MyParentSong.Refresh_From_Beneath();
   }
   @Override public boolean HitsMe(double XLoc, double YLoc) {// IDrawable.IMoveable
     System.out.print("HitsMe:");
@@ -251,7 +257,7 @@ public class MonkeyBox implements IDrawable.IMoveable, IDeletable, ITextable {//
     HashMap<String, JsonParse.Node> Fields = phrase.ChildrenHash;
     this.TimeX = Double.parseDouble(IFactory.Utils.GetField(Fields, MonkeyBox.TimeXName, "0"));
     this.OctaveY = Double.parseDouble(IFactory.Utils.GetField(Fields, MonkeyBox.OctaveYName, "0"));
-    JsonParse.Node ph = Fields.get( MonkeyBox.OctaveYName);
+    JsonParse.Node ph = Fields.get(MonkeyBox.OctaveYName);
     this.LoudnessFactor = Double.parseDouble(IFactory.Utils.GetField(Fields, MonkeyBox.LoudnessFactorName, "1.0"));
     this.ScaleX = Double.parseDouble(IFactory.Utils.GetField(Fields, MonkeyBox.ScaleXName, "1.0"));
     this.ScaleY = Double.parseDouble(IFactory.Utils.GetField(Fields, MonkeyBox.ScaleYName, "1.0"));

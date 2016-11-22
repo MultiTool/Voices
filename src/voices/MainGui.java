@@ -112,6 +112,7 @@ public class MainGui {
     Grabber Query;
     Grabber.DestinationGrabber DestQuery;
     int ScreenMouseX = 0, ScreenMouseY = 0;
+    double MouseOffsetX = 0, MouseOffsetY = 0;
     //public IDrawable.IMoveable Floater = null;// copy we are dragging around (in hover mode, no mouse buttons) 
     Point2D.Double results = new Point2D.Double();// used in multiple places as a return parameter for mapping
     /* ********************************************************************************* */
@@ -190,17 +191,18 @@ public class MainGui {
       }
     }
     /* ********************************************************************************* */
-    public void DropOnTarget() {
+    public OffsetBox DropOnTarget() {
       IDrawable.IMoveable floater = this.GetFloater();
+      OffsetBox obox = null;
       if (floater != null && floater instanceof OffsetBox) {
-        OffsetBox obox = (OffsetBox) floater;
         if (this.DestQuery.PossibleDestination != null) {
+          obox = (OffsetBox) floater;
           this.DestQuery.MapThroughStack(obox.TimeX, obox.OctaveY, this.MyProject.AudioRoot, results);// Map new location to destination
           if (true) {// The destination is not the offsetbox, but instead the songlet that offsetbox points to. So we must map one level deeper. 
             OffsetBox UltimaCaja = (OffsetBox) this.DestQuery.Leaf;// another cast! 
             UltimaCaja.MapTo(results.x, results.y, results);
           }
-          this.DestQuery.Floater = null;
+          this.DestQuery.Floater = null;// reset
           obox.TimeX = results.x;
           obox.OctaveY = results.y;
           this.DestQuery.PossibleDestination.Add_SubSong(obox);
@@ -209,6 +211,7 @@ public class MainGui {
           this.repaint();
         }
       }
+      return obox;
     }
     /* ********************************************************************************* */
     public IDrawable.IMoveable GetFloater() {
@@ -377,6 +380,9 @@ public class MainGui {
       super.paintComponent(g);
       Graphics2D g2d = (Graphics2D) g;
       Draw_Me(g2d);// redrawing everything is overkill for every little change or move. to do: optimize this
+      if (false) {
+        Splines.Test(g2d);
+      }
     }
     /* ********************************************************************************* */
     @Override public void mouseDragged(MouseEvent me) {
@@ -384,7 +390,10 @@ public class MainGui {
         {
           BigApp.MyThread.PleaseStop();
         }
-        this.Query.MapThroughStack(me.getX(), me.getY(), results);
+        double XLoc = me.getX();
+        double YLoc = me.getY();
+        //MouseOffsetX = MouseOffsetY = 0;
+        this.Query.MapThroughStack(XLoc + MouseOffsetX, YLoc + MouseOffsetY, results);
         this.Query.Leaf.MoveTo(results.x, results.y);
         this.repaint();
       }
@@ -404,28 +413,38 @@ public class MainGui {
     @Override public void mousePressed(MouseEvent me) {
       if (this.Query.Leaf != null) {
         this.Query.Leaf.SetSelected(false);
+        this.Query.Leaf = null;
       }
       if (this.GetFloater() != null) {// need to Delete_Me these
         this.DropOnTarget();
         this.SetFloater(null);
         this.HighlightTarget(false);
+        //this.repaint();return;// to do: make the just-dropped copy the currently selected leaf, without a new gofishing search.
       }
-      this.Query.AddFirstBox(this.MyProject.GraphicRoot, me.getX(), me.getY());
-      //this.MyProject.GraphicRoot.GoFishing(this.Query);
-      // this is really ugly.  #kludgey
-      this.MyProject.GraphicRoot.Content.ContentOBox.GoFishing(Query);// call this on graphic songlet's child obox. 
-      this.Query.DecrementStack();
-      if (this.Query.Leaf != null) {
-        this.Query.Leaf.SetSelected(true);
-        //this.repaint();
+      {
+        {// go fishing
+          this.Query.AddFirstBox(this.MyProject.GraphicRoot, me.getX(), me.getY());
+          //this.MyProject.GraphicRoot.GoFishing(this.Query);
+          // this is really ugly.  #kludgey
+          this.MyProject.GraphicRoot.Content.ContentOBox.GoFishing(Query);// call this on graphic songlet's child obox. 
+          this.Query.DecrementStack();
+        }
+        if (this.Query.Leaf != null) {
+          this.Query.Leaf.SetSelected(true);
+          if (this.Query.Leaf instanceof MonkeyBox) {// drag handles by wherever we clicked them, by the edge or whatever, not just by their centers.
+            MonkeyBox leafbox = (MonkeyBox) this.Query.Leaf;// another cast!
+            this.Query.UnMapThroughStack(leafbox.TimeX, leafbox.OctaveY, results);
+            MouseOffsetX = results.x - me.getX();
+            MouseOffsetY = results.y - me.getY();
+          } else {// special case for loudness handles
+            MouseOffsetX = MouseOffsetY = 0;
+          }
+        }
       }
       this.repaint();
     }
     @Override public void mouseReleased(MouseEvent me) {
       if (this.Query.Leaf != null) {
-        if (false) {// disable to make selected persistent, for copy paste, del etc. 
-          this.Query.Leaf.SetSelected(false);
-        }
         this.MyProject.Update_Guts();
         this.MyProject.GraphicRoot.UpdateBoundingBox();
         this.InstantPlayback(me.getX());

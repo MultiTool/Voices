@@ -226,6 +226,9 @@ public class GraphicBox implements IDrawable, ISonglet, IDeletable {//
   @Override public void Update_Guts(MetricsPacket metrics) {
     throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
   }
+  @Override public void Refresh_From_Beneath() {
+  }
+  /* ********************************************************************************* */
   @Override public void Sort_Me() {
     throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
   }
@@ -236,7 +239,8 @@ public class GraphicBox implements IDrawable, ISonglet, IDeletable {//
     throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
   }
   /* ********************************************************************************* */
-  @Override public void SetMute(boolean Mute){}
+  @Override public void SetMute(boolean Mute) {
+  }
   /* ********************************************************************************* */
   @Override public int FreshnessTimeStamp_g() {// ISonglet
     return this.FreshnessTimeStamp;
@@ -297,6 +301,7 @@ public class GraphicBox implements IDrawable, ISonglet, IDeletable {//
       // if (XLoc >= 0) {// don't go backward in time
       this.TimeX = XLoc;
       this.OctaveY = YLoc;
+      this.MyParentSong.Refresh_From_Beneath();
     }
     /* ********************************************************************************* */
     @Override public Graphic_OffsetBox Clone_Me() {// ICloneable always override this thusly
