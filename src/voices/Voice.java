@@ -11,7 +11,7 @@ import java.util.HashMap;
  *
  * @author MultiTool
  */
-public class Voice implements ISonglet, IDrawable {
+public class Voice implements ISonglet, IDrawable, ISonglet.IContainer {
   // collection of control points, each one having a pitch and a volume. rendering morphs from one cp to another. 
   public ArrayList<VoicePoint> CPoints = new ArrayList<VoicePoint>();
   public static String CPointsName = "ControlPoints";// for serialization
@@ -85,14 +85,14 @@ public class Voice implements ISonglet, IDrawable {
     return minloc;
   }
   /* ********************************************************************************* */
-  @Override public int Get_Sample_Count(int SampleRate) {
-    int len = this.CPoints.size();
-    VoicePoint First_Point = this.CPoints.get(0);
-    VoicePoint Final_Point = this.CPoints.get(len - 1);
-    double TimeDiff = Final_Point.TimeX - First_Point.TimeX;
-    return (int) (TimeDiff * SampleRate);
-    // return (int) (Final_Point.TimeX * SampleRate);
-  }
+//  @Override public int Get_Sample_Count(int SampleRate) {
+//    int len = this.CPoints.size();
+//    VoicePoint First_Point = this.CPoints.get(0);
+//    VoicePoint Final_Point = this.CPoints.get(len - 1);
+//    double TimeDiff = Final_Point.TimeX - First_Point.TimeX;
+//    return (int) (TimeDiff * SampleRate);
+//    // return (int) (Final_Point.TimeX * SampleRate);
+//  }
   /* ********************************************************************************* */
   @Override public double Get_Duration() {
     int len = this.CPoints.size();
@@ -103,9 +103,9 @@ public class Voice implements ISonglet, IDrawable {
     return Final_Point.TimeX + this.ReverbDelay;
   }
   /* ********************************************************************************* */
-  @Override public double Update_Durations() {
-    return this.Get_Duration();// this is not a container, so just return what we already know
-  }
+//  @Override public double Update_Durations() {
+//    return this.Get_Duration();// this is not a container, so just return what we already know
+//  }
   /* ********************************************************************************* */
   @Override public double Get_Max_Amplitude() {
     return this.MaxAmplitude;
@@ -135,9 +135,13 @@ public class Voice implements ISonglet, IDrawable {
     metrics.MaxDuration = this.Get_Duration();
   }
   /* ********************************************************************************* */
-  @Override public void Refresh_From_Beneath(){}
+  @Override public void Refresh_Me_From_Beneath(IDrawable.IMoveable mbox){}
   /* ********************************************************************************* */
-  @Override public void Sort_Me() {// sorting by TimeX
+  @Override public void Remove_SubNode(MonkeyBox obox) {// Remove a songlet from my list.
+    this.CPoints.remove(obox);
+  }
+  /* ********************************************************************************* */
+  public void Sort_Me() {// @Override // sorting by TimeX
     Collections.sort(this.CPoints, new Comparator<VoicePoint>() {
       @Override public int compare(VoicePoint note0, VoicePoint note1) {
         return Double.compare(note0.TimeX, note1.TimeX);
@@ -145,22 +149,12 @@ public class Voice implements ISonglet, IDrawable {
     });
   }
   /* ********************************************************************************* */
-  @Override public AudProject Get_Project() {
-    return this.MyProject;
-  }
+//  @Override public AudProject Get_Project() {
+//    return this.MyProject;
+//  }
   /* ********************************************************************************* */
   @Override public void Set_Project(AudProject project) {
     this.MyProject = project;
-  }
-  /* ********************************************************************************* */
-  @Override public void SetMute(boolean Mute) {
-  }
-  /* ********************************************************************************* */
-  @Override public int FreshnessTimeStamp_g() {// ISonglet
-    return this.FreshnessTimeStamp;
-  }
-  @Override public void FreshnessTimeStamp_s(int TimeStampNew) {// ISonglet
-    this.FreshnessTimeStamp = TimeStampNew;
   }
   /* ********************************************************************************* */
   public void Recalc_Line_SubTime() {
@@ -314,7 +308,7 @@ public class Voice implements ISonglet, IDrawable {
   /* ********************************************************************************* */
   @Override public void GoFishing(Grabber Scoop) {// IDrawable
     System.out.print(" Voice GoFishing: ");
-    if (Scoop.CurrentContext.SearchBounds.Intersects(MyBounds)) {
+    if (Scoop.Intersects(MyBounds)) {
       int len = this.CPoints.size();
       VoicePoint pnt;
       for (int pcnt = 0; pcnt < len; pcnt++) {

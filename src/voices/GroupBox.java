@@ -15,7 +15,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  *
  * @author MultiTool
  */
-public class GroupBox implements ISonglet, IDrawable {
+public class GroupBox implements ISonglet, IDrawable, ISonglet.IContainer {
   public ArrayList<OffsetBox> SubSongs = new ArrayList<OffsetBox>();
   public static String SubSongsName = "SubSongs";
   public double Duration = 0.0;
@@ -30,9 +30,9 @@ public class GroupBox implements ISonglet, IDrawable {
   // to do: These will belong to the Artist object after we code for that separation
   private boolean HighlightSpine = false;
   Color LineColor;
-  public static boolean UsingSplines = false;
+  public static boolean UsingSplines = true;
   int NumSubLines = 10;
-  Splines.PointX[] SplinePoints = new Splines.PointX[0];
+  Globals.PointX[] SplinePoints = new Globals.PointX[0];
   /* ********************************************************************************* */
   public GroupBox() {
     MyBounds = new CajaDelimitadora();
@@ -41,7 +41,7 @@ public class GroupBox implements ISonglet, IDrawable {
   }
   /* ********************************************************************************* */
   public OffsetBox Add_SubSong(ISonglet songlet, double TimeOffset, double OctaveOffset, double LoudnessFactor) {
-    OffsetBox obox = songlet.Spawn_OffsetBox();
+    OffsetBox obox = songlet.Spawn_OffsetBox();// this Add_SubSong is only used by notemaker
     this.Add_SubSong(obox, TimeOffset, OctaveOffset, LoudnessFactor);
     return obox;
   }
@@ -55,21 +55,32 @@ public class GroupBox implements ISonglet, IDrawable {
   /* ********************************************************************************* */
   public void Add_SubSong(OffsetBox obox) {// Add a songlet with its offsetbox already created and filled out.
     obox.GetContent().Set_Project(this.MyProject);// child inherits project from me
-    obox.MyParentSong = this;
-    SubSongs.add(obox);
-
-    if (UsingSplines) {
-      int SplineSize = (this.SubSongs.size()) * NumSubLines + 1;
-      this.SplinePoints = new Splines.PointX[SplineSize];
-      for (int pcnt = 0; pcnt < this.SplinePoints.length; pcnt++) {
-        this.SplinePoints[pcnt] = new Splines.PointX();
-      }
-      Splines.Cubic_Spline_Boxes(this.SubSongs, NumSubLines, SplinePoints);
-    }
+    obox.MyParentSong = this;// this is the only Add_SubSong that is publicly used outside of notemaker, by gui
+    int dex = this.Tree_Search(obox.TimeX, 0, SubSongs.size());
+    SubSongs.add(dex, obox);
+    //this.Sort_Me();// overkill in the case we add a bunch of subsongs in a loop. should only sort once at end of loop. 
+    Refresh_Splines();// maybe sort_me and refresh_splines should be in update_guts instead? 
   }
   /* ********************************************************************************* */
   public void Remove_SubSong(OffsetBox obox) {// Remove a songlet from my list.
     SubSongs.remove(obox);
+    Refresh_Splines();
+  }
+  /* ********************************************************************************* */
+  @Override public void Remove_SubNode(MonkeyBox obox) {// Remove a songlet from my list.
+    SubSongs.remove(obox);
+    Refresh_Splines();
+  }
+  /* ********************************************************************************* */
+  public void Refresh_Splines() {
+    if (UsingSplines) {
+      int SplineSize = (this.SubSongs.size()) * NumSubLines + 1;
+      this.SplinePoints = new Globals.PointX[SplineSize];
+      for (int pcnt = 0; pcnt < SplineSize; pcnt++) {
+        this.SplinePoints[pcnt] = new Globals.PointX();
+      }
+      Splines.Cubic_Spline_Boxes(this.SubSongs, NumSubLines, this.SplinePoints);
+    }
   }
   /* ********************************************************************************* */
   @Override public double Get_Duration() {
@@ -92,26 +103,26 @@ public class GroupBox implements ISonglet, IDrawable {
     this.MaxAmplitude = MaxAmp;
   }
   /* ********************************************************************************* */
-  @Override public double Update_Durations() {
-    double MaxDuration = 0.0;
-    double DurBuf = 0.0;
-    int NumSubSongs = this.SubSongs.size();
-    for (int cnt = 0; cnt < NumSubSongs; cnt++) {
-      OffsetBox ob = this.SubSongs.get(cnt);
-      ISonglet child = ob.GetContent();
-      //if (MaxDuration < (DurBuf = (ob.UnMapTime(vb.Update_Durations())))) {
-      if (MaxDuration < (DurBuf = (ob.TimeX + child.Update_Durations()))) {
-        MaxDuration = DurBuf;
-      }
-    }
-    this.Duration = MaxDuration;
-    return MaxDuration;
-  }
+//  @Override public double Update_Durations() {
+//    double MaxDuration = 0.0;
+//    double DurBuf = 0.0;
+//    int NumSubSongs = this.SubSongs.size();
+//    for (int cnt = 0; cnt < NumSubSongs; cnt++) {
+//      OffsetBox ob = this.SubSongs.get(cnt);
+//      ISonglet child = ob.GetContent();
+//      //if (MaxDuration < (DurBuf = (ob.UnMapTime(vb.Update_Durations())))) {
+//      if (MaxDuration < (DurBuf = (ob.TimeX + child.Update_Durations()))) {
+//        MaxDuration = DurBuf;
+//      }
+//    }
+//    this.Duration = MaxDuration;
+//    return MaxDuration;
+//  }
   /* ********************************************************************************* */
   @Override public void Update_Guts(MetricsPacket metrics) {
     if (this.FreshnessTimeStamp < metrics.FreshnessTimeStamp) {// don't hit the same songlet twice on one update
       this.Set_Project(metrics.MyProject);
-      this.Sort_Me();
+      //this.Sort_Me();
       this.Update_Max_Amplitude();
       metrics.MaxDuration = 0.0;// redundant
       double MyMaxDuration = 0.0;
@@ -132,14 +143,36 @@ public class GroupBox implements ISonglet, IDrawable {
     metrics.MaxDuration = this.Duration;
   }
   /* ********************************************************************************* */
-  @Override public void Refresh_From_Beneath() {
-    System.out.println("Refresh_From_Beneath");
+  @Override public void Refresh_Me_From_Beneath(IDrawable.IMoveable mbox) {
+    System.out.println("Refresh_Me_From_Beneath");
+    if (true) {
+      this.Sort_Me();
+    } else {
+      int Dex = this.Tree_Search(mbox.GetX(), 0, this.SubSongs.size());
+      this.Bubble_Right(Dex);// how do we get the right index? OffsetBoxes do not have that. 
+    }
     if (UsingSplines) {
-      Splines.Cubic_Spline_Boxes(this.SubSongs, NumSubLines, SplinePoints);
+      Splines.Cubic_Spline_Boxes(this.SubSongs, NumSubLines, this.SplinePoints);
     }
   }
   /* ********************************************************************************* */
-  @Override public void Sort_Me() {// sorting by RealTime
+  public void Bubble_Right(int Dex) {// when a point moves right in space, move it to the correct place in the collection.
+    int len = this.SubSongs.size();
+    OffsetBox mov = this.SubSongs.get(Dex);
+    OffsetBox next;
+    int PrevDex = Dex++;
+    while (Dex < len) {
+      next = this.SubSongs.get(Dex);
+      if (mov.TimeX <= next.TimeX) {
+        break;
+      }
+      this.SubSongs.set(PrevDex, next);
+      PrevDex = Dex++;
+    }
+    this.SubSongs.set(PrevDex, mov);
+  }
+  /* ********************************************************************************* */
+  public void Sort_Me() {// @Override  // sorting by RealTime
     Collections.sort(this.SubSongs, new Comparator<OffsetBox>() {
       @Override public int compare(OffsetBox voice0, OffsetBox voice1) {
         return Double.compare(voice0.TimeX, voice1.TimeX);
@@ -164,26 +197,16 @@ public class GroupBox implements ISonglet, IDrawable {
     return GroupPlayer;
   }
   /* ********************************************************************************* */
-  @Override public int Get_Sample_Count(int SampleRate) {
-    return SampleRate * (int) this.Get_Duration();
-  }
+//  @Override public int Get_Sample_Count(int SampleRate) {
+//    return SampleRate * (int) this.Get_Duration();
+//  }
   /* ********************************************************************************* */
-  @Override public AudProject Get_Project() {
-    return this.MyProject;
-  }
+//  @Override public AudProject Get_Project() {
+//    return this.MyProject;
+//  }
   /* ********************************************************************************* */
   @Override public void Set_Project(AudProject project) {
     this.MyProject = project;
-  }
-  /* ********************************************************************************* */
-  @Override public void SetMute(boolean Mute) {
-  }
-  /* ********************************************************************************* */
-  @Override public int FreshnessTimeStamp_g() {// ISonglet
-    return this.FreshnessTimeStamp;
-  }
-  @Override public void FreshnessTimeStamp_s(int TimeStampNew) {// ISonglet
-    this.FreshnessTimeStamp = TimeStampNew;
   }
   /* ********************************************************************************* */
   public void SetSpineHighlight(boolean Highlight) {
@@ -209,7 +232,7 @@ public class GroupBox implements ISonglet, IDrawable {
       ParentDC.gr.setColor(Color.black);
       OutlineStroke = new BasicStroke(InnerLineThickness + OutlineSwell, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND);
     }
-    Splines.PointX SplinePoint;
+    Globals.PointX SplinePoint;
     //-----------
     ParentDC.gr.setStroke(OutlineStroke);// draw outline or glow of spine
     pntprev = ParentDC.To_Screen(0, 0);
@@ -411,15 +434,11 @@ public class GroupBox implements ISonglet, IDrawable {
     }
   }
   /* ********************************************************************************* */
-  public void swap(AtomicInteger a, AtomicInteger b) {// http://stackoverflow.com/questions/3624525/how-to-write-a-basic-swap-function-in-java
-    a.set(b.getAndSet(a.get()));// look mom, no tmp variables needed
-  }
-  /* ********************************************************************************* */
-  public double DotProduct(double X0, double Y0, double X1, double Y1) {
+  public static double DotProduct(double X0, double Y0, double X1, double Y1) {
     return X0 * X1 + Y0 * Y1;// length of projection from one vector onto another
   }
   /* ********************************************************************************* */
-  public void LineClosestPoint(double LineX0, double LineY0, double LineX1, double LineY1, double XPnt, double YPnt, Point.Double Intersection) {// Find dnd destination using dot product on line segments.
+  public static void LineClosestPoint(double LineX0, double LineY0, double LineX1, double LineY1, double XPnt, double YPnt, Point.Double Intersection) {// Find dnd destination using dot product on line segments.
     double Temp;
     if (LineX1 < LineX0 || (LineX1 == LineX0 && LineY1 < LineY0)) {// sort endpoints
       Temp = LineX0;// swap X
@@ -441,7 +460,7 @@ public class GroupBox implements ISonglet, IDrawable {
     YDif -= ShrinkY * 2;
     double Magnitude = Math.hypot(XDif, YDif);
 
-    double DotProd = this.DotProduct(XPnt - LineX0, YPnt - LineY0, XDif, YDif);
+    double DotProd = DotProduct(XPnt - LineX0, YPnt - LineY0, XDif, YDif);
     DotProd /= Magnitude;// now dotprod is the full length of the projection
     double XLoc = ((XDif / Magnitude) * DotProd);// scale separate dimensions to length of shadow
     double YLoc = ((YDif / Magnitude) * DotProd);
@@ -457,9 +476,9 @@ public class GroupBox implements ISonglet, IDrawable {
     Intersection.setLocation(XLoc, YLoc);
   }
   /* ********************************************************************************* */
-  public double DistanceFromLine(double LineX0, double LineY0, double LineX1, double LineY1, double XPnt, double YPnt) {// work in progress for drag and drop support
+  public static double DistanceFromLine(double LineX0, double LineY0, double LineX1, double LineY1, double XPnt, double YPnt) {// work in progress for drag and drop support
     double XDif = LineX1 - LineX0, YDif = LineY1 - LineY0;
-    double DotProd = this.DotProduct(XDif, YDif, XPnt - LineX0, YPnt - LineY0);
+    double DotProd = DotProduct(XDif, YDif, XPnt - LineX0, YPnt - LineY0);
     double XLoc = LineX0 + (XDif * DotProd);// point of intersection
     double YLoc = LineY0 + (YDif * DotProd);
     // to do: at this point we would like to test if the intersection is between the line's endpoints. 
@@ -491,37 +510,42 @@ public class GroupBox implements ISonglet, IDrawable {
   }
   /* ********************************************************************************* */
   public double HitsMyVineSpline(double XPnt, double YPnt) {// work in progress for drag and drop support
-    double Limit = 0.1;// octaves
-    int len = this.SplinePoints.length;
-    Splines.PointX OBox, ClosestPoint = null;
-    double XPrev = 0, YPrev = 0, YCross, YDist, Dist;
-    Splines.PointX LastBox = this.SplinePoints[len - 1];
+    double Limit = 0.1;// octaves.  hardcoded hack, need something better
+    int len = this.SubSongs.size();
+    double Dist;
+    OffsetBox LastBox = this.SubSongs.get(len - 1);
     Point.Double Intersection = new Point.Double();
-    if (0.0 <= XPnt && XPnt <= LastBox.x) {// or this.MyBounds.Max.x) {
-//      int FoundDex = Tree_Search(XPnt - Limit, 0, len);
-      int FoundDex = Tree_Search(XPnt, 0, len);
-      if (FoundDex == 0) {
-        XPrev = YPrev = 0;
-      } else {
-        Splines.PointX PrevBox = this.SplinePoints[FoundDex - 1];
-        XPrev = PrevBox.x;
-        YPrev = PrevBox.y;
+    if (0.0 <= XPnt && XPnt <= LastBox.TimeX) {// or this.MyBounds.Max.x) {
+      int FoundDex = Tree_Search(XPnt, 0, len);// to do: tree search with buffer around click point
+      int LinesPerSubSong = this.SplinePoints.length / this.SubSongs.size();
+
+      // Splines start to the left of subsong[0], so their indexes are higher than the subsongs they correspond to. 
+      int StartSplineDex = FoundDex * LinesPerSubSong;
+      int EndSplineDex = (FoundDex + 1) * LinesPerSubSong;
+      EndSplineDex = Math.min(EndSplineDex, this.SplinePoints.length);
+
+      Globals.PointX prevpnt, pnt = Globals.PointX.Zero;
+      double MinDist = Double.POSITIVE_INFINITY;
+      for (int scnt = StartSplineDex; scnt < EndSplineDex; scnt++) {// roll through all segments in this subrange of this spline. look for closest segment. 
+        prevpnt = pnt;
+        pnt = this.SplinePoints[scnt];
+        LineClosestPoint(prevpnt.x, prevpnt.y, pnt.x, pnt.y, XPnt, YPnt, Intersection);
+        Dist = Math.hypot(XPnt - Intersection.x, YPnt - Intersection.y);
+        System.out.println("Dist:" + Dist + ", Intersection.x:" + Intersection.x + ", Intersection.y:" + Intersection.y);
+        if (MinDist > Dist) {
+          MinDist = Dist;
+        }
+      }
+      if (MinDist < Limit) {// then we found one
+        return MinDist;
       }
       // to do: need condition if FoundDex is greater than len. beyond-end insertion would be nice.
-      OBox = this.SplinePoints[FoundDex];
-      LineClosestPoint(XPrev, YPrev, OBox.x, OBox.y, XPnt, YPnt, Intersection);
-      Dist = Math.hypot(XPnt - Intersection.x, YPnt - Intersection.y);
-      System.out.println("Dist:" + Dist + ", Intersection.x:" + Intersection.x + ", Intersection.y:" + Intersection.y);
-      if (Dist < Limit) {// then we found one
-        ClosestPoint = this.SplinePoints[FoundDex];
-        return Dist;
-      }
     }
     return Double.POSITIVE_INFINITY;// infinite if not found
   }
   /* ********************************************************************************* */
   public double HitsMyVine(double XPnt, double YPnt) {// work in progress for drag and drop support
-    double Limit = 0.1;// octaves
+    double Limit = 0.1;// octaves.  hardcoded hack, need something better
     int len = this.SubSongs.size();
     OffsetBox OBox, ClosestPoint = null;
     double XPrev = 0, YPrev = 0, YCross, YDist, Dist;
@@ -530,7 +554,7 @@ public class GroupBox implements ISonglet, IDrawable {
     if (0.0 <= XPnt && XPnt <= LastBox.TimeX) {// or this.MyBounds.Max.x) {
 //      int FoundDex = Tree_Search(XPnt - Limit, 0, len);
       int FoundDex = Tree_Search(XPnt, 0, len);
-      if (FoundDex == 0) {
+      if (FoundDex == 0) {// X point equals first element in subsong array
         XPrev = YPrev = 0;
       } else {
         OffsetBox PrevBox = this.SubSongs.get(FoundDex - 1);
@@ -568,7 +592,6 @@ public class GroupBox implements ISonglet, IDrawable {
         maxloc = medloc;
       } else {
         minloc = medloc + 1;/* has to go through here to be found. */
-
       }
     }
     return minloc;
@@ -662,6 +685,7 @@ public class GroupBox implements ISonglet, IDrawable {
         obox = (OffsetBox) child;// another cast!
         this.Add_SubSong(obox);
       }
+      this.Sort_Me();
     }
     if (this.SubSongs.isEmpty()) {
       boolean nop = true;
@@ -824,7 +848,7 @@ public class GroupBox implements ISonglet, IDrawable {
         this.ParentPoint.ScaleX = XLoc / GetUnitX();
       }
       // ignore YLoc for now
-      this.ParentPoint.MyParentSong.Refresh_From_Beneath();
+      this.ParentPoint.MyParentSong.Refresh_Me_From_Beneath(this);
     }
     @Override public boolean HitsMe(double XLoc, double YLoc) {// IDrawable.IMoveable
       System.out.print("** ScaleXHandle HitsMe:");
@@ -959,11 +983,6 @@ public class GroupBox implements ISonglet, IDrawable {
       child.Copy_From(this);
       child.Attach_Songlet(this.Content.Deep_Clone_Me(HitTable));
       return child;
-    }
-    /* ********************************************************************************* */
-    //@Override 
-    public Group_OffsetBox Shallow_Clone_Me() {
-      return null;
     }
     /* ********************************************************************************* */
     @Override public void BreakFromHerd(ITextable.CollisionLibrary HitTable) {// for compose time. detach from my songlet and attach to an identical but unlinked songlet

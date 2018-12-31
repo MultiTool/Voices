@@ -13,7 +13,7 @@ import java.util.HashMap;
  1/time unit length = base frequency for this object
  
  */
-public class PluckVoice extends Voice {
+public class PluckVoice extends SampleVoice {
   private Wave MySample = null;
   /* ********************************************************************************* */
   public PluckVoice() {
@@ -26,8 +26,8 @@ public class PluckVoice extends Voice {
     //MySample = new Wave();
     switch (2) {
     case 0: {
-      SizeInit = NoteMaker.Horn.length;
-      MySample.Ingest(NoteMaker.Horn, SampleRate);
+      SizeInit = Horn.length;
+      MySample.Ingest(Horn, SampleRate);
       WaveLen = (((double) SizeInit) / (double) SampleRate);
       this.BaseFreq = 1.0 / WaveLen;
       break;
@@ -62,14 +62,191 @@ public class PluckVoice extends Voice {
     int SamplesPerCycle = (int) ((1.0 / BaseFreq) * Globals.SampleRate);
     Wave pattern = new Wave();
     pattern.Init(SamplesPerCycle, Globals.SampleRate);
-    NoteMaker.Generate_WhiteNoise(pattern, SamplesPerCycle, Globals.SampleRate);
+    PluckVoice.Generate_WhiteNoise(pattern, SamplesPerCycle, Globals.SampleRate);
     if (true) {
-      NoteMaker.Synth_Pluck_Decay(wave0, pattern, Duration);
+      PluckVoice.Synth_Pluck_Decay(wave0, pattern, Duration);
     } else {
-      NoteMaker.Repeat_Pattern(wave0, pattern, Duration);
+      PluckVoice.Repeat_Pattern(wave0, pattern, Duration);
     }
     wave0.Normalize();
     return wave0;
+  }
+  /* ********************************************************************************* */
+  public static void Repeat_Pattern(Wave ResultWave, Wave pattern, double Duration) {
+    int SamplesPerCycle = pattern.NumSamples;
+    int ResultSize = (int) (Duration * (double) pattern.SampleRate);
+    ResultWave.Init(ResultSize, pattern.SampleRate);
+    double val;
+    int DexNow;
+    for (int SampCnt = 0; SampCnt < ResultSize; SampCnt++) {
+      DexNow = SampCnt % SamplesPerCycle;
+      val = pattern.Get(DexNow);
+      ResultWave.Set(SampCnt, val);
+    }
+  }
+  /* ********************************************************************************* */
+  public static void Generate_WhiteNoise(Wave pattern, int SampleSize, int SampleRate) {
+    pattern.Init(SampleSize, SampleRate);
+    double val;
+    for (int SampCnt = 0; SampCnt < SampleSize; SampCnt++) {
+      val = Globals.RandomGenerator.nextDouble() * 2.0 - 1.0;// white noise
+      pattern.Set(SampCnt, val);
+    }
+    pattern.Center();
+  }
+  /* ********************************************************************************* */
+  public static void Synth_Pluck_Decay(Wave ResultWave, Wave pattern, double Duration) {
+    int SamplesPerCycle = pattern.NumSamples;
+    double WaveLength = ((double) pattern.NumSamples) / (double) pattern.SampleRate;
+    double BaseFreq = 1.0 / WaveLength;
+    int ResultSize = (int) (Duration * (double) pattern.SampleRate);
+    ResultWave.Init(ResultSize, pattern.SampleRate);
+    double val;
+    int DexNow;
+    double ValAvg;
+    double ValPrev = 0;
+    for (int SampCnt = 0; SampCnt < ResultSize; SampCnt++) {
+      DexNow = SampCnt % SamplesPerCycle;
+      val = pattern.Get(DexNow);
+      ResultWave.Set(SampCnt, val);
+      ValAvg = (ValPrev + val) / 2.0;
+      pattern.Set(DexNow, ValAvg);
+      ValPrev = val;
+    }
+  }
+  /* ********************************************************************************* */
+  public static void Synth_Pluck_Flywheel(Wave wave, double BaseFreq, double Duration, int SampleRate) {
+    int SamplesPerCycle = (int) ((1.0 / BaseFreq) * SampleRate);
+    int MegaSamples = (int) (Duration * (double) SampleRate);
+    wave.Init(MegaSamples, SampleRate);
+    Wave pattern = new Wave();
+    pattern.Init(SamplesPerCycle, SampleRate);
+    double val;
+    double avg = 0.0;
+    double subtime = 0.0, timerate = 1, FractAlong = 0;
+    for (int SampCnt = 0; SampCnt < SamplesPerCycle; SampCnt++) {
+      FractAlong = ((double) SampCnt) / ((double) SamplesPerCycle);
+      subtime = FractAlong * timerate;
+      val = Math.sin(subtime * Globals.TwoPi);// chirp
+      val = Globals.RandomGenerator.nextDouble() * 2.0 - 1.0;// white noise
+      timerate += 0.1;
+      pattern.Set(SampCnt, val);
+      avg += val;
+    }
+    avg /= SamplesPerCycle;
+    for (int SampCnt = 0; SampCnt < SamplesPerCycle; SampCnt++) {// make average be 0
+      val = pattern.Get(SampCnt);
+      pattern.Set(SampCnt, val - avg);
+    }
+    if (true) {
+      if (false) {
+        Generate_WhiteNoise(pattern, SamplesPerCycle, SampleRate);
+      } else {
+        Generate_Chirp(pattern, SamplesPerCycle, SampleRate);
+      }
+    }
+    double Flywheel = 0.0;
+    double Inertia = 0.94, InertiaPersist = 0.9999;
+    Inertia = 0.8;// http://www.dynamicnotions.net/2014/01/cleaning-noisy-time-series-data-low.html
+    Inertia = 0.1;// lower value is more local -> only limits higher frequencies. bigger value wipes more frequencies. 
+    Inertia = 0.0;
+    double Numerator = 0.0, Denominator = 0.0;
+    int WindowSize = 2;
+    double ValPrev = 0, ValNext = 0, WindowAvg;
+    double WindowSum = 0;
+    for (int SampCnt = 0; SampCnt < MegaSamples; SampCnt++) {
+      val = pattern.Get(SampCnt % SamplesPerCycle);
+      ValPrev = pattern.Get(SampCnt % SamplesPerCycle);
+      ValNext = pattern.Get((SampCnt + WindowSize) % SamplesPerCycle);
+      WindowSum -= ValPrev;
+      WindowSum += ValNext;
+      WindowAvg = WindowSum / (double) WindowSize;
+      // Denominator = (Denominator + 1.0) * Inertia;
+      Denominator = (Denominator * Inertia) + Inertia;
+      Numerator = (Numerator * Inertia) + (val * Inertia);
+      val = (Numerator) / (Denominator);
+      // val = WindowAvg;
+      wave.Set(SampCnt, val);
+      //Inertia *= InertiaPersist;
+//      Flywheel = (Flywheel * Inertia) + (val * (1.0 - Inertia));
+//      wave.Set(SampCnt, Flywheel);
+      Inertia = 1.0 - ((1.0 - Inertia) * InertiaPersist);
+      WindowSize = (int) Math.ceil((((double) SampCnt) / (double) MegaSamples) * (double) SamplesPerCycle);
+      //WindowSize++;
+    }
+  }
+  
+  /* ********************************************************************************* */
+  public static void Generate_Chirp(Wave pattern, int SampleSize, int SampleRate) {
+    pattern.Init(SampleSize, SampleRate);
+    double val;
+    int wrapfactor = 1;
+    int SampleSizePlus = (SampleSize * wrapfactor) + 1;
+    int SampWrapped;
+    double subtime = 0.0, timerate = 1.0, FractAlong = 0, FractRemaining = 0;
+    for (int SampCnt = 0; SampCnt < SampleSize * wrapfactor; SampCnt++) {
+      SampWrapped = SampCnt % SampleSize;
+      FractAlong = ((double) SampCnt) / ((double) SampleSizePlus);
+      FractRemaining = 1.0 - FractAlong;
+      //timerate = 1.0 / FractRemaining;
+      subtime = FractAlong * timerate;
+      val = Math.sin(subtime * Globals.TwoPi);// chirp
+      timerate += 0.125;
+      double temp = pattern.Get(SampWrapped);
+      pattern.Set(SampWrapped, temp + val);
+      //pattern.Set(SampCnt, val);
+    }
+    pattern.Center();
+  }
+  /* ********************************************************************************* */
+  public static void Generate_HashChirp(Wave pattern, int SampleSize, int SampleRate) {// not finished yet
+    pattern.Init(SampleSize, SampleRate);
+    double prevamp, amp = Globals.Fudge;
+    double CrossX, BaseX = 0, RelativeTime;
+    double RealTime = 0, FractAlong;
+    double WaveLen, freq = 1.0, newfreq = 1.0;
+    double NumCycles;
+    /*
+     A big problem with this so far is that long wavelengths will win most of the territory.
+     we need a way to give short wavelengths more space. could bias the probability, but nah.
+     could only switch frequencies if NumCycles * WaveLen is greater than some value. 
+     should base at higher frequency than 1 for this, or freq 1 will own the entire span.
+     */
+    for (int SampCnt = 0; SampCnt < SampleSize; SampCnt++) {
+      RealTime = ((double) SampCnt) / (double) SampleSize;// do we want FractAlong or actual time? 
+      RelativeTime = RealTime - BaseX;
+      prevamp = amp;
+      amp = Math.sin(RelativeTime * freq);
+      //if (prevamp * amp <= 0) { // crosses 0
+      //if ((prevamp * amp <= 0) && (amp - prevamp > 0)) { // crosses 0 and rising
+      if ((prevamp <= 0) && (0 <= amp)) { // crosses 0 and rising
+        NumCycles = Math.round(RelativeTime * freq);
+        WaveLen = 1.0 / freq;
+        CrossX = WaveLen * NumCycles + BaseX;
+        BaseX = CrossX;
+        freq = newfreq;// random range 1.0 to maybe (timespan*samplerate)/8
+        amp = Math.sin(RelativeTime * freq);
+      }
+      pattern.Set(SampCnt, amp);
+    }
+    pattern.Center();
+  }
+  /* ********************************************************************************* */
+  public static void Generate_StackedSines(Wave pattern, int SampleSize, int SampleRate) {
+    pattern.Init(SampleSize, SampleRate);
+    double val;
+    double FractAlong, subtime, Frequency;// frequency is cycles per whole length of pattern
+    int NumHarmonics = 34;
+    for (int SampCnt = 0; SampCnt < SampleSize; SampCnt++) {
+      FractAlong = ((double) SampCnt) / ((double) SampleSize);
+      val = 0.0;
+      for (Frequency = 2.0; Frequency < NumHarmonics; Frequency++) {// once for each harmonic
+        subtime = FractAlong * Frequency;
+        val += Math.sin(subtime * Globals.TwoPi);
+      }
+      pattern.Set(SampCnt, val);
+    }
+    pattern.Center();
   }
   /* ********************************************************************************* */
   public void PluckLab() {
@@ -83,9 +260,9 @@ public class PluckVoice extends Voice {
     Wave pattern = new Wave();
     pattern.Init(SamplesPerCycle, Globals.SampleRate);
     //pattern.Sawtooth_Fill();
-    NoteMaker.Generate_WhiteNoise(pattern, SamplesPerCycle, Globals.SampleRate);
+    PluckVoice.Generate_WhiteNoise(pattern, SamplesPerCycle, Globals.SampleRate);
     //Generate_StackedSines(pattern, SamplesPerCycle, Globals.SampleRate);
-    NoteMaker.Synth_Pluck_Decay(wave0, pattern, Duration);
+    PluckVoice.Synth_Pluck_Decay(wave0, pattern, Duration);
     wave0.Normalize();
   }
   /* ********************************************************************************* */
@@ -218,7 +395,7 @@ public class PluckVoice extends Voice {
     // my white noise is already created. although it is different it is still white noise of the same length.
   }
   /* ********************************************************************************* */
-  public static class PluckVoice_OffsetBox extends Voice_OffsetBox {// location box to transpose in pitch, move in time, etc. 
+  public static class PluckVoice_OffsetBox extends SampleVoice_OffsetBox {// location box to transpose in pitch, move in time, etc. 
     public PluckVoice PluckVoiceContent;
     public static String ObjectTypeName = "PluckVoice_OffsetBox";
     /* ********************************************************************************* */
@@ -308,7 +485,7 @@ public class PluckVoice extends Voice {
     }
   }
   /* ********************************************************************************* */
-  public static class PluckVoice_Singer extends Voice_Singer {
+  public static class PluckVoice_Singer extends SampleVoice_Singer {
     public PluckVoice MyPluckVoice;
     public Wave MySample = null;
     /* ********************************************************************************* */

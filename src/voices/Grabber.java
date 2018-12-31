@@ -9,19 +9,19 @@ import java.util.ArrayList;
 /**
  *
  * @author MultiTool
-
- Grabber is basically a spatial query which also carries back all the results data.
+ *
+ * Grabber is basically a spatial query which also carries back all the results
+ * data.
  *
  */
 public class Grabber { // to do: rename this class to Grabber
-  public double XHit, YHit;// exact mouse click point
   //public CajaDelimitadora SearchBounds = new CajaDelimitadora();
   public StackItem CurrentContext = null;
   public int Stack_Depth = 0, Stack_Depth_Best = 0;
   public ArrayList<StackItem> Explore_Stack = new ArrayList<StackItem>();
   public ArrayList<StackItem> Best_Stack = new ArrayList<StackItem>();
   public IDrawable.IMoveable Leaf;// thing we hit and are going to move or copy or whatever
-  double Radius = 5;
+  private double Radius = 5;
   /* ********************************************************************************* */
   public void ConsiderLeaf(IDrawable.IMoveable CandidateLeaf) {
     if (CandidateLeaf.HitsMe(this.CurrentContext.Loc.x, this.CurrentContext.Loc.y)) {
@@ -267,7 +267,7 @@ public class Grabber { // to do: rename this class to Grabber
           Point.Double results = new Point.Double();
           obx.MapTo(this.CurrentContext.Loc.x, this.CurrentContext.Loc.y, results);// we're hitting the songlet, not its offsetbox, so we have to map to obox child coordinates.
           double FoundDistance;
-          if (false && GroupBox.UsingSplines) {
+          if (true && GroupBox.UsingSplines) {
             FoundDistance = gbx.HitsMyVineSpline(results.x, results.y);// WIP 
           } else {
             FoundDistance = gbx.HitsMyVine(results.x, results.y);// WIP
@@ -306,5 +306,9 @@ public class Grabber { // to do: rename this class to Grabber
       }
       return (this.CurrentContext.SearchBounds.Intersects(Candidate.GetBoundingBox()));
     }
+  }
+  /* ********************************************************************************* */
+  public boolean Intersects(CajaDelimitadora OtherBounds) {
+    return this.CurrentContext.SearchBounds.Intersects(OtherBounds);
   }
 }

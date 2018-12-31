@@ -23,77 +23,30 @@ public class Splines {
   static final double Sin270 = Math.sin(Math.PI * 3.0 / 2.0);// 270 degrees
   static final double Cos270 = Math.cos(Math.PI * 3.0 / 2.0);// 270 degrees
   /* ********************************************************************************* */
-  public static class PointX extends Point.Double {
-    //public double x, y;
-    public PointX() {
-
-    }
-    public PointX(PointX donor) {
-      this.CopyFrom(donor);
-    }
-    public PointX(double XLoc, double YLoc) {
-      this.x = XLoc;
-      this.y = YLoc;
-    }
-    public void Assign(double XLoc, double YLoc) {
-      this.x = XLoc;
-      this.y = YLoc;
-    }
-    public final void CopyFrom(PointX donor) {
-      this.x = donor.x;
-      this.y = donor.y;
-    }
-    public void Add(PointX other) {
-      this.x += other.x;
-      this.y += other.y;
-    }
-    public void Subtract(PointX other) {
-      this.x -= other.x;
-      this.y -= other.y;
-    }
-    public void Multiply(double factor) {
-      this.x *= factor;
-      this.y *= factor;
-    }
-    public void Normalize() {
-      if (this.x != 0 || this.y != 0) {
-        double magnitude = Math.sqrt((this.x * this.x) + (this.y * this.y));
-        this.x /= magnitude;
-        this.y /= magnitude;
-      }
-    }
-    public double GetMagnitude() {
-      if (this.x == 0 && this.y == 0) {
-        return 0;
-      }
-      return Math.sqrt((this.x * this.x) + (this.y * this.y));
-    }
-  }
-  /* ********************************************************************************* */
   public static class Line {
-    PointX[] pnt = new PointX[2];
-    PointX delta = new PointX(); // delta X, delta Y
+    Globals.PointX[] pnt = new Globals.PointX[2];
+    Globals.PointX delta = new Globals.PointX(); // delta X, delta Y
     public Line() {
     }
-    public Line(PointX p0, PointX p1) {
-      this.pnt[0] = new PointX(p0);
-      this.pnt[1] = new PointX(p1);
+    public Line(Globals.PointX p0, Globals.PointX p1) {
+      this.pnt[0] = new Globals.PointX(p0);
+      this.pnt[1] = new Globals.PointX(p1);
       this.CompDelta();
     }
     public void Assign(double X0, double Y0, double X1, double Y1) {
-      this.pnt[0] = new PointX(X0, Y0);
-      this.pnt[1] = new PointX(X1, Y1);
+      this.pnt[0] = new Globals.PointX(X0, Y0);
+      this.pnt[1] = new Globals.PointX(X1, Y1);
       this.CompDelta();
     }
-    public void Assign(PointX p0, PointX p1) {
-      this.pnt[0] = new PointX(p0);
-      this.pnt[1] = new PointX(p1);
+    public void Assign(Globals.PointX p0, Globals.PointX p1) {
+      this.pnt[0] = new Globals.PointX(p0);
+      this.pnt[1] = new Globals.PointX(p1);
       this.CompDelta();
     }
     public void CompDelta() {
-      this.delta = new PointX(this.pnt[1].x - this.pnt[0].x, this.pnt[1].y - this.pnt[0].y);
+      this.delta = new Globals.PointX(this.pnt[1].x - this.pnt[0].x, this.pnt[1].y - this.pnt[0].y);
     }
-    public void FractAlong(double Fract, PointX results) {
+    public void FractAlong(double Fract, Globals.PointX results) {
       double dx = this.delta.x * Fract;
       double dy = this.delta.y * Fract;
       results.x = this.pnt[0].x + dx;
@@ -103,8 +56,8 @@ public class Splines {
     }
   }
   /* ********************************************************************************* */
-  public static void Cheap_Spline(Graphics2D gr, PointX p0, PointX ctr, PointX p1, PointX[] results) {// cheap spline, cross spline, cross curve
-    PointX p0prime = new PointX(ctr), p1prime = new PointX(ctr);
+  public static void Cheap_Spline(Graphics2D gr, Globals.PointX p0, Globals.PointX ctr, Globals.PointX p1, Globals.PointX[] results) {// cheap spline, cross spline, cross curve
+    Globals.PointX p0prime = new Globals.PointX(ctr), p1prime = new Globals.PointX(ctr);
     //p0prime.CopyFrom(ctr);
     p0prime.Subtract(p0);
     p0prime.Add(ctr);
@@ -119,7 +72,7 @@ public class Splines {
 //    gr.setColor(Globals.ToColorWheel(Globals.RandomGenerator.nextDouble()));
 //    gr.drawLine((int) lcross1.pnt[0].x, (int) lcross1.pnt[0].y, (int) lcross1.pnt[1].x, (int) lcross1.pnt[1].y);
     //lcross0.Assign(p0, p1prime); lcross1.Assign(p0prime, p1);
-    PointX results0 = new PointX(), results1 = new PointX(), resultsmeta = new PointX();
+    Globals.PointX results0 = new Globals.PointX(), results1 = new Globals.PointX(), resultsmeta = new Globals.PointX();
     Line crossmeta = new Line();
     int len = results.length;// 6;
     for (int cnt = 0; cnt < len; cnt++) {
@@ -140,12 +93,12 @@ public class Splines {
     }
   }
   /* ********************************************************************************* */
-  public static void Cubic_Spline_Chunk(PointX p0, PointX p1, PointX p2, PointX p3, double FractAlong, PointX result) {
+  public static void Cubic_Spline_Chunk(Globals.PointX p0, Globals.PointX p1, Globals.PointX p2, Globals.PointX p3, double FractAlong, Globals.PointX result) {
     // B(t) = (1-t)^3*P0  +  3*(1-t)^2*t*P1  +  3*(1-t)*t^2*P2  +  t^3*P3 
     double MinusFract = 1.0 - FractAlong;
     double Wgt0 = Math.pow(MinusFract, 3);// * P0;
-    double Wgt1 = 3 * FractAlong * Math.pow(MinusFract, 2);// * P1;
-    double Wgt2 = 3 * MinusFract * Math.pow(FractAlong, 2);// * P2;
+    double Wgt1 = 3.0 * FractAlong * Math.pow(MinusFract, 2);// * P1;
+    double Wgt2 = 3.0 * MinusFract * Math.pow(FractAlong, 2);// * P2;
     double Wgt3 = Math.pow(FractAlong, 3);// * P3;
 
     double XLoc = (p0.x * Wgt0) + (p1.x * Wgt1) + (p2.x * Wgt2) + (p3.x * Wgt3);
@@ -153,8 +106,8 @@ public class Splines {
     result.Assign(XLoc, YLoc);
   }
   /* ********************************************************************************* */
-  public static void Create_Control_Point(PointX Prev, PointX CornerPnt, PointX Next, PointX CtrlPnt) {
-    PointX before = new PointX(Prev), after = new PointX(Next);
+  public static void Create_Control_Point(Globals.PointX Prev, Globals.PointX CornerPnt, Globals.PointX Next, Globals.PointX CtrlPnt) {
+    Globals.PointX before = new Globals.PointX(Prev), after = new Globals.PointX(Next);
     before.Subtract(CornerPnt);
     before.Normalize();
     after.Subtract(CornerPnt);
@@ -179,82 +132,50 @@ public class Splines {
      */
   }
   /* ********************************************************************************* */
-  public static void Cubic_Spline_Boxes(ArrayList<OffsetBox> raw, int NumSubLines, PointX[] SplinePoints) {
-    PointX Prev, CornerPnt, Next;
-    PointX CtrlPrev = new PointX(), CtrlNext = new PointX();
-    PointX CtrlPrev2 = new PointX(), CtrlNext2 = new PointX();
-    PointX zero = new PointX();
-    double PrevLen, NextLen;
-    double FractAlong;
-    PointX result = new PointX();
-    double CtrlPntLength = 1.0 / 5.0;
+  public static void Cubic_Spline_Boxes(ArrayList<OffsetBox> raw, int NumSubLines, Globals.PointX[] SplinePoints) {// Splines that only go forward in time
+    double CtrlPntLength = 1.0 / 2.0;
+    Globals.PointX Prev = new Globals.PointX(), Next = new Globals.PointX(0, 0);
+    Globals.PointX CtrlPrev = new Globals.PointX(), CtrlNext = new Globals.PointX();
+    Globals.PointX result = new Globals.PointX();
     int len = raw.size();
+    double FractAlong;
+    double XDist;
+    OffsetBox NowBox;
 
     int pcnt = 0;
-    //CornerPnt = Next = raw.get(pcnt++).Spawn_PointX();
-    CornerPnt = Next = zero;
-
-    Prev = CornerPnt;// rollover
-    CornerPnt = Next;
-    Next = raw.get(pcnt++).Spawn_PointX();
-    NextLen = Next.distance(CornerPnt) * CtrlPntLength;
-
     int rescnt = 0;
     while (pcnt < len) {
-      PrevLen = NextLen;
-      CtrlPrev.CopyFrom(CtrlNext);// rollover control points
-      CtrlPrev.Multiply(-1.0);// 180 degree turn
-      CtrlPrev2.CopyFrom(CtrlPrev);// this is all really unnecessary, will just modify CtrlPrev
-      CtrlPrev2.Multiply(PrevLen);// make this af fraction of the length of the current line
-      CtrlPrev2.Add(CornerPnt);// offset
+      Prev.CopyFrom(Next);// rollover
+      NowBox = raw.get(pcnt);
+      NowBox.CopyTo_PointX(Next);
+      XDist = Next.x - Prev.x;
 
-      Prev = CornerPnt;// rollover
-      CornerPnt = Next;
-      Next = raw.get(pcnt).Spawn_PointX();
+      CtrlPrev.CopyFrom(Prev);
+      CtrlPrev.x += (XDist * CtrlPntLength);
 
-      NextLen = Next.distance(CornerPnt) * CtrlPntLength;
-      Create_Control_Point(Prev, CornerPnt, Next, CtrlNext);
-      CtrlNext2.CopyFrom(CtrlNext);
-      CtrlNext2.Multiply(PrevLen);// make this af fraction of the length of the current line
-      CtrlNext2.Add(CornerPnt);// offset
+      CtrlNext.CopyFrom(Next);
+      CtrlNext.x -= (XDist * CtrlPntLength);
 
       for (int subdex = 0; subdex < NumSubLines; subdex++) {
         FractAlong = ((double) subdex) / (double) NumSubLines;
-        Cubic_Spline_Chunk(Prev, CtrlPrev2, CtrlNext2, CornerPnt, FractAlong, result);
+        Cubic_Spline_Chunk(Prev, CtrlPrev, CtrlNext, Next, FractAlong, result);
         SplinePoints[rescnt].CopyFrom(result);
         rescnt++;
       }
       pcnt++;
     }
-    if (true) {// under construction: interpolate final line segment
-      PrevLen = NextLen;
-      CtrlPrev.CopyFrom(CtrlNext);// rollover control points
-      CtrlPrev.Multiply(-1.0);// 180 degree turn
-      CtrlPrev2.CopyFrom(CtrlPrev);// this is all really unnecessary, will just modify CtrlPrev
-      CtrlPrev2.Multiply(PrevLen);// make this 1/3 the length of the current line
-      CtrlPrev2.Add(CornerPnt);// offset
-
-      Prev = CornerPnt;// rollover
-      CtrlNext2 = CornerPnt = Next;
-      for (int subdex = 0; subdex < NumSubLines; subdex++) {
-        FractAlong = ((double) subdex) / (double) NumSubLines;
-        Cubic_Spline_Chunk(Prev, CtrlPrev2, CtrlNext2, CornerPnt, FractAlong, result);
-        SplinePoints[rescnt].CopyFrom(result);
-        rescnt++;
-      }
-      SplinePoints[rescnt].CopyFrom(Next);
-    }
+    SplinePoints[rescnt].CopyFrom(Next);// pin last segment to final point
   }
   /* ********************************************************************************* */
-  public static void Cubic_Spline(Graphics2D gr, PointX[] raw, int NumSubLines, PointX[] results) {
-    PointX p0, p1, p2, p3;// p0 = raw[cnt + 0]; p1 = raw[cnt + 1]; p2 = raw[cnt + 2]; p3 = raw[cnt + 3];
-    PointX Prev, CornerPnt, Next, cpleft, cpright, CtrlPrev = new PointX(), CtrlNext = new PointX();
-    PointX CtrlPrev2 = new PointX(), CtrlNext2 = new PointX();
+  public static void Cubic_Spline(Graphics2D gr, Globals.PointX[] raw, int NumSubLines, Globals.PointX[] results) {
+    Globals.PointX p0, p1, p2, p3;// p0 = raw[cnt + 0]; p1 = raw[cnt + 1]; p2 = raw[cnt + 2]; p3 = raw[cnt + 3];
+    Globals.PointX Prev, CornerPnt, Next, cpleft, cpright, CtrlPrev = new Globals.PointX(), CtrlNext = new Globals.PointX();
+    Globals.PointX CtrlPrev2 = new Globals.PointX(), CtrlNext2 = new Globals.PointX();
     double PrevLen, NextLen;
-    cpleft = new PointX();
-    cpright = new PointX();
+    cpleft = new Globals.PointX();
+    cpright = new Globals.PointX();
     double FractAlong;
-    PointX result = new PointX();
+    Globals.PointX result = new Globals.PointX();
     double CtrlPntLength = 1.0 / 3.0;
     //int NumSubLines = 50;
     int len = raw.length;
@@ -333,8 +254,8 @@ public class Splines {
     gr.setStroke(OldStroke);// draw outline or glow of spine
   }
   /* ********************************************************************************* */
-  public static int Interpolate_Segment(PointX Prev, PointX CtrlPrev, PointX CtrlNext, PointX Next, int NumSubLines, PointX[] results, int resultcnt) {
-    PointX result = new PointX();
+  public static int Interpolate_Segment(Globals.PointX Prev, Globals.PointX CtrlPrev, Globals.PointX CtrlNext, Globals.PointX Next, int NumSubLines, Globals.PointX[] results, int resultcnt) {
+    Globals.PointX result = new Globals.PointX();
     double FractAlong;
     for (int subdex = 0; subdex < NumSubLines; subdex++) {
       FractAlong = ((double) subdex) / (double) NumSubLines;
@@ -347,30 +268,30 @@ public class Splines {
   /* ********************************************************************************* */
   public static void Test(Graphics2D gr) {
     double Factor = 150;
-    PointX p0 = new PointX(1 * Factor, 1 * Factor), ctr = new PointX(2 * Factor, 2 * Factor), p1 = new PointX(3 * Factor, 0.5 * Factor);
+    Globals.PointX p0 = new Globals.PointX(1 * Factor, 1 * Factor), ctr = new Globals.PointX(2 * Factor, 2 * Factor), p1 = new Globals.PointX(3 * Factor, 0.5 * Factor);
 
     int len = 256;
-    PointX[] results = new PointX[len];
+    Globals.PointX[] results = new Globals.PointX[len];
     for (int cnt = 0; cnt < len; cnt++) {
-      results[cnt] = new PointX();
+      results[cnt] = new Globals.PointX();
     }
     Cheap_Spline(gr, p0, ctr, p1, results);
 
-    PointX[] raw = new PointX[10];
+    Globals.PointX[] raw = new Globals.PointX[10];
 
     p0.Assign(0, 0);
-    PointX prevpnt = p0, pnt = p0;
+    Globals.PointX prevpnt = p0, pnt = p0;
     for (int cnt = 0; cnt < raw.length; cnt++) {
       prevpnt = pnt;
-      pnt = new PointX(60 + cnt * 80, 200 + (cnt % 2) * 80 + (Globals.RandomGenerator.nextDouble() * 100));
+      pnt = new Globals.PointX(60 + cnt * 80, 200 + (cnt % 2) * 80 + (Globals.RandomGenerator.nextDouble() * 100));
       raw[cnt] = pnt;
       gr.setColor(Globals.ToColorWheel(Globals.RandomGenerator.nextDouble()));
       gr.drawLine((int) prevpnt.x, (int) prevpnt.y, (int) pnt.x, (int) pnt.y);
     }
     int NumSubLines = 8;
-    results = new PointX[NumSubLines * (raw.length - 1) + 1];
+    results = new Globals.PointX[NumSubLines * (raw.length - 1) + 1];
     for (int pcnt = 0; pcnt < results.length; pcnt++) {
-      results[pcnt] = new PointX();
+      results[pcnt] = new Globals.PointX();
     }
     Cubic_Spline(gr, raw, NumSubLines, results);
     if (true) {

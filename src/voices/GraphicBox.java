@@ -11,7 +11,7 @@ import java.util.HashMap;
  *
  * @author MultiTool
  */
-public class GraphicBox implements IDrawable, ISonglet, IDeletable {// 
+public class GraphicBox implements IDrawable, ISonglet, IDeletable, ISonglet.IContainer {// 
   public OffsetBox ContentOBox = null;
   public IDrawable.IMoveable Floater = null;
   private CajaDelimitadora MyBounds = new CajaDelimitadora();
@@ -211,42 +211,28 @@ public class GraphicBox implements IDrawable, ISonglet, IDeletable {//
   @Override public Singer Spawn_Singer() {
     throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
   }
-  @Override public int Get_Sample_Count(int SampleRate) {
-    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-  }
+//  @Override public int Get_Sample_Count(int SampleRate) {
+//    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+//  }
   @Override public double Get_Duration() {
     throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
   }
   @Override public double Get_Max_Amplitude() {
     throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
   }
-  @Override public double Update_Durations() {
-    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-  }
+//  @Override public double Update_Durations() {
+//    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+//  }
   @Override public void Update_Guts(MetricsPacket metrics) {
     throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
   }
-  @Override public void Refresh_From_Beneath() {
-  }
   /* ********************************************************************************* */
-  @Override public void Sort_Me() {
-    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+  @Override public void Refresh_Me_From_Beneath(IDrawable.IMoveable mbox) {
   }
-  @Override public AudProject Get_Project() {
-    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+  @Override public void Remove_SubNode(MonkeyBox obox) {// Remove a songlet from my list.
   }
   @Override public void Set_Project(AudProject project) {
     throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-  }
-  /* ********************************************************************************* */
-  @Override public void SetMute(boolean Mute) {
-  }
-  /* ********************************************************************************* */
-  @Override public int FreshnessTimeStamp_g() {// ISonglet
-    return this.FreshnessTimeStamp;
-  }
-  @Override public void FreshnessTimeStamp_s(int TimeStampNew) {// ISonglet
-    this.FreshnessTimeStamp = TimeStampNew;
   }
   /* ********************************************************************************* */
   public static class Graphic_OffsetBox extends OffsetBox {
@@ -301,7 +287,9 @@ public class GraphicBox implements IDrawable, ISonglet, IDeletable {//
       // if (XLoc >= 0) {// don't go backward in time
       this.TimeX = XLoc;
       this.OctaveY = YLoc;
-      this.MyParentSong.Refresh_From_Beneath();
+      if (this.MyParentSong != null) {
+        this.MyParentSong.Refresh_Me_From_Beneath(this);
+      }
     }
     /* ********************************************************************************* */
     @Override public Graphic_OffsetBox Clone_Me() {// ICloneable always override this thusly

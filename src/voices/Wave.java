@@ -13,7 +13,7 @@ import java.util.Arrays;
 public class Wave implements IDeletable {
   public int NumSamples;
   private int Current_Index;
-  public int StartDex = 0;
+  public int StartDex = 0;// startdex is offset of 'virtual samples' before our wave array begins
   public int SampleRate;
   public double StartTime = 0;
   public double EndTime = 0;// for debugging

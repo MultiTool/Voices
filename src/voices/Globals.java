@@ -1,6 +1,7 @@
 package voices;
 
 import java.awt.Color;
+import java.awt.Point;
 import java.util.HashMap;
 import java.util.Random;
 
@@ -54,6 +55,53 @@ public class Globals {
     } else {// blue to red
       Fraction = (Fraction - (2.0 / 3.0)) * 6.0;
       return new Color((float) Math.min(2.0 - Fraction, 1.0), 0, (float) Math.min(Fraction, 1.0));
+    }
+  }
+    /* ********************************************************************************* */
+  public static class PointX extends Point.Double {
+    //public double x, y;
+    public static PointX Zero = new PointX(0, 0);
+    public PointX() {
+    }
+    public PointX(PointX donor) {
+      this.CopyFrom(donor);
+    }
+    public PointX(double XLoc, double YLoc) {
+      this.x = XLoc;
+      this.y = YLoc;
+    }
+    public void Assign(double XLoc, double YLoc) {
+      this.x = XLoc;
+      this.y = YLoc;
+    }
+    public final void CopyFrom(PointX donor) {
+      this.x = donor.x;
+      this.y = donor.y;
+    }
+    public void Add(PointX other) {
+      this.x += other.x;
+      this.y += other.y;
+    }
+    public void Subtract(PointX other) {
+      this.x -= other.x;
+      this.y -= other.y;
+    }
+    public void Multiply(double factor) {
+      this.x *= factor;
+      this.y *= factor;
+    }
+    public void Normalize() {
+      if (this.x != 0 || this.y != 0) {
+        double magnitude = Math.sqrt((this.x * this.x) + (this.y * this.y));
+        this.x /= magnitude;
+        this.y /= magnitude;
+      }
+    }
+    public double GetMagnitude() {
+      if (this.x == 0 && this.y == 0) {
+        return 0;
+      }
+      return Math.sqrt((this.x * this.x) + (this.y * this.y));
     }
   }
 }

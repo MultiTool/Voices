@@ -10,30 +10,26 @@ public interface ISonglet extends IDrawable, IDeletable, ITextable {// Cancionit
   /* ********************************************************************************* */
   public ISonglet.Singer Spawn_Singer();// for render time
   /* ********************************************************************************* */
-  public int Get_Sample_Count(int SampleRate);
+  //public int Get_Sample_Count(int SampleRate);
   /* ********************************************************************************* */
   public double Get_Duration();
   /* ********************************************************************************* */
   public double Get_Max_Amplitude();
   /* ********************************************************************************* */
-  public double Update_Durations();
+  //public double Update_Durations();
   /* ********************************************************************************* */
   public void Update_Guts(MetricsPacket metrics);
   /* ********************************************************************************* */
-  public void Refresh_From_Beneath();
+  //public void Refresh_Me_From_Beneath(IDrawable.IMoveable mbox);// should be just for IContainer types, but aren't all songs containers? 
   /* ********************************************************************************* */
-  public void Sort_Me();
+  //public void Sort_Me();// not needed in base class, can be implemented by child classes
   /* ********************************************************************************* */
-  public AudProject Get_Project();
+  //public AudProject Get_Project();
   /* ********************************************************************************* */
   public void Set_Project(AudProject project);
   /* ********************************************************************************* */
-  public void SetMute(boolean Mute);
-  /* ********************************************************************************* */
-  public int FreshnessTimeStamp_g();
-  public void FreshnessTimeStamp_s(int TimeStampNew);
-  /* ********************************************************************************* */
-  @Override ISonglet Deep_Clone_Me(ITextable.CollisionLibrary HitTable);
+  @Override
+  ISonglet Deep_Clone_Me(ITextable.CollisionLibrary HitTable);
   /* ********************************************************************************* */
   int Ref_Songlet();// Reference Counting: increment ref counter and return new value just for kicks
   int UnRef_Songlet();// Reference Counting: decrement ref counter and return new value just for kicks
@@ -45,7 +41,7 @@ public interface ISonglet extends IDrawable, IDeletable, ITextable {// Cancionit
   public abstract static class Singer implements IDeletable {// Cantante
     // public static class Singer extends OffsetBox { // Cantante
     public AudProject MyProject;
-    double Inherited_OctaveRate = 0.0;// bend context, change dyanimcally while rendering. not used yet.
+    double Inherited_OctaveRate = 0.0;// bend context, change dynamically while rendering. not used yet.
     public MonkeyBox InheritedMap = new OffsetBox();// InheritedMap is transformation to and from samples. Replacement for Inherited_* 
     /*
     InheritedMap breakdown:
@@ -106,5 +102,10 @@ public interface ISonglet extends IDrawable, IDeletable, ITextable {// Cancionit
     public double MaxDuration = 0.0;
     public AudProject MyProject = null;
     public int FreshnessTimeStamp = 1;
+  }
+  public interface IContainer extends ISonglet {
+    /* ********************************************************************************* */
+    public void Refresh_Me_From_Beneath(IDrawable.IMoveable mbox);// should be just for IContainer types, but aren't all songs containers? 
+    public void Remove_SubNode(MonkeyBox mbx);
   }
 }

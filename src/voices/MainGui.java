@@ -225,7 +225,7 @@ public class MainGui {
     }
     public void MoveFloater(double ScreenX, double ScreenY) {
       this.MyProject.GraphicRoot.MapTo(ScreenX, ScreenY, results);
-      this.GetFloater().MoveTo(results.x, results.y);
+      this.GetFloater().MoveTo(results.x, results.y);// free independent floater
       this.GetFloater().UpdateBoundingBoxLocal();
 
       if (true) {
@@ -247,10 +247,10 @@ public class MainGui {
         if (Leaf instanceof MonkeyBox) {// hmm, we might be able to delete from voice and groupbox without having to know which is which
           MonkeyBox mbx = (MonkeyBox) Leaf;// another cast! 
           songlet = mbx.MyParentSong;// we would just need an IContainer interface with a virtual Remove_SubNode(MonkeyBox)
-//          if (songlet instanceof IContainer) {
-//            IContainer con = (IContainer)songlet;
-//            con.Remove_SubNode(mbx);
-//          }
+          if (songlet instanceof ISonglet. IContainer) {
+            ISonglet.IContainer con = (ISonglet.IContainer)songlet;
+            con.Remove_SubNode(mbx);
+          }
         }
         if (Leaf instanceof OffsetBox) {
           OffsetBox obx = (OffsetBox) Leaf;// another cast! 
@@ -351,6 +351,7 @@ public class MainGui {
           //FloatHandle = obx.Deep_Clone_Me(HitTable);
           FloatHandle = obx.GetContent().Spawn_OffsetBox();
           FloatHandle.Copy_From(obx);
+          FloatHandle.MyParentSong = null;
           if (false) {// one catch is that if this is a loopbox ghost handle we get a copy of the ghost instead of a native offsetbox
             ISonglet songlet = obx.GetContent();
             OffsetBox ObxCopy = songlet.Spawn_OffsetBox();
@@ -380,9 +381,6 @@ public class MainGui {
       super.paintComponent(g);
       Graphics2D g2d = (Graphics2D) g;
       Draw_Me(g2d);// redrawing everything is overkill for every little change or move. to do: optimize this
-      if (false) {
-        Splines.Test(g2d);
-      }
     }
     /* ********************************************************************************* */
     @Override public void mouseDragged(MouseEvent me) {
@@ -394,7 +392,7 @@ public class MainGui {
         double YLoc = me.getY();
         //MouseOffsetX = MouseOffsetY = 0;
         this.Query.MapThroughStack(XLoc + MouseOffsetX, YLoc + MouseOffsetY, results);
-        this.Query.Leaf.MoveTo(results.x, results.y);
+        this.Query.Leaf.MoveTo(results.x, results.y);// move while attached to tree
         this.repaint();
       }
     }

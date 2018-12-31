@@ -14,7 +14,7 @@ import java.util.HashMap;
  * @author MultiTool
  * LoopBox is most likely deprecated. It creates too many problems with the UI and is easily replaceable with a specialized GroupBox. 
  */
-public class LoopBox implements ISonglet, IDrawable {
+public class LoopBox implements ISonglet.IContainer, IDrawable {
   public ArrayList<Ghost_OffsetBox> SubSongs = new ArrayList<Ghost_OffsetBox>();
   private double MyDuration = 1.0;// manually assigned duration, as loops are infinite otherwise
   private double Delay = 1.0;// time delay between loops
@@ -50,10 +50,6 @@ public class LoopBox implements ISonglet, IDrawable {
     return LoopSinger;
   }
   /* ********************************************************************************* */
-  @Override public int Get_Sample_Count(int SampleRate) {
-    return (int) (this.MyDuration * SampleRate);
-  }
-  /* ********************************************************************************* */
   @Override public double Get_Duration() {
     return this.MyDuration;
   }
@@ -70,10 +66,6 @@ public class LoopBox implements ISonglet, IDrawable {
     this.Delay = delay;
   }
   /* ********************************************************************************* */
-  @Override public double Update_Durations() {// probably deprecated
-    return this.Content.Update_Durations();
-  }
-  /* ********************************************************************************* */
   @Override public void Update_Guts(MetricsPacket metrics) {
     if (this.FreshnessTimeStamp < metrics.FreshnessTimeStamp) {// don't hit the same songlet twice on one update
       this.Set_Project(metrics.MyProject);
@@ -84,29 +76,17 @@ public class LoopBox implements ISonglet, IDrawable {
     metrics.MaxDuration = this.MyDuration;
   }
   /* ********************************************************************************* */
-  @Override public void Refresh_From_Beneath() {
+  @Override public void Refresh_Me_From_Beneath(IDrawable.IMoveable mbox) {
   }
   /* ********************************************************************************* */
-  @Override public void Sort_Me() {
-    this.Content.Sort_Me();// not really the plan, but LoopBox doesn't have anything else to sort so why not
-  }
+  @Override public void Remove_SubNode(MonkeyBox mbx){}
   /* ********************************************************************************* */
-  @Override public AudProject Get_Project() {
-    return this.MyProject;
-  }
+//  @Override public AudProject Get_Project() {
+//    return this.MyProject;
+//  }
   /* ********************************************************************************* */
   @Override public void Set_Project(AudProject project) {
     this.MyProject = project;
-  }
-  /* ********************************************************************************* */
-  @Override public void SetMute(boolean Mute) {
-  }
-  /* ********************************************************************************* */
-  @Override public int FreshnessTimeStamp_g() {// ISonglet
-    return this.FreshnessTimeStamp;
-  }
-  @Override public void FreshnessTimeStamp_s(int TimeStampNew) {// ISonglet
-    this.FreshnessTimeStamp = TimeStampNew;
   }
   /* ********************************************************************************* */
   public OffsetBox Add_Content(ISonglet songlet) {
@@ -599,7 +579,7 @@ public class LoopBox implements ISonglet, IDrawable {
       if (false) {// maybe we don't really need to save Delay as part of our child's obox. 
         this.ContentLayer.MoveTo(TempDelay, YLoc);
       }
-      this.MyParentSong.Refresh_From_Beneath();
+      this.MyParentSong.Refresh_Me_From_Beneath(this);
     }
     /* ********************************************************************************* */
     @Override public Ghost_OffsetBox Clone_Me() {// ICloneable always override this thusly

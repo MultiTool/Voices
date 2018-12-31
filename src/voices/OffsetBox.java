@@ -7,7 +7,6 @@ import java.awt.Paint;
 import java.awt.RadialGradientPaint;
 import java.awt.Stroke;
 import java.awt.geom.Point2D;
-import java.util.HashMap;
 import voices.ISonglet.Singer;
 
 /**
@@ -203,8 +202,12 @@ public class OffsetBox extends MonkeyBox { //implements IDrawable.IMoveable, IDe
       this.TimeX = XLoc;
     }
     this.OctaveY = YLoc;
-    this.MyParentSong.Refresh_From_Beneath();
+    if (this.MyParentSong != null) {
+      this.MyParentSong.Refresh_Me_From_Beneath(this);
+    }
   }
+  @Override public double GetX(){return this.TimeX;}
+  @Override public double GetY(){return this.OctaveY;}
   @Override public boolean HitsMe(double XLoc, double YLoc) {// IDrawable.IMoveable
     System.out.print("HitsMe:");
     if (this.MyBounds.Contains(XLoc, YLoc)) {// redundant test

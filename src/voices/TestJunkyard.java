@@ -145,7 +145,6 @@ public class TestJunkyard {
     //lbx.Set_Duration(8.0);
     lbx.Set_Delay(0.1);
     lbx.Set_Duration(0.9);
-    lbx.Sort_Me();
     return lbx;
   }
   /* ********************************************************************************* */

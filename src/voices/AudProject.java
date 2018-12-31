@@ -147,22 +147,6 @@ public class AudProject implements IDeletable {
 
       obox = gbx.Spawn_OffsetBox();
       break;
-    case 10:
-      TimeStep = 0.125;
-      TimeStep = 1.0;
-      int NumBeats = 8;
-      gbx = NoteMaker.Create_Note_Chain(NumBeats, TimeStep);
-      obox = gbx.Spawn_OffsetBox();
-
-      lbx = new LoopBox();
-      lbx.Add_Content(gbx);
-      lbx.Set_Delay(NumBeats * TimeStep);
-      lbx.Set_Duration(30);
-      obox = lbx.Spawn_OffsetBox();
-
-      obox.TimeX += NoteMaker.OffsetTime;
-      obox.OctaveY = (4);
-      break;
     case 11:
       GroupBox trunk = new GroupBox();
       
@@ -177,17 +161,6 @@ public class AudProject implements IDeletable {
       trunk.Add_SubSong(obox);
 
       obox = trunk.Spawn_OffsetBox();
-      break;
-    case 12:
-      TimeStep = 0.125;
-      Voice voz = new Voice();
-      double Dur = 1.0;
-      int TotalNotes = 1;
-      NoteMaker.Create_Block_Voice(voz, Dur, 3);
-      GroupBox gbx2 = NoteMaker.Create_Note_Chain(voz, TotalNotes, TimeStep);
-      obox = gbx2.Spawn_OffsetBox();
-      obox.TimeX += NoteMaker.OffsetTime;
-      obox.OctaveY = 4;
       break;
     }
     if (false) {
@@ -315,7 +288,6 @@ public class AudProject implements IDeletable {
     ITextable.CollisionLibrary HitTable = new ITextable.CollisionLibrary();
     HitTable.ConsumePhrase(LibraryPhrase);
 
-    OffsetBox Tree;
     this.GraphicRoot.Delete_Me();
     this.GraphicRoot = new GraphicBox.Graphic_OffsetBox();
     this.GraphicRoot.Consume(TreePhrase, HitTable);

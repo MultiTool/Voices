@@ -25,7 +25,7 @@ public class MonkeyBox implements IDrawable.IMoveable, IDeletable, ITextable {//
   public static String TimeXName = "TimeX", OctaveYName = "OctaveY", LoudnessFactorName = "LoudnessFactor", ScaleXName = "ScaleX", ScaleYName = "ScaleY";// for serialization
 
   public CajaDelimitadora MyBounds = new CajaDelimitadora();
-  public ISonglet MyParentSong;// can do this but not used yet
+  public ISonglet.IContainer MyParentSong;// can do this but not used yet
 
   // graphics support, will move to separate object
   //double OctavesPerRadius = 0.03;
@@ -68,9 +68,8 @@ public class MonkeyBox implements IDrawable.IMoveable, IDeletable, ITextable {//
     ScaleX = ScaleY = 1.0;
   }
   /* ********************************************************************************* */
-  public Splines.PointX Spawn_PointX() {// #kludgey, this is a bad hack
-    Splines.PointX pnt = new Splines.PointX(TimeX, OctaveY);
-    return pnt;
+  public void CopyTo_PointX(Globals.PointX pnt) {
+    pnt.x = TimeX; pnt.y = OctaveY;
   }
   /* ********************************************************************************* */
   public double Get_Max_Amplitude() {
@@ -112,22 +111,8 @@ public class MonkeyBox implements IDrawable.IMoveable, IDeletable, ITextable {//
     return this.OctaveY + ((ChildPitch) * ScaleY);
   }
   /* ********************************************************************************* */
-  public Point2D.Double MapTo(double XLoc, double YLoc) {
-    Point2D.Double pnt = new Point2D.Double(this.MapTime(XLoc), this.MapPitch(YLoc));
-    return pnt;
-  }
-  /* ********************************************************************************* */
-  public Point2D.Double UnMap(double XLoc, double YLoc) {
-    Point2D.Double pnt = new Point2D.Double(this.UnMapTime(XLoc), this.UnMapPitch(YLoc));
-    return pnt;
-  }
-  /* ********************************************************************************* */
   public void MapTo(double XLoc, double YLoc, Point2D.Double results) {
     results.setLocation(this.MapTime(XLoc), this.MapPitch(YLoc));
-  }
-  /* ********************************************************************************* */
-  public void UnMap(double XLoc, double YLoc, Point2D.Double results) {
-    results.setLocation(this.UnMapTime(XLoc), this.UnMapPitch(YLoc));
   }
   /* ********************************************************************************* */
   public void MapTo(Point2D.Double pnt, Point2D.Double results) {
@@ -210,8 +195,12 @@ public class MonkeyBox implements IDrawable.IMoveable, IDeletable, ITextable {//
       this.TimeX = XLoc;
     }
     this.OctaveY = YLoc;
-    this.MyParentSong.Refresh_From_Beneath();
+    if (this.MyParentSong!=null){
+      this.MyParentSong.Refresh_Me_From_Beneath(this);
+    }
   }
+  @Override public double GetX(){return this.TimeX;}
+  @Override public double GetY(){return this.OctaveY;}
   @Override public boolean HitsMe(double XLoc, double YLoc) {// IDrawable.IMoveable
     System.out.print("HitsMe:");
     if (this.MyBounds.Contains(XLoc, YLoc)) {// redundant test

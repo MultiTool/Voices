@@ -21,6 +21,8 @@ public interface IDrawable extends ICloneable {
   public interface IMoveable extends IDrawable {// IMoveable is for things that can be selected, dragged, copied, pasted, deleted etc. through the UI.
     void MoveTo(double XLoc, double YLoc);
     boolean HitsMe(double XLoc, double YLoc);// click detection
+    double GetX();
+    double GetY();
     void SetSelected(boolean Selected);
     @Override IMoveable Clone_Me();
     @Override IMoveable Deep_Clone_Me(ITextable.CollisionLibrary HitTable);

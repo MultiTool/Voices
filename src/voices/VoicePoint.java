@@ -27,6 +27,7 @@ public class VoicePoint extends MonkeyBox {
     this.MyBounds = new CajaDelimitadora();
   }
   public void RefParent(Voice Parent) {
+    this.MyParentVoice = Parent;
     this.MyParentSong = this.MyParentVoice = Parent;
   }
   /* ********************************************************************************* */
@@ -170,13 +171,6 @@ public class VoicePoint extends MonkeyBox {
     public double OctavesPerRadius = 0.007;
     private boolean IsSelected = false;
     /* ********************************************************************************* */
-    public double GetX() {
-      return this.ParentPoint.TimeX;
-    }
-    public double GetY() {
-      double LoudnessHeight = this.ParentPoint.LoudnessFactor * this.ParentPoint.OctavesPerLoudness;// Map loudness to screen pixels.
-      return this.ParentPoint.OctaveY + LoudnessHeight;
-    }
     @Override public void MoveTo(double XLoc, double YLoc) {// IDrawable.IMoveable
       if (XLoc >= 0) {// don't go backward in time
         this.ParentPoint.TimeX = XLoc;
@@ -188,6 +182,13 @@ public class VoicePoint extends MonkeyBox {
           this.ParentPoint.LoudnessFactor = RelativeY;
         }
       }
+    }
+    @Override public double GetX() {
+      return this.ParentPoint.TimeX;
+    }
+    @Override public double GetY() {
+      double LoudnessHeight = this.ParentPoint.LoudnessFactor * this.ParentPoint.OctavesPerLoudness;// Map loudness to screen pixels.
+      return this.ParentPoint.OctaveY + LoudnessHeight;
     }
     @Override public boolean HitsMe(double XLoc, double YLoc) {// IDrawable.IMoveable
       System.out.print("** LoudnessHandle HitsMe:");

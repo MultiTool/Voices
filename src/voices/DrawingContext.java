@@ -15,7 +15,7 @@ public final class DrawingContext implements IDeletable {// Let's be final until
   public CajaDelimitadora ClipBounds;
   public OffsetBox Offset, GlobalOffset = new OffsetBox();// Global Offset is transformation to and from pixels
   public int RecurseDepth;
-  public double Excitement;// to highlight animation, range 0 to 1. 
+  private double Excitement;// to highlight animation, range 0 to 1. 
   /* ********************************************************************************* */
   public DrawingContext() {
     this.GlobalOffset = new OffsetBox();
