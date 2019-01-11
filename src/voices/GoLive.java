@@ -47,7 +47,7 @@ public class GoLive implements Runnable, IDeletable {
     }
     //this.CurrentTime = 0;
     //FinalTime = this.MyProject.AudioRoot.GetContent().Get_Duration();
-    wave_render.Init(0, TimeIncrement, this.MyProject.SampleRate);
+    wave_render.Init_Time(0, TimeIncrement, this.MyProject.SampleRate);
 
     RootPlayer = this.MyProject.AudioRoot.Spawn_Singer();
     RootPlayer.Compound(this.MyProject.AudioRoot);
@@ -74,7 +74,7 @@ public class GoLive implements Runnable, IDeletable {
     this.CurrentTime = StartTime;// obx.UnMapTime(0);
     this.FinalTime = EndTime;// obx.UnMapTime(obx.GetContent().Get_Duration());
 
-    wave_render.Init(0, TimeIncrement, this.MyProject.SampleRate);
+    wave_render.Init_Time(0, TimeIncrement, this.MyProject.SampleRate);
     RootPlayer = obx.Spawn_Singer();
     RootPlayer.Compound(obx);
     RootPlayer.Start();

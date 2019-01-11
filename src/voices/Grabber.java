@@ -10,8 +10,7 @@ import java.util.ArrayList;
  *
  * @author MultiTool
  *
- * Grabber is basically a spatial query which also carries back all the results
- * data.
+ * Grabber is basically a spatial query which also carries back all the results data.
  *
  */
 public class Grabber { // to do: rename this class to Grabber

@@ -636,12 +636,12 @@ public class Voice implements ISonglet, IDrawable, ISonglet.IContainer {
       int NumPoints = this.MyVoice.CPoints.size();
       if (NumPoints < 2) {// this should really just throw an error
         this.IsFinished = true;
-        wave.Init(UnMapped_Prev_Time, UnMapped_Prev_Time, this.MyProject.SampleRate);
+        wave.Init_Time(UnMapped_Prev_Time, UnMapped_Prev_Time, this.MyProject.SampleRate);
         return;
       }
       EndTime = this.ClipTime(EndTime);
       double UnMapped_EndTime = this.InheritedMap.UnMapTime(EndTime);
-      wave.Init(UnMapped_Prev_Time, UnMapped_EndTime, this.MyProject.SampleRate);// wave times are in global coordinates because samples are always real time
+      wave.Init_Time(UnMapped_Prev_Time, UnMapped_EndTime, this.MyProject.SampleRate);// wave times are in global coordinates because samples are always real time
       Prev_Point = this.Cursor_Point;
       int pdex = this.Next_Point_Dex;
 

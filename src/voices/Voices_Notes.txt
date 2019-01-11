@@ -758,6 +758,19 @@ Where to initialize these?
 static const double BaseFreqC0;// = 16.3516;// hz
 static const double BaseFreqA0;// = 27.5000;// hz
 
+/*
+could/should all offsetboxes own a spline segment?  they belong to their parent group and can
+know each other like a linked list. 
+pros:
+easy to find splines.
+maybe easy to push/pop neighbors?
+cons:
+not every obox is part of a list, right? 
+lines get drawn separately, so shadows are divided
 
+in the future, all obox circles should be same color/glow as parent line? 
+or as child line? sadly a group does not own its obox grabber. 
+
+ */
 
 

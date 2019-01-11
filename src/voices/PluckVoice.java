@@ -1,17 +1,17 @@
 package voices;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 
 /**
  *
  * @author MultiTool
-
- Experimental - THIS SOUNDS TERRIBLE
-
- Plan is:
- generate a time unit (wavelength of BaseFreqC0) of white noise.
- 1/time unit length = base frequency for this object
- 
+ *
+ * Experimental - THIS SOUNDS TERRIBLE
+ *
+ * Plan is: generate a time unit (wavelength of BaseFreqC0) of white noise.
+ * 1/time unit length = base frequency for this object
+ *
  */
 public class PluckVoice extends SampleVoice {
   private Wave MySample = null;
@@ -25,27 +25,27 @@ public class PluckVoice extends SampleVoice {
     double WaveLen, Freq;
     //MySample = new Wave();
     switch (2) {
-    case 0: {
-      SizeInit = Horn.length;
-      MySample.Ingest(Horn, SampleRate);
-      WaveLen = (((double) SizeInit) / (double) SampleRate);
-      this.BaseFreq = 1.0 / WaveLen;
-      break;
-    }
-    case 1: {
-      Freq = Globals.BaseFreqC0;
-      //this.BaseFreq = Globals.BaseFreqC0 * Math.pow(2.0, 8.0);
-      this.BaseFreq = Globals.BaseFreqC0 / Freq;
-      WaveLen = (1.0 / Freq);
-      SizeInit = (int) (WaveLen * SampleRate);
-      MySample.Init(SizeInit, SampleRate);
-      //MySample.WhiteNoise_Fill();
-      MySample.Sawtooth_Fill();
-      break;
-    }
-    case 2:
-      MySample = GeneratePluck();
-      break;
+      case 0: {
+        SizeInit = Horn.length;
+        MySample.Ingest(Horn, SampleRate);
+        WaveLen = (((double) SizeInit) / (double) SampleRate);
+        this.BaseFreq = 1.0 / WaveLen;
+        break;
+      }
+      case 1: {
+        Freq = Globals.BaseFreqC0;
+        //this.BaseFreq = Globals.BaseFreqC0 * Math.pow(2.0, 8.0);
+        this.BaseFreq = Globals.BaseFreqC0 / Freq;
+        WaveLen = (1.0 / Freq);
+        SizeInit = (int) (WaveLen * SampleRate);
+        MySample.Init(SizeInit, SampleRate);
+        //MySample.WhiteNoise_Fill();
+        MySample.Sawtooth_Fill();
+        break;
+      }
+      case 2:
+        MySample = GeneratePluck();
+        break;
     }
   }
   /* ********************************************************************************* */
@@ -59,59 +59,175 @@ public class PluckVoice extends SampleVoice {
     this.BaseFreq = Globals.BaseFreqC0 / BaseFreq;// ??? 
     double Duration = 6.0;
     Wave wave0 = new Wave();
-    int SamplesPerCycle = (int) ((1.0 / BaseFreq) * Globals.SampleRate);
-    Wave pattern = new Wave();
-    pattern.Init(SamplesPerCycle, Globals.SampleRate);
-    PluckVoice.Generate_WhiteNoise(pattern, SamplesPerCycle, Globals.SampleRate);
     if (true) {
-      PluckVoice.Synth_Pluck_Decay(wave0, pattern, Duration);
+      int SamplesPerCycle = (int) ((1.0 / BaseFreq) * Globals.SampleRate);
+      Wave pattern = new Wave();
+      pattern.Init(SamplesPerCycle, Globals.SampleRate);
+      PluckVoice.Generate_WhiteNoise(pattern, SamplesPerCycle, Globals.SampleRate);
+      if (true) {
+        PluckVoice.Synth_Pluck_Decay(wave0, pattern, Duration);
+      } else {
+        PluckVoice.Repeat_Pattern(pattern, Duration, wave0);
+      }
     } else {
-      PluckVoice.Repeat_Pattern(wave0, pattern, Duration);
+      WaveTable_Test(wave0);
     }
     wave0.Normalize();
     return wave0;
   }
   /* ********************************************************************************* */
-  public static void Repeat_Pattern(Wave ResultWave, Wave pattern, double Duration) {
-    int SamplesPerCycle = pattern.NumSamples;
-    int ResultSize = (int) (Duration * (double) pattern.SampleRate);
-    ResultWave.Init(ResultSize, pattern.SampleRate);
-    double val;
-    int DexNow;
-    for (int SampCnt = 0; SampCnt < ResultSize; SampCnt++) {
-      DexNow = SampCnt % SamplesPerCycle;
-      val = pattern.Get(DexNow);
-      ResultWave.Set(SampCnt, val);
-    }
+  public static void Repeat_Pattern(Wave pattern, double Duration, Wave ResultWave) {
+    ResultWave.Repeat_Pattern_Time(pattern, Duration);
   }
   /* ********************************************************************************* */
   public static void Generate_WhiteNoise(Wave pattern, int SampleSize, int SampleRate) {
     pattern.Init(SampleSize, SampleRate);
-    double val;
-    for (int SampCnt = 0; SampCnt < SampleSize; SampCnt++) {
-      val = Globals.RandomGenerator.nextDouble() * 2.0 - 1.0;// white noise
-      pattern.Set(SampCnt, val);
+    if (false) {
+      pattern.Sawtooth_Fill();
+    } else {
+      double val;
+      for (int SampCnt = 0; SampCnt < SampleSize; SampCnt++) {
+        val = Globals.RandomGenerator.nextDouble() * 2.0 - 1.0;// white noise
+        pattern.Set(SampCnt, val);
+      }
+      pattern.Center();
     }
-    pattern.Center();
+  }
+  /* ********************************************************************************* */
+  public void WaveTable_Test(Wave Result) {
+    double BaseFreq = Globals.MiddleC4Freq;
+
+    this.BaseFreq = Globals.BaseFreqC0 / BaseFreq;// ??? 
+    double Duration = 6.0;
+    int SamplesPerCycle = (int) ((1.0 / BaseFreq) * Globals.SampleRate);
+
+    Wave pattern = new Wave();
+    pattern.Init(SamplesPerCycle, Globals.SampleRate);
+    //PluckVoice.Generate_SquareWave(pattern, SamplesPerCycle, Globals.SampleRate);
+    PluckVoice.Generate_WhiteNoise(pattern, SamplesPerCycle, Globals.SampleRate);
+
+    ArrayList<Wave> WaveTable = new ArrayList<Wave>();
+    int WaveSpanCycles = 10;//10;// number of pattern cycles represented by one wavetable sample.
+    Build_WaveTable(pattern, Duration, WaveSpanCycles, WaveTable);
+    //WaveSpanCycles = 2;//100;// expand or contract duration of sound without changing pitch
+    Reconstitute_Pluck(WaveTable, Duration, WaveSpanCycles, Result);
+    Result.EndTime = Duration;
+    Result.SampleRate = Globals.SampleRate;
+    Audio aud = new Audio();
+    aud.Save("RawPluck.wav", Result.GetWave());
+  }
+  /* ********************************************************************************* */
+  public static void Build_WaveTable(Wave pattern, double Duration, int WaveSpanCycles, ArrayList<Wave> ResultWaves) {
+    // experiment to create a simple wave table from a pluck
+    int SamplesPerCycle = pattern.NumSamples;
+    Audio aud = new Audio();
+    double PatternLengthSeconds = ((double) pattern.NumSamples) / (double) pattern.SampleRate;
+    int PluckLengthSamples = (int) (Duration * (double) pattern.SampleRate);
+    int NumCycles = (int) (PluckLengthSamples / SamplesPerCycle);
+    int NumWaves = NumCycles / WaveSpanCycles;
+    for (int cnt = 0; cnt < NumWaves; cnt++) {
+      Wave wav = new Wave();
+      wav.Init(SamplesPerCycle, pattern.SampleRate);
+      ResultWaves.add(wav);
+    }
+    double ValNow;
+    double ValAvg;
+    int DexPrev, DexNext;
+    int Dex0 = 0, Dex1 = 0, Dex2 = 0;
+    double ValPrev = 0, ValNext = 0;
+    int WavCnt = 0;
+    for (int PatternCnt = 0; PatternCnt < NumCycles; PatternCnt++) {
+      if ((PatternCnt % WaveSpanCycles) == 0) {// so every 10 patterns save a sample
+        if (PatternCnt == 1570 || WavCnt == 157) {
+          System.out.println("PatternCnt:" + PatternCnt + ", WavCnt:" + WavCnt);
+        }
+        if (WavCnt < NumWaves) {
+          Wave wav = ResultWaves.get(WavCnt);
+          wav.Copy_From(pattern);// snapshot
+          String formatted = String.format("%03d", WavCnt);
+          //aud.Save("pattern_" + formatted + ".wav", wav.GetWave());
+          WavCnt++;
+        }
+      }
+      double Inertia = 0.75;
+      double AntInertia = (1.0 - Inertia) / 2.0;
+      for (int SampCnt = 0; SampCnt < SamplesPerCycle; SampCnt++) {// more symmetrical blurring
+        Dex0 = Dex1;// dragging 3 indexes
+        Dex1 = Dex2;
+        Dex2 = SampCnt;
+        ValPrev = pattern.Get(Dex0);
+        ValNow = pattern.Get(Dex1);
+        ValNext = pattern.Get(Dex2);
+        ValAvg = (ValPrev * AntInertia) + (ValNow * Inertia) + (ValNext * AntInertia);
+        pattern.Set(Dex1, ValAvg);// decaying pattern
+      }
+      System.out.println("nothing");
+    }
+    for (int cnt = 0; cnt < NumWaves; cnt++) {
+      Wave wav = ResultWaves.get(cnt);
+      double MaxAmp = wav.GetMaxAmp();
+      System.out.println("MaxAmp:" + MaxAmp);
+    }
+  }
+  /* ********************************************************************************* */
+  public static void Reconstitute_Pluck(ArrayList<Wave> WaveTable, double Duration, int WaveSpanCycles, Wave Result) {
+    int PatternSizeSamples = WaveTable.get(0).NumSamples;
+    Result.Init(0, Result.SampleRate);
+    int WaveSpanSamples = WaveSpanCycles * PatternSizeSamples;
+    int NumPatterns = WaveTable.size();
+    Wave PatternPrev = WaveTable.get(0);
+    Wave PatternNext;
+    Wave PrevRun = new Wave(), NextRun = new Wave();
+    Wave Span = new Wave();
+    for (int pcnt = 1; pcnt < NumPatterns; pcnt++) {
+      PatternNext = WaveTable.get(pcnt);
+      // Build 2 waves that are repeats of prev and next, then fade them and mix them.
+      PrevRun.Repeat_Pattern_Samples(PatternPrev, WaveSpanSamples);
+      NextRun.Repeat_Pattern_Samples(PatternNext, WaveSpanSamples);
+      PrevRun.Fade(1.0, 0.0);// crossfade
+      NextRun.Fade(0.0, 1.0);
+      Span.Copy_From(NextRun);
+      Span.Overdub(PrevRun);
+      Result.Append2(Span);
+      PatternPrev = PatternNext;
+    }
   }
   /* ********************************************************************************* */
   public static void Synth_Pluck_Decay(Wave ResultWave, Wave pattern, double Duration) {
     int SamplesPerCycle = pattern.NumSamples;
-    double WaveLength = ((double) pattern.NumSamples) / (double) pattern.SampleRate;
-    double BaseFreq = 1.0 / WaveLength;
+    double WaveLengthSeconds = ((double) pattern.NumSamples) / (double) pattern.SampleRate;
+    double BaseFreq = 1.0 / WaveLengthSeconds;
     int ResultSize = (int) (Duration * (double) pattern.SampleRate);
     ResultWave.Init(ResultSize, pattern.SampleRate);
-    double val;
-    int DexNow;
+    double ValNow;
     double ValAvg;
-    double ValPrev = 0;
-    for (int SampCnt = 0; SampCnt < ResultSize; SampCnt++) {
-      DexNow = SampCnt % SamplesPerCycle;
-      val = pattern.Get(DexNow);
-      ResultWave.Set(SampCnt, val);
-      ValAvg = (ValPrev + val) / 2.0;
-      pattern.Set(DexNow, ValAvg);
-      ValPrev = val;
+    double ValPrev = 0, ValNext = 0;
+    int DexNow;
+    if (false) {
+      for (int SampCnt = 0; SampCnt < ResultSize; SampCnt++) {
+        DexNow = SampCnt % SamplesPerCycle;
+        ValNow = pattern.Get(DexNow);
+        ResultWave.Set(SampCnt, ValNow);
+        ValAvg = (ValPrev + ValNow) / 2.0;
+        pattern.Set(DexNow, ValAvg);
+        ValPrev = ValNow;
+      }
+    } else {
+      double Inertia = 0.75;
+      double AntInertia = (1.0 - Inertia) / 2.0;
+      int Dex0 = 0, Dex1 = 0, Dex2 = 0;
+      for (int SampCnt = 0; SampCnt < ResultSize; SampCnt++) {// more symmetrical blurring
+        DexNow = SampCnt % SamplesPerCycle;
+        Dex0 = Dex1;// dragging 3 indexes
+        Dex1 = Dex2;
+        Dex2 = DexNow;
+        ValPrev = pattern.Get(Dex0);
+        ValNow = pattern.Get(Dex1);
+        ValNext = pattern.Get(Dex2);
+        ValAvg = (ValPrev * AntInertia) + (ValNow * Inertia) + (ValNext * AntInertia);
+        pattern.Set(Dex1, ValAvg);// decaying pattern
+        ResultWave.Set(SampCnt, ValNow);
+      }
     }
   }
   /* ********************************************************************************* */
@@ -175,7 +291,7 @@ public class PluckVoice extends SampleVoice {
       //WindowSize++;
     }
   }
-  
+
   /* ********************************************************************************* */
   public static void Generate_Chirp(Wave pattern, int SampleSize, int SampleRate) {
     pattern.Init(SampleSize, SampleRate);
@@ -276,7 +392,7 @@ public class PluckVoice extends SampleVoice {
    Do we do this by seconds or by samples?  pluck averages samples, which is arbitrary. 
    seconds are huge, though. 
    */
-  /* ********************************************************************************* */
+ /* ********************************************************************************* */
   public static double Normal_Curve_Shrink(double XVal, double ShrinkFactor) {// create scaled mask for low-pass filter
     ShrinkFactor = ShrinkFactor / Math.sqrt(2 * Math.PI);// if ShrinkFactor parameter is 1, then curve is 1 unit.
     return Normal_Curve(XVal * ShrinkFactor) * ShrinkFactor;

@@ -60,7 +60,7 @@ public class Wave implements IDeletable {
     }
   }
   /* ********************************************************************************* */
-  public void Init(double StartTime0, double EndTime0, int SampleRate0) {
+  public void Init_Time(double StartTime0, double EndTime0, int SampleRate0) {
     this.StartTime = StartTime0;// wave start time is the offset of wave[0] from time 0. 
     this.EndTime = EndTime0;
     this.SampleRate = SampleRate0;
@@ -77,10 +77,34 @@ public class Wave implements IDeletable {
     this.Current_Index = 0;
   }
   /* ********************************************************************************* */
+  void Init_Sample(int SampleStart, int SampleEnd, int SampleRate0, double Filler) {
+    this.StartTime = ((double) SampleStart) / (double) SampleRate0;// wave start time is the offset of wave[0] from time 0.
+    this.EndTime = ((double) SampleEnd) / (double) SampleRate0;
+    this.SampleRate = SampleRate0;
+    int nsamps = SampleEnd - SampleStart;
+
+    this.StartDex = SampleStart;// StartDex is the number of empty samples from Time=0 to wave[0]
+    this.NumSamples = nsamps;
+    this.Resize(nsamps);
+    Arrays.fill(this.wave, Filler);
+  }
+  /* ********************************************************************************* */
+  public void Resize(int NextSize) {
+    double[] NextWave = new double[NextSize];
+    Arrays.fill(NextWave, 0.7);
+    int CopyLen = this.wave.length;
+    if (NextSize < CopyLen) {// if wave is shrinking
+      CopyLen = NextSize;
+    }
+    System.arraycopy(this.wave, 0, NextWave, 0, CopyLen);
+    this.wave = NextWave;
+    this.NumSamples = this.wave.length;
+  }
+  /* ********************************************************************************* */
   public void Ingest(double[] Sample, int SampleRate0) {
     int len = Sample.length;
     double Duration = ((double) len) / (double) SampleRate0;
-    this.Init(0, Duration, SampleRate0);
+    this.Init_Time(0, Duration, SampleRate0);
     for (int cnt = 0; cnt < len; cnt++) {
       this.wave[cnt] = Sample[cnt];
     }
@@ -176,8 +200,19 @@ public class Wave implements IDeletable {
     }
   }
   /* ********************************************************************************* */
+  public void Append2(Wave other) {// simple append for testing, ignores time offsets
+    int MySize = this.wave.length;
+    int OtherSize = other.wave.length;
+    int StartPlace = MySize;
+    int nextsize = MySize + OtherSize;
+    this.Resize(nextsize);
+    System.arraycopy(other.wave, 0, this.wave, StartPlace, OtherSize);
+    this.NumSamples = this.wave.length;
+  }
+  /* ********************************************************************************* */
   public void Append(Wave other) {
     int StartPlace = other.StartDex;
+    StartPlace = this.wave.length;
     int nextsize = StartPlace + other.NumSamples;
     this.wave = Arrays.copyOf(this.wave, nextsize);
     // StartPlace = StartPlace > 0 ? StartPlace - 1 : StartPlace;
@@ -300,6 +335,49 @@ public class Wave implements IDeletable {
     InterpAmp = (Fraction0 * amp0) + (Fraction1 * amp1);
     return InterpAmp;
   }
+  /* ********************************************************************************* */
+  void Repeat_Pattern_Time(Wave pattern, double Duration) {
+    int ResultSizeSamples = (int) (Duration * (double) pattern.SampleRate);
+    Repeat_Pattern_Samples(pattern, ResultSizeSamples);
+  }
+  /* ********************************************************************************* */
+  void Repeat_Pattern_Samples(Wave pattern, int ResultSizeSamples) {
+    int SamplesPerCycle = pattern.NumSamples;
+    this.Init_Sample(0, ResultSizeSamples, pattern.SampleRate, 0.7);
+    double val;
+    int DexNow;
+    for (int SampCnt = 0; SampCnt < ResultSizeSamples; SampCnt++) {
+      DexNow = SampCnt % SamplesPerCycle;// this could be more efficient with an array copy
+      val = pattern.Get(DexNow);
+      this.Set(SampCnt, val);
+    }
+  }
+  /* ******************************************************************* */
+  void Fade(double StartFactor, double EndFactor) {
+    double val0, DeltaFactor = EndFactor - StartFactor;
+    double Factor, FractAlong;
+    for (int cnt = 0; cnt < this.NumSamples; cnt++) {
+      val0 = this.wave[cnt];
+      FractAlong = ((double) cnt) / (double) this.NumSamples;
+      Factor = StartFactor + (DeltaFactor * FractAlong);
+      this.wave[cnt] = (val0 * Factor);
+    }
+  }
+  /* ******************************************************************* */
+  void CrossFade(Wave other, double StartFactor, double EndFactor, Wave results) {
+    double val0, val1, DeltaFactor = EndFactor - StartFactor;
+    double Factor, CompFactor, FractAlong;
+    int MinSamples = Math.min(this.NumSamples, other.NumSamples);
+    results.Init(MinSamples, this.SampleRate);// does not respect this.StartTime, time 0 is sample 0.
+    for (int cnt = 0; cnt < MinSamples; cnt++) {
+      val0 = this.wave[cnt];
+      val1 = other.wave[cnt];
+      FractAlong = ((double) cnt) / (double) MinSamples;
+      Factor = StartFactor + (DeltaFactor * FractAlong);
+      CompFactor = 1.0 - Factor;
+      results.wave[cnt] = (val0 * Factor) + (val1 * CompFactor);
+    }
+  }
   /* ******************************************************************* */
   public void MorphToWave(Wave other, double Factor, Wave results) {
     double val0, val1;
@@ -321,7 +399,7 @@ public class Wave implements IDeletable {
     this.Center();
   }
   /* ********************************************************************************* */
-  public void Sawtooth_Fill() {
+  public void Sawtooth_Fill() {// one cycle of a sawtooth wave for this whole wave
     double val;
     double FractAlong = 0;
     for (int SampCnt = 0; SampCnt < this.NumSamples; SampCnt++) {
@@ -330,6 +408,18 @@ public class Wave implements IDeletable {
       this.wave[SampCnt] = val;
     }
     this.Center();
+  }
+  /* ********************************************************************************* */
+  public void SquareWave_Fill() {// one cycle of a square wave for this whole wave
+    double Amplitude = 0.999;
+    int SampleSize = this.NumSamples = this.wave.length;
+    int HalfWay = SampleSize / 2;
+    for (int SampCnt = 0; SampCnt < HalfWay; SampCnt++) {
+      this.Set(SampCnt, Amplitude);
+    }
+    for (int SampCnt = HalfWay; SampCnt < SampleSize; SampCnt++) {
+      this.Set(SampCnt, -Amplitude);
+    }
   }
   /* ********************************************************************************* */
   public double[] GetWave() {// just for testing. remove later
@@ -370,8 +460,8 @@ public class Wave implements IDeletable {
     return child;
   }
   public void Copy_From(Wave donor) {
-    this.Init(donor.StartTime, donor.EndTime, donor.SampleRate);
-    System.arraycopy(donor.wave, 0, this.wave, 0, donor.NumSamples);
+    this.Init_Sample(donor.StartDex, donor.StartDex + donor.NumSamples, donor.SampleRate, 0.7);
+    System.arraycopy(donor.wave, 0, this.wave, 0, donor.wave.length);
   }
   public String Export() {
     StringBuilder sb = new StringBuilder();
@@ -387,7 +477,6 @@ public class Wave implements IDeletable {
     return sb.toString();
   }
   public void Consume(String text) {
-    StringBuilder sb = new StringBuilder();
     text = text.replace("[", "");// #hacky 
     text = text.replace("]", "");
     String[] chunks = text.split(",");

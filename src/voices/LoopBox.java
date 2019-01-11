@@ -307,13 +307,13 @@ public class LoopBox implements ISonglet.IContainer, IDrawable {
       double UnMapped_Prev_Time = this.MyOffsetBox.UnMapTime(this.Prev_Time);// get start time in parent coordinates
       if (this.MySonglet.Content == null) {
         this.IsFinished = true;
-        wave.Init(UnMapped_Prev_Time, UnMapped_Prev_Time, this.MyProject.SampleRate);// wave times are in parent coordinates because the parent will be reading the wave data.
+        wave.Init_Time(UnMapped_Prev_Time, UnMapped_Prev_Time, this.MyProject.SampleRate);// wave times are in parent coordinates because the parent will be reading the wave data.
         this.Prev_Time = EndTime;
         return;
       }
       double Clipped_EndTime = this.Tee_Up(EndTime);
       double UnMapped_EndTime = this.MyOffsetBox.UnMapTime(Clipped_EndTime);
-      wave.Init(UnMapped_Prev_Time, UnMapped_EndTime, this.MyProject.SampleRate);// wave times are in parent coordinates because the parent will be reading the wave data.
+      wave.Init_Time(UnMapped_Prev_Time, UnMapped_EndTime, this.MyProject.SampleRate);// wave times are in parent coordinates because the parent will be reading the wave data.
       Wave ChildWave = new Wave();
       int NumPlaying = NowPlaying.size();
       int cnt = 0;

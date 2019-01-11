@@ -192,7 +192,7 @@ public class AudProject implements IDeletable {
     double FinalTime = this.AudioRoot.GetContent().Get_Duration();
 
     Wave wave_render = new Wave();
-    wave_render.Init(0, FinalTime, SampleRate);
+    wave_render.Init_Time(0, FinalTime, SampleRate);
     Wave wave_scratch = new Wave();
 
     long StartTime, EndTime;
@@ -231,7 +231,7 @@ public class AudProject implements IDeletable {
 //    int nsamps = this.AudioRoot.GetContent().Get_Sample_Count(this.SampleRate);
 //    wave_render.Init(nsamps);
     Wave wave_render = new Wave();
-    wave_render.Init(0, FinalTime, SampleRate);
+    wave_render.Init_Time(0, FinalTime, SampleRate);
     wave_render.Fill(Wave.Debug_Fill);
     Wave wave_scratch = new Wave();
 

@@ -32,7 +32,7 @@ public class Voices {
   public static void main(String[] args) {
 
     RegisterFactories();
-    switch (4) {
+    switch (7) {
     case 0: {
       JavaParse.MetaProject mp = new JavaParse.MetaProject();
       mp.PortAll();
@@ -66,6 +66,14 @@ public class Voices {
     case 6:
       BenchTest();
       break;
+    case 7: {
+      Wave wav = new Wave();
+      String flpath = new File("").getAbsolutePath();
+      Audio.Read(flpath + "\\..\\samples\\Ahh_Waveform01.wav", wav);
+      wav.Normalize();
+      Wave.SaveWaveToCsv("Ahh_Waveform01.csv", wav);
+      break;
+    }
     }
   }
   /* ********************************************************************************* */

@@ -154,7 +154,7 @@ public class Audio implements IDeletable {
 
     double FinalTime = SongHandle.GetContent().Get_Duration();
     Wave wave_render = new Wave();
-    wave_render.Init(0, FinalTime, SampleRate);
+    wave_render.Init_Time(0, FinalTime, SampleRate);
     wave_render.Fill(Wave.Debug_Fill);
     Wave wave_scratch = new Wave();
 
@@ -181,7 +181,7 @@ public class Audio implements IDeletable {
     double FinalTime = SongHandle.GetContent().Get_Duration();
 
     Wave wave_render = new Wave();
-    wave_render.Init(0, FinalTime, SampleRate);
+    wave_render.Init_Time(0, FinalTime, SampleRate);
 
     RootPlayer.Start();
     RootPlayer.Render_To(FinalTime, wave_render);
