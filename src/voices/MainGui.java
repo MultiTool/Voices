@@ -652,7 +652,7 @@ public class MainGui {
   }
   /* ********************************************************************************* */
   public void savefile() {// http://stackoverflow.com/questions/19621105/save-image-from-jpanel-after-draw
-    BufferedImage image2 = new BufferedImage(drawpanel.WIDTH, drawpanel.HEIGHT, BufferedImage.TYPE_INT_RGB);
+    BufferedImage image2 = new BufferedImage(DrawingPanel.WIDTH, DrawingPanel.HEIGHT, BufferedImage.TYPE_INT_RGB);
     JFileChooser jFile = new JFileChooser();
     jFile.showSaveDialog(null);
     Path pth = jFile.getSelectedFile().toPath();

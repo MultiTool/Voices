@@ -198,7 +198,7 @@ public class GraphicBox implements IDrawable, ISonglet, IDeletable, ISonglet.ICo
       return;
     }
     this.ShallowLoad(phrase);
-    JsonParse.Node ChildPhrase = IFactory.Utils.LookUpField(phrase.ChildrenHash, this.ContentOBoxName);// array of subsongs object
+    JsonParse.Node ChildPhrase = IFactory.Utils.LookUpField(phrase.ChildrenHash, GraphicBox.ContentOBoxName);// array of subsongs object
     if (ChildPhrase != null) {
       String TypeName = IFactory.Utils.GetField(ChildPhrase.ChildrenHash, Globals.ObjectTypeName, "null");
       IFactory factory = Globals.FactoryLUT.get(TypeName);// use factories to deal with polymorphism

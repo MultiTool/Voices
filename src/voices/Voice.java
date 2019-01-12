@@ -420,7 +420,7 @@ public class Voice implements ISonglet, IDrawable, ISonglet.IContainer {
     // to do: before we even enter this function, first determine if phrase just has a txt pointer instead of a ChildrenHash. 
     this.ShallowLoad(phrase);
     HashMap<String, JsonParse.Node> Fields = phrase.ChildrenHash;
-    JsonParse.Node PhrasePointList = IFactory.Utils.LookUpField(Fields, this.CPointsName);
+    JsonParse.Node PhrasePointList = IFactory.Utils.LookUpField(Fields, Voice.CPointsName);
     if (PhrasePointList != null && PhrasePointList.ChildrenArray != null) {
       this.Wipe_CPoints();
       VoicePoint vp;
@@ -442,7 +442,7 @@ public class Voice implements ISonglet, IDrawable, ISonglet.IContainer {
     // Fields.put("MyBounds", MyBounds.Export(HitTable)); // can be calculated
     JsonParse.Node CPointsPhrase = new JsonParse.Node();// Save my array of control points.
     CPointsPhrase.ChildrenArray = IFactory.Utils.MakeArray(HitTable, this.CPoints);
-    Fields.put(this.CPointsName, CPointsPhrase);
+    Fields.put(Voice.CPointsName, CPointsPhrase);
     return Fields;
   }
   /* ********************************************************************************* */

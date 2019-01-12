@@ -124,6 +124,7 @@ public class AudProject implements IDeletable {
       obox = TestJunkyard.Compose_Warble_Chorus();
       obox.TimeX += NoteMaker.OffsetTime;
       obox.OctaveY = (4);
+      break;
     case 8:
       obox = TestJunkyard.Compose_Ribbon_Chorus().Spawn_OffsetBox();
       obox.TimeX += NoteMaker.OffsetTime;

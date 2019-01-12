@@ -657,7 +657,7 @@ public class GroupBox implements ISonglet, IDrawable, ISonglet.IContainer {
     // Save my array of songlets.
     JsonParse.Node CPointsPhrase = new JsonParse.Node();
     CPointsPhrase.ChildrenArray = IFactory.Utils.MakeArray(HitTable, this.SubSongs);
-    phrase.AddSubPhrase(this.SubSongsName, CPointsPhrase);
+    phrase.AddSubPhrase(GroupBox.SubSongsName, CPointsPhrase);
 
     return phrase;
   }
@@ -671,7 +671,7 @@ public class GroupBox implements ISonglet, IDrawable, ISonglet.IContainer {
       return;
     }
     this.ShallowLoad(phrase);
-    JsonParse.Node ChildPhraseList = IFactory.Utils.LookUpField(phrase.ChildrenHash, this.SubSongsName);// array of subsongs object
+    JsonParse.Node ChildPhraseList = IFactory.Utils.LookUpField(phrase.ChildrenHash, GroupBox.SubSongsName);// array of subsongs object
     if (ChildPhraseList != null && ChildPhraseList.ChildrenArray != null) {
       this.Wipe_SubSongs();
       OffsetBox obox;
