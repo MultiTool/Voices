@@ -757,6 +757,7 @@ public class GroupBox implements ISonglet, IDrawable, ISonglet.IContainer {
       double UnMapped_EndTime = this.InheritedMap.UnMapTime(Clipped_EndTime);
       wave.Init_Time(UnMapped_Prev_Time, UnMapped_EndTime, this.MyProject.SampleRate);// wave times are in parent coordinates because the parent will be reading the wave data.
       Wave ChildWave = new Wave();
+      ChildWave.SampleRate = wave.SampleRate;
       int NumPlaying = NowPlaying.size();
       Singer player = null;
       int cnt = 0;

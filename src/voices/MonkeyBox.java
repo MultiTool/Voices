@@ -138,6 +138,14 @@ public class MonkeyBox implements IDrawable.IMoveable, IDeletable, ITextable {//
   }
   // </editor-fold>
   /* ********************************************************************************* */
+  double GetFrequencyFactor() {
+    return Math.pow(2.0, this.OctaveY);
+  }
+  /* ********************************************************************************* */
+  static double OctaveToFrequencyFactor(double Octave) {
+    return Math.pow(2.0, Octave);
+  }
+  /* ********************************************************************************* */
   @Override public void Draw_Me(DrawingContext ParentDC) {// IDrawable
   }
   /* ********************************************************************************* */

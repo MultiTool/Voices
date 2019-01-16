@@ -315,6 +315,7 @@ public class LoopBox implements ISonglet.IContainer, IDrawable {
       double UnMapped_EndTime = this.MyOffsetBox.UnMapTime(Clipped_EndTime);
       wave.Init_Time(UnMapped_Prev_Time, UnMapped_EndTime, this.MyProject.SampleRate);// wave times are in parent coordinates because the parent will be reading the wave data.
       Wave ChildWave = new Wave();
+      ChildWave.SampleRate = wave.SampleRate;
       int NumPlaying = NowPlaying.size();
       int cnt = 0;
       while (cnt < NumPlaying) {// then play the whole pool

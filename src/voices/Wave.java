@@ -92,10 +92,7 @@ public class Wave implements IDeletable {
   public void Resize(int NextSize) {
     double[] NextWave = new double[NextSize];
     Arrays.fill(NextWave, 0.7);
-    int CopyLen = this.wave.length;
-    if (NextSize < CopyLen) {// if wave is shrinking
-      CopyLen = NextSize;
-    }
+    int CopyLen = Math.min(NextSize, this.wave.length);
     System.arraycopy(this.wave, 0, NextWave, 0, CopyLen);
     this.wave = NextWave;
     this.NumSamples = this.wave.length;
@@ -253,6 +250,16 @@ public class Wave implements IDeletable {
 //    } else {
 //      boolean nop = true;// range check
 //    }
+  }
+  void Set_Abs(int dex, double value) {// set with index based on absolute time == 0 (beginning of whole composition)
+    int sz = wave.length;
+    dex -= this.StartDex;// to do: replace this approach with something more efficient
+    if (dex < 0 || sz - 1 < dex) {
+      //printf("Set_Abs out of range! size:%zu, dex:%i\n\n", wave.length, dex);
+      //this->wave.insert(this->wave.begin()+dex, value); this->NumSamples = this->wave.size();
+    } else {
+      this.wave[dex] = value;
+    }
   }
   /* ******************************************************************* */
   public double GetDownSampleDecimated(double PrevTimeSeconds, double CtrTimeSeconds, double NextTimeSeconds) {// not ready for test or even fully thought out yet.

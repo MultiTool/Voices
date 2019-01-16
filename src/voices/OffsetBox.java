@@ -29,6 +29,7 @@ public class OffsetBox extends MonkeyBox { //implements IDrawable.IMoveable, IDe
 //  double OctavesPerRadius = 0.03;
   public static Factory MyFactory = InitFactory();
   public static String ContentName = "Content";
+  public ISonglet MySonglet;
   /* ********************************************************************************* */
   public OffsetBox() {
     //this.Clear();

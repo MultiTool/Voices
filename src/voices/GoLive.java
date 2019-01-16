@@ -125,10 +125,17 @@ public class GoLive implements Runnable, IDeletable {
     while (this.NumRunning > 0) {// block until existing threads have finished
       System.out.println("Blocking on threads:" + this.NumRunning);
     }
+//    Wave master = new Wave();
+//    master.Init_Sample(0, 0, this.MyProject.SampleRate, 0.3);
+    this.wave_render.SampleRate = this.MyProject.SampleRate;
     this.NumRunning++;
     while (this.CurrentTime < this.FinalTime && this.KeepGoing) {
-      System.out.println("CurrentTime:" + CurrentTime + " KeepGoing:" + this.KeepGoing);
+//      System.out.println("CurrentTime:" + CurrentTime + " KeepGoing:" + this.KeepGoing);
+      this.wave_render = new Wave();
+      this.wave_render.Init_Sample(0, 0, this.MyProject.SampleRate, 0.7);
       this.RootPlayer.Render_To(CurrentTime, this.wave_render);
+      System.out.println("GoLive CurrentTime:" + CurrentTime + ", wave_render.NumSamples:" + this.wave_render.NumSamples);
+//      master.Append2(this.wave_render);
       this.CheckMax();
       audio.Feed(this.wave_render);
       if (this.MyCallback != null) {
@@ -141,13 +148,18 @@ public class GoLive implements Runnable, IDeletable {
       }
     }
     if (this.KeepGoing) {
+      this.wave_render = new Wave();
+      this.wave_render.Init_Sample(0, 0, this.MyProject.SampleRate, 0.7);
       this.RootPlayer.Render_To(this.FinalTime, this.wave_render);// play last little bit, if any
+//      master.Append2(this.wave_render);
       this.CheckMax();
       audio.Feed(this.wave_render);
     }
     this.stop();
     this.MyCallback.LivePlayerFinished();
     this.NumRunning--;
+//    Audio aud = new Audio();
+//    aud.Save("VPlay.wav", master.GetWave());
   }
   /* ********************************************************************************* */
   public void PleaseStop() {// polite stopping without interrupt

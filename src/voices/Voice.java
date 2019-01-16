@@ -11,11 +11,12 @@ import java.util.HashMap;
  *
  * @author MultiTool
  */
-public class Voice implements ISonglet, IDrawable, ISonglet.IContainer {
+public class Voice implements ISonglet.IContainer {
   // collection of control points, each one having a pitch and a volume. rendering morphs from one cp to another. 
   public ArrayList<VoicePoint> CPoints = new ArrayList<VoicePoint>();
-  public static String CPointsName = "ControlPoints";// for serialization
-  protected AudProject MyProject;
+  public static String CPointsName = "ControlPoints", BaseFreqName = "BaseFreq";// for serialization
+  public AudProject MyProject;
+  public int SampleRate;
   private double MaxAmplitude;
   private int FreshnessTimeStamp;
   protected double BaseFreq = Globals.BaseFreqC0;
@@ -25,27 +26,446 @@ public class Voice implements ISonglet, IDrawable, ISonglet.IContainer {
   // graphics support
   CajaDelimitadora MyBounds = new CajaDelimitadora();
   Color FillColor;
+  static double Filler = 0.3;// to diagnose/debug dropouts in output wave
+  public static boolean Voice_Iterative = false;
+  /* ********************************************************************************* */
+  public static class Voice_Singer extends Singer {
+    protected Voice MyVoice;
+    double Phase, Cycles;// Cycles is the number of cycles we've rotated since the start of this voice. The fractional part is the phase information. 
+    double SubTime;// Subjective time.
+    double Current_Octave, Current_Frequency;
+    int Next_Point_Dex;
+    VoicePoint Cursor_Point = new VoicePoint();
+    double Prev_Time_Absolute = Double.NEGATIVE_INFINITY;//  Initialize to broken value.
+    int Sample_Start = Integer.MIN_VALUE;// Number of samples since time 0 absolute, not local. Initialize to broken value.
+    //int SampleRate;// to do: move int GetSampleRate to Singer
+    double BaseFreq;
+    /* ********************************************************************************* */
+    protected Voice_Singer() {
+      this.Current_Frequency = 440;
+      this.Create_Me();
+      this.ParentSinger = null;
+    }
+    /* ********************************************************************************* */
+    @Override public void Start() {
+      this.SubTime = 0.0;
+      this.Phase = 0.0;
+      this.Cycles = 0.0;
+      this.Next_Point_Dex = 1;
+      this.Sample_Start = 0;
+      this.Prev_Time_Absolute = 0;
+      if (this.MyVoice.CPoints.size() < 2 || this.InheritedMap.LoudnessFactor == 0.0) {
+        this.IsFinished = true;// muted, so don't waste time rendering
+      } else {
+        this.IsFinished = false;
+        VoicePoint pnt = this.MyVoice.CPoints.get(0);
+        this.Cursor_Point.CopyFrom(pnt);
+        this.Prev_Time_Absolute = this.InheritedMap.UnMapTime(pnt.TimeX);// get start time in global coordinates
+        //this.Sample_Start = (int)(Prev_Time_Absolute * (double)this.SampleRate);
+      }
+    }
+    /* ********************************************************************************* */
+    @Override public void Skip_To(double EndTime) {// to do: rewrite this to match bug-fixed render_to
+      if (this.IsFinished) {
+        return;
+      }
+      VoicePoint Prev_Point = null, Next_Point = null;
+
+      EndTime = this.MyOffsetBox.MapTime(EndTime);// EndTime is now time internal to voice's own coordinate system
+      EndTime = this.ClipTime(EndTime);
+      double EndTime_Absolute = this.InheritedMap.UnMapTime(EndTime);
+      //this.Sample_Start = EndTime_Absolute * (double)this.SampleRate;
+      this.Prev_Time_Absolute = EndTime_Absolute;
+
+      Prev_Point = this.Cursor_Point;
+      int pdex = this.Next_Point_Dex;
+      Next_Point = this.MyVoice.CPoints.get(pdex);
+      if (false) {// to do: put treesearch here
+        pdex = this.MyVoice.Tree_Search(EndTime, this.Next_Point_Dex, this.MyVoice.CPoints.size());
+        Next_Point = this.MyVoice.CPoints.get(pdex);
+        // what to do with Prev_Point?
+      } else {
+        while (Next_Point.TimeX < EndTime) {// this loop ends with Prev_Point before EndTime and Next_Point after it.
+          pdex++;
+          Prev_Point = Next_Point;
+          Next_Point = this.MyVoice.CPoints.get(pdex);
+        }
+      }
+      this.Next_Point_Dex = pdex;
+
+      if (EndTime <= Next_Point.TimeX) {// deal with loose end.
+        if (Prev_Point.TimeX <= EndTime) {// EndTime is inside this box. 
+          VoicePoint End_Cursor = new VoicePoint();// this section should always be executed, due to time clipping
+          End_Cursor.CopyFrom(Prev_Point);
+          Interpolate_ControlPoint(Prev_Point, Next_Point, EndTime, End_Cursor);
+          this.Cursor_Point.CopyFrom(End_Cursor);
+        }
+      }
+    }
+    /* ********************************************************************************* */
+    @Override public void Render_To(double EndTime, Wave wave) {      // ready for test
+      int SampleRateLocal = this.SampleRate = wave.SampleRate;
+      this.Sample_Start = (int) (this.Prev_Time_Absolute * (double) SampleRateLocal);
+      System.out.printf("Voice.Render_To EndTime:%f,wave.StartDex:%d,wave.NumSamples:%d %n", EndTime, wave.StartDex, wave.NumSamples);
+      if (this.IsFinished) {
+        wave.Init_Sample(this.Sample_Start, this.Sample_Start, SampleRateLocal, Filler);// we promise to return a blank wave
+        return;
+      }
+      VoicePoint Prev_Point = null, Next_Point = null;
+      EndTime = this.MyOffsetBox.MapTime(EndTime);// EndTime is now time internal to voice's own coordinate system
+      EndTime = this.ClipTime(EndTime);
+      double EndTime_Absolute = this.InheritedMap.UnMapTime(EndTime);
+      int Sample_End = (int) (EndTime_Absolute * (double) SampleRateLocal);
+      wave.Init_Sample(this.Sample_Start, Sample_End, SampleRateLocal, Filler);// wave times are in global coordinates because samples are always real time
+
+      Prev_Point = this.Cursor_Point;
+      int pdex = this.Next_Point_Dex;
+      Next_Point = this.MyVoice.CPoints.get(pdex);
+      while (Next_Point.TimeX < EndTime) {// this loop ends with Prev_Point before EndTime and Next_Point after it.
+        Render_Segment(Prev_Point, Next_Point, wave);
+        pdex++;
+        Prev_Point = Next_Point;
+        Next_Point = this.MyVoice.CPoints.get(pdex);
+      }
+      this.Next_Point_Dex = pdex;
+
+      if (EndTime <= Next_Point.TimeX) {// render loose end.
+        if (Prev_Point.TimeX <= EndTime) {// EndTime is inside this box. 
+          VoicePoint End_Cursor = new VoicePoint();// this section should always be executed, due to time clipping
+          End_Cursor.CopyFrom(Prev_Point);
+          Interpolate_ControlPoint(Prev_Point, Next_Point, EndTime, End_Cursor);
+          Render_Segment(Prev_Point, End_Cursor, wave);
+          this.Cursor_Point.CopyFrom(End_Cursor);
+        }
+      }
+      wave.Amplify(this.MyOffsetBox.LoudnessFactor);
+      this.Sample_Start = Sample_End;
+      this.Prev_Time_Absolute = EndTime_Absolute;// get end time in absolute universal
+      if (false) {
+        this.Distortion_Effect(wave, 10.0);
+//        this.Noise_Effect(wave);
+        Reverb_Effect(wave);
+      }
+    }
+    /* ********************************************************************************* */
+    public double GetWaveForm(double SubTimeAbsolute) {// not used currently
+      return Math.sin(SubTimeAbsolute * this.MyVoice.BaseFreq * Globals.TwoPi);
+    }
+    /* ********************************************************************************* */
+    public double ClipTime(double EndTime) {
+      if (EndTime < Cursor_Point.TimeX) {
+        EndTime = Cursor_Point.TimeX;// clip time
+      }
+      int FinalIndex = this.MyVoice.CPoints.size() - 1;
+      VoicePoint Final_Point = this.MyVoice.CPoints.get(FinalIndex);
+      if (EndTime > Final_Point.TimeX) {
+        this.IsFinished = true;
+        EndTime = Final_Point.TimeX;// clip time
+      }
+      return EndTime;
+    }
+    /* ********************************************************************************* */
+    @Override public OffsetBox Get_OffsetBox() {
+      return this.MyOffsetBox;
+    }
+    /* ********************************************************************************* */
+    void Render_Range(int dex0, int dex1, Wave wave) {// written for testing
+      VoicePoint pnt0, pnt1;
+      for (int pcnt = dex0; pcnt < dex1; pcnt++) {
+        pnt0 = this.MyVoice.CPoints.get(pcnt);
+        pnt1 = this.MyVoice.CPoints.get(pcnt + 1);
+        Render_Segment(pnt0, pnt1, wave);
+      }
+    }
+    /* ********************************************************************************* */
+    public static void Interpolate_ControlPoint(VoicePoint pnt0, VoicePoint pnt1, double RealTime, VoicePoint PntMid) {
+      double FrequencyFactorStart = pnt0.GetFrequencyFactor();
+      double TimeRange = pnt1.TimeX - pnt0.TimeX;
+      double TimeAlong = RealTime - pnt0.TimeX;
+      double OctaveRange = pnt1.OctaveY - pnt0.OctaveY;
+      double OctaveRate = OctaveRange / TimeRange;// octaves per second
+      double SubTimeLocal;
+      if (OctaveRate == 0.0) {
+        SubTimeLocal = TimeAlong;
+      } else {
+        SubTimeLocal = Voice.Integral(OctaveRate, TimeAlong);
+      }
+      PntMid.TimeX = RealTime;
+      PntMid.SubTime = pnt0.SubTime + (FrequencyFactorStart * SubTimeLocal);
+
+      // not calculus here
+      PntMid.OctaveY = pnt0.OctaveY + (TimeAlong * OctaveRate);
+      double LoudRange = pnt1.LoudnessFactor - pnt0.LoudnessFactor;
+      double LoudAlong = TimeAlong * LoudRange / TimeRange;
+      PntMid.LoudnessFactor = pnt0.LoudnessFactor + LoudAlong;
+    }
+    /* ********************************************************************************* */
+    void Render_Segment(VoicePoint pnt0, VoicePoint pnt1, Wave wave) {// Render a straight pitch line between two points (bend/chirp).
+      if (Voice_Iterative) {// In the long run, if we use Render_Segment_Iterative at all, it will be to fill in spaces for the integral approach.
+        Render_Segment_Iterative(pnt0, pnt1, wave);
+      } else {
+        Render_Segment_Integral(pnt0, pnt1, wave);
+      }
+    }
+    /* ********************************************************************************* */
+    void Render_Segment_Iterative(VoicePoint pnt0, VoicePoint pnt1, Wave wave) {// stateful iterative approach, ready for test
+      double SRate = this.SampleRate;
+      double Time0 = this.InheritedMap.UnMapTime(pnt0.TimeX);
+      double Time1 = this.InheritedMap.UnMapTime(pnt1.TimeX);
+      double FrequencyFactorInherited = this.InheritedMap.GetFrequencyFactor();// inherit transposition
+      int EndSample = (int) (Time1 * (double) SRate);// absolute
+
+      double SubTime0 = pnt0.SubTime * this.InheritedMap.ScaleX;// tempo rescale
+      double TimeRange = pnt1.TimeX - pnt0.TimeX;
+      double Octave0 = this.InheritedMap.OctaveY + pnt0.OctaveY;
+      double Octave1 = this.InheritedMap.OctaveY + pnt1.OctaveY;
+
+      double OctaveRange = Octave1 - Octave0;
+      double OctaveRate = OctaveRange / TimeRange;// octaves per second bend
+      OctaveRate += this.Inherited_OctaveRate;// inherit note bend
+      double LoudnessRange = pnt1.LoudnessFactor - pnt0.LoudnessFactor;
+      double LoudnessRate = LoudnessRange / TimeRange;
+      int NumSamples = EndSample - this.Sample_Start;
+
+      double TimeAlong, CurrentLoudness, Amplitude;
+
+      double CurrentOctaveLocal, CurrentFrequency, CurrentFrequencyFactorAbsolute, CurrentFrequencyFactorLocal;
+      double SubTimeIterate;
+
+      double FrequencyFactor0 = MonkeyBox.OctaveToFrequencyFactor(Octave0);
+      double FrequencyFactor1 = MonkeyBox.OctaveToFrequencyFactor(Octave1);
+      double FrequencyRatio = FrequencyFactor1 / FrequencyFactor0;
+      double Root = Math.pow(FrequencyRatio, 1.0 / (double) NumSamples);
+
+      SubTimeIterate = pnt0.SubTime * FrequencyFactorInherited * this.InheritedMap.ScaleX;// tempo rescale
+      double Snowball = 1.0;// frequency, pow(anything, 0)
+      for (int SampleCnt = this.Sample_Start; SampleCnt < EndSample; SampleCnt++) {
+        TimeAlong = (SampleCnt / SRate) - Time0;
+        CurrentLoudness = pnt0.LoudnessFactor + (TimeAlong * LoudnessRate);
+        CurrentFrequencyFactorAbsolute = (FrequencyFactor0 * Snowball);
+        Amplitude = this.GetWaveForm(SubTimeIterate);
+        wave.Set_Abs(SampleCnt, Amplitude * CurrentLoudness);
+        SubTimeIterate += CurrentFrequencyFactorAbsolute / SRate;
+        Snowball *= Root;
+      }
+      this.Sample_Start = EndSample;
+    }
+    /* ********************************************************************************* */
+    void Render_Segment_Integral(VoicePoint pnt0, VoicePoint pnt1, Wave wave) {// stateless calculus integral approach
+      double SRate = this.SampleRate;
+      double Time0 = this.InheritedMap.UnMapTime(pnt0.TimeX);
+      double Time1 = this.InheritedMap.UnMapTime(pnt1.TimeX);
+      double FrequencyFactorInherited = this.InheritedMap.GetFrequencyFactor();// inherit transposition
+      int EndSample = (int) (Time1 * (double) SRate);// absolute
+
+      double SubTime0 = pnt0.SubTime * this.InheritedMap.ScaleX;// tempo rescale
+      double TimeRange = Time1 - Time0;
+      double FrequencyFactorStart = pnt0.GetFrequencyFactor();
+      double Octave0 = this.InheritedMap.OctaveY + pnt0.OctaveY, Octave1 = this.InheritedMap.OctaveY + pnt1.OctaveY;
+
+      double OctaveRange = Octave1 - Octave0;
+      double OctaveRate = OctaveRange / TimeRange;// octaves per second bend
+      OctaveRate += this.Inherited_OctaveRate;// inherit note bend
+      double LoudnessRange = pnt1.LoudnessFactor - pnt0.LoudnessFactor;
+      double LoudnessRate = LoudnessRange / TimeRange;
+      double SubTimeLocal, SubTimeAbsolute;
+
+      double TimeAlong;
+      double CurrentLoudness;
+      double Amplitude;
+      int SampleCnt;
+      if (OctaveRate == 0.0) {// no bends, don't waste time on calculus
+        for (SampleCnt = this.Sample_Start; SampleCnt < EndSample; SampleCnt++) {
+          TimeAlong = (SampleCnt / SRate) - Time0;
+          CurrentLoudness = pnt0.LoudnessFactor + (TimeAlong * LoudnessRate);
+          SubTimeAbsolute = (SubTime0 + (FrequencyFactorStart * TimeAlong)) * FrequencyFactorInherited;
+          Amplitude = this.GetWaveForm(SubTimeAbsolute);
+          wave.Set_Abs(SampleCnt, Amplitude * CurrentLoudness);
+        }
+      } else {
+        double PreCalc0 = (SubTime0 * FrequencyFactorInherited);// evaluate this outside the loop to optimize
+        double PreCalc1 = (FrequencyFactorStart * FrequencyFactorInherited);
+        for (SampleCnt = this.Sample_Start; SampleCnt < EndSample; SampleCnt++) { // look into -ffast-math
+          TimeAlong = (SampleCnt / SRate) - Time0;
+          CurrentLoudness = pnt0.LoudnessFactor + (TimeAlong * LoudnessRate);
+          SubTimeLocal = Voice.Integral(OctaveRate, TimeAlong);
+          SubTimeAbsolute = (SubTime0 + (FrequencyFactorStart * SubTimeLocal)) * FrequencyFactorInherited;
+          //SubTimeAbsolute = (PreCalc0 + (PreCalc1 * SubTimeLocal));// optimized, hardly notice the difference
+          Amplitude = this.GetWaveForm(SubTimeAbsolute);
+          wave.Set_Abs(SampleCnt, Amplitude * CurrentLoudness);
+        }
+      }
+      this.Sample_Start = EndSample;
+    }
+    /* ********************************************************************************* */
+    double flywheel = 0.0;
+    double drag = 0.9, antidrag = 1.0 - drag;
+    /* ********************************************************************************* */
+    public void Noise_Effect(Wave wave) {
+      int len = wave.NumSamples;
+      for (int cnt = 0; cnt < len; cnt++) {
+        double val = wave.Get(cnt);
+        double rand = (Globals.RandomGenerator.nextDouble()) * antidrag + flywheel;
+        flywheel = rand * drag;
+        val = rand * val * 0.5 + val * 0.5;
+        wave.Set(cnt, val);
+      }
+    }
+    /* ********************************************************************************* */
+    public void Distortion_Effect(Wave wave, double gain) {
+      double power = 2.0;// sigmoid clipping 
+      int len = wave.NumSamples;
+      for (int cnt = 0; cnt < len; cnt++) {
+        double val = wave.Get(cnt) * gain;
+        val = val / Math.pow(1 + Math.abs(Math.pow(val, power)), 1.0 / power);
+        wave.Set(cnt, val);
+      }
+    }
+    /* ********************************************************************************* */
+    public void Reverb_Effect(Wave wave) {// not finished, need to extend the length of the sample 'wave' object
+      double Delay = this.MyVoice.ReverbDelay;// delay in seconds
+      double gain = 0.95;// diminish
+      int SampleDelay = (int) Math.round(Delay * (double) wave.SampleRate);
+      int PrevDex = 0;
+      double PrevVal, NowVal;
+      int len = wave.NumSamples;
+      for (int cnt = SampleDelay; cnt < len; cnt++) {
+        PrevVal = wave.Get(PrevDex);
+        NowVal = wave.Get(cnt);
+        NowVal = NowVal + (PrevVal * gain);
+        wave.Set(cnt, NowVal);
+        PrevDex++;
+      }
+    }
+    /* ********************************************************************************* */
+    @Override public boolean Create_Me() {// IDeletable
+      return true;
+    }
+    @Override public void Delete_Me() {// IDeletable
+      super.Delete_Me();
+      this.Cursor_Point.Delete_Me();
+      this.Cursor_Point = null;
+      this.MyVoice = null;// wreck everything so we crash if we try to use a dead object
+      this.Phase = this.Cycles = this.SubTime = Double.NEGATIVE_INFINITY;
+      this.Current_Octave = this.Current_Frequency = Double.NEGATIVE_INFINITY;
+      this.BaseFreq = Double.NEGATIVE_INFINITY;
+      this.Next_Point_Dex = Integer.MIN_VALUE;
+      this.Sample_Start = Integer.MIN_VALUE;
+    }
+  }
+  /* ********************************************************************************* */
+  public static class Voice_OffsetBox extends OffsetBox {// location box to transpose in pitch, move in time, etc. 
+    public Voice VoiceContent;
+    public static String ObjectTypeName = "Voice_OffsetBox";// for serialization
+    /* ********************************************************************************* */
+    public Voice_OffsetBox() {
+      super();
+      this.Create_Me();
+      this.Clear();
+    }
+    /* ********************************************************************************* */
+    @Override public Voice GetContent() {
+      return VoiceContent;
+    }
+    /* ********************************************************************************* */
+    public void Attach_Songlet(Voice songlet) {// for serialization
+      this.VoiceContent = songlet;
+      songlet.Ref_Songlet();
+    }
+    /* ********************************************************************************* */
+    @Override public Voice_Singer Spawn_Singer() {// for render time.  always always always override this
+      Voice_Singer Singer = this.VoiceContent.Spawn_Singer();
+      Singer.MyOffsetBox = this;
+      Singer.SampleRate = this.VoiceContent.MyProject.SampleRate;
+      return Singer;
+    }
+    /* ********************************************************************************* */
+    @Override public Voice_OffsetBox Clone_Me() {// always this thusly
+      Voice_OffsetBox child = new Voice_OffsetBox();// clone
+      child.Copy_From(this);
+      child.VoiceContent = this.VoiceContent;// iffy 
+      return child;
+    }
+    /* ********************************************************************************* */
+    @Override public Voice_OffsetBox Deep_Clone_Me(ITextable.CollisionLibrary HitTable) {// ICloneable
+      Voice_OffsetBox child = this.Clone_Me();
+      child.Attach_Songlet(this.VoiceContent.Deep_Clone_Me(HitTable));
+      return child;
+    }
+    /* ********************************************************************************* */
+    @Override public void BreakFromHerd(ITextable.CollisionLibrary HitTable) {// for compose time. detach from my songlet and attach to an identical but unlinked songlet
+      Voice clone = this.VoiceContent.Deep_Clone_Me(HitTable);
+      if (this.VoiceContent.UnRef_Songlet() <= 0) {
+        this.VoiceContent.Delete_Me();
+        this.VoiceContent = null;
+      }
+      this.Attach_Songlet(clone);
+    }
+    /* ********************************************************************************* */
+    @Override public boolean Create_Me() {// IDeletable
+      return true;
+    }
+    @Override public void Delete_Me() {// IDeletable
+      super.Delete_Me();
+      if (this.VoiceContent != null) {
+        if (this.VoiceContent.UnRef_Songlet() <= 0) {
+          this.VoiceContent.Delete_Me();
+          this.VoiceContent = null;
+        }
+      }
+    }
+    /* ********************************************************************************* */
+    @Override public JsonParse.Node Export(CollisionLibrary HitTable) {// ITextable
+      JsonParse.Node SelfPackage = super.Export(HitTable);// ready for test?
+      SelfPackage.AddSubPhrase(Globals.ObjectTypeName, IFactory.Utils.PackField(ObjectTypeName));
+      return SelfPackage;
+    }
+    @Override public void ShallowLoad(JsonParse.Node phrase) {// ITextable
+      super.ShallowLoad(phrase);
+    }
+    @Override public void Consume(JsonParse.Node phrase, CollisionLibrary ExistingInstances) {// ITextable - Fill in all the values of an already-created object, including deep pointers.
+      if (phrase == null) {// ready for test?
+        return;
+      }
+      this.ShallowLoad(phrase);
+      JsonParse.Node SongletPhrase = phrase.ChildrenHash.get(OffsetBox.ContentName);// value of songlet field
+      String ContentTxt = SongletPhrase.Literal;
+      Voice songlet;
+      if (Globals.IsTxtPtr(ContentTxt)) {// if songlet content is just a pointer into the library
+        CollisionItem ci = ExistingInstances.GetItem(ContentTxt);// look up my songlet in the library
+        if (ci == null) {// then null reference even in file - the json is corrupt
+          throw new RuntimeException("CollisionItem is null in " + ObjectTypeName);
+        }
+        if ((songlet = (Voice) ci.Item) == null) {// another cast!
+          ci.Item = songlet = new Voice();// if not instantiated, create one and save it
+          songlet.Consume(ci.JsonPhrase, ExistingInstances);
+        }
+      } else {
+        songlet = new Voice();// songlet is inline, inside this one offsetbox
+        songlet.Consume(SongletPhrase, ExistingInstances);
+      }
+      this.Attach_Songlet(songlet);
+    }
+    @Override public ISonglet Spawn_And_Attach_Songlet() {// reverse birth, use ONLY for deserialization
+      Voice songlet = new Voice();
+      this.Attach_Songlet(songlet);
+      return songlet;
+    }
+    /* ********************************************************************************* */
+    public static class Factory implements IFactory {// for serialization
+      @Override public Voice_OffsetBox Create(JsonParse.Node phrase, CollisionLibrary ExistingInstances) {// under construction, this does not do anything yet
+        Voice_OffsetBox obox = new Voice_OffsetBox();
+        obox.Consume(phrase, ExistingInstances);
+        return obox;
+      }
+    }
+  }
   /* ********************************************************************************* */
   public Voice() {
     this.MaxAmplitude = 1.0;
     RefCount = 0;
     this.FillColor = Globals.ToColorWheel(Globals.RandomGenerator.nextDouble());
-  }
-  /* ********************************************************************************* */
-  @Override public Voice_OffsetBox Spawn_OffsetBox() {// for compose time
-    Voice_OffsetBox vbox = new Voice_OffsetBox();// Deliver an OffsetBox specific to this type of phrase.
-    vbox.Attach_Songlet(this);
-    return vbox;
-  }
-  /* ********************************************************************************* */
-  @Override public Voice_Singer Spawn_Singer() {// for render time
-    // Deliver one of my singers while exposing specific object class. 
-    // Handy if my parent's singers know what class I am and want special access to my particular type of singer.
-    Voice_Singer singer = new Voice_Singer();
-    singer.MyVoice = this;
-    singer.MyProject = this.MyProject;// inherit project
-    singer.BaseFreq = this.BaseFreq;
-    return singer;
+    FreshnessTimeStamp = 0;
   }
   /* ********************************************************************************* */
   public void Attach_Editor(Voice_Editor editor) {// If a GUI forms editor has been designed, attach it using this.
@@ -60,8 +480,8 @@ public class Voice implements ISonglet, IDrawable, ISonglet.IContainer {
   /* ********************************************************************************* */
   public VoicePoint Add_Note(double RealTime, double Octave, double Loudness) {
     VoicePoint pnt = new VoicePoint();
-    pnt.OctaveY = Octave;
     pnt.TimeX = RealTime;
+    pnt.OctaveY = Octave;
     pnt.SubTime = 0.0;
     pnt.LoudnessFactor = Loudness;
     this.Add_Note(pnt);
@@ -78,21 +498,12 @@ public class Voice implements ISonglet, IDrawable, ISonglet.IContainer {
       medloc = (minloc + maxloc) >> 1; // >>1 is same as div 2, only faster.
       if (Time <= this.CPoints.get(medloc).TimeX) {
         maxloc = medloc;
-      }/* has to go through here to be found. */ else {
-        minloc = medloc + 1;
+      } else {
+        minloc = medloc + 1;/* has to go through here to be found. */
       }
     }
     return minloc;
   }
-  /* ********************************************************************************* */
-//  @Override public int Get_Sample_Count(int SampleRate) {
-//    int len = this.CPoints.size();
-//    VoicePoint First_Point = this.CPoints.get(0);
-//    VoicePoint Final_Point = this.CPoints.get(len - 1);
-//    double TimeDiff = Final_Point.TimeX - First_Point.TimeX;
-//    return (int) (TimeDiff * SampleRate);
-//    // return (int) (Final_Point.TimeX * SampleRate);
-//  }
   /* ********************************************************************************* */
   @Override public double Get_Duration() {
     int len = this.CPoints.size();
@@ -102,10 +513,6 @@ public class Voice implements ISonglet, IDrawable, ISonglet.IContainer {
     VoicePoint Final_Point = this.CPoints.get(len - 1);
     return Final_Point.TimeX + this.ReverbDelay;
   }
-  /* ********************************************************************************* */
-//  @Override public double Update_Durations() {
-//    return this.Get_Duration();// this is not a container, so just return what we already know
-//  }
   /* ********************************************************************************* */
   @Override public double Get_Max_Amplitude() {
     return this.MaxAmplitude;
@@ -125,7 +532,7 @@ public class Voice implements ISonglet, IDrawable, ISonglet.IContainer {
   }
   /* ********************************************************************************* */
   @Override public void Update_Guts(MetricsPacket metrics) {
-    if (this.FreshnessTimeStamp < metrics.FreshnessTimeStamp) {// don't hit the same songlet twice on one update
+    if (this.FreshnessTimeStamp != metrics.FreshnessTimeStamp) {// don't hit the same songlet twice on one update
       this.Set_Project(metrics.MyProject);
       this.Sort_Me();
       this.Recalc_Line_SubTime();
@@ -135,7 +542,8 @@ public class Voice implements ISonglet, IDrawable, ISonglet.IContainer {
     metrics.MaxDuration = this.Get_Duration();
   }
   /* ********************************************************************************* */
-  @Override public void Refresh_Me_From_Beneath(IDrawable.IMoveable mbox){}
+  @Override public void Refresh_Me_From_Beneath(IDrawable.IMoveable mbox) {
+  }// IContainer
   /* ********************************************************************************* */
   @Override public void Remove_SubNode(MonkeyBox obox) {// Remove a songlet from my list.
     this.CPoints.remove(obox);
@@ -153,8 +561,9 @@ public class Voice implements ISonglet, IDrawable, ISonglet.IContainer {
 //    return this.MyProject;
 //  }
   /* ********************************************************************************* */
-  @Override public void Set_Project(AudProject project) {
+  @Override public void Set_Project(AudProject project) {// ISonglet
     this.MyProject = project;
+//    this.SampleRate = MyProject.SampleRate; // snox, need to enable this and make it work
   }
   /* ********************************************************************************* */
   public void Recalc_Line_SubTime() {
@@ -164,9 +573,8 @@ public class Voice implements ISonglet, IDrawable, ISonglet.IContainer {
       return;
     }
     this.Sort_Me();
-    VoicePoint Prev_Point, Next_Point, Dummy_First;
+    VoicePoint Prev_Point, Next_Point, Dummy_First = new VoicePoint();
     Next_Point = this.CPoints.get(0);
-    Dummy_First = new VoicePoint();
     Dummy_First.CopyFrom(Next_Point);
     Dummy_First.SubTime = Dummy_First.TimeX = 0.0;// Times must both start at 0, even though user may have put the first audible point at T greater than 0. 
     Next_Point = Dummy_First;
@@ -180,7 +588,11 @@ public class Voice implements ISonglet, IDrawable, ISonglet.IContainer {
         TimeRange = Globals.Fudge;// Fudge to avoid div by 0 
       }
       double OctaveRate = OctaveRange / TimeRange;// octaves per second
-      SubTimeLocal = Integral(OctaveRate, TimeRange);
+      if (OctaveRate == 0.0) {
+        SubTimeLocal = TimeRange;// snox is using TimeRange right?
+      } else {
+        SubTimeLocal = Voice.Integral(OctaveRate, TimeRange);
+      }
       Next_Point.SubTime = Prev_Point.SubTime + (FrequencyFactorStart * SubTimeLocal);
     }
   }
@@ -191,15 +603,11 @@ public class Voice implements ISonglet, IDrawable, ISonglet.IContainer {
       return TimeAlong;
     }
     // Yep calling log and pow functions for every sample generated is expensive. We will have to optimize later. 
-    double Denom = (Math.log(2) * OctaveRate);// returns the integral of (2 ^ (TimeAlong * OctaveRate))
+    double Denom = (Math.log(2.0) * OctaveRate);// returns the integral of (2 ^ (TimeAlong * OctaveRate))
     //SubTimeCalc = (Math.pow(2, (TimeAlong * OctaveRate)) / Denom) - (1.0 / Denom);
     SubTimeCalc = ((Math.pow(2, (TimeAlong * OctaveRate)) - 1.0) / Denom);
     return SubTimeCalc;
   }
-  /* ********************************************************************************* */
-//  public double GetWaveForm(double SubTimeAbsolute) {
-//    return Math.sin(SubTimeAbsolute * this.BaseFreq * Globals.TwoPi);
-//  }
   /* ********************************************************************************* */
   @Override public void Draw_Me(DrawingContext ParentDC) {// IDrawable
     CajaDelimitadora ChildrenBounds = ParentDC.ClipBounds;// parent is already transformed by my offsetbox
@@ -311,7 +719,7 @@ public class Voice implements ISonglet, IDrawable, ISonglet.IContainer {
     if (Scoop.Intersects(MyBounds)) {
       int len = this.CPoints.size();
       VoicePoint pnt;
-      for (int pcnt = 0; pcnt < len; pcnt++) {
+      for (int pcnt = 0; pcnt < len; pcnt++) {// search my children
         System.out.print("" + pcnt + ", ");
         pnt = this.CPoints.get(pcnt);
         pnt.GoFishing(Scoop);
@@ -446,434 +854,25 @@ public class Voice implements ISonglet, IDrawable, ISonglet.IContainer {
     return Fields;
   }
   /* ********************************************************************************* */
-  public static class Voice_OffsetBox extends OffsetBox {// location box to transpose in pitch, move in time, etc. 
-    public Voice VoiceContent;
-    public static String ObjectTypeName = "Voice_OffsetBox";// for serialization
-    /* ********************************************************************************* */
-    public Voice_OffsetBox() {
-      super();
-      MyBounds = new CajaDelimitadora();
-      this.Clear();
-    }
-    /* ********************************************************************************* */
-    @Override public Voice GetContent() {
-      return VoiceContent;
-    }
-    /* ********************************************************************************* */
-    public void Attach_Songlet(Voice songlet) {// for serialization
-      this.VoiceContent = songlet;
-      songlet.Ref_Songlet();
-    }
-    /* ********************************************************************************* */
-    @Override public Voice_Singer Spawn_Singer() {// for render time.  always always always override this
-      Voice_Singer Singer = this.VoiceContent.Spawn_Singer();
-      Singer.MyOffsetBox = this;
-      return Singer;
-    }
-    /* ********************************************************************************* */
-    @Override public Voice_OffsetBox Clone_Me() {// always override this thusly
-      Voice_OffsetBox child = new Voice_OffsetBox();
-      child.Copy_From(this);
-      child.VoiceContent = this.VoiceContent;// iffy 
-      return child;
-    }
-    /* ********************************************************************************* */
-    @Override public Voice_OffsetBox Deep_Clone_Me(ITextable.CollisionLibrary HitTable) {// ICloneable
-      Voice_OffsetBox child = this.Clone_Me();
-      child.Attach_Songlet(this.VoiceContent.Deep_Clone_Me(HitTable));
-      return child;
-    }
-    /* ********************************************************************************* */
-    @Override public void BreakFromHerd(ITextable.CollisionLibrary HitTable) {// for compose time. detach from my songlet and attach to an identical but unlinked songlet
-      Voice clone = this.VoiceContent.Deep_Clone_Me(HitTable);
-      if (this.VoiceContent.UnRef_Songlet() <= 0) {
-        this.VoiceContent.Delete_Me();
-      }
-      this.Attach_Songlet(clone);
-    }
-    /* ********************************************************************************* */
-    @Override public boolean Create_Me() {// IDeletable
-      return true;
-    }
-    @Override public void Delete_Me() {// IDeletable
-      super.Delete_Me();
-      if (this.VoiceContent != null) {
-        if (this.VoiceContent.UnRef_Songlet() <= 0) {
-          this.VoiceContent.Delete_Me();
-        }
-        this.VoiceContent = null;
-      }
-    }
-    /* ********************************************************************************* */
-    @Override public JsonParse.Node Export(CollisionLibrary HitTable) {// ITextable
-      JsonParse.Node SelfPackage = super.Export(HitTable);// ready for test?
-      SelfPackage.AddSubPhrase(Globals.ObjectTypeName, IFactory.Utils.PackField(ObjectTypeName));
-      return SelfPackage;
-    }
-    @Override public void ShallowLoad(JsonParse.Node phrase) {// ITextable
-      super.ShallowLoad(phrase);
-    }
-    @Override public void Consume(JsonParse.Node phrase, CollisionLibrary ExistingInstances) {// ITextable - Fill in all the values of an already-created object, including deep pointers.
-      if (phrase == null) {// ready for test?
-        return;
-      }
-      this.ShallowLoad(phrase);
-      JsonParse.Node SongletPhrase = phrase.ChildrenHash.get(OffsetBox.ContentName);// value of songlet field
-      String ContentTxt = SongletPhrase.Literal;
-      Voice songlet;
-      if (Globals.IsTxtPtr(ContentTxt)) {// if songlet content is just a pointer into the library
-        CollisionItem ci = ExistingInstances.GetItem(ContentTxt);// look up my songlet in the library
-        if (ci == null) {// then null reference even in file - the json is corrupt
-          throw new RuntimeException("CollisionItem is null in " + ObjectTypeName);
-        }
-        if ((songlet = (Voice) ci.Item) == null) {// another cast!
-          ci.Item = songlet = new Voice();// if not instantiated, create one and save it
-          songlet.Consume(ci.JsonPhrase, ExistingInstances);
-        }
-      } else {
-        songlet = new Voice();// songlet is inline, inside this one offsetbox
-        songlet.Consume(SongletPhrase, ExistingInstances);
-      }
-      this.Attach_Songlet(songlet);
-    }
-    @Override public ISonglet Spawn_And_Attach_Songlet() {// reverse birth, use ONLY for deserialization
-      Voice songlet = new Voice();
-      this.Attach_Songlet(songlet);
-      return songlet;
-    }
-    /* ********************************************************************************* */
-    public static class Factory implements IFactory {// for serialization
-      @Override public Voice_OffsetBox Create(JsonParse.Node phrase, CollisionLibrary ExistingInstances) {// under construction, this does not do anything yet
-        Voice_OffsetBox obox = new Voice_OffsetBox();
-        obox.Consume(phrase, ExistingInstances);
-        return obox;
-      }
-    }
-  }
-  /* ********************************************************************************* */
-  public static class Voice_Singer extends Singer {
-    protected Voice MyVoice;
-    double Phase, Cycles;// Cycles is the number of cycles we've rotated since the start of this voice. The fractional part is the phase information. 
-    double SubTime;// Subjective time.
-    double Current_Octave, Current_Frequency;
-    int Prev_Point_Dex, Next_Point_Dex;
-    int Render_Sample_Count;
-    VoicePoint Cursor_Point = new VoicePoint();
-    protected int Bone_Sample_Mark = 0;// number of samples since time 0
-    double BaseFreq;
-    /* ********************************************************************************* */
-    protected Voice_Singer() {
-      this.Create_Me();
-      this.ParentSinger = null;
-    }
-    /* ********************************************************************************* */
-    @Override public void Start() {
-      this.SubTime = 0.0;
-      this.Phase = 0.0;
-      this.Cycles = 0.0;
-      this.Prev_Point_Dex = 0;//this.Parent.CPoints.get(0);
-      this.Next_Point_Dex = 1;
-      this.Render_Sample_Count = 0;
-      this.Bone_Sample_Mark = 0;
-      this.IsFinished = false;
-      if (this.MyVoice.CPoints.size() > 0) {
-        VoicePoint pnt = this.MyVoice.CPoints.get(0);
-        //this.Bone_Sample_Mark = (int) ((pnt.TimeX * this.Inherited_ScaleX) * this.MyProject.SampleRate);
-        this.Bone_Sample_Mark = (int) ((pnt.TimeX * this.InheritedMap.ScaleX) * this.MyProject.SampleRate);
-      }
-      //if (this.Parent != null) {
-      VoicePoint ppnt = this.MyVoice.CPoints.get(this.Prev_Point_Dex);
-      this.Cursor_Point.CopyFrom(ppnt);
-      //}
-    }
-    /* ********************************************************************************* */
-    @Override public void Skip_To(double EndTime) {      // ready for test
-      VoicePoint Prev_Point;
-      VoicePoint Next_Point;
-      EndTime = this.MyOffsetBox.MapTime(EndTime);// EndTime is now time internal to voice's own coordinate system
-      this.Render_Sample_Count = 0;
-      int NumPoints = this.MyVoice.CPoints.size();
-      if (NumPoints < 2) {// this should really just throw an error
-        this.IsFinished = true;
-        return;
-      }
-      EndTime = this.ClipTime(EndTime);
-      Prev_Point = this.Cursor_Point;
-      int pdex = this.Next_Point_Dex;
-      Next_Point = this.MyVoice.CPoints.get(pdex);
-      while (Next_Point.TimeX < EndTime) {
-        pdex++;
-        Prev_Point = Next_Point;
-        Next_Point = this.MyVoice.CPoints.get(pdex);
-      }
-      this.Next_Point_Dex = pdex;
-      this.Prev_Point_Dex = this.Next_Point_Dex - 1;
-
-      // deal with loose end. 
-      if (EndTime <= Next_Point.TimeX) {
-        if (Prev_Point.TimeX <= EndTime) {// EndTime is inside this box. 
-          this.Cursor_Point.CopyFrom(Prev_Point);// this section should always be executed, due to time clipping
-          Interpolate_ControlPoint(Prev_Point, Next_Point, EndTime, this.Cursor_Point);
-        }
-      }
-      //int EndSample = (int) (pnt1.TimeX * SRate);// absolute
-      int EndSample = (int) (EndTime * this.MyProject.SampleRate);// absolute
-      this.Bone_Sample_Mark = EndSample;
-    }
-    /* ********************************************************************************* */
-    @Override public void Render_To(double EndTime, Wave wave) {      // ready for test
-      if (this.InheritedMap.LoudnessFactor == 0.0) {// muted, so don't waste time rendering
-        return;
-      }
-      VoicePoint Prev_Point = null;
-      VoicePoint Next_Point = null;
-      EndTime = this.MyOffsetBox.MapTime(EndTime);// EndTime is now time internal to voice's own coordinate system
-      if (this.Cursor_Point == null) {
-        boolean nop = true;
-      }
-      double UnMapped_Prev_Time = this.InheritedMap.UnMapTime(this.Cursor_Point.TimeX);// get start time in global coordinates
-      this.Render_Sample_Count = 0;
-      int NumPoints = this.MyVoice.CPoints.size();
-      if (NumPoints < 2) {// this should really just throw an error
-        this.IsFinished = true;
-        wave.Init_Time(UnMapped_Prev_Time, UnMapped_Prev_Time, this.MyProject.SampleRate);
-        return;
-      }
-      EndTime = this.ClipTime(EndTime);
-      double UnMapped_EndTime = this.InheritedMap.UnMapTime(EndTime);
-      wave.Init_Time(UnMapped_Prev_Time, UnMapped_EndTime, this.MyProject.SampleRate);// wave times are in global coordinates because samples are always real time
-      Prev_Point = this.Cursor_Point;
-      int pdex = this.Next_Point_Dex;
-
-      if (true) {
-        Next_Point = this.MyVoice.CPoints.get(pdex);
-        while (Next_Point.TimeX < EndTime) {
-          Render_Segment_Integral(Prev_Point, Next_Point, wave);
-          pdex++;
-          Prev_Point = Next_Point;
-          Next_Point = this.MyVoice.CPoints.get(pdex);
-        }
-        this.Next_Point_Dex = pdex;
-      } else {
-        while (this.Next_Point_Dex < NumPoints) {
-          Next_Point = this.MyVoice.CPoints.get(this.Next_Point_Dex);
-          if (EndTime < Next_Point.TimeX) {// repeat until control point time overtakes EndTime
-            break;
-          }
-          this.Prev_Point_Dex = this.Next_Point_Dex - 1;
-          Prev_Point = this.MyVoice.CPoints.get(this.Prev_Point_Dex);
-          Render_Segment_Integral(Prev_Point, Next_Point, wave);
-          this.Next_Point_Dex++;
-        }
-      }
-
-      this.Prev_Point_Dex = this.Next_Point_Dex - 1;
-
-      // render loose end. 
-      if (EndTime <= Next_Point.TimeX) {
-        if (Prev_Point.TimeX <= EndTime) {// EndTime is inside this box. 
-          VoicePoint End_Cursor = new VoicePoint();// this section should always be executed, due to time clipping
-          End_Cursor.CopyFrom(Prev_Point);
-          Interpolate_ControlPoint(Prev_Point, Next_Point, EndTime, End_Cursor);
-          Render_Segment_Integral(Prev_Point, End_Cursor, wave);
-          this.Cursor_Point.CopyFrom(End_Cursor);
-        }
-      }
-      wave.Amplify(this.MyOffsetBox.LoudnessFactor);
-      if (false) {
-        this.Distortion_Effect(wave, 10.0);
-//        this.Noise_Effect(wave);
-        Reverb_Effect(wave);
-      }
-      wave.NumSamples = this.Render_Sample_Count;
-    }
-    /* ********************************************************************************* */
-    public double GetWaveForm(double SubTimeAbsolute) {// not used currently
-      return Math.sin(SubTimeAbsolute * this.MyVoice.BaseFreq * Globals.TwoPi);
-    }
-    double flywheel = 0.0;
-    double drag = 0.9, antidrag = 1.0 - drag;
-    /* ********************************************************************************* */
-    public void Noise_Effect(Wave wave) {
-      int len = wave.NumSamples;
-      for (int cnt = 0; cnt < len; cnt++) {
-        double val = wave.Get(cnt);
-        double rand = (Globals.RandomGenerator.nextDouble()) * antidrag + flywheel;
-        flywheel = rand * drag;
-        val = rand * val * 0.5 + val * 0.5;
-        wave.Set(cnt, val);
-      }
-    }
-    /* ********************************************************************************* */
-    public void Distortion_Effect(Wave wave, double gain) {
-      double power = 2.0;// sigmoid clipping 
-      int len = wave.NumSamples;
-      for (int cnt = 0; cnt < len; cnt++) {
-        double val = wave.Get(cnt) * gain;
-        val = val / Math.pow(1 + Math.abs(Math.pow(val, power)), 1.0 / power);
-        wave.Set(cnt, val);
-      }
-    }
-    /* ********************************************************************************* */
-    public void Reverb_Effect(Wave wave) {// not finished, need to extend the length of the sample 'wave' object
-      double Delay = this.MyVoice.ReverbDelay;// delay in seconds
-      double gain = 0.95;// diminish
-      int SampleDelay = (int) Math.round(Delay * (double) wave.SampleRate);
-      int PrevDex = 0;
-      double PrevVal, NowVal;
-      int len = wave.NumSamples;
-      for (int cnt = SampleDelay; cnt < len; cnt++) {
-        PrevVal = wave.Get(PrevDex);
-        NowVal = wave.Get(cnt);
-        NowVal = NowVal + (PrevVal * gain);
-        wave.Set(cnt, NowVal);
-        PrevDex++;
-      }
-    }
-    /* ********************************************************************************* */
-    public double ClipTime(double EndTime) {
-      if (EndTime < Cursor_Point.TimeX) {
-        EndTime = Cursor_Point.TimeX;// clip time
-      }
-      int FinalIndex = this.MyVoice.CPoints.size() - 1;
-      VoicePoint Final_Point = this.MyVoice.CPoints.get(FinalIndex);
-      if (EndTime > Final_Point.TimeX) {
-        this.IsFinished = true;
-        EndTime = Final_Point.TimeX;// clip time
-      }
-      return EndTime;
-    }
-    /* ********************************************************************************* */
-    @Override public OffsetBox Get_OffsetBox() {
-      return this.MyOffsetBox;
-    }
-    /* ********************************************************************************* */
-    public void Render_Range(int dex0, int dex1, Wave wave) {
-      VoicePoint pnt0;
-      VoicePoint pnt1;
-      this.Render_Sample_Count = 0;
-      for (int pcnt = dex0; pcnt < dex1; pcnt++) {
-        pnt0 = this.MyVoice.CPoints.get(pcnt);
-        pnt1 = this.MyVoice.CPoints.get(pcnt + 1);
-        Render_Segment_Integral(pnt0, pnt1, wave);
-      }
-    }
-    /* ********************************************************************************* */
-    public static void Interpolate_ControlPoint(VoicePoint pnt0, VoicePoint pnt1, double RealTime, VoicePoint PntMid) {
-      double FrequencyFactorStart = pnt0.GetFrequencyFactor();
-      double TimeRange = pnt1.TimeX - pnt0.TimeX;
-      double TimeAlong = RealTime - pnt0.TimeX;
-      double OctaveRange = pnt1.OctaveY - pnt0.OctaveY;
-      double OctaveRate = OctaveRange / TimeRange;// octaves per second
-      double SubTimeLocal = Integral(OctaveRate, TimeAlong);
-      PntMid.TimeX = RealTime;
-      PntMid.SubTime = pnt0.SubTime + (FrequencyFactorStart * SubTimeLocal);
-
-      // not calculus here
-      PntMid.OctaveY = pnt0.OctaveY + (TimeAlong * OctaveRate);
-      double LoudRange = pnt1.LoudnessFactor - pnt0.LoudnessFactor;
-      double LoudAlong = TimeAlong * LoudRange / TimeRange;
-      PntMid.LoudnessFactor = pnt0.LoudnessFactor + LoudAlong;
-    }
-    /* ********************************************************************************* */
-    public void Render_Segment_Iterative(VoicePoint pnt0, VoicePoint pnt1, Wave wave) {// stateful iterative approach
-      double BaseFreq = this.MyVoice.BaseFreq;
-      double SRate = this.MyProject.SampleRate;
-      double TimeRange = pnt1.TimeX - pnt0.TimeX;
-      double SampleDuration = 1.0 / SRate;
-      double FrequencyFactorStart = pnt0.GetFrequencyFactor();
-      // FrequencyFactorStart *= Math.pow(2.0, this.Inherited_Octave);// inherit transposition 
-      //double Octave0 = this.Inherited_Octave + pnt0.OctaveY, Octave1 = this.Inherited_Octave + pnt1.OctaveY;
-      FrequencyFactorStart *= Math.pow(2.0, this.InheritedMap.OctaveY);// inherit transposition 
-      double Octave0 = this.InheritedMap.OctaveY + pnt0.OctaveY, Octave1 = this.InheritedMap.OctaveY + pnt1.OctaveY;
-      double OctaveRange = Octave1 - Octave0;
-      if (OctaveRange == 0.0) {
-        OctaveRange = Globals.Fudge;// Fudge to avoid div by 0 
-      }
-      double LoudnessRange = pnt1.LoudnessFactor - pnt0.LoudnessFactor;
-      double OctaveRate = OctaveRange / TimeRange;// octaves per second
-      double LoudnessRate = LoudnessRange / TimeRange;
-      int NumSamples = (int) Math.ceil(TimeRange * SRate);
-
-      double TimeAlong;
-      double CurrentOctaveLocal, CurrentFrequency, CurrentFrequencyFactorAbsolute, CurrentFrequencyFactorLocal;
-      double CurrentLoudness;
-      double Amplitude;
-
-      double SubTimeIterate = (pnt0.SubTime * BaseFreq * Globals.TwoPi);
-
-      for (int scnt = 0; scnt < NumSamples; scnt++) {
-        TimeAlong = scnt * SampleDuration;
-        CurrentOctaveLocal = TimeAlong * OctaveRate;
-        CurrentFrequencyFactorLocal = Math.pow(2.0, CurrentOctaveLocal); // to convert to absolute, do pnt0.SubTime + (FrequencyFactorStart * CurrentFrequencyFactorLocal);
-        CurrentFrequencyFactorAbsolute = (FrequencyFactorStart * CurrentFrequencyFactorLocal);
-        CurrentLoudness = pnt0.LoudnessFactor + (TimeAlong * LoudnessRate);
-        CurrentFrequency = BaseFreq * CurrentFrequencyFactorAbsolute;// do we really need to include the base frequency in the summing?
-        Amplitude = Math.sin(SubTimeIterate);
-        wave.Set(this.Render_Sample_Count, Amplitude * CurrentLoudness);
-        SubTimeIterate += (CurrentFrequency * Globals.TwoPi) / SRate;
-        this.Render_Sample_Count++;
-      }
-    }
-    /* ********************************************************************************* */
-    public void Render_Segment_Integral(VoicePoint pnt0, VoicePoint pnt1, Wave wave) {// stateless calculus integral approach
-      double SRate = this.MyProject.SampleRate;
-      double Time0 = pnt0.TimeX * this.InheritedMap.ScaleX;
-      double Time1 = pnt1.TimeX * this.InheritedMap.ScaleX;
-      double SubTime0 = pnt0.SubTime * this.InheritedMap.ScaleX;// tempo rescale
-      double TimeRange = Time1 - Time0;
-      double FrequencyFactorStart = pnt0.GetFrequencyFactor();
-//      double FrequencyFactorInherited = Math.pow(2.0, this.Inherited_Octave);// inherit transposition 
-//      double Octave0 = this.Inherited_Octave + pnt0.OctaveY, Octave1 = this.Inherited_Octave + pnt1.OctaveY;
-      double FrequencyFactorInherited = Math.pow(2.0, this.InheritedMap.OctaveY);// inherit transposition 
-      double Octave0 = this.InheritedMap.OctaveY + pnt0.OctaveY, Octave1 = this.InheritedMap.OctaveY + pnt1.OctaveY;
-
-      double OctaveRange = Octave1 - Octave0;
-//      if (OctaveRange == 0.0) {
-//        OctaveRange = Globals.Fudge;// Fudge to avoid div by 0 
-//      }
-      double LoudnessRange = pnt1.LoudnessFactor - pnt0.LoudnessFactor;
-      double OctaveRate = OctaveRange / TimeRange;// octaves per second bend
-      OctaveRate += this.Inherited_OctaveRate;// inherit note bend 
-      double LoudnessRate = LoudnessRange / TimeRange;
-      double SubTimeLocal;
-      double SubTimeAbsolute;
-      int EndSample = (int) (Time1 * SRate);// absolute
-      double TimeAlong;
-      double CurrentLoudness;
-      double Amplitude;
-      int SampleCnt;
-      for (SampleCnt = this.Bone_Sample_Mark; SampleCnt < EndSample; SampleCnt++) {
-        TimeAlong = (SampleCnt / SRate) - Time0;
-        CurrentLoudness = pnt0.LoudnessFactor + (TimeAlong * LoudnessRate);
-        SubTimeLocal = Integral(OctaveRate, TimeAlong);
-        SubTimeAbsolute = (SubTime0 + (FrequencyFactorStart * SubTimeLocal)) * FrequencyFactorInherited;
-        Amplitude = this.GetWaveForm(SubTimeAbsolute);
-        wave.Set(this.Render_Sample_Count, Amplitude * CurrentLoudness);
-        this.Render_Sample_Count++;
-      }
-      this.Bone_Sample_Mark = EndSample;
-    }
-    /* ********************************************************************************* */
-    @Override public boolean Create_Me() {// IDeletable
-      return true;
-    }
-    @Override public void Delete_Me() {// IDeletable
-      super.Delete_Me();
-      this.Cursor_Point.Delete_Me();// this leads to snox
-      this.Cursor_Point = null;
-      this.MyVoice = null;// wreck everything so we crash if we try to use a dead object
-      this.Phase = this.Cycles = this.SubTime = Double.NEGATIVE_INFINITY;
-      this.Current_Octave = this.Current_Frequency = Double.NEGATIVE_INFINITY;
-      this.BaseFreq = Double.NEGATIVE_INFINITY;
-      this.Prev_Point_Dex = this.Next_Point_Dex = Integer.MIN_VALUE;
-      this.Render_Sample_Count = this.Bone_Sample_Mark = Integer.MIN_VALUE;
-    }
-  }
-  /* ********************************************************************************* */
   public static class Voice_Editor {// Form editor API, should probably be an interface
     public Voice MyVoice = null;// an editor has access to any variables in its songlet, but a songlet must call an editor's update function to propagate changes the other way.
     public void UpdateWhatever() {// override this. voice will force its editor to check for voice changes. we can write other more specific functions later. 
     }
+  }
+  /* ********************************************************************************* */
+  @Override public Voice_OffsetBox Spawn_OffsetBox() {// for compose time
+    Voice_OffsetBox vbox = new Voice_OffsetBox();// Spawn an OffsetBox specific to this type of phrase.
+    vbox.Attach_Songlet(this);
+    return vbox;
+  }
+  /* ********************************************************************************* */
+  @Override public Voice_Singer Spawn_Singer() {// for render time
+    // Deliver one of my singers while exposing specific object class. 
+    // Handy if my parent's singers know what class I am and want special access to my particular type of singer.
+    Voice_Singer singer = new Voice_Singer();// Spawn a singer specific to this type of phrase.
+    singer.MyVoice = this;
+    singer.Set_Project(this.MyProject);// inherit project
+    singer.BaseFreq = this.BaseFreq;
+    return singer;
   }
 }

@@ -150,6 +150,7 @@ public class AudProject implements IDeletable {
       break;
     case 11:
       GroupBox trunk = new GroupBox();
+      trunk.Set_Project(this);
       
       GroupBox.Group_OffsetBox dummy = NoteMaker.Create_Dummy_Group(3);// create dummy branch to help manual nesting of groups
       trunk.Add_SubSong(dummy, 0, 3, 1.0);

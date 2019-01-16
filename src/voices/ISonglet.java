@@ -48,10 +48,11 @@ public interface ISonglet extends IDrawable, IDeletable, ITextable {// Cancionit
     Inherited_Time = 0.0, Inherited_Octave = 0.0, Inherited_Loudness = 1.0;// time, octave, and loudness context
     Inherited_ScaleX = 1.0;// tempo rescale context
     Inherited_ScaleY = 1.0;// 'temper' context, which we will NEVER use unless we want to make ugly anharmonic noise.
-    */
+     */
     public boolean IsFinished = false;
     public Singer ParentSinger;
     protected OffsetBox MyOffsetBox = null;
+    public int SampleRate;// to do: move int GetSampleRate to Singer
     // public boolean exists = Create_Me();
     /* ********************************************************************************* */
     public Singer() {
@@ -72,6 +73,15 @@ public interface ISonglet extends IDrawable, IDeletable, ITextable {// Cancionit
       this.ParentSinger = parent;
       this.InheritedMap.Copy_From(parent.InheritedMap);
       this.Compound();
+    }
+    /* ********************************************************************************* */
+    void Set_Project(AudProject config) {
+      if (config != null) {
+        this.MyProject = config;
+        this.SampleRate = config.SampleRate;
+      } else {
+        System.out.printf("Singer Set_Project config is null!\n");
+      }
     }
     /* ********************************************************************************* */
     public void Compound() {// accumulate my own transformation
