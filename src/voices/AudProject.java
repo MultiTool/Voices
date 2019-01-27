@@ -53,11 +53,11 @@ public class AudProject implements IDeletable {
   public void Compose_Test() {
     ISonglet song = null;
     OffsetBox obox = null, obox_clone = null;
-    GroupBox CMinor, CMajor, DMajor, DMinor;
+    GroupSong CMinor, CMajor, DMajor, DMinor;
     OffsetBox CMinorObx, CMajorObx, DMajorObx, DMinorObx;
     double Delay;
     double TimeStep = 0.125;
-    GroupBox cbx;
+    GroupSong cbx;
     NoteMaker nm;
     LoopBox lbx;
     switch (11) {
@@ -97,7 +97,7 @@ public class AudProject implements IDeletable {
       break;
     case 6:
       Delay = 1.5;
-      cbx = new GroupBox();
+      cbx = new GroupSong();
       nm = new NoteMaker();
       lbx = new LoopBox();
       CMajorObx = nm.MakeMajor_OBox(0);// C major
@@ -131,7 +131,7 @@ public class AudProject implements IDeletable {
       obox.OctaveY = (4);
       break;
     case 9:
-      GroupBox gbx = new GroupBox();
+      GroupSong gbx = new GroupSong();
       gbx.Set_Project(this);
 
       song = NoteMaker.Create_Unbound_Triad_Rythm();
@@ -149,10 +149,10 @@ public class AudProject implements IDeletable {
       obox = gbx.Spawn_OffsetBox();
       break;
     case 11:
-      GroupBox trunk = new GroupBox();
+      GroupSong trunk = new GroupSong();
       trunk.Set_Project(this);
       
-      GroupBox.Group_OffsetBox dummy = NoteMaker.Create_Dummy_Group(3);// create dummy branch to help manual nesting of groups
+      GroupSong.Group_OffsetBox dummy = NoteMaker.Create_Dummy_Group(3);// create dummy branch to help manual nesting of groups
       trunk.Add_SubSong(dummy, 0, 3, 1.0);
       
       TimeStep = 0.33333 / 2.0;//0.125;

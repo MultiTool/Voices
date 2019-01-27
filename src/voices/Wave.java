@@ -89,6 +89,15 @@ public class Wave implements IDeletable {
     Arrays.fill(this.wave, Filler);
   }
   /* ********************************************************************************* */
+  void Assign_SampleRate(int SampleRate0) {
+    this.SampleRate = SampleRate0;
+    int SampleStart = (int)(this.StartTime * (double)this.SampleRate);
+    int SampleEnd = (int)(this.EndTime * (double)this.SampleRate);
+    int nsamps = SampleEnd - SampleStart;
+    this.StartDex = SampleStart;// StartDex is the number of empty samples from Time=0 to wave[0]
+    this.Resize(nsamps);
+  }
+  /* ********************************************************************************* */
   public void Resize(int NextSize) {
     double[] NextWave = new double[NextSize];
     Arrays.fill(NextWave, 0.7);
@@ -395,6 +404,51 @@ public class Wave implements IDeletable {
       val1 = other.wave[cnt];
       results.wave[cnt] = (val0 * InvFactor) + (val1 * Factor);
     }
+  }
+  /* ********************************************************************************* */
+  public void Harmonic_Fill(int FrequencyFactorInt) {
+    double FrequencyFactor = FrequencyFactorInt;// pass as integer so all wavelengths fit evenly.
+    double val, FractAlong;// int param forces call to be only in even harmonics.
+    int Len = this.NumSamples;
+    for (int SampCnt = 0; SampCnt < Len; SampCnt++) {
+      FractAlong = ((double)SampCnt) / (double)Len;
+      val = Math.sin(FractAlong * FrequencyFactor * Globals.TwoPi);
+      this.wave[SampCnt] = val;
+    }
+    this.Center();
+    this.Normalize();
+  }
+  /* ********************************************************************************* */
+  public void Fractal_Fill() {// not finished and not ready for test
+    this.Fill(0.0);
+    Fractal_Fill(0, this.NumSamples, 0);
+  }
+  /* ********************************************************************************* */
+  public void Fractal_Fill(int Dex0, int Dex1, int Depth) {// not finished and not ready for test
+    double val;
+    int Len = Dex1-Dex0;
+    if (Len<=2){
+      return;
+    }
+    int HalfWay = Len/2;//(Dex0 + Dex1) / 2;
+    int SampCnt = 0;//Dex0;
+    while (SampCnt < HalfWay) {// rise to peak
+      val = SampCnt;
+      this.wave[Dex0+SampCnt] += val;
+      SampCnt++;
+    }
+    while (SampCnt < Len) {// fall from peak
+      val = HalfWay-(SampCnt-HalfWay);
+      this.wave[Dex0+SampCnt] += val;
+      SampCnt++;
+    }
+    Depth++;
+    if (Depth<2){
+      Fractal_Fill(Dex0, Dex0+HalfWay, Depth);
+      Fractal_Fill(Dex0+HalfWay, Dex1, Depth);
+    }
+    this.Center();
+    this.Normalize();
   }
   /* ********************************************************************************* */
   public void WhiteNoise_Fill() {

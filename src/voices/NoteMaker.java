@@ -188,6 +188,7 @@ public class NoteMaker {
       pattern.Set(SampCnt, val);
     }
     pattern.Center();
+    pattern.Normalize();
   }
   /* ********************************************************************************* */
   public static void Morph_Synth(ArrayList<Wave> WaveTable, Wave wave) {
@@ -330,14 +331,14 @@ public class NoteMaker {
   /* ********************************************************************************* */
   public static ISonglet Create_Unbound_Triad_Rythm() {
     OffsetBox obox = null;
-    GroupBox CMinor, CMajor, DMajor, DMinor;
+    GroupSong CMinor, CMajor, DMajor, DMinor;
     double Delay = 1.5;
-    GroupBox gbx;
+    GroupSong gbx;
     NoteMaker nm;
     LoopBox song;
     
     double offx = NoteMaker.OffsetTime;
-    gbx = new GroupBox();
+    gbx = new GroupSong();
     nm = new NoteMaker();
     song = new LoopBox();
     CMajor = nm.MakeMajor();// C major
@@ -395,8 +396,8 @@ public class NoteMaker {
     voice.Add_Note(NoteMaker.OffsetTime * 2, 0.0, 0.0);
   }
   /* ********************************************************************************* */
-  public static GroupBox.Group_OffsetBox Create_Dummy_Group(double TimeLength) {// silent empty stub just for marking a place
-    GroupBox gbx = new GroupBox();
+  public static GroupSong.Group_OffsetBox Create_Dummy_Group(double TimeLength) {// silent empty stub just for marking a place
+    GroupSong gbx = new GroupSong();
     Voice voice = new Voice();
     gbx.Add_SubSong(voice, TimeLength, 0.0, 1.0);
     voice.Add_Note(NoteMaker.OffsetTime, 0.0, 0.0);
@@ -404,7 +405,7 @@ public class NoteMaker {
     return gbx.Spawn_OffsetBox();
   }
   /* ********************************************************************************* */
-  public static GroupBox.Group_OffsetBox Create_Palette() {
+  public static GroupSong.Group_OffsetBox Create_Palette() {
     double TimeStep;
     TimeStep = 0.33333 / 2.0;//0.125;
 
@@ -418,7 +419,7 @@ public class NoteMaker {
     NoteMaker.Create_Tapered_Voice(pvoz, NoteMaker.OffsetTime, TimeStep, 0, 1.0, 3);
     NoteMaker.Create_Tapered_Voice(svoz, NoteMaker.OffsetTime, TimeStep, 0, 1.0, 3);
     
-    GroupBox ChildGbx = new GroupBox();
+    GroupSong ChildGbx = new GroupSong();
     ChildGbx.MyName = "ChildGbx";
     int cnt = 0;
     for (int iter = 0; iter < 2; iter++) {
@@ -427,18 +428,18 @@ public class NoteMaker {
       ChildGbx.Add_SubSong(svoz, (TimeStep * (double) cnt++) + NoteMaker.OffsetTime, 0, 1.0);
     }
     
-    GroupBox MainGbx;
+    GroupSong MainGbx;
     double MetaTimeStep = TimeStep * ((double) NumBeats);
     MainGbx = Create_Group_Loop(ChildGbx, 3, MetaTimeStep);// was 6
     MainGbx.MyName = "MainGbx";
-    GroupBox.Group_OffsetBox MainGobx;
+    GroupSong.Group_OffsetBox MainGobx;
     MainGobx = MainGbx.Spawn_OffsetBox();
     return MainGobx;
   }
   /* ********************************************************************************* */
-  public static GroupBox Create_Group_Loop(ISonglet Songlet, int Iterations, double TimeStep) {
+  public static GroupSong Create_Group_Loop(ISonglet Songlet, int Iterations, double TimeStep) {
     OffsetBox ChildObx;
-    GroupBox MainGbx = new GroupBox();
+    GroupSong MainGbx = new GroupSong();
     double OffsetTime = NoteMaker.OffsetTime * 1;
     double TimeBase = 0.0;
     int Counter = 0;
@@ -451,8 +452,8 @@ public class NoteMaker {
     return MainGbx;
   }
   /* ********************************************************************************* */
-  public GroupBox Create_Triad(ISonglet s0, ISonglet s1, ISonglet s2) {
-    GroupBox grpbx = new GroupBox();
+  public GroupSong Create_Triad(ISonglet s0, ISonglet s1, ISonglet s2) {
+    GroupSong grpbx = new GroupSong();
     for (int cnt = 0; cnt < NumNotes; cnt++) {
       grpbx.Add_SubSong(s0, 0, 0, 1.0);
       grpbx.Add_SubSong(s1, 0, 0, 1.0);
@@ -462,11 +463,11 @@ public class NoteMaker {
     return grpbx;
   }
   /* ********************************************************************************* */
-  public GroupBox Create_Triad(int NoteDex0, int NoteDex1, int NoteDex2) {
+  public GroupSong Create_Triad(int NoteDex0, int NoteDex1, int NoteDex2) {
     double Loudness = 1.0;// NoteDex0 is usually the key
     double Duration = 2.0;
     ISonglet note;
-    GroupBox gbx = new GroupBox();
+    GroupSong gbx = new GroupSong();
     note = Create_Bent_Note(0 + NoteMaker.OffsetTime, Duration, 0, Loudness);
     gbx.Add_SubSong(note, 0 + NoteMaker.OffsetTime, SemitoneFraction * NoteDex0, Loudness);
     if (true) {
@@ -483,7 +484,7 @@ public class NoteMaker {
     double Duration = 2.0;
     ISonglet note;
     OffsetBox obox;
-    GroupBox grpbx = new GroupBox();
+    GroupSong grpbx = new GroupSong();
     
     note = Create_Bent_Note(0, Duration, 0, Loudness);
     
@@ -501,21 +502,21 @@ public class NoteMaker {
     return obox;
   }
   /* ********************************************************************************* */
-  public GroupBox Create_Seventh(int NoteDex0, int NoteDex1, int NoteDex2, int NoteDex3) {
+  public GroupSong Create_Seventh(int NoteDex0, int NoteDex1, int NoteDex2, int NoteDex3) {
     double Loudness = 1.0;// NoteDex0 is usually the key
     double Duration = 2.0;
     ISonglet note;
-    GroupBox cbx = Create_Triad(NoteDex0, NoteDex1, NoteDex2);
+    GroupSong cbx = Create_Triad(NoteDex0, NoteDex1, NoteDex2);
     note = Create_Bent_Note(0, Duration, 0, Loudness);
     cbx.Add_SubSong(note, 0, SemitoneFraction * NoteDex3, Loudness);
     return cbx;
   }
   /* ********************************************************************************* */
-  public GroupBox MakeMajor() {
+  public GroupSong MakeMajor() {
     return Create_Triad(0, (0 + 4), (0 + 7));
   }
   /* ********************************************************************************* */
-  public GroupBox MakeMajor(int Key) {
+  public GroupSong MakeMajor(int Key) {
     return Create_Triad(Key, (Key + 4), (Key + 7));
   }
   /* ********************************************************************************* */
@@ -525,11 +526,11 @@ public class NoteMaker {
     return obx;
   }
   /* ********************************************************************************* */
-  public GroupBox MakeMinor() {
+  public GroupSong MakeMinor() {
     return Create_Triad(0, (0 + 3), (0 + 7));
   }
   /* ********************************************************************************* */
-  public GroupBox MakeMinor(int Key) {
+  public GroupSong MakeMinor(int Key) {
     return Create_Triad(Key, (Key + 3), (Key + 7));
   }
   /* ********************************************************************************* */
@@ -539,11 +540,11 @@ public class NoteMaker {
     return obx;
   }
   /* ********************************************************************************* */
-  public GroupBox MakeAugmented(int Key) {
+  public GroupSong MakeAugmented(int Key) {
     return Create_Triad(Key, (Key + 4), (Key + 8));
   }
   /* ********************************************************************************* */
-  public GroupBox MakeDiminished(int Key) {
+  public GroupSong MakeDiminished(int Key) {
     return Create_Triad(Key, (Key + 3), (Key + 6));
   }
   /* ********************************************************************************* */

@@ -74,6 +74,29 @@ public class Voices {
       Wave.SaveWaveToCsv("Ahh_Waveform01.csv", wav);
       break;
     }
+    case 8: {
+      Wave wav = new Wave();
+      WTVoice wt = new WTVoice();
+      double TimeStep = 6.0;// seconds
+      NoteMaker.Create_Block_Voice(wt, TimeStep, 1);
+      WTVoice.WT_OffsetBox wobx = wt.Spawn_OffsetBox();
+      wobx.OctaveY = 4.0;
+      AudProject project = new AudProject();
+      project.AudioRoot = wobx;
+      project.Update_Guts();
+      
+      WTVoice.WT_Singer  sing = wobx.Spawn_Singer();
+      int LastVpDex = wt.CPoints.size()-1;
+      sing.Start(); //sing.Render_To(2.0, wav);
+      sing.Render_Segment_Integral(wt.CPoints.get(1), wt.CPoints.get(LastVpDex), wav);
+      
+      Audio aud = new Audio();
+      aud.Save("WTVoice100.wav", wav.GetWave());
+      if (false){
+        wt.WaveTable_Test(wav);
+      }
+      break;
+    }
     }
   }
   /* ********************************************************************************* */
@@ -83,7 +106,7 @@ public class Voices {
     Globals.FactoryLUT.put(Voice.Voice_OffsetBox.ObjectTypeName, new Voice.Voice_OffsetBox.Factory());
     Globals.FactoryLUT.put(SampleVoice.SampleVoice_OffsetBox.ObjectTypeName, new SampleVoice.SampleVoice_OffsetBox.Factory());
     Globals.FactoryLUT.put(PluckVoice.PluckVoice_OffsetBox.ObjectTypeName, new PluckVoice.PluckVoice_OffsetBox.Factory());
-    Globals.FactoryLUT.put(GroupBox.Group_OffsetBox.ObjectTypeName, new GroupBox.Group_OffsetBox.Factory());
+    Globals.FactoryLUT.put(GroupSong.Group_OffsetBox.ObjectTypeName, new GroupSong.Group_OffsetBox.Factory());
     Globals.FactoryLUT.put(LoopBox.Loop_OffsetBox.ObjectTypeName, new LoopBox.Loop_OffsetBox.Factory());
     //Globals.FactoryLUT.put("OffsetBox", new OffsetBox.Factory());
   }

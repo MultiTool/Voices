@@ -251,7 +251,7 @@ public class Voice implements ISonglet.IContainer {
       this.Sample_Start = EndSample;
     }
     /* ********************************************************************************* */
-    void Render_Segment_Integral(VoicePoint pnt0, VoicePoint pnt1, Wave wave) {// stateless calculus integral approach
+    public void Render_Segment_Integral(VoicePoint pnt0, VoicePoint pnt1, Wave wave) {// stateless calculus integral approach
       double SRate = this.SampleRate;
       double Time0 = this.InheritedMap.UnMapTime(pnt0.TimeX);
       double Time1 = this.InheritedMap.UnMapTime(pnt1.TimeX);
@@ -285,7 +285,7 @@ public class Voice implements ISonglet.IContainer {
       } else {
         double PreCalc0 = (SubTime0 * FrequencyFactorInherited);// evaluate this outside the loop to optimize
         double PreCalc1 = (FrequencyFactorStart * FrequencyFactorInherited);
-        for (SampleCnt = this.Sample_Start; SampleCnt < EndSample; SampleCnt++) { // look into -ffast-math
+        for (SampleCnt = this.Sample_Start; SampleCnt < EndSample; SampleCnt++) {
           TimeAlong = (SampleCnt / SRate) - Time0;
           CurrentLoudness = pnt0.LoudnessFactor + (TimeAlong * LoudnessRate);
           SubTimeLocal = Voice.Integral(OctaveRate, TimeAlong);

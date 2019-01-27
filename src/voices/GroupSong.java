@@ -15,7 +15,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  *
  * @author MultiTool
  */
-public class GroupBox implements ISonglet, IDrawable, ISonglet.IContainer {
+public class GroupSong implements ISonglet, IDrawable, ISonglet.IContainer {
   public ArrayList<OffsetBox> SubSongs = new ArrayList<OffsetBox>();
   public static String SubSongsName = "SubSongs";
   public double Duration = 0.0;
@@ -34,7 +34,7 @@ public class GroupBox implements ISonglet, IDrawable, ISonglet.IContainer {
   int NumSubLines = 10;
   Globals.PointX[] SplinePoints = new Globals.PointX[0];
   /* ********************************************************************************* */
-  public GroupBox() {
+  public GroupSong() {
     MyBounds = new CajaDelimitadora();
     RefCount = 0;
     this.LineColor = Globals.ToColorWheel(Globals.RandomGenerator.nextDouble());
@@ -53,13 +53,14 @@ public class GroupBox implements ISonglet, IDrawable, ISonglet.IContainer {
     this.Add_SubSong(obox);
   }
   /* ********************************************************************************* */
-  public void Add_SubSong(OffsetBox obox) {// Add a songlet with its offsetbox already created and filled out.
+  public int Add_SubSong(OffsetBox obox) {// Add a songlet with its offsetbox already created and filled out.
     obox.GetContent().Set_Project(this.MyProject);// child inherits project from me
     obox.MyParentSong = this;// this is the only Add_SubSong that is publicly used outside of notemaker, by gui
     int dex = this.Tree_Search(obox.TimeX, 0, SubSongs.size());
     SubSongs.add(dex, obox);
     //this.Sort_Me();// overkill in the case we add a bunch of subsongs in a loop. should only sort once at end of loop. 
     Refresh_Splines();// maybe sort_me and refresh_splines should be in update_guts instead? 
+    return dex;
   }
   /* ********************************************************************************* */
   public void Remove_SubSong(OffsetBox obox) {// Remove a songlet from my list.
@@ -103,25 +104,9 @@ public class GroupBox implements ISonglet, IDrawable, ISonglet.IContainer {
     this.MaxAmplitude = MaxAmp;
   }
   /* ********************************************************************************* */
-//  @Override public double Update_Durations() {
-//    double MaxDuration = 0.0;
-//    double DurBuf = 0.0;
-//    int NumSubSongs = this.SubSongs.size();
-//    for (int cnt = 0; cnt < NumSubSongs; cnt++) {
-//      OffsetBox ob = this.SubSongs.get(cnt);
-//      ISonglet child = ob.GetContent();
-//      //if (MaxDuration < (DurBuf = (ob.UnMapTime(vb.Update_Durations())))) {
-//      if (MaxDuration < (DurBuf = (ob.TimeX + child.Update_Durations()))) {
-//        MaxDuration = DurBuf;
-//      }
-//    }
-//    this.Duration = MaxDuration;
-//    return MaxDuration;
-//  }
-  /* ********************************************************************************* */
   @Override public void Update_Guts(MetricsPacket metrics) {
-    if (this.FreshnessTimeStamp < metrics.FreshnessTimeStamp) {// don't hit the same songlet twice on one update
-      this.Set_Project(metrics.MyProject);
+    if (this.FreshnessTimeStamp != metrics.FreshnessTimeStamp) {// don't hit the same songlet twice on one update
+      this.Set_Project(metrics.MyProject);// should probably separate Set_Project into its own thing
       //this.Sort_Me();
       this.Update_Max_Amplitude();
       metrics.MaxDuration = 0.0;// redundant
@@ -178,23 +163,6 @@ public class GroupBox implements ISonglet, IDrawable, ISonglet.IContainer {
         return Double.compare(voice0.TimeX, voice1.TimeX);
       }
     });
-  }
-  /* ********************************************************************************* */
-  @Override public Group_OffsetBox Spawn_OffsetBox() {// for compose time
-    Group_OffsetBox lbox = new Group_OffsetBox();// Deliver an OffsetBox specific to this type of songlet.
-    lbox.Attach_Songlet(this);
-    return lbox;
-  }
-  /* ********************************************************************************* */
-  @Override public ISonglet.Singer Spawn_Singer() {
-    return this.Spawn_My_Singer();
-  }
-  /* ********************************************************************************* */
-  public Group_Singer Spawn_My_Singer() {
-    Group_Singer GroupPlayer = new Group_Singer();
-    GroupPlayer.MySonglet = this;
-    GroupPlayer.MyProject = this.MyProject;// inherit project
-    return GroupPlayer;
   }
   /* ********************************************************************************* */
 //  @Override public int Get_Sample_Count(int SampleRate) {
@@ -367,17 +335,17 @@ public class GroupBox implements ISonglet, IDrawable, ISonglet.IContainer {
     }
   }
   /* ********************************************************************************* */
-  @Override public GroupBox Clone_Me() {// ICloneable
-    GroupBox child = new GroupBox();
+  @Override public GroupSong Clone_Me() {// ICloneable
+    GroupSong child = new GroupSong();
     child.Copy_From(this);
     return child;
   }
   /* ********************************************************************************* */
-  @Override public GroupBox Deep_Clone_Me(ITextable.CollisionLibrary HitTable) {// ICloneable
-    GroupBox child;
+  @Override public GroupSong Deep_Clone_Me(ITextable.CollisionLibrary HitTable) {// ICloneable
+    GroupSong child;
     CollisionItem ci = HitTable.GetItem(this);
     if (ci == null) {
-      child = new GroupBox();
+      child = new GroupSong();
       ci = HitTable.InsertUniqueInstance(this);
       ci.Item = child;
       child.TraceText = "I am a clone";
@@ -390,18 +358,18 @@ public class GroupBox implements ISonglet, IDrawable, ISonglet.IContainer {
         child.Add_SubSong(obox);
       }
     } else {// pre exists
-      child = (GroupBox) ci.Item;// another cast! 
+      child = (GroupSong) ci.Item;// another cast! 
     }
     return child;
   }
   /* ********************************************************************************* */
 //  @Override 
-  public GroupBox Shallow_Clone_Me() {
+  public GroupSong Shallow_Clone_Me() {
     /*
      clone-me clones myself, clones all my children oboxes, but does NOT clone their songlets. 
      */
-    GroupBox child;
-    child = new GroupBox();
+    GroupSong child;
+    child = new GroupSong();
     child.TraceText = "I am a shallow clone";
     child.Copy_From(this);
     OffsetBox SubSongHandle, ChildSubSongHandle;
@@ -417,7 +385,7 @@ public class GroupBox implements ISonglet, IDrawable, ISonglet.IContainer {
     return child;
   }
   /* ********************************************************************************* */
-  public void Copy_From(GroupBox donor) {
+  public void Copy_From(GroupSong donor) {
     this.Duration = donor.Duration;
     this.Set_Project(donor.MyProject);
     this.MyName = donor.MyName;// for debugging
@@ -657,13 +625,13 @@ public class GroupBox implements ISonglet, IDrawable, ISonglet.IContainer {
     // Save my array of songlets.
     JsonParse.Node CPointsPhrase = new JsonParse.Node();
     CPointsPhrase.ChildrenArray = IFactory.Utils.MakeArray(HitTable, this.SubSongs);
-    phrase.AddSubPhrase(GroupBox.SubSongsName, CPointsPhrase);
+    phrase.AddSubPhrase(GroupSong.SubSongsName, CPointsPhrase);
 
     return phrase;
   }
   @Override public void ShallowLoad(JsonParse.Node phrase) {// ITextable
     HashMap<String, JsonParse.Node> Fields = phrase.ChildrenHash;
-    this.MyName = IFactory.Utils.GetField(Fields, "MyName", "GroupBoxName");
+    this.MyName = IFactory.Utils.GetField(Fields, "MyName", "GroupSongName");
     // this.MaxAmplitude = Double.parseDouble(IFactory.Utils.GetField(Fields, "MaxAmplitude", "0.125")); can be calculated
   }
   @Override public void Consume(JsonParse.Node phrase, CollisionLibrary ExistingInstances) {// ITextable - Fill in all the values of an already-created object, including deep pointers.
@@ -671,7 +639,7 @@ public class GroupBox implements ISonglet, IDrawable, ISonglet.IContainer {
       return;
     }
     this.ShallowLoad(phrase);
-    JsonParse.Node ChildPhraseList = IFactory.Utils.LookUpField(phrase.ChildrenHash, GroupBox.SubSongsName);// array of subsongs object
+    JsonParse.Node ChildPhraseList = IFactory.Utils.LookUpField(phrase.ChildrenHash, GroupSong.SubSongsName);// array of subsongs object
     if (ChildPhraseList != null && ChildPhraseList.ChildrenArray != null) {
       this.Wipe_SubSongs();
       OffsetBox obox;
@@ -693,30 +661,27 @@ public class GroupBox implements ISonglet, IDrawable, ISonglet.IContainer {
   }
   /* ********************************************************************************* */
   public static class Group_Singer extends Singer {
-    protected GroupBox MySonglet;
+    protected GroupSong MySonglet;
     public ArrayList<Singer> NowPlaying = new ArrayList<Singer>();// pool of currently playing voices
     public int Current_Dex = 0;
-    double Prev_Time = 0;
+    double Prev_Time_Absolute = 0;
     //private Group_OffsetBox MyOffsetBox;
     /* ********************************************************************************* */
     @Override public void Start() {
       IsFinished = false;
       Current_Dex = 0;
-      Prev_Time = 0;
-      NowPlaying.clear();
-    }
-    /* ********************************************************************************* */
-    @Override public void Skip_To(double EndTime) {
-      if (this.IsFinished) {
-        return;
-      }
-      EndTime = this.MyOffsetBox.MapTime(EndTime);// EndTime is now time internal to GroupBox's own coordinate system
+      this.Prev_Time_Absolute = 0;
+      Delete_Kids();
       if (this.MySonglet.SubSongs.size() <= 0) {
         this.IsFinished = true;
-        this.Prev_Time = EndTime;
-        return;
       }
-      double Clipped_EndTime = this.Tee_Up(EndTime);
+      if (this.InheritedMap.LoudnessFactor == 0.0) { this.IsFinished = true; }// muted, so don't waste time rendering
+    }
+    /* ********************************************************************************* */
+    @Override public void Skip_To(double EndTime) {// to do: rewrite this to match bug-fixed render_to
+      if (this.IsFinished) { return; }
+      EndTime = this.MyOffsetBox.MapTime(EndTime);// EndTime is now time internal to GroupSongHpp's own coordinate system
+      double Clipped_EndTime = this.Tee_Up_Skip(EndTime);
       int NumPlaying = NowPlaying.size();
       Singer player = null;
       int cnt = 0;
@@ -725,39 +690,39 @@ public class GroupBox implements ISonglet, IDrawable, ISonglet.IContainer {
         player.Skip_To(Clipped_EndTime);
         cnt++;
       }
-      cnt = 0;// now pack down the finished ones
-      while (cnt < this.NowPlaying.size()) {
+      cnt = 0;// now pack down the finished ones, probably redundant with Tee_Up_Skip now
+      int AliveCnt = 0;
+      for (cnt=0; cnt < NumPlaying; cnt++) {
         player = this.NowPlaying.get(cnt);
         if (player.IsFinished) {
-          this.NowPlaying.remove(player);
           player.Delete_Me();
         } else {
-          cnt++;
+          this.NowPlaying.set(AliveCnt++, player);
         }
       }
-      this.Prev_Time = EndTime;
+      this.NowPlaying = new ArrayList<Singer>(this.NowPlaying.subList(0, AliveCnt));//this.NowPlaying.resize(AliveCnt);
+      this.Prev_Time_Absolute = this.InheritedMap.UnMapTime(Clipped_EndTime);// get end time in absolute universal coordinates
     }
     /* ********************************************************************************* */
     @Override public void Render_To(double EndTime, Wave wave) {
+      int SampleRateLocal = wave.SampleRate;// spoin
+      this.SampleRate = SampleRateLocal;
+      int Sample_Start = (int)(this.Prev_Time_Absolute * (double) this.SampleRate);
+
       if (this.IsFinished) {
+        wave.Init_Sample(Sample_Start, Sample_Start, this.SampleRate, 0.0);
         return;
       }
-      if (this.InheritedMap.LoudnessFactor == 0.0) {// muted, so don't waste time rendering
-        return;
-      }
-      EndTime = this.MyOffsetBox.MapTime(EndTime);// EndTime is now time internal to GroupBox's own coordinate system
-      double UnMapped_Prev_Time = this.InheritedMap.UnMapTime(this.Prev_Time);// get start time in parent coordinates
-      if (this.MySonglet.SubSongs.size() <= 0) {
-        this.IsFinished = true;
-        wave.Init_Time(UnMapped_Prev_Time, UnMapped_Prev_Time, this.MyProject.SampleRate);// wave times are in parent coordinates because the parent will be reading the wave data.
-        this.Prev_Time = EndTime;
-        return;
-      }
-      double Clipped_EndTime = this.Tee_Up(EndTime);
-      double UnMapped_EndTime = this.InheritedMap.UnMapTime(Clipped_EndTime);
-      wave.Init_Time(UnMapped_Prev_Time, UnMapped_EndTime, this.MyProject.SampleRate);// wave times are in parent coordinates because the parent will be reading the wave data.
+
+      EndTime = this.MyOffsetBox.MapTime(EndTime);// EndTime is now time internal to GroupSongHpp's own coordinate system
+      double Clipped_EndTime = this.Tee_Up_Render(EndTime);
+      double EndTime_Absolute = this.InheritedMap.UnMapTime(Clipped_EndTime);// get end time in absolute universal coordinates
+      int Sample_End = (int)(EndTime_Absolute * (double) this.SampleRate);
+
+      wave.Init_Sample(Sample_Start, Sample_End, this.SampleRate, 0.0);// wave times are in parent coordinates because the parent will be reading the wave data.
+      //wave.Init_Sample_NoRate(Sample_Start, Sample_End, 0.0);// wave times are in parent coordinates because the parent will be reading the wave data.
       Wave ChildWave = new Wave();
-      ChildWave.SampleRate = wave.SampleRate;
+      ChildWave.Assign_SampleRate(wave.SampleRate);// pass down sample rate
       int NumPlaying = NowPlaying.size();
       Singer player = null;
       int cnt = 0;
@@ -768,45 +733,19 @@ public class GroupBox implements ISonglet, IDrawable, ISonglet.IContainer {
         cnt++;
       }
       cnt = 0;// now pack down the finished ones
-      while (cnt < this.NowPlaying.size()) {
+      int AliveCnt = 0;
+      while (cnt < NumPlaying) {
         player = this.NowPlaying.get(cnt);
         if (player.IsFinished) {
-          this.NowPlaying.remove(player);
           player.Delete_Me();
-        } else {
-          cnt++;
+        } else {// still playing, so pack it down
+          this.NowPlaying.set(AliveCnt++, player);
         }
+        cnt++;
       }
+      this.NowPlaying = new ArrayList<Singer>(this.NowPlaying.subList(0, AliveCnt));//this.NowPlaying.resize(AliveCnt);
       wave.Amplify(this.MyOffsetBox.LoudnessFactor);
-      this.Prev_Time = EndTime;
-    }
-    /* ********************************************************************************* */
-    private double Tee_Up(double EndTime) {// consolidating identical code 
-      if (EndTime < 0) {
-        EndTime = 0;// clip time
-      }
-      int NumSonglets = MySonglet.SubSongs.size();
-      int FinalSongletDex = NumSonglets - 1;
-      double Final_Start = this.MySonglet.SubSongs.get(FinalSongletDex).TimeX;
-      Final_Start = Math.min(Final_Start, EndTime);
-      double Final_Time = this.MySonglet.Get_Duration();
-      if (EndTime > Final_Time) {
-        this.IsFinished = true;
-        EndTime = Final_Time;// clip time
-      }
-      OffsetBox obox;
-      while (this.Current_Dex < NumSonglets) {// first find new songlets in this time range and add them to pool
-        obox = MySonglet.SubSongs.get(this.Current_Dex);
-        if (Final_Start < obox.TimeX) {// repeat until obox start time overtakes EndTime
-          break;
-        }
-        Singer singer = obox.Spawn_Singer();
-        singer.Inherit(this);
-        this.NowPlaying.add(singer);
-        singer.Start();
-        this.Current_Dex++;
-      }
-      return EndTime;
+      this.Prev_Time_Absolute = EndTime_Absolute;
     }
     /* ********************************************************************************* */
     @Override public OffsetBox Get_OffsetBox() {
@@ -824,6 +763,87 @@ public class GroupBox implements ISonglet, IDrawable, ISonglet.IContainer {
         this.NowPlaying.get(cnt).Delete_Me();
       }
       this.NowPlaying.clear();
+    }
+    void Delete_Kids() {// delete the whole pool of sub-singers
+      int len = this.NowPlaying.size();
+      Singer singer;
+      for (int cnt = 0; cnt < len; cnt++) {
+        singer = this.NowPlaying.get(cnt);
+        singer.Delete_Me();
+      }
+      this.NowPlaying.clear();
+    }
+    /* ********************************************************************************* */
+    double Tee_Up_Skip(double EndTime) {// this works best for skip_to
+      if (EndTime < 0) { EndTime = 0; }// clip time
+      int NumSonglets = MySonglet.SubSongs.size();
+      int FinalSongletDex = NumSonglets - 1;
+      double Final_Start = this.MySonglet.SubSongs.get(FinalSongletDex).TimeX;
+      Final_Start = Math.min(Final_Start, EndTime);
+      double Final_Time = this.MySonglet.Get_Duration();
+      if (EndTime > Final_Time) {
+        this.IsFinished = true;
+        EndTime = Final_Time;// clip time
+      }
+
+      // clear out any singers that finished before EndTime
+      int NumPlaying = this.NowPlaying.size();
+      OffsetBox obox;
+      double Child_End_Time, ChildDuration;
+      Singer ChildSinger;
+      int AliveCnt = 0;
+      for (int cnt=0;cnt<NumPlaying;cnt++){
+        ChildSinger = this.NowPlaying.get(cnt);
+        obox = ChildSinger.MyOffsetBox;
+        ChildDuration = obox.GetContent().Get_Duration();
+        Child_End_Time = obox.UnMapTime(ChildDuration);// Duration starts at time==0 so we can treat it as a coordinate.
+        if (Child_End_Time < EndTime){// Delete any singers whose songs end before the next 'play zone'.
+          ChildSinger.Delete_Me();ChildSinger=null;
+        }else{
+          this.NowPlaying.set(AliveCnt++, ChildSinger);// pack them down
+        }
+      }
+      this.NowPlaying = new ArrayList<Singer>(this.NowPlaying.subList(0, AliveCnt));//this.NowPlaying.resize(AliveCnt);
+      //printf("NowPlaying:%i\n", NowPlaying.size());
+
+      while (this.Current_Dex < NumSonglets) {// first find neuvo songlets in this time range and add them to pool
+        obox = MySonglet.SubSongs.get(this.Current_Dex);
+        if (Final_Start < obox.TimeX) { break; }// repeat until obox start time overtakes EndTime
+        ChildDuration = obox.GetContent().Get_Duration();
+        Child_End_Time = obox.UnMapTime(ChildDuration);// Duration starts at time==0 so we can treat it as a coordinate.
+        if (EndTime < Child_End_Time){// Only use songlets that cross into the next 'play zone'
+          ChildSinger = obox.Spawn_Singer();
+          ChildSinger.Inherit(this);
+          this.NowPlaying.add(ChildSinger);
+          ChildSinger.Start();
+        }
+        this.Current_Dex++;
+      }
+      return EndTime;
+    }
+    /* ********************************************************************************* */
+    double Tee_Up_Render(double EndTime) {// this works best for render_to
+      if (EndTime < 0) { EndTime = 0; }// clip time
+      int NumSonglets = MySonglet.SubSongs.size();
+      int FinalSongletDex = NumSonglets - 1;
+      double Final_Start = this.MySonglet.SubSongs.get(FinalSongletDex).TimeX;
+      Final_Start = Math.min(Final_Start, EndTime);
+      double Final_Time = this.MySonglet.Get_Duration();
+      if (EndTime > Final_Time) {
+        this.IsFinished = true;
+        EndTime = Final_Time;// clip time
+      }
+      OffsetBox obox;
+      while (this.Current_Dex < NumSonglets) {// first find neuvo songlets in this time range and add them to pool
+        obox = MySonglet.SubSongs.get(this.Current_Dex);
+        if (Final_Start < obox.TimeX) { break; }// repeat until obox start time overtakes EndTime
+        Singer ChildSinger = obox.Spawn_Singer();
+        ChildSinger.Inherit(this);
+        this.NowPlaying.add(ChildSinger);
+        ChildSinger.Start();
+        this.Current_Dex++;
+      }
+      return EndTime;
     }
   }
   /* ********************************************************************************* */
@@ -932,7 +952,7 @@ public class GroupBox implements ISonglet, IDrawable, ISonglet.IContainer {
   }
   /* ********************************************************************************* */
   public static class Group_OffsetBox extends OffsetBox {// location box to transpose in pitch, move in time, etc. 
-    public GroupBox Content = null;
+    public GroupSong Content = null;
     public double GroupScaleX = 1.0;
     public static String GroupScaleXName = "GroupScaleX";// for serialization
     public static String ObjectTypeName = "Group_OffsetBox";
@@ -944,11 +964,13 @@ public class GroupBox implements ISonglet, IDrawable, ISonglet.IContainer {
       this.Create_Me();
     }
     /* ********************************************************************************* */
-    @Override public GroupBox GetContent() {
+    // ~Group_OffsetBox() { this.Delete_Me(); }
+    /* ********************************************************************************* */
+    @Override public GroupSong GetContent() {
       return Content;
     }
     /* ********************************************************************************* */
-    public void Attach_Songlet(GroupBox songlet) {// for serialization
+    public void Attach_Songlet(GroupSong songlet) {// for serialization
       this.Content = songlet;
       songlet.Ref_Songlet();
     }
@@ -963,11 +985,7 @@ public class GroupBox implements ISonglet, IDrawable, ISonglet.IContainer {
     }
     /* ********************************************************************************* */
     @Override public Group_Singer Spawn_Singer() {// always always always override this
-      return this.Spawn_My_Singer();
-    }
-    /* ********************************************************************************* */
-    public Group_Singer Spawn_My_Singer() {// for render time
-      Group_Singer Singer = this.Content.Spawn_My_Singer();
+      Group_Singer Singer = this.Content.Spawn_Singer();
       Singer.MyOffsetBox = this;// Transfer all of this box's offsets to singer. 
       return Singer;
     }
@@ -987,17 +1005,19 @@ public class GroupBox implements ISonglet, IDrawable, ISonglet.IContainer {
     }
     /* ********************************************************************************* */
     @Override public void BreakFromHerd(ITextable.CollisionLibrary HitTable) {// for compose time. detach from my songlet and attach to an identical but unlinked songlet
-      GroupBox clone = this.Content.Deep_Clone_Me(HitTable);
+      GroupSong clone = this.Content.Deep_Clone_Me(HitTable);
       if (this.Content.UnRef_Songlet() <= 0) {
         this.Content.Delete_Me();
+        this.Content = null;
       }
       this.Attach_Songlet(clone);
     }
     /* ********************************************************************************* */
     public void BreakFromHerd_Shallow() {// for compose time. detach from my songlet and attach to an identical but unlinked songlet
-      GroupBox clone = this.Content.Shallow_Clone_Me();
+      GroupSong clone = this.Content.Shallow_Clone_Me();
       if (this.Content.UnRef_Songlet() <= 0) {
         this.Content.Delete_Me();
+        this.Content = null;
       }
       this.Content = clone;
       this.Content.Ref_Songlet();
@@ -1050,15 +1070,15 @@ public class GroupBox implements ISonglet, IDrawable, ISonglet.IContainer {
       this.ShallowLoad(phrase);
       JsonParse.Node SongletPhrase = phrase.ChildrenHash.get(OffsetBox.ContentName);// value of songlet field
       String ContentTxt = SongletPhrase.Literal;
-      GroupBox songlet;
+      GroupSong songlet;
       if (Globals.IsTxtPtr(ContentTxt)) {// if songlet content is just a pointer into the library
         CollisionItem ci = ExistingInstances.GetItem(ContentTxt);// look up my songlet in the library
         if (ci == null) {// then null reference even in file - the json is corrupt
           throw new RuntimeException("CollisionItem is null in " + ObjectTypeName);
           //return;
         }
-        if ((songlet = (GroupBox) ci.Item) == null) {// another cast!
-          ci.Item = songlet = new GroupBox();// if not instantiated, create one and save it
+        if ((songlet = (GroupSong) ci.Item) == null) {// another cast!
+          ci.Item = songlet = new GroupSong();// if not instantiated, create one and save it
           if (ci.JsonPhrase == null) {
             boolean nop = true;
           }
@@ -1067,13 +1087,13 @@ public class GroupBox implements ISonglet, IDrawable, ISonglet.IContainer {
           boolean nop = true;
         }
       } else {
-        songlet = new GroupBox();// songlet is inline, inside this one offsetbox
+        songlet = new GroupSong();// songlet is inline, inside this one offsetbox
         songlet.Consume(SongletPhrase, ExistingInstances);
       }
       this.Attach_Songlet(songlet);
     }
     @Override public ISonglet Spawn_And_Attach_Songlet() {// reverse birth, use ONLY for deserialization
-      GroupBox songlet = new GroupBox();
+      GroupSong songlet = new GroupSong();
       this.Attach_Songlet(songlet);
       return songlet;
     }
@@ -1085,5 +1105,18 @@ public class GroupBox implements ISonglet, IDrawable, ISonglet.IContainer {
         return obox;
       }
     }
+  }
+  /* ********************************************************************************* */
+  @Override public Group_OffsetBox Spawn_OffsetBox() {// for compose time
+    Group_OffsetBox lbox = new Group_OffsetBox();// Spawn an OffsetBox specific to this type of songlet.
+    lbox.Attach_Songlet(this);
+    return lbox;
+  }
+  /* ********************************************************************************* */
+  @Override public Group_Singer Spawn_Singer() {
+    Group_Singer GroupPlayer = new Group_Singer();
+    GroupPlayer.MySonglet = this;
+    GroupPlayer.MyProject = this.MyProject;// inherit project
+    return GroupPlayer;
   }
 }

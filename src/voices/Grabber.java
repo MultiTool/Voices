@@ -248,7 +248,7 @@ public class Grabber { // to do: rename this class to Grabber
   public static class DestinationGrabber extends Grabber {
     // this class searches for containers in which to drop a floating, copied songlet
     public OffsetBox Floater = null;
-    public GroupBox PossibleDestination = null;
+    public GroupSong PossibleDestination = null;
     private double ClosestDistance = Double.POSITIVE_INFINITY;
     @Override public void AddFirstBox(OffsetBox starter, double XLoc, double YLoc) {// add first space map at start of search
       this.PossibleDestination = null;
@@ -261,12 +261,12 @@ public class Grabber { // to do: rename this class to Grabber
       if (CandidateLeaf instanceof OffsetBox) {// only one that works so far
         OffsetBox obx = (OffsetBox) CandidateLeaf;// another cast!
         ISonglet songlet = obx.GetContent();
-        if (songlet instanceof GroupBox) {
-          GroupBox gbx = (GroupBox) songlet;// other cast!
+        if (songlet instanceof GroupSong) {
+          GroupSong gbx = (GroupSong) songlet;// other cast!
           Point.Double results = new Point.Double();
           obx.MapTo(this.CurrentContext.Loc.x, this.CurrentContext.Loc.y, results);// we're hitting the songlet, not its offsetbox, so we have to map to obox child coordinates.
           double FoundDistance;
-          if (true && GroupBox.UsingSplines) {
+          if (true && GroupSong.UsingSplines) {
             FoundDistance = gbx.HitsMyVineSpline(results.x, results.y);// WIP 
           } else {
             FoundDistance = gbx.HitsMyVine(results.x, results.y);// WIP
@@ -282,9 +282,9 @@ public class Grabber { // to do: rename this class to Grabber
           }
         }
       }
-      if (false && CandidateLeaf instanceof GroupBox.Group_OffsetBox) {
-        GroupBox.Group_OffsetBox gobx = (GroupBox.Group_OffsetBox) CandidateLeaf;// another cast!
-        GroupBox gbx = gobx.GetContent();//.Content;
+      if (false && CandidateLeaf instanceof GroupSong.Group_OffsetBox) {
+        GroupSong.Group_OffsetBox gobx = (GroupSong.Group_OffsetBox) CandidateLeaf;// another cast!
+        GroupSong gbx = gobx.GetContent();//.Content;
         double FoundDistance = gbx.HitsMyVine(this.CurrentContext.Loc.x, this.CurrentContext.Loc.y);// WIP, does not do anything yet
         if ((FoundDistance < this.ClosestDistance) && this.Stack_Depth_Best <= this.Stack_Depth) {// prefer the most distal
           this.Stack_Depth_Best = this.Stack_Depth;// or if equal, prefer the last drawn (most recent hit)

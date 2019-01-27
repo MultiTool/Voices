@@ -463,7 +463,7 @@ Dependency order, more or less:
 * VoicePoint, LoudnessHandle, 
    * CajaDelimitadora, Globals, Grabber, IDeletable, IDrawable, IMoveable, Drawing_Context, MonkeyBox, Voice, 
 
-* GroupBox, Group_Singer, Group_OffsetBox, 
+* GroupSong, Group_Singer, Group_OffsetBox, 
    * AudProject, CajaDelimitadora, Grabber, IDeletable, IDrawable, Drawing_Context, ISonglet, Singer, MetricsPacket, OffsetBox, Wave, 
 * GraphicBox, Graphic_OffsetBox, 
    * AudProject, CajaDelimitadora, Globals, Grabber, IDeletable, IDrawable, IMoveable, Drawing_Context, ISonglet, Singer, MetricsPacket, OffsetBox, 
@@ -474,15 +474,15 @@ Dependency order, more or less:
    * AudProject, CajaDelimitadora, Globals, Grabber, IDeletable, IDrawable, Drawing_Context, ISonglet, Singer, MetricsPacket, Note, OffsetBox, VoicePoint, Wave, 
    
 * NoteMaker, Note, Indexes, 
-   * GroupBox, ISonglet, LoopBox, OffsetBox, Voice, 
+   * GroupSong, ISonglet, LoopBox, OffsetBox, Voice, 
 * TestJunkyard, GetterSetterTest, GetSet<T>, GetSetDouble, ISoup, Onions, 
-   * Globals, GroupBox, ISonglet, LoopBox, NoteMaker, Note, OffsetBox, Voice, 
+   * Globals, GroupSong, ISonglet, LoopBox, NoteMaker, Note, OffsetBox, Voice, 
 * MainGui, Act, DrawingPanel, 
    * Audio, AudProject, GoLive, Grabber, GraphicBox, Graphic_OffsetBox, IDrawable, Drawing_Context, OffsetBox, 
 * Voices, 
    * AudProject, Globals, MainGui, Voice, Wave, 
 * AudProject, 
-   * Audio, Globals, GraphicBox, Graphic_OffsetBox, GroupBox, IDeletable, IDrawable, Drawing_Context, ISonglet, Singer, MetricsPacket, LoopBox, NoteMaker, Note, OffsetBox, TestJunkyard, Voice, Voices, Wave, 
+   * Audio, Globals, GraphicBox, Graphic_OffsetBox, GroupSong, IDeletable, IDrawable, Drawing_Context, ISonglet, Singer, MetricsPacket, LoopBox, NoteMaker, Note, OffsetBox, TestJunkyard, Voice, Voices, Wave, 
 
 next:
 swipe & play region
@@ -608,8 +608,8 @@ double DotProduct(double X0, double Y0, double X1, double Y1){
       super(grabber0);
     }
     public void ConsiderLeaf(IDrawable.IMoveable CandidateLeaf) {
-      if (CandidateLeaf instanceof GroupBox) {
-        GroupBox gbx = (GroupBox) CandidateLeaf;// another cast!
+      if (CandidateLeaf instanceof GroupSong) {
+        GroupSong gbx = (GroupSong) CandidateLeaf;// another cast!
 //        if (gbx.ScanForDropLoc(XHit, YHit))
         if (CandidateLeaf.HitsMe(grabber.CurrentContext.Loc.x, grabber.CurrentContext.Loc.y)) {
           System.out.print(" Was Hit, ");
@@ -624,7 +624,7 @@ double DotProduct(double X0, double Y0, double X1, double Y1){
   }
 x
 
-so the before we can go further, we must make GroupBox:
+so the before we can go further, we must make GroupSong:
 be scalable by TimeX, and 
 have an 'Align Time' button. 
 it would be nice to have a paste-repeat feature. maybe just keep floater copy until escape. 
@@ -643,10 +643,10 @@ deep clones are shattered, they can be pasted anywhere. in that case, no need fo
 
 to do:
 Create LoopBox Draw_Me(). - done
-Rename ChorusBox to GroupBox everywhere. - done
+Rename ChorusBox to GroupSong everywhere. - done
 Put playing and drawing in separate threads. - done
 More zoomed-in octave scale. - done
-GroupBox Draw_Me needs to draw its own vine spine. Draw it behind its children. - done, touch it up more. 
+GroupSong Draw_Me needs to draw its own vine spine. Draw it behind its children. - done, touch it up more. 
 Test live audio on faster machines. - done, TOO MUCH CLICKING, seek fix. 
 Fix graphic clipping to work right. - done
 Clean: Make ISonglet inherit IDrawable and remove redundant code. - done

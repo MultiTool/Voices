@@ -12,7 +12,7 @@ import java.util.HashMap;
 /**
  *
  * @author MultiTool
- * LoopBox is most likely deprecated. It creates too many problems with the UI and is easily replaceable with a specialized GroupBox. 
+ * LoopBox is most likely deprecated. It creates too many problems with the UI and is easily replaceable with a specialized GroupSong. 
  */
 public class LoopBox implements ISonglet.IContainer, IDrawable {
   public ArrayList<Ghost_OffsetBox> SubSongs = new ArrayList<Ghost_OffsetBox>();

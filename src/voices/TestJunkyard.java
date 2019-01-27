@@ -148,9 +148,9 @@ public class TestJunkyard {
     return lbx;
   }
   /* ********************************************************************************* */
-  public static GroupBox Create_Chord(double TimeOffset, double OctaveOffset, double LoudnessOffset, int NumNotes) {// a test
+  public static GroupSong Create_Chord(double TimeOffset, double OctaveOffset, double LoudnessOffset, int NumNotes) {// a test
     double OctaveChange, LoudnessChange;// for stress testing
-    GroupBox cbx = new GroupBox();
+    GroupSong cbx = new GroupSong();
     for (int cnt = 0; cnt < NumNotes; cnt++) {
       Voice note = Create_Simple_Note(0, 1, 0, 1);
       OctaveChange = cnt * 3;
@@ -160,9 +160,9 @@ public class TestJunkyard {
     return cbx;
   }
   /* ********************************************************************************* */
-  public static GroupBox Create_Random_Chorus(double TimeOffset, double OctaveOffset, double LoudnessOffset) {// a test
+  public static GroupSong Create_Random_Chorus(double TimeOffset, double OctaveOffset, double LoudnessOffset) {// a test
     double TDiff, OctaveRand, LoudnessRand;// for fuzz testing
-    GroupBox cbx = new GroupBox();
+    GroupSong cbx = new GroupSong();
     for (int cnt = 0; cnt < 4; cnt++) {
       Voice note = Create_Simple_Note(0, 1, 0, 1);
       TDiff = (Globals.RandomGenerator.nextDouble() * 5);
@@ -173,13 +173,13 @@ public class TestJunkyard {
     return cbx;
   }
   /* ********************************************************************************* */
-  public static GroupBox Create_Nested_Chorus(double TimeOffset, double OctaveOffset, double LoudnessOffset, int BoxDepth) {
+  public static GroupSong Create_Nested_Chorus(double TimeOffset, double OctaveOffset, double LoudnessOffset, int BoxDepth) {
     Voice note = Create_Simple_Note(0, 1, 0, 1);// for stress testing
     ISonglet songlet0 = note;
     ISonglet songlet1 = note;
-    GroupBox cbx = null;
+    GroupSong cbx = null;
     for (int cnt = 0; cnt < BoxDepth; cnt++) {
-      cbx = new GroupBox();
+      cbx = new GroupSong();
       cbx.MyName = "Chord" + cnt;
       cbx.Add_SubSong(songlet0, 1, 1, LoudnessOffset * 1.0);
       cbx.Add_SubSong(songlet1, 0, 1, LoudnessOffset * 1.0);
@@ -190,7 +190,7 @@ public class TestJunkyard {
   }
   /* ********************************************************************************* */
   public static OffsetBox Compose_Warble_Chorus() {
-    GroupBox cbx = new GroupBox();
+    GroupSong cbx = new GroupSong();
     OffsetBox obox = cbx.Spawn_OffsetBox();
 
     if (false) {
@@ -205,8 +205,8 @@ public class TestJunkyard {
     return obox;
   }
   /* ********************************************************************************* */
-  public static GroupBox Compose_Ribbon_Chorus() {
-    GroupBox gbx = new GroupBox();
+  public static GroupSong Compose_Ribbon_Chorus() {
+    GroupSong gbx = new GroupSong();
     // OffsetBox obox = gbx.Spawn_OffsetBox();
 
     Voice vc0 = Create_SampleVoice_Ribbon(0, 0, 1);

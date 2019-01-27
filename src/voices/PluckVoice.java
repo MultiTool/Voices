@@ -59,18 +59,14 @@ public class PluckVoice extends SampleVoice {
     this.BaseFreq = Globals.BaseFreqC0 / BaseFreq;// ??? 
     double Duration = 6.0;
     Wave wave0 = new Wave();
+    int SamplesPerCycle = (int) ((1.0 / BaseFreq) * Globals.SampleRate);
+    Wave pattern = new Wave();
+    pattern.Init(SamplesPerCycle, Globals.SampleRate);
+    PluckVoice.Generate_WhiteNoise(pattern, SamplesPerCycle, Globals.SampleRate);
     if (true) {
-      int SamplesPerCycle = (int) ((1.0 / BaseFreq) * Globals.SampleRate);
-      Wave pattern = new Wave();
-      pattern.Init(SamplesPerCycle, Globals.SampleRate);
-      PluckVoice.Generate_WhiteNoise(pattern, SamplesPerCycle, Globals.SampleRate);
-      if (true) {
-        PluckVoice.Synth_Pluck_Decay(wave0, pattern, Duration);
-      } else {
-        PluckVoice.Repeat_Pattern(pattern, Duration, wave0);
-      }
+      PluckVoice.Synth_Pluck_Decay(wave0, pattern, Duration);
     } else {
-      WaveTable_Test(wave0);
+      PluckVoice.Repeat_Pattern(pattern, Duration, wave0);
     }
     wave0.Normalize();
     return wave0;
@@ -93,106 +89,6 @@ public class PluckVoice extends SampleVoice {
       pattern.Center();
     }
   }
-  /* ********************************************************************************* */
-  public void WaveTable_Test(Wave Result) {
-    double BaseFreq = Globals.MiddleC4Freq;
-
-    this.BaseFreq = Globals.BaseFreqC0 / BaseFreq;// ??? 
-    double Duration = 6.0;
-    int SamplesPerCycle = (int) ((1.0 / BaseFreq) * Globals.SampleRate);
-
-    Wave pattern = new Wave();
-    pattern.Init(SamplesPerCycle, Globals.SampleRate);
-    //PluckVoice.Generate_SquareWave(pattern, SamplesPerCycle, Globals.SampleRate);
-    PluckVoice.Generate_WhiteNoise(pattern, SamplesPerCycle, Globals.SampleRate);
-
-    ArrayList<Wave> WaveTable = new ArrayList<Wave>();
-    int WaveSpanCycles = 10;//10;// number of pattern cycles represented by one wavetable sample.
-    Build_WaveTable(pattern, Duration, WaveSpanCycles, WaveTable);
-    //WaveSpanCycles = 2;//100;// expand or contract duration of sound without changing pitch
-    Reconstitute_Pluck(WaveTable, Duration, WaveSpanCycles, Result);
-    Result.EndTime = Duration;
-    Result.SampleRate = Globals.SampleRate;
-    Audio aud = new Audio();
-    aud.Save("RawPluck.wav", Result.GetWave());
-  }
-  /* ********************************************************************************* */
-  public static void Build_WaveTable(Wave pattern, double Duration, int WaveSpanCycles, ArrayList<Wave> ResultWaves) {
-    // experiment to create a simple wave table from a pluck
-    int SamplesPerCycle = pattern.NumSamples;
-    Audio aud = new Audio();
-    double PatternLengthSeconds = ((double) pattern.NumSamples) / (double) pattern.SampleRate;
-    int PluckLengthSamples = (int) (Duration * (double) pattern.SampleRate);
-    int NumCycles = (int) (PluckLengthSamples / SamplesPerCycle);
-    int NumWaves = NumCycles / WaveSpanCycles;
-    for (int cnt = 0; cnt < NumWaves; cnt++) {
-      Wave wav = new Wave();
-      wav.Init(SamplesPerCycle, pattern.SampleRate);
-      ResultWaves.add(wav);
-    }
-    double ValNow;
-    double ValAvg;
-    int DexPrev, DexNext;
-    int Dex0 = 0, Dex1 = 0, Dex2 = 0;
-    double ValPrev = 0, ValNext = 0;
-    int WavCnt = 0;
-    for (int PatternCnt = 0; PatternCnt < NumCycles; PatternCnt++) {
-      if ((PatternCnt % WaveSpanCycles) == 0) {// so every 10 patterns save a sample
-        if (PatternCnt == 1570 || WavCnt == 157) {
-          System.out.println("PatternCnt:" + PatternCnt + ", WavCnt:" + WavCnt);
-        }
-        if (WavCnt < NumWaves) {
-          Wave wav = ResultWaves.get(WavCnt);
-          wav.Copy_From(pattern);// snapshot
-          String formatted = String.format("%03d", WavCnt);
-          //aud.Save("pattern_" + formatted + ".wav", wav.GetWave());
-          WavCnt++;
-        }
-      }
-      double Inertia = 0.75;
-      double AntInertia = (1.0 - Inertia) / 2.0;
-      for (int SampCnt = 0; SampCnt < SamplesPerCycle; SampCnt++) {// more symmetrical blurring
-        Dex0 = Dex1;// dragging 3 indexes
-        Dex1 = Dex2;
-        Dex2 = SampCnt;
-        ValPrev = pattern.Get(Dex0);
-        ValNow = pattern.Get(Dex1);
-        ValNext = pattern.Get(Dex2);
-        ValAvg = (ValPrev * AntInertia) + (ValNow * Inertia) + (ValNext * AntInertia);
-        pattern.Set(Dex1, ValAvg);// decaying pattern
-      }
-      System.out.println("nothing");
-    }
-    for (int cnt = 0; cnt < NumWaves; cnt++) {
-      Wave wav = ResultWaves.get(cnt);
-      double MaxAmp = wav.GetMaxAmp();
-      System.out.println("MaxAmp:" + MaxAmp);
-    }
-  }
-  /* ********************************************************************************* */
-  public static void Reconstitute_Pluck(ArrayList<Wave> WaveTable, double Duration, int WaveSpanCycles, Wave Result) {
-    int PatternSizeSamples = WaveTable.get(0).NumSamples;
-    Result.Init(0, Result.SampleRate);
-    int WaveSpanSamples = WaveSpanCycles * PatternSizeSamples;
-    int NumPatterns = WaveTable.size();
-    Wave PatternPrev = WaveTable.get(0);
-    Wave PatternNext;
-    Wave PrevRun = new Wave(), NextRun = new Wave();
-    Wave Span = new Wave();
-    for (int pcnt = 1; pcnt < NumPatterns; pcnt++) {
-      PatternNext = WaveTable.get(pcnt);
-      // Build 2 waves that are repeats of prev and next, then fade them and mix them.
-      PrevRun.Repeat_Pattern_Samples(PatternPrev, WaveSpanSamples);
-      NextRun.Repeat_Pattern_Samples(PatternNext, WaveSpanSamples);
-      PrevRun.Fade(1.0, 0.0);// crossfade
-      NextRun.Fade(0.0, 1.0);
-      Span.Copy_From(NextRun);
-      Span.Overdub(PrevRun);
-      Result.Append2(Span);
-      PatternPrev = PatternNext;
-    }
-  }
-  /* ********************************************************************************* */
   public static void Synth_Pluck_Decay(Wave ResultWave, Wave pattern, double Duration) {
     int SamplesPerCycle = pattern.NumSamples;
     double WaveLengthSeconds = ((double) pattern.NumSamples) / (double) pattern.SampleRate;
@@ -648,4 +544,4 @@ public class PluckVoice extends SampleVoice {
  either way, then add all of the points together to get the weighted average.
 
  so which is the 'default' dampening range?  1 sample?  1 second? 
- */
+*/

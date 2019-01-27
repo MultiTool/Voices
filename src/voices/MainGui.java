@@ -21,7 +21,7 @@ import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import voices.DrawingContext;
 import voices.GoLive.LivePlayerCallbacks;
-import voices.GroupBox.Group_OffsetBox;
+import voices.GroupSong.Group_OffsetBox;
 // From http://www.tutorialspoint.com/javaexamples/gui_polygon.htm
 
 public class MainGui {
@@ -255,8 +255,8 @@ public class MainGui {
         if (Leaf instanceof OffsetBox) {
           OffsetBox obx = (OffsetBox) Leaf;// another cast! 
           songlet = obx.MyParentSong;
-          if (songlet instanceof GroupBox) {
-            GroupBox gbx = (GroupBox) songlet;
+          if (songlet instanceof GroupSong) {
+            GroupSong gbx = (GroupSong) songlet;
             gbx.Remove_SubSong(obx);
             this.repaint();
           }

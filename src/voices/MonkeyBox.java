@@ -95,20 +95,20 @@ public class MonkeyBox implements IDrawable.IMoveable, IDeletable, ITextable {//
   }
   // <editor-fold defaultstate="collapsed" desc="Mappings and Unmappings">
   /* ********************************************************************************* */
-  public double MapTime(double ParentTime) {// convert time coordinate from my parent's frame to my child's frame
+  public double MapTime(double ParentTime) {// convert time coordinate from parent's frame to child's frame
     return ((ParentTime - this.TimeX) / ScaleX); // in the long run we'll probably use a matrix
   }
   /* ********************************************************************************* */
-  public double UnMapTime(double ChildTime) {// convert time coordinate from my child's frame to my parent's frame
+  public double UnMapTime(double ChildTime) {// convert time coordinate from child's frame to parent's frame
     return this.TimeX + ((ChildTime) * ScaleX);
   }
   /* ********************************************************************************* */
-  public double MapPitch(double ParentPitch) {// convert octave coordinate from my parent's frame to my child's frame
+  public double MapPitch(double ParentPitch) {// convert octave coordinate from parent's frame to child's frame
     return ((ParentPitch - this.OctaveY) / ScaleY);
   }
   /* ********************************************************************************* */
-  public double UnMapPitch(double ChildPitch) {// convert octave coordinate from my child's frame to my parent's frame
-    return this.OctaveY + ((ChildPitch) * ScaleY);
+  public double UnMapPitch(double ChildPitch) {// convert octave coordinate from child's frame to parent's frame
+    return this.OctaveY + (ChildPitch * ScaleY);
   }
   /* ********************************************************************************* */
   public void MapTo(double XLoc, double YLoc, Point2D.Double results) {
