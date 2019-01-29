@@ -411,7 +411,7 @@ public class Wave implements IDeletable {
     double val, FractAlong;// int param forces call to be only in even harmonics.
     int Len = this.NumSamples;
     for (int SampCnt = 0; SampCnt < Len; SampCnt++) {
-      FractAlong = ((double)SampCnt) / (double)Len;
+      FractAlong = ((double) SampCnt) / (double) Len;
       val = Math.sin(FractAlong * FrequencyFactor * Globals.TwoPi);
       this.wave[SampCnt] = val;
     }

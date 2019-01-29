@@ -241,19 +241,14 @@ public class LoopBox implements ISonglet.IContainer, IDrawable {
     return this.RefCount;
   }
   /* ********************************************************************************* */
-  @Override public JsonParse.Node Export(CollisionLibrary HitTable) {// ITextable
-    JsonParse.Node phrase = new JsonParse.Node();
+  @Override public JsonParse.HashNode Export(CollisionLibrary HitTable) {// ITextable
+    JsonParse.HashNode phrase = new JsonParse.HashNode();
     return phrase;
   }
-  @Override public void ShallowLoad(JsonParse.Node phrase) {// ITextable
+  @Override public void ShallowLoad(JsonParse.HashNode phrase) {// ITextable
     HashMap<String, JsonParse.Node> Fields = phrase.ChildrenHash;
   }
-  @Override public void Consume(JsonParse.Node phrase, CollisionLibrary ExistingInstances) {// ITextable - Fill in all the values of an already-created object, including deep pointers.
-    if (phrase == null) {
-      return;
-    }
-    this.ShallowLoad(phrase);
-    HashMap<String, JsonParse.Node> Fields = phrase.ChildrenHash;
+  @Override public void Consume(JsonParse.HashNode phrase, CollisionLibrary ExistingInstances) {// ITextable - Fill in all the values of an already-created object, including deep pointers.
   }
   /* ********************************************************************************* */
   public static class Loop_Singer extends Singer {
@@ -481,7 +476,7 @@ public class LoopBox implements ISonglet.IContainer, IDrawable {
     }
     /* ********************************************************************************* */
     public static class Factory implements IFactory {// for serialization
-      @Override public Loop_OffsetBox Create(JsonParse.Node phrase, CollisionLibrary ExistingInstances) {// under construction, this does not do anything yet
+      @Override public Loop_OffsetBox Create(JsonParse.HashNode phrase, CollisionLibrary ExistingInstances) {// under construction, this does not do anything yet
         Loop_OffsetBox obox = new Loop_OffsetBox();
         obox.Consume(phrase, ExistingInstances);
         return obox;
@@ -598,7 +593,7 @@ public class LoopBox implements ISonglet.IContainer, IDrawable {
     }
     /* ********************************************************************************* */
     public static class Factory implements IFactory {// for serialization
-      @Override public Ghost_OffsetBox Create(JsonParse.Node phrase, CollisionLibrary ExistingInstances) {// under construction, this does not do anything yet
+      @Override public Ghost_OffsetBox Create(JsonParse.HashNode phrase, CollisionLibrary ExistingInstances) {// under construction, this does not do anything yet
         return null;
       }
     }

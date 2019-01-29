@@ -3,8 +3,9 @@ package voices;
 import java.util.ArrayList;
 
 /**
- * @author MultiTool
- */
+* @author MultiTool
+*/
+
 public class WTVoice extends Voice {// Wave Table Voice
   /* ********************************************************************************* */
   public ArrayList<Wave> WaveTable = new ArrayList<Wave>();
@@ -45,7 +46,7 @@ public class WTVoice extends Voice {// Wave Table Voice
       double PatFractAlong = 0;
       double FadeFractAlong = 0, FadeFractAlongComp = 0;
       int PatSampleStart, PatEndSample;
-
+      
       Wave PrevPat, NextPat;
       if (true) {
         int SampleDex = this.Sample_Start;
@@ -135,7 +136,7 @@ public class WTVoice extends Voice {// Wave Table Voice
     }
   }
   /* ********************************************************************************* */
-  public WTVoice() {
+  public WTVoice(){
     super();
     this.BaseFreq = Globals.MiddleC4Freq;
     Fill_WaveTable();
@@ -154,7 +155,7 @@ public class WTVoice extends Voice {// Wave Table Voice
 
     int WaveSpanCycles = 10;//10;// number of pattern cycles represented by one wavetable sample.
 //    Build_Pluck_WaveTable(pattern, Duration, WaveSpanCycles, this.WaveTable);
-    Build_Sines_WaveTable(30, this.WaveTable);
+    Build_Sines_WaveTable(10, this.WaveTable);
     if (false) {
       Wave Result = new Wave();
       //WaveSpanCycles = 2;//100;// expand or contract duration of sound without changing pitch
@@ -170,7 +171,7 @@ public class WTVoice extends Voice {// Wave Table Voice
     double Duration = 6.0;
     double WaveLength = 1.0 / this.BaseFreq;
     int SamplesPerCycle = (int) (WaveLength * Globals.SampleRate);
-
+    
     Wave pattern = new Wave();
     pattern.Init(SamplesPerCycle, Globals.SampleRate);
     //PluckVoice.Generate_SquareWave(pattern, SamplesPerCycle, Globals.SampleRate);
@@ -278,56 +279,56 @@ public class WTVoice extends Voice {// Wave Table Voice
 }
 
 /*
- start with VoicePoint0, VoicePoint1, and also their indexes.
- double WtAlong0 = index0/LastVoicePoint;
- WtAlong0 *= wavetable.size();
- double WtAlong1 = index1/LastVoicePoint;
- WtAlong1 *= wavetable.size();
+start with VoicePoint0, VoicePoint1, and also their indexes.
+double WtAlong0 = index0/LastVoicePoint;
+WtAlong0 *= wavetable.size();
+double WtAlong1 = index1/LastVoicePoint;
+WtAlong1 *= wavetable.size();
 
- WtDex0 = Trunc(WtAlong0); WtFract0 = Fraction(WtAlong0);
- WtDex1 = Trunc(WtAlong1); WtFract1 = Fraction(WtAlong1);
+WtDex0 = Trunc(WtAlong0); WtFract0 = Fraction(WtAlong0);
+WtDex1 = Trunc(WtAlong1); WtFract1 = Fraction(WtAlong1);
 
 
- PatternDex = 
- prevpat = wt[PatternDex0];
- for (int patcnt=PatternDex0+1; patcnt<=PatternDex1; patcnt++){
- nextpat = wt[patcnt];
- for (samplenum = start to finish){
- }
- prevpat = nextpat;// drag
- }
+PatternDex = 
+prevpat = wt[PatternDex0];
+for (int patcnt=PatternDex0+1; patcnt<=PatternDex1; patcnt++){
+  nextpat = wt[patcnt];
+  for (samplenum = start to finish){
+  }
+  prevpat = nextpat;// drag
+}
 
- short linear sweep between 2 patterns:
- first parameters are: wavetable, controlpoint0(with time0), PatternDex0, controlpoint1(with time1), PatternDex1  
- could also derive both PatternDexes from times, by taking PatternDex0 = NumPatterns * (time0/Voice.Duration); 
- map time0 to sample0, time1 to sample1 ?
- NumPats = PatternDex1 - PatternDex0;
- prevpat = wt[PatternDex0];
- for (int patcnt=PatternDex0+1; patcnt<=PatternDex1; patcnt++){
- need to calc time length or sample length of span between patterns here. 
- nextpat = wt[patcnt];
- double Fade0, Fade1;
- for (subtime=start to finish){// from prevpat to nextpat. 
- amp0 = prevpat.GetResampleLooped(SubTimeAbsolute);// to do: merge these, redundant calc
- amp1 = nextpat.GetResampleLooped(SubTimeAbsolute);
- // either put amp0, amp1 in separate waves and crossfade them later, or do it now.
- Fade1 = (SubTimeAbsolute - starttime)/DeltaSubTimeAbsolute;
- Fade0 = 1.0-Fade1;
- amp0 *= Fade0; amp1 *= Fade1;
- amp = amp0+amp1;
- }
- if (false) {
- GenerateRun(prevpat, Run0);// over how much time? 
- GenerateRun(nextpat, Run1);
- Resample(Run0, RRun0);// here we need subtime
- Resample(Run1, RRun1);// here we need subtime
- }
- prevpat = nextpat;// drag
- map time0 to 
- now how to calculate number of samples?
- crossfade(Wave run0, Wave run1, Wave result, int Sample0, int Sample1);//  must specifiy number of samples. but wave sizes are the same so maybe not. 
- overdub result onto master wave. 
+short linear sweep between 2 patterns:
+first parameters are: wavetable, controlpoint0(with time0), PatternDex0, controlpoint1(with time1), PatternDex1  
+could also derive both PatternDexes from times, by taking PatternDex0 = NumPatterns * (time0/Voice.Duration); 
+map time0 to sample0, time1 to sample1 ?
+NumPats = PatternDex1 - PatternDex0;
+prevpat = wt[PatternDex0];
+for (int patcnt=PatternDex0+1; patcnt<=PatternDex1; patcnt++){
+  need to calc time length or sample length of span between patterns here. 
+  nextpat = wt[patcnt];
+  double Fade0, Fade1;
+  for (subtime=start to finish){// from prevpat to nextpat. 
+    amp0 = prevpat.GetResampleLooped(SubTimeAbsolute);// to do: merge these, redundant calc
+    amp1 = nextpat.GetResampleLooped(SubTimeAbsolute);
+    // either put amp0, amp1 in separate waves and crossfade them later, or do it now.
+    Fade1 = (SubTimeAbsolute - starttime)/DeltaSubTimeAbsolute;
+    Fade0 = 1.0-Fade1;
+    amp0 *= Fade0; amp1 *= Fade1;
+    amp = amp0+amp1;
+  }
+  if (false) {
+    GenerateRun(prevpat, Run0);// over how much time? 
+    GenerateRun(nextpat, Run1);
+    Resample(Run0, RRun0);// here we need subtime
+    Resample(Run1, RRun1);// here we need subtime
+  }
+  prevpat = nextpat;// drag
+  map time0 to 
+  now how to calculate number of samples?
+  crossfade(Wave run0, Wave run1, Wave result, int Sample0, int Sample1);//  must specifiy number of samples. but wave sizes are the same so maybe not. 
+  overdub result onto master wave. 
 
- }
+}
 
- */
+*/

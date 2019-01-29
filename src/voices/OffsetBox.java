@@ -239,50 +239,28 @@ public class OffsetBox extends MonkeyBox { //implements IDrawable.IMoveable, IDe
     }
   }
   /* ********************************************************************************* */
-  @Override public JsonParse.Node Export(CollisionLibrary HitTable) {// ITextable
-    JsonParse.Node SelfPackage = super.Export(HitTable);// ready for test?
+  @Override public JsonParse.HashNode Export(CollisionLibrary HitTable) {// ITextable
+    JsonParse.HashNode SelfPackage = super.Export(HitTable);// ready for test?
     JsonParse.Node ChildPackage;
     if (this.GetContent().GetRefCount() != 1) {// songlet exists in more than one place, use a pointer to library
-      ChildPackage = new JsonParse.Node();// multiple references, use a pointer to library instead
+      JsonParse.LiteralNode CPLit;
+      ChildPackage = CPLit = new JsonParse.LiteralNode();// multiple references, use a pointer to library instead
       CollisionItem ci;// songlet is already in library, just create a child phrase and assign its textptr to that entry key
       if ((ci = HitTable.GetItem(this.GetContent())) == null) {
         ci = HitTable.InsertUniqueInstance(this.GetContent());// songlet is NOT in library, serialize it and add to library
         ci.JsonPhrase = this.GetContent().Export(HitTable);
       }
-      ChildPackage.Literal = ci.ItemTxtPtr;
+      CPLit.Literal = ci.ItemTxtPtr;
     } else {// songlet only exists in one place, make it inline.
       ChildPackage = this.GetContent().Export(HitTable);
     }
     SelfPackage.AddSubPhrase(OffsetBox.ContentName, ChildPackage);
     return SelfPackage;
   }
-  @Override public void ShallowLoad(JsonParse.Node phrase) {// ITextable
+  @Override public void ShallowLoad(JsonParse.HashNode phrase) {// ITextable
     super.ShallowLoad(phrase);
   }
-  @Override public void Consume(JsonParse.Node phrase, CollisionLibrary ExistingInstances) {// ITextable - Fill in all the values of an already-created object, including deep pointers.
-    // should never hit this function - work in progress
-    if (phrase == null) {
-      return;
-    }
-    this.ShallowLoad(phrase);
-    JsonParse.Node SongletPhrase = phrase.ChildrenHash.get(OffsetBox.ContentName);// value of songlet field
-    String ContentTxt = SongletPhrase.Literal;
-    ISonglet songlet;
-    if (Globals.IsTxtPtr(ContentTxt)) {// if songlet content is just a pointer into the library
-      CollisionItem ci = ExistingInstances.GetItem(ContentTxt);// look up my songlet in the library
-      if (ci == null) {// then null reference even in file - the json is corrupt
-        throw new RuntimeException("CollisionItem is null in OffsetBox");// + ObjectTypeName);
-      }
-      if ((songlet = (ISonglet) ci.Item) == null) {// another cast!
-        ci.Item = songlet = this.Spawn_And_Attach_Songlet();// if not instantiated, create one and save it
-        songlet.Consume(ci.JsonPhrase, ExistingInstances);
-      } else {// songlet is found in library
-        //this.Attach_Songlet(songlet);// Attach_Songlet would have to be called by inheriting classes after calling super.Consume()
-      }
-    } else {
-      songlet = this.Spawn_And_Attach_Songlet();// songlet is inline, inside this one offsetbox
-      songlet.Consume(SongletPhrase, ExistingInstances);
-    }
+  @Override public void Consume(JsonParse.HashNode phrase, CollisionLibrary ExistingInstances) {// ITextable - Fill in all the values of an already-created object, including deep pointers.
   }
   public ISonglet Spawn_And_Attach_Songlet() {// virtual
     throw new UnsupportedOperationException("Spawn_And_Attach_Songlet not supported in OffseBox base class.");
@@ -296,7 +274,7 @@ public class OffsetBox extends MonkeyBox { //implements IDrawable.IMoveable, IDe
   }
   /* ********************************************************************************* */
   public static class Factory implements IFactory {// for serialization
-    @Override public OffsetBox Create(JsonParse.Node phrase, CollisionLibrary ExistingInstances) {// under construction, this does not do anything yet
+    @Override public OffsetBox Create(JsonParse.HashNode phrase, CollisionLibrary ExistingInstances) {// under construction, this does not do anything yet
       return null;
     }
   }

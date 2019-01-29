@@ -387,18 +387,18 @@ public class PluckVoice extends SampleVoice {
     // my white noise is already created. although it is different it is still white noise of the same length.
   }
   /* ********************************************************************************* */
-  @Override public JsonParse.Node Export(CollisionLibrary HitTable) {// ITextable
-    JsonParse.Node phrase = super.Export(HitTable);// to do: export my wave too
+  @Override public JsonParse.HashNode Export(CollisionLibrary HitTable) {// ITextable
+    JsonParse.HashNode phrase = super.Export(HitTable);// to do: export my wave too
     phrase.ChildrenHash = this.SerializeMyContents(HitTable);
     //this.MySample.Export();
     return phrase;
   }
-  @Override public void ShallowLoad(JsonParse.Node phrase) {// ITextable
+  @Override public void ShallowLoad(JsonParse.HashNode phrase) {// ITextable
     super.ShallowLoad(phrase);
     HashMap<String, JsonParse.Node> Fields = phrase.ChildrenHash;
     // Boolean.getBoolean(""); maybe use this instead. simpler, returns false if parse fails. 
   }
-  @Override public void Consume(JsonParse.Node phrase, CollisionLibrary ExistingInstances) {// ITextable - Fill in all the values of an already-created object, including deep pointers.
+  @Override public void Consume(JsonParse.HashNode phrase, CollisionLibrary ExistingInstances) {// ITextable - Fill in all the values of an already-created object, including deep pointers.
     if (phrase == null) {
       return;
     }
@@ -451,36 +451,15 @@ public class PluckVoice extends SampleVoice {
       this.Attach_Songlet(clone);
     }
     /* ********************************************************************************* */
-    @Override public JsonParse.Node Export(CollisionLibrary HitTable) {// ITextable
-      JsonParse.Node SelfPackage = super.Export(HitTable);// tested
+    @Override public JsonParse.HashNode Export(CollisionLibrary HitTable) {// ITextable
+      JsonParse.HashNode SelfPackage = super.Export(HitTable);// tested
       SelfPackage.AddSubPhrase(Globals.ObjectTypeName, IFactory.Utils.PackField(ObjectTypeName));
       return SelfPackage;
     }
-    @Override public void ShallowLoad(JsonParse.Node phrase) {// ITextable
+    @Override public void ShallowLoad(JsonParse.HashNode phrase) {// ITextable
       super.ShallowLoad(phrase);
     }
-    @Override public void Consume(JsonParse.Node phrase, CollisionLibrary ExistingInstances) {// ITextable - Fill in all the values of an already-created object, including deep pointers.
-      if (phrase == null) {// ready for test?
-        return;
-      }
-      this.ShallowLoad(phrase);
-      JsonParse.Node SongletPhrase = phrase.ChildrenHash.get(OffsetBox.ContentName);// value of songlet field
-      String ContentTxt = SongletPhrase.Literal;
-      PluckVoice songlet;
-      if (Globals.IsTxtPtr(ContentTxt)) {// if songlet content is just a pointer into the library
-        CollisionItem ci = ExistingInstances.GetItem(ContentTxt);// look up my songlet in the library
-        if (ci == null) {// then null reference even in file - the json is corrupt
-          throw new RuntimeException("CollisionItem is null in " + ObjectTypeName);
-        }
-        if ((songlet = (PluckVoice) ci.Item) == null) {// another cast!
-          ci.Item = songlet = new PluckVoice();// if not instantiated, create one and save it
-          songlet.Consume(ci.JsonPhrase, ExistingInstances);
-        }
-      } else {
-        songlet = new PluckVoice();// songlet is inline, inside this one offsetbox
-        songlet.Consume(SongletPhrase, ExistingInstances);
-      }
-      this.Attach_Songlet(songlet);
+    @Override public void Consume(JsonParse.HashNode phrase, CollisionLibrary ExistingInstances) {// ITextable - Fill in all the values of an already-created object, including deep pointers.
     }
     @Override public ISonglet Spawn_And_Attach_Songlet() {// reverse birth, use ONLY for deserialization
       PluckVoice songlet = new PluckVoice();
@@ -489,7 +468,7 @@ public class PluckVoice extends SampleVoice {
     }
     /* ********************************************************************************* */
     public static class Factory implements IFactory {// for serialization
-      @Override public PluckVoice_OffsetBox Create(JsonParse.Node phrase, CollisionLibrary ExistingInstances) {
+      @Override public PluckVoice_OffsetBox Create(JsonParse.HashNode phrase, CollisionLibrary ExistingInstances) {
         PluckVoice_OffsetBox obox = new PluckVoice_OffsetBox();
         obox.Consume(phrase, ExistingInstances);
         return obox;

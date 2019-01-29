@@ -266,8 +266,7 @@ public class AudProject implements IDeletable {
   }
   /* ********************************************************************************* */
   public String Textify() {// serialize
-    JsonParse.Node MainPhrase = new JsonParse.Node();
-    MainPhrase.ChildrenHash = new HashMap<String, JsonParse.Node>();
+    JsonParse.HashNode MainPhrase = new JsonParse.HashNode();
     ITextable.CollisionLibrary HitTable = new ITextable.CollisionLibrary();
     JsonParse.Node Tree = this.GraphicRoot.Export(HitTable);
     JsonParse.Node Library = HitTable.ExportJson();
@@ -278,22 +277,21 @@ public class AudProject implements IDeletable {
   }
   /* ********************************************************************************* */
   public void UnTextify(String JsonTxt) {// deserialize
-    JsonParse.Node MainPhrase = JsonParse.Parse(JsonTxt);
-
-    //JsonParse.Node VersionPhrase = MainPhrase.ChildrenHash.get(VersionNumName);
-    HashMap<String, JsonParse.Node> Fields = MainPhrase.ChildrenHash;
-    this.VersionNum = Double.parseDouble(IFactory.Utils.GetField(Fields, VersionNumName, String.format("%f%n", this.VersionNum)));
-
-    JsonParse.Node TreePhrase = MainPhrase.ChildrenHash.get(TreePhraseName);
-    JsonParse.Node LibraryPhrase = MainPhrase.ChildrenHash.get(LibraryPhraseName);
-
-    ITextable.CollisionLibrary HitTable = new ITextable.CollisionLibrary();
-    HitTable.ConsumePhrase(LibraryPhrase);
-
+    JsonParse jp = new JsonParse();
+    JsonParse.HashNode MainPhrase = jp.Parse(JsonTxt);
+    
+    // RootJNode will be deleted by jparse's destructor. So use it only in this scope!
+    // JsonParse::HashNode *RootJNode = jparse.Parse(JsonTxt);
+    // this->VersionNum = ITextable::GetNumberField(*RootJNode, VersionNumName, -1.0);// -1 default means error
+    this.VersionNum = Double.parseDouble(MainPhrase.GetField(VersionNumName, String.format("%f%n", this.VersionNum)));
+    // this.VersionNum = Double.parseDouble(MainPhrase.GetField(VersionNumName, "-1.0"));// -1 default means error
+    // In the future, if VersionNum has changed, use a different FileMapper. 
+    FileMapper fm = new FileMapper();
+    GraphicBox.Graphic_OffsetBox grabox = fm.Create(MainPhrase);
     this.GraphicRoot.Delete_Me();
-    this.GraphicRoot = new GraphicBox.Graphic_OffsetBox();
-    this.GraphicRoot.Consume(TreePhrase, HitTable);
-    this.AudioRoot = this.GraphicRoot.Content.ContentOBox;
+    this.GraphicRoot = grabox;
+    this.GBox = this.GraphicRoot.Content;
+    this.AudioRoot = this.GBox.ContentOBox;
     this.Update_Guts();
     this.GraphicRoot.UpdateBoundingBox();
   }

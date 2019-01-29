@@ -415,36 +415,15 @@ public class Voice implements ISonglet.IContainer {
       }
     }
     /* ********************************************************************************* */
-    @Override public JsonParse.Node Export(CollisionLibrary HitTable) {// ITextable
-      JsonParse.Node SelfPackage = super.Export(HitTable);// ready for test?
+    @Override public JsonParse.HashNode Export(CollisionLibrary HitTable) {// ITextable
+      JsonParse.HashNode SelfPackage = super.Export(HitTable);// ready for test?
       SelfPackage.AddSubPhrase(Globals.ObjectTypeName, IFactory.Utils.PackField(ObjectTypeName));
       return SelfPackage;
     }
-    @Override public void ShallowLoad(JsonParse.Node phrase) {// ITextable
+    @Override public void ShallowLoad(JsonParse.HashNode phrase) {// ITextable
       super.ShallowLoad(phrase);
     }
-    @Override public void Consume(JsonParse.Node phrase, CollisionLibrary ExistingInstances) {// ITextable - Fill in all the values of an already-created object, including deep pointers.
-      if (phrase == null) {// ready for test?
-        return;
-      }
-      this.ShallowLoad(phrase);
-      JsonParse.Node SongletPhrase = phrase.ChildrenHash.get(OffsetBox.ContentName);// value of songlet field
-      String ContentTxt = SongletPhrase.Literal;
-      Voice songlet;
-      if (Globals.IsTxtPtr(ContentTxt)) {// if songlet content is just a pointer into the library
-        CollisionItem ci = ExistingInstances.GetItem(ContentTxt);// look up my songlet in the library
-        if (ci == null) {// then null reference even in file - the json is corrupt
-          throw new RuntimeException("CollisionItem is null in " + ObjectTypeName);
-        }
-        if ((songlet = (Voice) ci.Item) == null) {// another cast!
-          ci.Item = songlet = new Voice();// if not instantiated, create one and save it
-          songlet.Consume(ci.JsonPhrase, ExistingInstances);
-        }
-      } else {
-        songlet = new Voice();// songlet is inline, inside this one offsetbox
-        songlet.Consume(SongletPhrase, ExistingInstances);
-      }
-      this.Attach_Songlet(songlet);
+    @Override public void Consume(JsonParse.HashNode phrase, CollisionLibrary ExistingInstances) {// ITextable - Fill in all the values of an already-created object, including deep pointers.
     }
     @Override public ISonglet Spawn_And_Attach_Songlet() {// reverse birth, use ONLY for deserialization
       Voice songlet = new Voice();
@@ -453,7 +432,7 @@ public class Voice implements ISonglet.IContainer {
     }
     /* ********************************************************************************* */
     public static class Factory implements IFactory {// for serialization
-      @Override public Voice_OffsetBox Create(JsonParse.Node phrase, CollisionLibrary ExistingInstances) {// under construction, this does not do anything yet
+      @Override public Voice_OffsetBox Create(JsonParse.HashNode phrase, CollisionLibrary ExistingInstances) {// under construction, this does not do anything yet
         Voice_OffsetBox obox = new Voice_OffsetBox();
         obox.Consume(phrase, ExistingInstances);
         return obox;
@@ -811,36 +790,17 @@ public class Voice implements ISonglet.IContainer {
     return this.RefCount;
   }
   /* ********************************************************************************* */
-  @Override public JsonParse.Node Export(CollisionLibrary HitTable) {// ITextable
-    JsonParse.Node phrase = new JsonParse.Node();
+  @Override public JsonParse.HashNode Export(CollisionLibrary HitTable) {// ITextable
+    JsonParse.HashNode phrase = new JsonParse.HashNode();
     phrase.ChildrenHash = this.SerializeMyContents(HitTable);
     return phrase;
   }
-  @Override public void ShallowLoad(JsonParse.Node phrase) {// ITextable
+  @Override public void ShallowLoad(JsonParse.HashNode phrase) {// ITextable
     HashMap<String, JsonParse.Node> Fields = phrase.ChildrenHash;
     this.BaseFreq = Double.parseDouble(IFactory.Utils.GetField(Fields, "BaseFreq", Double.toString(Globals.BaseFreqC0)));
     // this.MaxAmplitude = Double.parseDouble(IFactory.Utils.GetField(Fields, "MaxAmplitude", "0.125")); can be calculated
   }
-  @Override public void Consume(JsonParse.Node phrase, CollisionLibrary ExistingInstances) {// ITextable - Fill in all the values of an already-created object, including deep pointers.
-    if (phrase == null) {// this function is tested and works
-      return;
-    }
-    // to do: before we even enter this function, first determine if phrase just has a txt pointer instead of a ChildrenHash. 
-    this.ShallowLoad(phrase);
-    HashMap<String, JsonParse.Node> Fields = phrase.ChildrenHash;
-    JsonParse.Node PhrasePointList = IFactory.Utils.LookUpField(Fields, Voice.CPointsName);
-    if (PhrasePointList != null && PhrasePointList.ChildrenArray != null) {
-      this.Wipe_CPoints();
-      VoicePoint vp;
-      JsonParse.Node PhrasePoint;
-      int len = PhrasePointList.ChildrenArray.size();
-      for (int pcnt = 0; pcnt < len; pcnt++) {
-        PhrasePoint = PhrasePointList.ChildrenArray.get(pcnt);
-        vp = new VoicePoint();// to do: replace this with a factory owned by VoicePoint.
-        vp.Consume(PhrasePoint, ExistingInstances);
-        this.Add_Note(vp);
-      }
-    }
+  @Override public void Consume(JsonParse.HashNode phrase, CollisionLibrary ExistingInstances) {// ITextable - Fill in all the values of an already-created object, including deep pointers.
   }
   /* ********************************************************************************* */
   public HashMap<String, JsonParse.Node> SerializeMyContents(CollisionLibrary HitTable) {// sort of the counterpart to ShallowLoad
@@ -848,7 +808,7 @@ public class Voice implements ISonglet.IContainer {
     Fields.put("BaseFreq", IFactory.Utils.PackField(this.BaseFreq));
     Fields.put("MaxAmplitude", IFactory.Utils.PackField(this.MaxAmplitude));
     // Fields.put("MyBounds", MyBounds.Export(HitTable)); // can be calculated
-    JsonParse.Node CPointsPhrase = new JsonParse.Node();// Save my array of control points.
+    JsonParse.ArrayNode CPointsPhrase = new JsonParse.ArrayNode();// Save my array of control points.
     CPointsPhrase.ChildrenArray = IFactory.Utils.MakeArray(HitTable, this.CPoints);
     Fields.put(Voice.CPointsName, CPointsPhrase);
     return Fields;

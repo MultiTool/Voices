@@ -123,8 +123,8 @@ public class SampleVoice extends Voice {
     this.MySample = donor.MySample;// maybe we should clone the sample too? 
   }
   /* ********************************************************************************* */
-  @Override public JsonParse.Node Export(CollisionLibrary HitTable) {// ITextable
-    JsonParse.Node phrase = super.Export(HitTable);// to do: export my wave too
+  @Override public JsonParse.HashNode Export(CollisionLibrary HitTable) {// ITextable
+    JsonParse.HashNode phrase = super.Export(HitTable);// to do: export my wave too
     phrase.ChildrenHash = this.SerializeMyContents(HitTable);
     phrase.AddSubPhrase(LoopedName, IFactory.Utils.PackField(this.Looped));
     if (!this.SamplePreset.trim().equals("")) {
@@ -133,7 +133,7 @@ public class SampleVoice extends Voice {
     //this.MySample.Export();
     return phrase;
   }
-  @Override public void ShallowLoad(JsonParse.Node phrase) {// ITextable
+  @Override public void ShallowLoad(JsonParse.HashNode phrase) {// ITextable
     super.ShallowLoad(phrase);
     HashMap<String, JsonParse.Node> Fields = phrase.ChildrenHash;
     this.Looped = Boolean.parseBoolean(IFactory.Utils.GetField(Fields, LoopedName, "true"));//Boolean.toString(this.Looped)));
@@ -143,7 +143,7 @@ public class SampleVoice extends Voice {
       this.Preset_Horn();
     }
   }
-  @Override public void Consume(JsonParse.Node phrase, CollisionLibrary ExistingInstances) {// ITextable - Fill in all the values of an already-created object, including deep pointers.
+  @Override public void Consume(JsonParse.HashNode phrase, CollisionLibrary ExistingInstances) {// ITextable - Fill in all the values of an already-created object, including deep pointers.
     if (phrase == null) {// to do: consume my wave too
       return;
     }
@@ -195,36 +195,15 @@ public class SampleVoice extends Voice {
       this.Attach_Songlet(clone);
     }
     /* ********************************************************************************* */
-    @Override public JsonParse.Node Export(CollisionLibrary HitTable) {// ITextable
-      JsonParse.Node SelfPackage = super.Export(HitTable);// tested
+    @Override public JsonParse.HashNode Export(CollisionLibrary HitTable) {// ITextable
+      JsonParse.HashNode SelfPackage = super.Export(HitTable);// tested
       SelfPackage.AddSubPhrase(Globals.ObjectTypeName, IFactory.Utils.PackField(ObjectTypeName));
       return SelfPackage;
     }
-    @Override public void ShallowLoad(JsonParse.Node phrase) {// ITextable
+    @Override public void ShallowLoad(JsonParse.HashNode phrase) {// ITextable
       super.ShallowLoad(phrase);
     }
-    @Override public void Consume(JsonParse.Node phrase, CollisionLibrary ExistingInstances) {// ITextable - Fill in all the values of an already-created object, including deep pointers.
-      if (phrase == null) {
-        return;
-      }
-      this.ShallowLoad(phrase);
-      JsonParse.Node SongletPhrase = phrase.ChildrenHash.get(OffsetBox.ContentName);// value of songlet field
-      String ContentTxt = SongletPhrase.Literal;
-      SampleVoice songlet;
-      if (Globals.IsTxtPtr(ContentTxt)) {// if songlet content is just a pointer into the library
-        CollisionItem ci = ExistingInstances.GetItem(ContentTxt);// look up my songlet in the library
-        if (ci == null) {// then null reference even in file - the json is corrupt
-          throw new RuntimeException("CollisionItem is null in " + ObjectTypeName);
-        }
-        if ((songlet = (SampleVoice) ci.Item) == null) {// another cast!
-          ci.Item = songlet = new SampleVoice();// if not instantiated, create one and save it
-          songlet.Consume(ci.JsonPhrase, ExistingInstances);
-        }
-      } else {
-        songlet = new SampleVoice();// songlet is inline, inside this one offsetbox
-        songlet.Consume(SongletPhrase, ExistingInstances);
-      }
-      this.Attach_Songlet(songlet);
+    @Override public void Consume(JsonParse.HashNode phrase, CollisionLibrary ExistingInstances) {// ITextable - Fill in all the values of an already-created object, including deep pointers.
     }
     @Override public ISonglet Spawn_And_Attach_Songlet() {// reverse birth, use ONLY for deserialization
       SampleVoice songlet = new SampleVoice();
@@ -233,12 +212,12 @@ public class SampleVoice extends Voice {
     }
     /* ********************************************************************************* */
     public static class Factory implements IFactory {// for serialization
-      @Override public SampleVoice_OffsetBox Create(JsonParse.Node phrase, CollisionLibrary ExistingInstances) {
+      @Override public SampleVoice_OffsetBox Create(JsonParse.HashNode phrase, CollisionLibrary ExistingInstances) {
         SampleVoice_OffsetBox obox = new SampleVoice_OffsetBox();
         obox.Consume(phrase, ExistingInstances);
         return obox;
       }
-//      @Override public Voice_OffsetBox Create(JsonParse.Node phrase, CollisionLibrary ExistingInstances) {
+//      @Override public Voice_OffsetBox Create(JsonParse.HashNode phrase, CollisionLibrary ExistingInstances) {
 //        Voice_OffsetBox obox = new Voice_OffsetBox();// hack to load sample voices as voices
 //        obox.Consume(phrase, ExistingInstances);
 //        return obox;

@@ -137,8 +137,8 @@ public class VoicePoint extends MonkeyBox {
     this.DownHandle = null;
   }
   /* ********************************************************************************* */
-  @Override public JsonParse.Node Export(CollisionLibrary HitTable) {// ITextable
-    JsonParse.Node phrase = super.Export(HitTable);
+  @Override public JsonParse.HashNode Export(CollisionLibrary HitTable) {// ITextable
+    JsonParse.HashNode phrase = super.Export(HitTable);
     phrase.AddSubPhrase("OctavesPerLoudness", IFactory.Utils.PackField(this.OctavesPerLoudness));
     phrase.AddSubPhrase("SubTime", IFactory.Utils.PackField(this.SubTime));// can be calculated
     phrase.AddSubPhrase(VoicePoint.UpHandleName, this.UpHandle.Export(HitTable));
@@ -147,7 +147,7 @@ public class VoicePoint extends MonkeyBox {
     this.DownHandle.Export(HitTable);
     return phrase;
   }
-  @Override public void ShallowLoad(JsonParse.Node phrase) {// ITextable
+  @Override public void ShallowLoad(JsonParse.HashNode phrase) {// ITextable
     super.ShallowLoad(phrase);
     HashMap<String, JsonParse.Node> Fields = phrase.ChildrenHash;
     this.OctavesPerLoudness = Double.parseDouble(IFactory.Utils.GetField(Fields, "OctavesPerLoudness", "0.125"));
@@ -155,14 +155,15 @@ public class VoicePoint extends MonkeyBox {
       this.SubTime = Double.parseDouble(IFactory.Utils.GetField(Fields, "SubTime", "0"));// can be calculated
     }
   }
-  @Override public void Consume(JsonParse.Node phrase, CollisionLibrary ExistingInstances) {// ITextable - Fill in all the values of an already-created object, including deep pointers.
+  @Override public void Consume(JsonParse.HashNode phrase, CollisionLibrary ExistingInstances) {// ITextable - Fill in all the values of an already-created object, including deep pointers.
     if (phrase == null) {
       return;
     }
     this.ShallowLoad(phrase);
-    HashMap<String, JsonParse.Node> Fields = phrase.ChildrenHash;
-    this.UpHandle.Consume(IFactory.Utils.LookUpField(Fields, VoicePoint.UpHandleName), ExistingInstances);
-    this.DownHandle.Consume(IFactory.Utils.LookUpField(Fields, VoicePoint.DownHandleName), ExistingInstances);
+    JsonParse.HashNode UpNode = (JsonParse.HashNode)phrase.Get(VoicePoint.UpHandleName);// another cast!
+    JsonParse.HashNode DnNode = (JsonParse.HashNode)phrase.Get(VoicePoint.DownHandleName);// another cast!
+    this.UpHandle.Consume(UpNode, ExistingInstances);
+    this.UpHandle.Consume(DnNode, ExistingInstances);
   }
   /* ********************************************************************************* */
   public static class LoudnessHandle implements IDrawable.IMoveable, IDeletable, ITextable {// probably should not be ITextable
@@ -278,8 +279,8 @@ public class VoicePoint extends MonkeyBox {
       this.IsSelected = false;
     }
     /* ********************************************************************************* */
-    @Override public JsonParse.Node Export(CollisionLibrary HitTable) {// ITextable
-      JsonParse.Node phrase = new JsonParse.Node();
+    @Override public JsonParse.HashNode Export(CollisionLibrary HitTable) {// ITextable
+      JsonParse.HashNode phrase = new JsonParse.HashNode();
       phrase.ChildrenHash = new HashMap<String, JsonParse.Node>();
       phrase.AddSubPhrase("OctavesPerRadius", IFactory.Utils.PackField(this.OctavesPerRadius));
       if (false) {// can be calculated
@@ -288,11 +289,11 @@ public class VoicePoint extends MonkeyBox {
       }
       return phrase;
     }
-    @Override public void ShallowLoad(JsonParse.Node phrase) {// ITextable
+    @Override public void ShallowLoad(JsonParse.HashNode phrase) {// ITextable
       HashMap<String, JsonParse.Node> Fields = phrase.ChildrenHash;
       this.OctavesPerRadius = Double.parseDouble(IFactory.Utils.GetField(Fields, "OctavesPerRadius", "0.007"));
     }
-    @Override public void Consume(JsonParse.Node phrase, CollisionLibrary ExistingInstances) {// ITextable - Fill in all the values of an already-created object, including deep pointers.
+    @Override public void Consume(JsonParse.HashNode phrase, CollisionLibrary ExistingInstances) {// ITextable - Fill in all the values of an already-created object, including deep pointers.
       if (phrase == null) {
         return;
       }

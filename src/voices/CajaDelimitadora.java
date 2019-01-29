@@ -160,18 +160,18 @@ public class CajaDelimitadora implements IDeletable, ITextable {// DIY BoundingB
     return false;
   }
   /* ********************************************************************************* */
-  @Override public JsonParse.Node Export(CollisionLibrary HitTable) {// ITextable
-    JsonParse.Node phrase = new JsonParse.Node();
+  @Override public JsonParse.HashNode Export(CollisionLibrary HitTable) {// ITextable
+    JsonParse.HashNode phrase = new JsonParse.HashNode();
     phrase.ChildrenHash = new HashMap<String, JsonParse.Node>();
     phrase.AddSubPhrase("Min", IFactory.Utils.PackField(this.Min.toString()));
     phrase.AddSubPhrase("Max", IFactory.Utils.PackField(this.Max.toString()));
     return phrase;
   }
-  @Override public void ShallowLoad(JsonParse.Node phrase) {// ITextable
+  @Override public void ShallowLoad(JsonParse.HashNode phrase) {// ITextable
     HashMap<String, JsonParse.Node> Fields = phrase.ChildrenHash;
     throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
   }
-  @Override public void Consume(JsonParse.Node phrase, CollisionLibrary ExistingInstances) {// ITextable - Fill in all the values of an already-created object, including deep pointers.
+  @Override public void Consume(JsonParse.HashNode phrase, CollisionLibrary ExistingInstances) {// ITextable - Fill in all the values of an already-created object, including deep pointers.
     throw new UnsupportedOperationException("Not supported yet.");
   }
 }

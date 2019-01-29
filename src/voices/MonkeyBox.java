@@ -236,8 +236,8 @@ public class MonkeyBox implements IDrawable.IMoveable, IDeletable, ITextable {//
     this.IsSelected = false;
   }
   /* ********************************************************************************* */
-  @Override public JsonParse.Node Export(CollisionLibrary HitTable) {// ITextable
-    JsonParse.Node phrase = new JsonParse.Node();// in the MonkeyBox base class, we export only shallow values, no songlet children
+  @Override public JsonParse.HashNode Export(CollisionLibrary HitTable) {// ITextable
+    JsonParse.HashNode phrase = new JsonParse.HashNode();// in the MonkeyBox base class, we export only shallow values, no songlet children
     HashMap<String, JsonParse.Node> Fields = new HashMap<String, JsonParse.Node>();
     phrase.ChildrenHash = Fields;
     phrase.AddSubPhrase(MonkeyBox.TimeXName, IFactory.Utils.PackField(this.TimeX));
@@ -250,7 +250,7 @@ public class MonkeyBox implements IDrawable.IMoveable, IDeletable, ITextable {//
     }
     return phrase;
   }
-  @Override public void ShallowLoad(JsonParse.Node phrase) {// ITextable
+  @Override public void ShallowLoad(JsonParse.HashNode phrase) {// ITextable
     HashMap<String, JsonParse.Node> Fields = phrase.ChildrenHash;
     this.TimeX = Double.parseDouble(IFactory.Utils.GetField(Fields, MonkeyBox.TimeXName, "0"));
     this.OctaveY = Double.parseDouble(IFactory.Utils.GetField(Fields, MonkeyBox.OctaveYName, "0"));
@@ -262,7 +262,7 @@ public class MonkeyBox implements IDrawable.IMoveable, IDeletable, ITextable {//
       this.OctavesPerRadius = Double.parseDouble(IFactory.Utils.GetField(Fields, "OctavesPerRadius", "0.01"));
     }
   }
-  @Override public void Consume(JsonParse.Node phrase, CollisionLibrary ExistingInstances) {// ITextable - Fill in all the values of an already-created object, including deep pointers.
+  @Override public void Consume(JsonParse.HashNode phrase, CollisionLibrary ExistingInstances) {// ITextable - Fill in all the values of an already-created object, including deep pointers.
     if (phrase == null) {
       return;
     }
