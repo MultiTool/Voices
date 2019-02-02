@@ -60,6 +60,7 @@ public class AudProject implements IDeletable {
     GroupSong cbx;
     NoteMaker nm;
     LoopBox lbx;
+//    switch (9){
     switch (11) {
     case 0:
       song = TestJunkyard.Create_Random_Chorus(0, 0, 1.0);
@@ -134,17 +135,21 @@ public class AudProject implements IDeletable {
       GroupSong gbx = new GroupSong();
       gbx.Set_Project(this);
 
-      song = NoteMaker.Create_Unbound_Triad_Rythm();
+//      song = NoteMaker.Create_Unbound_Triad_Rythm();
+      song = NoteMaker.Create_Unbound_Triad_Rythm_LoopSong();
+      
       obox = song.Spawn_OffsetBox();
       obox.OctaveY = (4);// move later
       obox.TimeX += NoteMaker.OffsetTime;
       gbx.Add_SubSong(obox);
 
-      song = TestJunkyard.Compose_Ribbon_Chorus();
-      obox = song.Spawn_OffsetBox();
-      obox.OctaveY = (1);// move later
-      obox.TimeX += NoteMaker.OffsetTime;
-      gbx.Add_SubSong(obox);
+      if (false){
+        song = TestJunkyard.Compose_Ribbon_Chorus();
+        obox = song.Spawn_OffsetBox();
+        obox.OctaveY = (1);// move later
+        obox.TimeX += NoteMaker.OffsetTime;
+        gbx.Add_SubSong(obox);
+      }
 
       obox = gbx.Spawn_OffsetBox();
       break;

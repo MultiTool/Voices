@@ -329,6 +329,35 @@ public class NoteMaker {
     }
   }
   /* ********************************************************************************* */
+  public static ISonglet Create_Unbound_Triad_Rythm_LoopSong() {
+    OffsetBox obox = null;
+    GroupSong CMinor, CMajor, DMajor, DMinor;
+    double Delay = 1.5;
+    GroupSong gbx;
+    NoteMaker nm;
+    LoopSong song;
+    
+    double offx = NoteMaker.OffsetTime;
+    gbx = new GroupSong();
+    nm = new NoteMaker();
+    song = new LoopSong();
+    CMajor = nm.MakeMajor();// C major
+    gbx.Add_SubSong(CMajor, 0 + offx, 0, 1.0);
+    CMinor = nm.MakeMinor();// C minor
+    gbx.Add_SubSong(CMinor, Delay * 1 + offx, 0, 1.0);
+    DMajor = nm.MakeMajor();// D major
+    gbx.Add_SubSong(DMajor, Delay * 2 + offx, 2.0 * NoteMaker.SemitoneFraction, 1.0);
+    DMinor = nm.MakeMinor();// D minor
+    gbx.Add_SubSong(DMinor, Delay * 3 + offx, 2.0 * NoteMaker.SemitoneFraction, 1.0);
+    
+    GroupSong.Group_OffsetBox gobox = gbx.Spawn_OffsetBox();
+    song.Add_SubSong(gobox);
+    song.Set_Interval(Delay * 4);
+    song.Set_Beats(30);
+
+    return song;
+  }
+  /* ********************************************************************************* */
   public static ISonglet Create_Unbound_Triad_Rythm() {
     OffsetBox obox = null;
     GroupSong CMinor, CMajor, DMajor, DMinor;

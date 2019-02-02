@@ -677,7 +677,8 @@ public class GroupSong implements ISonglet, IDrawable, ISonglet.IContainer {
           this.NowPlaying.set(AliveCnt++, player);
         }
       }
-      this.NowPlaying = new ArrayList<Singer>(this.NowPlaying.subList(0, AliveCnt));//this.NowPlaying.resize(AliveCnt);
+      Globals.ShrinkList(this.NowPlaying, AliveCnt);//this.NowPlaying.resize(AliveCnt);
+      //this.NowPlaying = new ArrayList<Singer>(this.NowPlaying.subList(0, AliveCnt));//this.NowPlaying.resize(AliveCnt);
       this.Prev_Time_Absolute = this.InheritedMap.UnMapTime(Clipped_EndTime);// get end time in absolute universal coordinates
     }
     /* ********************************************************************************* */
@@ -720,7 +721,8 @@ public class GroupSong implements ISonglet, IDrawable, ISonglet.IContainer {
         }
         cnt++;
       }
-      this.NowPlaying = new ArrayList<Singer>(this.NowPlaying.subList(0, AliveCnt));//this.NowPlaying.resize(AliveCnt);
+      Globals.ShrinkList(this.NowPlaying, AliveCnt);//this.NowPlaying.resize(AliveCnt);
+      //this.NowPlaying = new ArrayList<Singer>(this.NowPlaying.subList(0, AliveCnt));//this.NowPlaying.resize(AliveCnt);
       wave.Amplify(this.MyOffsetBox.LoudnessFactor);
       this.Prev_Time_Absolute = EndTime_Absolute;
     }
@@ -780,7 +782,8 @@ public class GroupSong implements ISonglet, IDrawable, ISonglet.IContainer {
           this.NowPlaying.set(AliveCnt++, ChildSinger);// pack them down
         }
       }
-      this.NowPlaying = new ArrayList<Singer>(this.NowPlaying.subList(0, AliveCnt));//this.NowPlaying.resize(AliveCnt);
+      Globals.ShrinkList(this.NowPlaying, AliveCnt);//this.NowPlaying.resize(AliveCnt);
+      //this.NowPlaying = new ArrayList<Singer>(this.NowPlaying.subList(0, AliveCnt));//this.NowPlaying.resize(AliveCnt);
       //printf("NowPlaying:%i\n", NowPlaying.size());
 
       while (this.Current_Dex < NumSonglets) {// first find neuvo songlets in this time range and add them to pool

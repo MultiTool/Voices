@@ -105,7 +105,8 @@ public class Grabber { // to do: rename this class to Grabber
     for (int cnt = resize; cnt < len; cnt++) {
       Stack.get(cnt).Delete_Me();
     }
-    Stack.subList(resize, len).clear();// does this really work? 
+    //Stack.subList(resize, len).clear();// does this really work? 
+    Globals.ShrinkList(Stack, resize);// does this really work? 
   }
   /* ********************************************************************************* */
   public int Compare(IDrawable.IMoveable thing0, IDrawable.IMoveable thing1) {// always override this

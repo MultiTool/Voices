@@ -180,49 +180,49 @@ public class FileMapper {
     }
   };
   /* ********************************************************************************* */
-//  public static class LoopSongFactory extends GroupSongFactory{
-//    LoopSongFactory(FileMapper fmap0)  {super(fmap0);}
-//    /* ********************************************************************************* */
-//    @Override LoopSong.Loop_OffsetBox Deserialize_OffsetBox(JsonParse.HashNode OboxNode) {
-//      LoopSong.Loop_OffsetBox grobox = (LoopSong.Loop_OffsetBox)Deserialize_Stack(OboxNode);// another cast!
-//      // For new file formats, we can replace grobox shallow load here.
-//      grobox.ShallowLoad(OboxNode);
-//      return grobox;
-//    }
-//    /* ********************************************************************************* */
-//    @Override LoopSong Deserialize_Songlet(JsonParse.HashNode node) {
-//      // Before we even enter this function, first determine if phrase just has a txt pointer instead of a ChildrenHash.
-//      LoopSong loop = new LoopSong();
-//      //Hydrate_Loop(node, loop); // this will not actually work
-//      return loop;
-//    }
-//    /* ********************************************************************************* */
-//    void Hydrate_Loop(JsonParse.HashNode LoopNode, LoopSong loop) {// Fill in all the values of an already-created object, including deep pointers.
-//      if (LoopNode == null) { return; }
-//      loop.ShallowLoad(LoopNode);// WARNING Hydrate_Loop is all untested junk shoveled from GroupFactory
-//      JsonParse.Node SubNode = LoopNode.Get(GroupSong.SubSongsName);
-//      if (SubNode != null && SubNode.MyType == JsonParse.Node.IsArray) {
-//        JsonParse.ArrayNode ChildPhraseList = (JsonParse.ArrayNode)SubNode;// another cast!
-//        loop.Wipe_SubSongs();
-//        OffsetBox ChildObox;
-//        JsonParse.Node ChildItemNode;
-//        int len = ChildPhraseList.ChildrenArray.size();
-//        for (int pcnt = 0; pcnt < len; pcnt++) {// iterate through the array
-//          ChildItemNode = ChildPhraseList.Get(pcnt);
-//          if (ChildItemNode!=null && ChildItemNode.IsHash){
-//            JsonParse.HashNode ChildObjNode = (JsonParse.HashNode)ChildItemNode;// another cast!
-//            String TypeName = ITextable.GetStringField(ChildObjNode, ITextable.ObjectTypeName, "null");
-//            FactoryBase factory = fmap.GetFactory(TypeName);// use factories to deal with polymorphism
-//            if (factory!=null){
-//              ChildObox = factory.Deserialize_OffsetBox(ChildObjNode);
-//              loop.Add_SubSong(ChildObox);
-//            }
-//          }
-//        }
-//        loop.Sort_Me();
-//      }
-//    }
-//  };
+  public static class LoopSongFactory extends GroupSongFactory{
+    LoopSongFactory(FileMapper fmap0)  {super(fmap0);}
+    /* ********************************************************************************* */
+    @Override LoopSong.Loop_OffsetBox Deserialize_OffsetBox(JsonParse.HashNode OboxNode) {
+      LoopSong.Loop_OffsetBox grobox = (LoopSong.Loop_OffsetBox)Deserialize_Stack(OboxNode);// another cast!
+      // For new file formats, we can replace grobox shallow load here.
+      grobox.ShallowLoad(OboxNode);
+      return grobox;
+    }
+    /* ********************************************************************************* */
+    @Override LoopSong Deserialize_Songlet(JsonParse.HashNode node) {
+      // Before we even enter this function, first determine if phrase just has a txt pointer instead of a ChildrenHash.
+      LoopSong loop = new LoopSong();
+      //Hydrate_Loop(node, loop); // this will not actually work
+      return loop;
+    }
+    /* ********************************************************************************* */
+    void Hydrate_Loop(JsonParse.HashNode LoopNode, LoopSong loop) {// Fill in all the values of an already-created object, including deep pointers.
+      if (LoopNode == null) { return; }
+      loop.ShallowLoad(LoopNode);// WARNING Hydrate_Loop is all untested junk shoveled from GroupFactory
+      JsonParse.Node SubNode = LoopNode.Get(GroupSong.SubSongsName);
+      if (SubNode != null && SubNode.MyType == JsonParse.Node.Types.IsArray) {
+        JsonParse.ArrayNode ChildPhraseList = (JsonParse.ArrayNode)SubNode;// another cast!
+        loop.Wipe_SubSongs();
+        OffsetBox ChildObox;
+        JsonParse.Node ChildItemNode;
+        int len = ChildPhraseList.ChildrenArray.size();
+        for (int pcnt = 0; pcnt < len; pcnt++) {// iterate through the array
+          ChildItemNode = ChildPhraseList.Get(pcnt);
+          if (ChildItemNode!=null && ChildItemNode.MyType == JsonParse.Node.Types.IsHash){
+            JsonParse.HashNode ChildObjNode = (JsonParse.HashNode)ChildItemNode;// another cast!
+            String TypeName = Utils.GetStringField(ChildObjNode, ITextable.ObjectTypeName, "null");
+            FactoryBase factory = fmap.GetFactory(TypeName);// use factories to deal with polymorphism
+            if (factory!=null){
+              ChildObox = factory.Deserialize_OffsetBox(ChildObjNode);
+              loop.Add_SubSong(ChildObox);
+            }
+          }
+        }
+        loop.Sort_Me();
+      }
+    }
+  };
   /* ********************************************************************************* */
   public static class GraphicFactory extends FactoryBase {// for serialization
     GraphicFactory(FileMapper fmap0) {super(fmap0);}
@@ -291,7 +291,7 @@ public class FileMapper {
     Factories.put(SampleVoiceFactory.ObjTypeName, new SampleVoiceFactory(this));
     Factories.put(PluckVoice.PluckVoice_OffsetBox.ObjectTypeName, new PluckVoiceFactory(this));
     Factories.put("Group_OffsetBox", new GroupSongFactory(this));
-//    Factories.put(LoopSong.Loop_OffsetBox.ObjectTypeName, new LoopSongFactory(this));
+    Factories.put(LoopSong.Loop_OffsetBox.ObjectTypeName, new LoopSongFactory(this));
   }
   /* ********************************************************************************* */
   void DeleteFactories(){
