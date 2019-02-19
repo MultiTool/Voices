@@ -154,6 +154,10 @@ public class VoicePoint extends MonkeyBox {
     if (false) {
       this.SubTime = Double.parseDouble(IFactory.Utils.GetField(Fields, "SubTime", "0"));// can be calculated
     }
+    JsonParse.HashNode UpNode = (JsonParse.HashNode)phrase.Get(VoicePoint.UpHandleName);// another cast!
+    JsonParse.HashNode DnNode = (JsonParse.HashNode)phrase.Get(VoicePoint.DownHandleName);// another cast!
+    this.UpHandle.ShallowLoad(UpNode);
+    this.UpHandle.ShallowLoad(DnNode);
   }
   @Override public void Consume(JsonParse.HashNode phrase, CollisionLibrary ExistingInstances) {// ITextable - Fill in all the values of an already-created object, including deep pointers.
     if (phrase == null) {

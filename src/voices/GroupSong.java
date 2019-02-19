@@ -15,7 +15,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  *
  * @author MultiTool
  */
-public class GroupSong implements ISonglet, IDrawable, ISonglet.IContainer {
+public class GroupSong extends ISonglet.IContainer {
   public ArrayList<OffsetBox> SubSongs = new ArrayList<OffsetBox>();
   public static String SubSongsName = "SubSongs";
   public double Duration = 0.0;
@@ -164,10 +164,6 @@ public class GroupSong implements ISonglet, IDrawable, ISonglet.IContainer {
       }
     });
   }
-  /* ********************************************************************************* */
-//  @Override public int Get_Sample_Count(int SampleRate) {
-//    return SampleRate * (int) this.Get_Duration();
-//  }
   /* ********************************************************************************* */
 //  @Override public AudProject Get_Project() {
 //    return this.MyProject;
@@ -600,16 +596,6 @@ public class GroupSong implements ISonglet, IDrawable, ISonglet.IContainer {
       this.SubSongs.get(cnt).Delete_Me();
     }
     this.SubSongs.clear();
-  }
-  /* ********************************************************************************* */
-  @Override public int Ref_Songlet() {// ISonglet Reference Counting: increment ref counter and return new value just for kicks
-    return ++this.RefCount;
-  }
-  @Override public int UnRef_Songlet() {// ISonglet Reference Counting: decrement ref counter and return new value just for kicks
-    return --this.RefCount;
-  }
-  @Override public int GetRefCount() {// ISonglet Reference Counting: get number of references for serialization
-    return this.RefCount;
   }
   /* ********************************************************************************* */
   @Override public JsonParse.HashNode Export(CollisionLibrary HitTable) {// ITextable

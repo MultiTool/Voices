@@ -11,7 +11,7 @@ import java.util.HashMap;
  *
  * @author MultiTool
  */
-public class GraphicBox implements IDrawable, ISonglet, IDeletable, ISonglet.IContainer {// 
+public class GraphicBox extends ISonglet.IContainer {// implements IDrawable, IDeletable{// 
   public OffsetBox ContentOBox = null;
   public IDrawable.IMoveable Floater = null;
   private CajaDelimitadora MyBounds = new CajaDelimitadora();
@@ -171,16 +171,6 @@ public class GraphicBox implements IDrawable, ISonglet, IDeletable, ISonglet.ICo
     this.FreshnessTimeStamp = Integer.MIN_VALUE;
   }
   /* ********************************************************************************* */
-  @Override public int Ref_Songlet() {// ISonglet Reference Counting: increment ref counter and return new value just for kicks
-    return ++this.RefCount;
-  }
-  @Override public int UnRef_Songlet() {// ISonglet Reference Counting: decrement ref counter and return new value just for kicks
-    return --this.RefCount;
-  }
-  @Override public int GetRefCount() {// ISonglet Reference Counting: get number of references for serialization
-    return this.RefCount;
-  }
-  /* ********************************************************************************* */
   @Override public JsonParse.HashNode Export(CollisionLibrary HitTable) {// ITextable
     JsonParse.HashNode phrase = new JsonParse.HashNode();
     phrase.ChildrenHash = new HashMap<String, JsonParse.Node>();
@@ -211,9 +201,6 @@ public class GraphicBox implements IDrawable, ISonglet, IDeletable, ISonglet.ICo
   @Override public Singer Spawn_Singer() {
     throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
   }
-//  @Override public int Get_Sample_Count(int SampleRate) {
-//    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-//  }
   @Override public double Get_Duration() {
     throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
   }

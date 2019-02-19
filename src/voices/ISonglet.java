@@ -4,21 +4,18 @@ package voices;
  *
  * @author MultiTool
  */
-public interface ISonglet extends IDrawable, IDeletable, ITextable {// Cancionita
+public abstract class ISonglet implements IDrawable, IDeletable, ITextable {// Cancionita
+  int RefCount = 0;
   /* ********************************************************************************* */
-  public OffsetBox Spawn_OffsetBox();// for compose time
+  public abstract OffsetBox Spawn_OffsetBox();// for compose time
   /* ********************************************************************************* */
-  public ISonglet.Singer Spawn_Singer();// for render time
+  public abstract ISonglet.Singer Spawn_Singer();// for render time
   /* ********************************************************************************* */
-  //public int Get_Sample_Count(int SampleRate);
+  public abstract double Get_Duration();
   /* ********************************************************************************* */
-  public double Get_Duration();
+  public abstract double Get_Max_Amplitude();
   /* ********************************************************************************* */
-  public double Get_Max_Amplitude();
-  /* ********************************************************************************* */
-  //public double Update_Durations();
-  /* ********************************************************************************* */
-  public void Update_Guts(MetricsPacket metrics);
+  public abstract void Update_Guts(MetricsPacket metrics);
   /* ********************************************************************************* */
   //public void Refresh_Me_From_Beneath(IDrawable.IMoveable mbox);// should be just for IContainer types, but aren't all songs containers? 
   /* ********************************************************************************* */
@@ -26,13 +23,19 @@ public interface ISonglet extends IDrawable, IDeletable, ITextable {// Cancionit
   /* ********************************************************************************* */
   //public AudProject Get_Project();
   /* ********************************************************************************* */
-  public void Set_Project(AudProject project);
+  public abstract void Set_Project(AudProject project);
   /* ********************************************************************************* */
-  @Override ISonglet Deep_Clone_Me(ITextable.CollisionLibrary HitTable);
+  @Override public abstract ISonglet Deep_Clone_Me(ITextable.CollisionLibrary HitTable);
   /* ********************************************************************************* */
-  int Ref_Songlet();// Reference Counting: increment ref counter and return new value just for kicks
-  int UnRef_Songlet();// Reference Counting: decrement ref counter and return new value just for kicks
-  int GetRefCount();// Reference Counting: get number of references for serialization
+  public int Ref_Songlet(){ return ++this.RefCount; }// Reference Counting: increment ref counter and return new value just for kicks
+  public int UnRef_Songlet(){// ISonglet Reference Counting: decrement ref counter and return new value just for kicks
+    if (this.RefCount < 0) {
+      throw new RuntimeException("Songlet: Negative RefCount:" + this.RefCount);
+//      throw new RuntimeException("Voice: Negative RefCount:" + this.RefCount);
+    }
+    return --this.RefCount;
+  }
+  public int GetRefCount(){return this.RefCount;}// Reference Counting: get number of references for serialization
   //  Possible RefCount pattern:
   //  (MyPointer = DeletableObject).Ref_Songlet();// ref pattern 
   //  MyPointer = MyPointer.UnRef_Songlet();// unref pattern, unref returns null?
@@ -112,9 +115,9 @@ public interface ISonglet extends IDrawable, IDeletable, ITextable {// Cancionit
     public AudProject MyProject = null;
     public int FreshnessTimeStamp = 1;
   }
-  public interface IContainer extends ISonglet {
+  public abstract static class IContainer extends ISonglet {
     /* ********************************************************************************* */
-    public void Refresh_Me_From_Beneath(IDrawable.IMoveable mbox);// should be just for IContainer types, but aren't all songs containers? 
-    public void Remove_SubNode(MonkeyBox mbx);
+    public abstract void Refresh_Me_From_Beneath(IDrawable.IMoveable mbox);// should be just for IContainer types, but aren't all songs containers? 
+    public abstract void Remove_SubNode(MonkeyBox mbx);
   }
 }

@@ -19,9 +19,10 @@ public interface ITextable {// DIY Json ISerializable - more control
   //void Textify(StringBuilder sb);// to do: pass a collision table parameter
   JsonParse.HashNode Export(CollisionLibrary HitTable);// to do: pass a collision table parameter
   void ShallowLoad(JsonParse.HashNode phrase);// just fill in primitive fields that belong to this object, don't follow up pointers.
+  // Consume IS DEPRECATED.  to do: remove it.
   void Consume(JsonParse.HashNode phrase, CollisionLibrary ExistingInstances);// Fill in all the values of an already-created object, including deep pointers.
 //  IFactory GetMyFactory();// this always returns a singleton of IFactory, one for each class declaration. 
-//  
+//  IFactory IS DEPRECATED.  will be replaced with FileMapper.FactoryBase.
   public interface IFactory {// probably overkill. will try delegate pointers to static methods instead
     public ITextable Create(JsonParse.HashNode phrase, CollisionLibrary ExistingInstances);
     public class Utils {

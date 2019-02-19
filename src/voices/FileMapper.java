@@ -8,6 +8,7 @@ import voices.ITextable.IFactory.Utils;
 
 // FileMapper is part of deserialization.  It will convert a parsed json tree onto a playable Vectunes tree.
 // Every time we upgrade our file format, we will create a new FileMapper to support it, and keep the old FileMapper around for backward compatibility.
+// At the moment this FileMapper is too integrated with the songlet classes to be reused for new formats.  But, it will work if outright replaced. 
 public class FileMapper {
   static final String TreePhraseName = "Tree", LibraryPhraseName = "Library";// for serialization
   /* ********************************************************************************* */
@@ -80,7 +81,8 @@ public class FileMapper {
         for (int pcnt = 0; pcnt < len; pcnt++) {
           PhrasePoint = (JsonParse.HashNode)PhrasePointList.Get(pcnt);// another cast!
           vpoint = new VoicePoint();// to do: replace this with a factory owned by VoicePoint.
-          vpoint.Consume(PhrasePoint, fmap.ExistingInstances);// to do: get rid of Consume and change this instance to shallowload(?)
+//          vpoint.Consume(PhrasePoint, fmap.ExistingInstances);// to do: get rid of Consume and change this instance to shallowload(?)
+          vpoint.ShallowLoad(PhrasePoint);
           voz.Add_Note(vpoint);
         }
         voz.Sort_Me();
@@ -89,21 +91,21 @@ public class FileMapper {
   };
   /* ********************************************************************************* */
   public static class SampleVoiceFactory extends VoiceFactory{
-    static final String ObjTypeName = "SampleVoice_OffsetBox";
+//    static final String ObjTypeName = "SampleVoice_OffsetBox";
     SampleVoiceFactory(FileMapper fmap0) {super(fmap0);}
     /* ********************************************************************************* */
     @Override SampleVoice.SampleVoice_OffsetBox Deserialize_OffsetBox(JsonParse.HashNode OboxNode) {
-      SampleVoice.SampleVoice_OffsetBox vobox = (SampleVoice.SampleVoice_OffsetBox)Deserialize_Stack(OboxNode);// another cast!
-      // For new file formats, we can replace vobox shallow load here.
-      vobox.ShallowLoad(OboxNode);
-      return vobox;
+      SampleVoice.SampleVoice_OffsetBox svobox = (SampleVoice.SampleVoice_OffsetBox)Deserialize_Stack(OboxNode);// another cast!
+      // For new file formats, we can replace svobox shallow load here.
+      svobox.ShallowLoad(OboxNode);
+      return svobox;
     }
     /* ********************************************************************************* */
     @Override SampleVoice Deserialize_Songlet(JsonParse.HashNode node) {
       // Before we even enter this function, first determine if phrase just has a txt pointer instead of a ChildrenHash.
-      SampleVoice voz = new SampleVoice();
-      Hydrate_SampleVoice(node, voz);
-      return voz;
+      SampleVoice svoz = new SampleVoice();
+      Hydrate_SampleVoice(node, svoz);
+      return svoz;
     }
     /* ********************************************************************************* */
     void Hydrate_SampleVoice(JsonParse.HashNode VoiceNode, SampleVoice voz) {// Fill in all the values of an already-created object, including deep pointers.
@@ -193,7 +195,7 @@ public class FileMapper {
     @Override LoopSong Deserialize_Songlet(JsonParse.HashNode node) {
       // Before we even enter this function, first determine if phrase just has a txt pointer instead of a ChildrenHash.
       LoopSong loop = new LoopSong();
-      //Hydrate_Loop(node, loop); // this will not actually work
+      Hydrate_Loop(node, loop); // this will not actually work
       return loop;
     }
     /* ********************************************************************************* */
@@ -286,11 +288,11 @@ public class FileMapper {
   }
   /* ********************************************************************************* */
   void BuildFactories(){
-    Factories.put("Graphic_OffsetBox", new GraphicFactory(this));
-    Factories.put("Voice_OffsetBox", new VoiceFactory(this));
-    Factories.put(SampleVoiceFactory.ObjTypeName, new SampleVoiceFactory(this));
+    Factories.put(GraphicBox.Graphic_OffsetBox.ObjectTypeName, new GraphicFactory(this));
+    Factories.put(Voice.Voice_OffsetBox.ObjectTypeName, new VoiceFactory(this));
+    Factories.put(SampleVoice.SampleVoice_OffsetBox.ObjectTypeName, new SampleVoiceFactory(this));
     Factories.put(PluckVoice.PluckVoice_OffsetBox.ObjectTypeName, new PluckVoiceFactory(this));
-    Factories.put("Group_OffsetBox", new GroupSongFactory(this));
+    Factories.put(GroupSong.Group_OffsetBox.ObjectTypeName, new GroupSongFactory(this));
     Factories.put(LoopSong.Loop_OffsetBox.ObjectTypeName, new LoopSongFactory(this));
   }
   /* ********************************************************************************* */

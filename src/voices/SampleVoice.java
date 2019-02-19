@@ -13,6 +13,7 @@ public class SampleVoice extends Voice {
   public String SamplePreset = "Horn";
 
   public static String HornSampleName = "Horn";
+  public static String AhhSampleName = "Ahh";
   public static String SamplePresetName = "SamplePreset";
   public static String LoopedName = "Looped";// for serialization
   public static double[] Horn = {// instrument waveform sample
@@ -73,6 +74,11 @@ public class SampleVoice extends Voice {
   public void Preset_Horn() {
     this.SamplePreset = HornSampleName;
     this.AttachWaveSample(Create_Horn_Sample(), Globals.BaseFreqC0 / 265.0);
+  }
+  /* ********************************************************************************* */
+  public void Preset_Ahh() {
+    this.SamplePreset = AhhSampleName;
+    this.AttachWaveSample(Create_Ahh_Sample(), Globals.BaseFreqC0 / 265.0);
   }
   /* ********************************************************************************* */
   @Override public SampleVoice_OffsetBox Spawn_OffsetBox() {// for compose time

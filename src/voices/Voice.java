@@ -11,7 +11,7 @@ import java.util.HashMap;
  *
  * @author MultiTool
  */
-public class Voice implements ISonglet.IContainer {
+public class Voice extends ISonglet.IContainer {
   // collection of control points, each one having a pitch and a volume. rendering morphs from one cp to another. 
   public ArrayList<VoicePoint> CPoints = new ArrayList<VoicePoint>();
   public static String CPointsName = "ControlPoints", BaseFreqName = "BaseFreq";// for serialization
@@ -775,19 +775,6 @@ public class Voice implements ISonglet.IContainer {
       this.CPoints.get(cnt).Delete_Me();
     }
     this.CPoints.clear();
-  }
-  /* ********************************************************************************* */
-  @Override public int Ref_Songlet() {// ISonglet Reference Counting: increment ref counter and return new value just for kicks
-    return ++this.RefCount;
-  }
-  @Override public int UnRef_Songlet() {// ISonglet Reference Counting: decrement ref counter and return new value just for kicks
-    if (this.RefCount < 0) {
-      throw new RuntimeException("Voice: Negative RefCount:" + this.RefCount);
-    }
-    return --this.RefCount;
-  }
-  @Override public int GetRefCount() {// ISonglet Reference Counting: get number of references for serialization
-    return this.RefCount;
   }
   /* ********************************************************************************* */
   @Override public JsonParse.HashNode Export(CollisionLibrary HitTable) {// ITextable

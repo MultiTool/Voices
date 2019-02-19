@@ -14,7 +14,7 @@ import java.util.HashMap;
  * @author MultiTool
  * LoopBox is most likely deprecated. It creates too many problems with the UI and is easily replaceable with a specialized GroupSong. 
  */
-public class LoopBox implements ISonglet.IContainer, IDrawable {
+public class LoopBox extends ISonglet.IContainer {
   public ArrayList<Ghost_OffsetBox> SubSongs = new ArrayList<Ghost_OffsetBox>();
   private double MyDuration = 1.0;// manually assigned duration, as loops are infinite otherwise
   private double Delay = 1.0;// time delay between loops
@@ -229,16 +229,6 @@ public class LoopBox implements ISonglet.IContainer, IDrawable {
       this.ContentOBox.Delete_Me();
       this.ContentOBox = null;
     }
-  }
-  /* ********************************************************************************* */
-  @Override public int Ref_Songlet() {// ISonglet Reference Counting: increment ref counter and return new value just for kicks
-    return ++this.RefCount;
-  }
-  @Override public int UnRef_Songlet() {// ISonglet Reference Counting: decrement ref counter and return new value just for kicks
-    return --this.RefCount;
-  }
-  @Override public int GetRefCount() {// ISonglet Reference Counting: get number of references for serialization
-    return this.RefCount;
   }
   /* ********************************************************************************* */
   @Override public JsonParse.HashNode Export(CollisionLibrary HitTable) {// ITextable

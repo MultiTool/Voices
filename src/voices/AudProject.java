@@ -60,8 +60,9 @@ public class AudProject implements IDeletable {
     GroupSong cbx;
     NoteMaker nm;
     LoopBox lbx;
-//    switch (9){
-    switch (11) {
+    int Choice = 11;
+//    Choice = 9;// loop
+    switch (Choice) {
     case 0:
       song = TestJunkyard.Create_Random_Chorus(0, 0, 1.0);
       obox = song.Spawn_OffsetBox();
@@ -143,13 +144,11 @@ public class AudProject implements IDeletable {
       obox.TimeX += NoteMaker.OffsetTime;
       gbx.Add_SubSong(obox);
 
-      if (false){
-        song = TestJunkyard.Compose_Ribbon_Chorus();
-        obox = song.Spawn_OffsetBox();
-        obox.OctaveY = (1);// move later
-        obox.TimeX += NoteMaker.OffsetTime;
-        gbx.Add_SubSong(obox);
-      }
+      song = TestJunkyard.Compose_Ribbon_Chorus();
+      obox = song.Spawn_OffsetBox();
+      obox.OctaveY = (1);// move later
+      obox.TimeX += NoteMaker.OffsetTime;
+      gbx.Add_SubSong(obox);
 
       obox = gbx.Spawn_OffsetBox();
       break;
@@ -235,8 +234,6 @@ public class AudProject implements IDeletable {
 
     double FinalTime = this.AudioRoot.GetContent().Get_Duration();
 
-//    int nsamps = this.AudioRoot.GetContent().Get_Sample_Count(this.SampleRate);
-//    wave_render.Init(nsamps);
     Wave wave_render = new Wave();
     wave_render.Init_Time(0, FinalTime, SampleRate);
     wave_render.Fill(Wave.Debug_Fill);

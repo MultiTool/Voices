@@ -20,7 +20,7 @@ package voices;
 //  /* virtual */ void Update_Rhythm(Dummy_OffsetBox_Base mbox) {};
 //};
 
-public class DummySong implements ISonglet.IContainer {
+public class DummySong extends ISonglet.IContainer {
   /* ********************************************************************************* */
   public static class Dummy_OffsetBox extends OffsetBox {
     LoopSong ParentLoop;
@@ -93,9 +93,6 @@ public class DummySong implements ISonglet.IContainer {
   // to do: Clean up ISonglet so there is less inherited junk. Also really implement these remaining methods. 
   /* ********************************************************************************* */
   // ISonglet
-  @Override public int Ref_Songlet(){return ++this.RefCount;}// Reference Counting: increment ref counter and return new value just for kicks
-  @Override public int UnRef_Songlet(){return --this.RefCount;}// Reference Counting: decrement ref counter and return new value just for kicks
-  @Override public int GetRefCount(){return this.RefCount;}// Reference Counting: get number of references for serialization
   @Override public void Set_Project(AudProject project){ChildSong.Set_Project(project);}
   /* ********************************************************************************* */
   // IDrawable
